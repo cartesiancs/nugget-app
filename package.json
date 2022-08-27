@@ -4,11 +4,14 @@
     "description": "Video Editor",
     "main": "main.js",
     "scripts": {
-        "start": "electron ."
+        "start": "electron .",
+        "bundle": "webpack --mode=production"
     },
     "author": "Dipokal",
     "dependencies": {
         "electron": "^20.1.0",
-        "electron-reload": "^2.0.0-alpha.1"
+        "electron-reload": "^2.0.0-alpha.1",
+        "webpack": "^5.74.0",
+        "webpack-cli": "^4.10.0"
     }
 }

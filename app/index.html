@@ -1,1 +1,257 @@
-sssssddssacasc
+
+
+<!DOCTYPE html>
+<html lang="ko" class="h-100">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Nugget</title>
+
+    <!-- CSS Dependencies -->
+    <link rel="icon" href="/favicon.ico">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Team-DeVent/devent-designsystem/dist/style.css"/>
+
+    <link rel="stylesheet" href="src/style/front.css">
+    
+
+</head>
+    <body class="h-100 bg-dark">
+        <div class="container-fluid h-100 ">
+
+            <div id="split_top" class="row align-items-start" style="height: 80%;">
+                <div class="bg-darklight h-100" style="width: 30%;">
+
+                    <button onclick="nugget.element.player.start()">play</button>
+                    <button onclick="nugget.element.player.stop()">pause</button>
+                    <button onclick="nugget.element.player.reset()">reset</button>
+                    <button onclick="nugget.canvas.preview.export()">export</button>
+
+                    <input type="file" name="upload" id="upload">
+
+                콘텐츠
+
+                sdv
+
+                효과
+
+
+
+
+                </div>
+
+                <div class="h-100" style="width: 70%;">
+                    <div id="video" class="video">
+                        <canvas id="preview" class="preview"></canvas>
+                        <div id="control" class="control">
+                            <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+    
+            <div id="split_bottom" class="row split-top align-items-end cursor-row-resize bg-darker line-top" style="height: 20%;">
+
+                <div id="split_inner_bottom" class="col-12 cursor-default line" style="height: 100%;" onmouseup="nugget.element.bar.event.drag.onmouseup(this); nugget.element.bar.event.resize.onmouseup(this);">
+                    <div id="timeline_bar" class="timeline-bar" style="left: 0px;">
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <dds-modal
+        modal-id="exportVideoModal"
+        modal-title="영상 내보내기"
+        modal-subtitle="">
+            <dds-content>
+                <div class="mb-3">
+                    <video id="exportVideo" controls="controls"></video>
+                </div>
+            </dds-content>
+            <dds-modal-button button-color="btn-blue" button-text-color="text-primary" is-dismiss="false">저장</dds-modal-button>
+            <dds-modal-button button-color="btn-light" button-text-color="text-dark" is-dismiss="true">취소</dds-modal-button>
+        </dds-modal>
+
+        
+
+  
+
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.3.4/dist/sweetalert2.all.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/Team-DeVent/devent-designsystem/dist/main.js"></script>
+        <script src="dist/index.js"></script>
+
+      <script>
+          //document.querySelector("a").getAttribute
+        let preview = document.getElementById('preview');
+        let control = document.getElementById('control-inner');
+        let video = document.getElementById('video');
+        let exportVideoModal = new bootstrap.Modal(document.getElementById('exportVideoModal'), {
+            keyboard: false
+        })
+        
+
+        let valueEvent = {
+            splitBottom: false,
+            moveElement: false,
+            mouse: {
+                x: 0,
+                y: 0
+            },
+            elementBar: {
+                isDrag: false,
+                isResize: false,
+                resizeLocation: 'left',
+                e: undefined,
+                blob: '',
+                criteria: {x: 0, y: 0, duration: 1000},
+                criteriaResize: {x: 0, y: 0}
+            },
+            element: {
+                isDrag: false,
+                e: undefined,
+                initial: {x: 0, y: 0}
+            }
+        }
+
+
+        const page = {
+            split: {
+                bottom: function (percent) {
+                    document.getElementById("split_top").style.height = `${percent}%`
+                    document.getElementById("split_bottom").style.height = `${100-percent}%`
+                }
+            }
+        }
+
+
+        HTMLCanvasElement.prototype.render = function () {
+            nugget.canvas.preview.render(this)
+        };
+
+        HTMLCanvasElement.prototype.clear = function () {
+            nugget.canvas.preview.clear(this)
+        };
+
+        window.addEventListener('resize', nugget.canvas.preview.resize, false);
+
+        window.addEventListener('load', (event) => {
+            nugget.canvas.preview.resize()
+        });
+                
+
+        upload.onchange = (event) => {
+            let [ uploadfile ] = upload.files
+
+            if (uploadfile) {
+                let blob = URL.createObjectURL(uploadfile)
+                let file = document.querySelector('#upload').files[0] || ''
+                preview.src = blob
+
+                nugget.element.bar.append(blob)
+                nugget.element.control.upload.image(blob)
+            }
+        }
+
+
+
+        
+
+
+
+
+        document.addEventListener("dragstart", (e) => {
+            let target = e.target
+
+            if (target.classList.contains('element-drag')) {
+                e.dataTransfer.effectAllowed = "copyMove";
+
+                //e.preventDefault();
+
+
+                valueEvent.element.isDrag = true
+                valueEvent.element.e = target.parentNode
+
+                valueEvent.element.initial.x = e.pageX - Number(target.style.left.split('px')[0])
+                valueEvent.element.initial.y = e.pageY - Number(target.style.top.split('px')[0])
+
+            }
+        })
+
+        document.addEventListener("drag", (e) => {
+            let target = e.target
+            //console.log(target, target.classList.contains('element-drag'))
+            if (target.classList.contains('element-drag')) {
+                let x =  e.clientX -valueEvent.element.initial.x
+                let y = e.clientY -valueEvent.element.initial.y
+                if (e.clientX + e.clientY != 0) nugget.element.control.drag(target, x, y);
+
+            }
+        })
+
+
+
+        document.addEventListener("dragend", (e) => {
+            let target = e.target
+            if (target.classList.contains('element-drag')) {
+                console.log(e)
+                valueEvent.element.isDrag = false
+            }
+        })
+
+
+        document.addEventListener("mousemove", (e) => {
+            valueEvent.mouse.x = e.pageX
+            valueEvent.mouse.y = e.pageY
+
+            if (valueEvent.splitBottom) {
+                let per = e.pageY/document.body.offsetHeight*100
+                page.split.bottom(per)
+            }
+
+            if (valueEvent.elementBar.isDrag) {
+                let x = e.pageX - valueEvent.elementBar.criteria.x
+                let y = e.pageY - valueEvent.elementBar.criteria.y
+
+                nugget.element.bar.drag(x, y)
+            }
+
+            if (valueEvent.elementBar.isResize) {
+                let x = e.pageX - valueEvent.elementBar.criteriaResize.x
+                let y = e.pageY - valueEvent.elementBar.criteriaResize.y
+
+                nugget.element.bar.resizeTime(x, valueEvent.elementBar.resizeLocation)
+            }
+
+        })
+
+
+          document.getElementById("split_inner_bottom").addEventListener("mousedown", (e) => {
+                e.stopPropagation();
+          })
+          document.getElementById("split_bottom").addEventListener("mousedown", (e) => {
+              valueEvent.splitBottom = true
+          })
+          document.getElementById("split_bottom").addEventListener("mouseup", (e) => {
+              valueEvent.splitBottom = false
+          })
+
+
+
+      </script>
+
+    </body>
+  </html>

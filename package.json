@@ -1,0 +1,14 @@
+{
+    "name": "nugget-app",
+    "version": "1.0.0",
+    "description": "Video Editor",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "author": "Dipokal",
+    "dependencies": {
+        "electron": "^20.1.0",
+        "electron-reload": "^2.0.0-alpha.1"
+    }
+}

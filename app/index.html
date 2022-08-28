@@ -24,12 +24,31 @@
         <div class="container-fluid h-100 ">
 
             <div id="split_top" class="row align-items-start" style="height: 80%;">
-                <div class="bg-darklight h-100" style="width: 30%;">
+                <div class="bg-darklight h-100 overflow-scroll" style="width: 30%;">
 
 
                     <button onclick="nugget.canvas.preview.export()">export</button>
+                    <button onclick="requestAllDir('/Users/hhj')">getDir</button>
+
+                    
 
                     <input type="file" name="upload" id="upload">
+
+
+                    <div id="assetBrowser" class="row">
+
+                        <div class="col-6 d-flex flex-column bd-highlight overflow-hidden asset mt-1">
+                            <i class="fas fa-file icon-lg align-self-center"></i>
+                            <b class="align-self-center text-light">sdfdf.png</b>
+                        </div>
+                        
+                        <div class="col-6 d-flex flex-column bd-highlight overflow-hidden asset mt-1">
+                            <i class="fas fa-file icon-lg align-self-center"></i>
+                            <b class="align-self-center text-light">wdf.png</b>
+                        </div>
+                        
+
+                    </div>
 
                 콘텐츠
 
@@ -97,6 +116,7 @@
         <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/Team-DeVent/devent-designsystem/dist/main.js"></script>
         <script src="dist/index.js"></script>
+        <script src="renderer.js"></script>
 
       <script>
           //document.querySelector("a").getAttribute

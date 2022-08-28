@@ -1,7 +1,10 @@
-const {app, BrowserWindow} = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const isDev = require('electron-is-dev');
 const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs');
+
+
 
 // if (process.platform === "darwin") {
 //   if (!isDev) {
@@ -34,6 +37,9 @@ function createWindow () {
     width: 1000,
     height: 600,
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js')
     },
     backgroundColor: '#252729',
@@ -56,8 +62,29 @@ function createWindow () {
 
 }
 
+let dir = "/Users/hhj"
+let result = {}
+
+
+
+ipcMain.on('REQ_ALL_DIR', (evt, payload) => {
+  fs.readdir(dir, (err, files) => {
+    files.forEach(file => {
+      let isDirectory = fs.lstatSync(`${dir}/${file}`).isDirectory() 
+      result[String(file)] = {
+        isDirectory: isDirectory,
+        title: file
+      }
+    });
+    console.log(result)
+    evt.sender.send('RES_ALL_DIR', dir, result)
+  });
+  
+})
+
 app.whenReady().then(() => {
   createWindow()
+  
 
 
   app.on('activate', function () {

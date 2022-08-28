@@ -149,3 +149,18 @@ body.swal2-height-auto {
     height: 100%;
     background-color: #868f99;
 }
+
+
+.asset {
+    padding: .5rem;
+}
+
+.asset:hover {
+    background-color: #373c43;
+    border-radius: 12px;
+}
+
+.icon-lg {
+    font-size: 3rem;
+    color: #ffffff;
+}

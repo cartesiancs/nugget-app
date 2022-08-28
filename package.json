@@ -8,60 +8,59 @@
         "bundle": "webpack --mode=production",
         "build:osx": "electron-builder build --mac"
     },
-
     "build": {
         "productName": "Nugget",
         "appId": "kr.devent.nugget",
         "files": [
-          "!bin/*"
+            "!bin/*"
         ],
         "extraFiles": [
-          {
-            "from": "bin/osx",
-            "to": "Resources/bin",
-            "filter": [
-              "**/*"
-            ]
-          }
+            {
+                "from": "bin/osx",
+                "to": "Resources/bin",
+                "filter": [
+                    "**/*"
+                ]
+            }
         ],
         "asar": true,
         "protocols": {
-          "name": "nugget",
-          "schemes": [
-            "nugget"
-          ]
+            "name": "nugget",
+            "schemes": [
+                "nugget"
+            ]
         },
         "mac": {
-          "target": [
-            "dmg"
-          ],
-          "icon": "assets/icons/mac/icon.icns"
+            "target": [
+                "dmg"
+            ],
+            "icon": "assets/icons/mac/icon.icns"
         },
         "dmg": {
-          "internetEnabled": true
+            "internetEnabled": true
         },
         "win": {
-          "target": [
-            "zip",
-            "nsis"
-          ],
-          "icon": "./assets/icons/win/icon.ico"
+            "target": [
+                "zip",
+                "nsis"
+            ],
+            "icon": "./assets/icons/win/icon.ico"
         },
         "nsis": {
-          "oneClick": false,
-          "allowToChangeInstallationDirectory": true
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true
         },
         "directories": {
-          "buildResources": "./assets/",
-          "output": "./dist/",
-          "app": "."
+            "buildResources": "./assets/",
+            "output": "./dist/",
+            "app": "."
         }
-      },
-
+    },
     "author": "Dipokal",
     "dependencies": {
         "electron-is-dev": "^2.0.0",
         "electron-reload": "^2.0.0-alpha.1",
+        "fluent-ffmpeg": "^2.1.2",
         "webpack": "^5.74.0",
         "webpack-cli": "^4.10.0"
     },

@@ -1,7 +1,22 @@
 const {app, BrowserWindow} = require('electron')
 const path = require('path')
-
 const isDev = require('electron-is-dev');
+const ffmpeg = require('fluent-ffmpeg');
+
+// if (process.platform === "darwin") {
+//   if (!isDev) {
+//     ffmpeg.setFfmpegPath(path.join(path.dirname(app.getAppPath()), '..', './Resources', 'bin/ffmpeg'));
+//     ffmpeg.setFfprobePath(path.join(path.dirname(app.getAppPath()), '..', './Resources', 'bin/ffprobe'));
+//   } else {
+//     ffmpeg.setFfmpegPath(path.join(__dirname, '.', 'bin/osx/ffmpeg'));
+//     ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/osx/ffprobe'));
+//   }
+// } 
+
+// else {
+//   ffmpeg.setFfmpegPath(path.join(__dirname, '.', 'bin/win64/ffmpeg.exe'));
+//   ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/win64/ffprobe.exe'));
+// }
 
 if (isDev) {
 	console.log('Running in development');
@@ -27,6 +42,17 @@ function createWindow () {
 
 
   mainWindow.loadFile('app/index.html')
+  // let command = ffmpeg('/Users/hhj/Desktop/_FILES/_Video/test.mov')
+  //   .fps(29.7)
+  //   .size('640x?')
+  //   .aspect('4:3')
+  //   .output('/Users/hhj/Desktop/_FILES/_Video/s1.mp4')
+  //   .on('end', function() {
+  //     console.log('Finished processing');
+  //   })
+  //   .run();
+
+  // console.log(command)
 
 }
 

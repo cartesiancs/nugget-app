@@ -15,6 +15,10 @@ const elementPlayer = {
     isPaused: true,
     progress: split_inner_bottom.scrollLeft,
     start: function () {
+        let toggle = document.querySelector("#playToggle")
+        toggle.setAttribute('onclick', `nugget.element.player.stop()`)
+        toggle.innerHTML = `<i class="fas fa-pause text-light"></i>`
+
         elementPlayer.scroller = setInterval(function() {
             //split_inner_bottom.scrollBy(4, 0);
             let nowTimelineProgress = Number(timeline_bar.style.left.split('px')[0]) + 4
@@ -31,6 +35,10 @@ const elementPlayer = {
     stop: function () {
         clearInterval(elementPlayer.scroller);
         elementPlayer.isPaused = true;
+
+        let toggle = document.querySelector("#playToggle")
+        toggle.setAttribute('onclick', `nugget.element.player.start()`)
+        toggle.innerHTML = `<i class="fas fa-play text-light"></i>`
     },
     reset: function () {
         timeline_bar.style.left = `0px`

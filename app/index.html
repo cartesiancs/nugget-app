@@ -28,24 +28,18 @@
 
 
                     <button onclick="nugget.canvas.preview.export()">export</button>
-                    <button onclick="requestAllDir('/Users/hhj')">getDir</button>
-
+                    <button onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
+                    <button onclick="ipc.render()">render</button>
                     
+
 
                     <input type="file" name="upload" id="upload">
 
 
+                    <button class="btn btn-transparent" onclick="nugget.asset.loadPrevDirectory()"><i class="fas fa-level-up-alt text-light"></i></button>
+
                     <div id="assetBrowser" class="row">
 
-                        <div class="col-6 d-flex flex-column bd-highlight overflow-hidden asset mt-1">
-                            <i class="fas fa-file icon-lg align-self-center"></i>
-                            <b class="align-self-center text-light">sdfdf.png</b>
-                        </div>
-                        
-                        <div class="col-6 d-flex flex-column bd-highlight overflow-hidden asset mt-1">
-                            <i class="fas fa-file icon-lg align-self-center"></i>
-                            <b class="align-self-center text-light">wdf.png</b>
-                        </div>
                         
 
                     </div>
@@ -170,10 +164,12 @@
             nugget.canvas.preview.clear(this)
         };
 
+
         window.addEventListener('resize', nugget.canvas.preview.resize, false);
 
         window.addEventListener('load', (event) => {
             nugget.canvas.preview.resize()
+            ipc.requestAllDir('/Users/hhj')
         });
                 
 
@@ -183,10 +179,11 @@
             if (uploadfile) {
                 let blob = URL.createObjectURL(uploadfile)
                 let file = document.querySelector('#upload').files[0] || ''
+                let path = uploadfile.path
                 preview.src = blob
 
                 nugget.element.bar.append(blob)
-                nugget.element.control.upload.image(blob)
+                nugget.element.control.upload.image(blob, path)
             }
         }
 

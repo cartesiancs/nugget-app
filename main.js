@@ -48,26 +48,22 @@ function createWindow () {
 
 
   mainWindow.loadFile('app/index.html')
-  // let command = ffmpeg('/Users/hhj/Desktop/_FILES/_Video/test.mov')
-  //   .fps(29.7)
-  //   .size('640x?')
-  //   .aspect('4:3')
-  //   .output('/Users/hhj/Desktop/_FILES/_Video/s1.mp4')
-  //   .on('end', function() {
-  //     console.log('Finished processing');
-  //   })
-  //   .run();
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
+
 
   // console.log(command)
 
 }
 
 let dir = "/Users/hhj"
-let result = {}
 
 
 
-ipcMain.on('REQ_ALL_DIR', (evt, payload) => {
+ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
+  let result = {}
+
   fs.readdir(dir, (err, files) => {
     files.forEach(file => {
       let isDirectory = fs.lstatSync(`${dir}/${file}`).isDirectory() 
@@ -76,9 +72,72 @@ ipcMain.on('REQ_ALL_DIR', (evt, payload) => {
         title: file
       }
     });
-    console.log(result)
     evt.sender.send('RES_ALL_DIR', dir, result)
   });
+})
+
+ipcMain.on('RENDER', (evt, elements) => {
+  let elementCounts = 1
+
+  let filter = []
+  let command = ffmpeg()
+  command.input('/Users/hhj/Desktop/_IMAGES/background.jpeg').loop(10)
+
+
+
+  for (const key in elements) {
+    if (Object.hasOwnProperty.call(elements, key)) {
+      const element = elements[key];
+      //console.log(element)
+      command.input(element.localpath)
+
+      let options = {
+        width: String(element.width),
+        height: String(element.height),
+        x: String(element.location.x),
+        y: String(element.location.y),
+        startTime: element.startTime/200,
+        endTime: (element.startTime/200) + (element.duration/200)
+      }
+
+
+      filter.push({
+        "filter": "scale",
+        "options": {
+          "w": options.width,
+          "h": options.height
+        },
+        "inputs": `[${elementCounts}:v]`,
+        "outputs": `image${elementCounts}`
+      })
+
+      filter.push({
+        "filter": "overlay",
+        "options": {
+          "enable": `between(t,${options.startTime},${options.endTime})`,
+          "x": options.x,
+          "y": options.y
+        },
+        "inputs": elementCounts == 1 ? `[0:v][image${elementCounts}]` : `[tmp][image${elementCounts}]`,
+        "outputs": `tmp`
+      })
+
+      elementCounts += 1
+    }
+  }
+
+  command.complexFilter(filter, 'tmp')
+  command.outputOptions(["-map 0:a?"])
+  command.on('progress', function(progress) {
+    console.log('Processing: ' + progress.timemark + ' done');
+  })
+    
+    
+  command.output('/Users/hhj/Desktop/_FILES/_Video/s1.mp4')
+  command.on('end', function() {
+        console.log('Finished processing');
+      })
+      command.run();
   
 })
 

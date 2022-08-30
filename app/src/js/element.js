@@ -124,7 +124,7 @@ const elementBar = {
 
 const elementControl = {
     upload: {
-        image: function (blob) {
+        image: function (blob, path) {
             let img = document.createElement('img');
             let elementId = blob.split('/')[3]
 
@@ -139,7 +139,8 @@ const elementControl = {
                     duration: 1000,
                     location: {x: 0, y: 0},
                     width: width,
-                    height: height
+                    height: height,
+                    localpath: path
                 }
 
                 elementPreview.show(blob)

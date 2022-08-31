@@ -76,12 +76,13 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
   });
 })
 
-ipcMain.on('RENDER', (evt, elements) => {
+ipcMain.on('RENDER', (evt, elements, options) => {
   let elementCounts = 1
+  let resizeRatio = options.previewRatio
 
   let filter = []
   let command = ffmpeg()
-  command.input('/Users/hhj/Desktop/_IMAGES/background.jpeg').loop(10)
+  command.input('/Users/hhj/Desktop/_IMAGES/background.jpeg').loop(options.videoDuration)
 
 
 
@@ -92,10 +93,10 @@ ipcMain.on('RENDER', (evt, elements) => {
       command.input(element.localpath)
 
       let options = {
-        width: String(element.width),
-        height: String(element.height),
-        x: String(element.location.x),
-        y: String(element.location.y),
+        width: String(element.width*resizeRatio),
+        height: String(element.height*resizeRatio),
+        x: String(element.location.x*resizeRatio),
+        y: String(element.location.y*resizeRatio),
         startTime: element.startTime/200,
         endTime: (element.startTime/200) + (element.duration/200)
       }
@@ -133,7 +134,7 @@ ipcMain.on('RENDER', (evt, elements) => {
   })
     
     
-  command.output('/Users/hhj/Desktop/_FILES/_Video/s1.mp4')
+  command.output(options.videoDestination)
   command.on('end', function() {
         console.log('Finished processing');
       })

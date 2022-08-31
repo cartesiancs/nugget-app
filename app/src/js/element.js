@@ -168,6 +168,7 @@ const elementControl = {
 }
 
 const elementPreview = {
+    previewRatio: 1920/preview.width, // 1920x1080을 기준으로
     show: function (blob) {
         let elementId = blob.split('/')[3]
         if (document.getElementById(`element-${elementId}`) == null) {

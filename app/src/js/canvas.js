@@ -12,10 +12,10 @@ const canvasPreview = {
         preview.height = height
         preview.style.width = `${width}px`
         preview.style.height = `${height}px`
-
         video.style.width = `${width}px`
-
         video.style.height = `${height}px`
+
+        nugget.element.preview.previewRatio = 1920/width
 
     },
     render: function (self) {

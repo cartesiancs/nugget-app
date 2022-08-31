@@ -8,7 +8,7 @@ ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
         if (Object.hasOwnProperty.call(result, key)) {
             const element = result[key];
             if (!element.isDirectory) {
-                nugget.asset.loadFile(element.title)
+                nugget.asset.loadFile(element.title, dir)
             } else {
                 nugget.asset.loadFolder(element.title, dir)
 

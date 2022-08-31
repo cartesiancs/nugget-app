@@ -107,7 +107,7 @@ const elementBar = {
             nugget.element.timeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
         } else {
             valueEvent.elementBar.e.style.left = `${valueEvent.elementBar.criteriaResize.x}px`
-            valueEvent.elementBar.e.style.width = `${valueEvent.mouse.x-valueEvent.elementBar.criteriaResize.x}px`
+            valueEvent.elementBar.e.style.width = `${split_inner_bottom.scrollLeft+valueEvent.mouse.x-valueEvent.elementBar.criteriaResize.x}px`
 
             nugget.element.timeline[elementId].startTime = valueEvent.elementBar.criteriaResize.x
             nugget.element.timeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])

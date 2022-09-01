@@ -164,3 +164,53 @@ body.swal2-height-auto {
     font-size: 3rem;
     color: #ffffff;
 }
+
+
+
+.resize-n {
+    position: absolute;
+    top: -.2rem;
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 80%;
+    height: .2rem;
+    background-color: #868f9900;
+    cursor: n-resize;
+
+}
+
+.resize-s {
+    position: absolute;
+    bottom: -.2rem;
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 80%;
+    height: .2rem;
+    background-color: #868f9900;
+    cursor: s-resize;
+
+}
+
+.resize-w {
+    position: absolute;
+    top: 50%;
+    left: -.2rem; 
+    transform: translateY(-50%);
+    width: .2rem;
+    height: 80%;
+    background-color: #868f9900;
+    cursor: w-resize;
+
+}
+
+.resize-e {
+    position: absolute;
+    top: 50%;
+    right: -.2rem; 
+    transform: translateY(-50%);
+    width: .2rem;
+    height: 80%;
+    background-color: #868f9900;
+    cursor: e-resize;
+
+}

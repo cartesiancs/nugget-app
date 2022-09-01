@@ -60,7 +60,7 @@
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
                             <div id="control" class="control">
-                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)">
+                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)" onmouseup="nugget.element.control.onmouseup(event)">
     
                                 </div>
                             </div>
@@ -257,6 +257,16 @@
                 let y = e.pageY - valueEvent.elementBar.criteriaResize.y
 
                 nugget.element.bar.resizeTime(x, valueEvent.elementBar.resizeLocation)
+            }
+
+            if (nugget.element.control.state.isResize) {
+                const videoBox = document.querySelector("#video");
+                const rect = videoBox.getBoundingClientRect();
+                
+                let x = e.pageX - rect.left - nugget.element.control.state.criteriaResize.x
+                let y = e.pageY - rect.top - nugget.element.control.state.criteriaResize.y
+
+                nugget.element.control.resize.action(x, y)
             }
 
         })

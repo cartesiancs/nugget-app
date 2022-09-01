@@ -123,6 +123,13 @@ const elementBar = {
 }
 
 const elementControl = {
+    state: {
+        isResize: false,
+        criteriaResize: {x: 0, y: 0, w: 0, h: 0},
+        resizeDirection: '',
+        resizeTargetElementId: ''
+    },
+
     upload: {
         image: function (blob, path) {
             let img = document.createElement('img');
@@ -164,7 +171,73 @@ const elementControl = {
     drop: function (event) {
         event.stopPropagation();
         event.preventDefault();
+    },
+    onmouseup: function (event) {
+        elementControl.state.isResize = false
+
+        for (const elementId in elementTimeline) {
+            if (Object.hasOwnProperty.call(elementTimeline, elementId)) {
+                let parentBody = document.querySelector(`#element-${elementId}`)
+                parentBody.setAttribute("draggable", 'true')                
+            }
+        }
+    },
+    resize: {
+        init: function (elementId, direction = 'n') {
+            let parentBody = document.querySelector(`#element-${elementId}`)
+            parentBody.setAttribute("draggable", 'false')
+            elementControl.state.criteriaResize.w = Number(parentBody.style.width.split('px')[0])
+            elementControl.state.criteriaResize.h = Number(parentBody.style.height.split('px')[0])
+            elementControl.state.criteriaResize.x = Number(parentBody.style.left.split('px')[0])
+            elementControl.state.criteriaResize.y = Number(parentBody.style.top.split('px')[0])
+    
+            elementControl.state.isResize = true
+            elementControl.state.resizeTargetElementId = elementId
+            elementControl.state.resizeDirection = direction
+    
+            console.log('N')
+        },
+        action: function (x, y) {
+            let elementId = elementControl.state.resizeTargetElementId
+            let targetBody = document.querySelector(`#element-${elementId}`)
+
+            switch (elementControl.state.resizeDirection) {
+                case 'n':
+                    targetBody.style.top = `${elementControl.state.criteriaResize.y+y}px`
+                    targetBody.style.height = `${elementControl.state.criteriaResize.h-y}px`
+
+                    break;
+
+                case 's':
+                    targetBody.style.top = `${elementControl.state.criteriaResize.y}px`
+                    targetBody.style.height = `${y}px`
+
+                    break;
+
+                case 'w':
+                    targetBody.style.left = `${elementControl.state.criteriaResize.x+x}px`
+                    targetBody.style.width = `${elementControl.state.criteriaResize.w-x}px`
+
+                    break;
+
+                case 'e':
+
+                    targetBody.style.left = `${elementControl.state.criteriaResize.x}px`
+                    targetBody.style.width = `${x}px`
+
+                    break;
+            
+                default:
+                    break;
+            }
+
+            nugget.element.timeline[elementId].location.y = Number(targetBody.style.top.split('px')[0])
+            nugget.element.timeline[elementId].location.x = Number(targetBody.style.left.split('px')[0])
+            nugget.element.timeline[elementId].width = Number(targetBody.style.width.split('px')[0])
+            nugget.element.timeline[elementId].height = Number(targetBody.style.height.split('px')[0])
+        }
     }
+
 }
 
 const elementPreview = {
@@ -173,8 +246,13 @@ const elementPreview = {
         let elementId = blob.split('/')[3]
         if (document.getElementById(`element-${elementId}`) == null) {
             control.insertAdjacentHTML("beforeend", `
-            <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; top: 0px; left: 0px;' draggable="true">
+            <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
             <img src="${blob}" alt="" class="element-image" draggable="false">
+            <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
+            <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
+            <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
+            <div class="resize-e" onmousedown="nugget.element.control.resize.init('${elementId}', 'e')"></div>
+
             </div>
             `)
         } else {
@@ -193,7 +271,8 @@ const elementPreview = {
         for(key in nugget.element.timeline) {
             let blob = `blob:${location.origin}/${key}`
 
-            if (nugget.element.timeline[key].startTime > elementPlayer.progress || nugget.element.timeline[key].startTime + nugget.element.timeline[key].duration < elementPlayer.progress) {
+            if (nugget.element.timeline[key].startTime > elementPlayer.progress || 
+                nugget.element.timeline[key].startTime + nugget.element.timeline[key].duration < elementPlayer.progress) {
                 elementPreview.hide(blob)
             } else {
                 elementPreview.show(blob)

@@ -182,7 +182,6 @@
                 let path = uploadfile.path
                 preview.src = blob
 
-                nugget.element.bar.append(blob)
                 nugget.element.control.upload.image(blob, path)
             }
         }
@@ -262,7 +261,7 @@
             if (nugget.element.control.state.isResize) {
                 const videoBox = document.querySelector("#video");
                 const rect = videoBox.getBoundingClientRect();
-                
+
                 let x = e.pageX - rect.left - nugget.element.control.state.criteriaResize.x
                 let y = e.pageY - rect.top - nugget.element.control.state.criteriaResize.y
 

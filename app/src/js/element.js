@@ -39,6 +39,8 @@ const elementPlayer = {
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `nugget.element.player.start()`)
         toggle.innerHTML = `<i class="fas fa-play text-light"></i>`
+
+        elementPreview.pauseAllVideo()
     },
     reset: function () {
         timeline_bar.style.left = `0px`
@@ -84,7 +86,10 @@ const elementBar = {
     },
     append: function (blob) {
         let body = document.querySelector("#split_inner_bottom")
-        body.insertAdjacentHTML("beforeend", `<div class="element-bar" style="width: 1000px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+        let elementId = blob.split('/')[3]
+        let width = elementTimeline[elementId].duration
+
+        body.insertAdjacentHTML("beforeend", `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
             ${blob}
             <div class="element-bar-resize-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'left')"></div>
             <div class="element-bar-resize-right position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'right')"></div>
@@ -147,22 +152,67 @@ const elementControl = {
                     location: {x: 0, y: 0},
                     width: width,
                     height: height,
-                    localpath: path
+                    localpath: path,
+                    filetype: 'image'
+
                 }
 
-                elementPreview.show(blob)
+                elementPreview.show.image(blob)
+                elementBar.append(blob)
+
+            }
+
+
+        },
+
+        video: function (blob, path) {
+            let video = document.createElement('video');
+            let elementId = blob.split('/')[3]
+
+            video.src = blob
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = function() {
+                let division = 10;
+
+                let width = video.videoWidth/division;
+                let height = video.videoHeight/division;
+                let duration = video.duration*200
+    
+                nugget.element.timeline[elementId] = {
+                    startTime: 0,
+                    duration: duration,
+                    location: {x: 0, y: 0},
+                    width: width,
+                    height: height,
+                    localpath: path,
+                    filetype: 'video'
+                }
+                
+                elementPreview.show.video(blob)
+                elementBar.append(blob)
+
             }
         }
     },
     drag: function (target, x, y) {
-        let elementId = target.querySelector("img").getAttribute('src').split('/')[3]
+        let checkTagName = ['img', 'video']
+        let existTagName = ''
+        for (let tagname = 0; tagname < checkTagName.length; tagname++) {
+            if (target.querySelector(checkTagName[tagname])) {
+                existTagName = checkTagName[tagname]
+            }
+        }
+
+        let elementId = target.querySelector(existTagName).getAttribute('src').split('/')[3]
+
         target.style.top = `${y}px`
         target.style.left = `${x}px`
         //target.style.transform = `translate(${x}px, ${y}px)`
         nugget.element.timeline[elementId].location.x = x 
         nugget.element.timeline[elementId].location.y = y
         preview.clear();
-        preview.render();
+        //preview.render();
     },
     dragover: function (event) {
         event.stopPropagation();
@@ -242,43 +292,104 @@ const elementControl = {
 
 const elementPreview = {
     previewRatio: 1920/preview.width, // 1920x1080을 기준으로
-    show: function (blob) {
-        let elementId = blob.split('/')[3]
-        if (document.getElementById(`element-${elementId}`) == null) {
-            control.insertAdjacentHTML("beforeend", `
-            <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
-            <img src="${blob}" alt="" class="element-image" draggable="false">
-            <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
-            <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
-            <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
-            <div class="resize-e" onmousedown="nugget.element.control.resize.init('${elementId}', 'e')"></div>
+    show: {
+        image: function (blob) {
+            let elementId = blob.split('/')[3]
+            if (document.getElementById(`element-${elementId}`) == null) {
+                control.insertAdjacentHTML("beforeend", `
+                <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
+                <img src="${blob}" alt="" class="element-image" draggable="false">
+                <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
+                <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
+                <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
+                <div class="resize-e" onmousedown="nugget.element.control.resize.init('${elementId}', 'e')"></div>
+    
+                </div>
+                `)
+            } else {
+                document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+            }
+    
+        },
+        video: function (blob) {
+            let elementId = blob.split('/')[3]
+            if (document.getElementById(`element-${elementId}`) == null) {
+                control.insertAdjacentHTML("beforeend", `
+                <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
+                <video src="${blob}" alt="" class="element-video" width="${nugget.element.timeline[elementId].width}" height="${nugget.element.timeline[elementId].height}" draggable="false">
+                <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
+                <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
+                <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
+                <div class="resize-e" onmousedown="nugget.element.control.resize.init('${elementId}', 'e')"></div>
+    
+                </div>
+                `)
+                let video = document.getElementById(`element-${elementId}`).querySelector("video");
+                
+                let secondsOfRelativeTime = (elementTimeline[elementId].startTime - elementPlayer.progress) / 200
 
-            </div>
-            `)
-        } else {
-            document.querySelector(`#element-${elementId}`).classList.remove('d-none')
-        }
+                console.log(secondsOfRelativeTime)
+                video.currentTime = secondsOfRelativeTime;
 
+            } else {
+                let video = document.getElementById(`element-${elementId}`).querySelector("video");
+                let secondsOfRelativeTime = -(elementTimeline[elementId].startTime - elementPlayer.progress) / 200
+
+                if (!!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
+                    if (elementPlayer.isPaused) {
+                        console.log('paused')
+
+                    }
+                    console.log('isPlaying')
+                } else {
+                    video.currentTime = secondsOfRelativeTime;
+                    video.play()
+                }
+
+                document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+            }
+    
+        },
     },
+
     hide: function (blob) {
         let elementId = blob.split('/')[3]
+        let video = document.getElementById(`element-${elementId}`).querySelector("video");
+        console.log(elementTimeline[elementId].filetype)
+
+        if (elementTimeline[elementId].filetype == 'video') {
+            video.pause()
+        }
         document.querySelector(`#element-${elementId}`).classList.add('d-none')
     },
     play: function () {
         let key;
-        preview.render();
+        //preview.render();
 
         for(key in nugget.element.timeline) {
             let blob = `blob:${location.origin}/${key}`
+            let filetype = nugget.element.timeline[key].filetype
 
             if (nugget.element.timeline[key].startTime > elementPlayer.progress || 
                 nugget.element.timeline[key].startTime + nugget.element.timeline[key].duration < elementPlayer.progress) {
                 elementPreview.hide(blob)
             } else {
-                elementPreview.show(blob)
+                elementPreview.show[filetype](blob)
             }
         }
-    }
+    },
+    pauseAllVideo: function () {
+        let key;
+
+        for(key in elementTimeline) {
+            let filetype = elementTimeline[key].filetype
+
+            if (filetype == 'video') {
+                let video = document.getElementById(`element-${key}`).querySelector("video");
+                video.pause()
+            }
+        }
+    },
 }
 
 

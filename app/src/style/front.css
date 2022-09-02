@@ -173,7 +173,7 @@ body.swal2-height-auto {
     left: 50%; 
     transform: translateX(-50%);
     width: 80%;
-    height: .2rem;
+    height: .3rem;
     background-color: #868f9900;
     cursor: n-resize;
 
@@ -185,7 +185,7 @@ body.swal2-height-auto {
     left: 50%; 
     transform: translateX(-50%);
     width: 80%;
-    height: .2rem;
+    height: .3rem;
     background-color: #868f9900;
     cursor: s-resize;
 
@@ -196,7 +196,7 @@ body.swal2-height-auto {
     top: 50%;
     left: -.2rem; 
     transform: translateY(-50%);
-    width: .2rem;
+    width: .3rem;
     height: 80%;
     background-color: #868f9900;
     cursor: w-resize;
@@ -208,7 +208,7 @@ body.swal2-height-auto {
     top: 50%;
     right: -.2rem; 
     transform: translateY(-50%);
-    width: .2rem;
+    width: .3rem;
     height: 80%;
     background-color: #868f9900;
     cursor: e-resize;

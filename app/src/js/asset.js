@@ -25,11 +25,14 @@ const asset = {
     },
     add: function (url, path) {
         fetch(`file://${url}`)
-        .then(res => res.blob())
+        .then(res => {
+            return res.blob()
+        })
         .then(blob => {
             let blobUrl = URL.createObjectURL(blob);
-            nugget.element.bar.append(blobUrl)
-            nugget.element.control.upload.image(blobUrl, url)
+            let blobType = blob.type.split('/')[0] // image, video ...
+            
+            nugget.element.control.upload[blobType](blobUrl, url)
         });
 
     }

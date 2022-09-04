@@ -245,25 +245,25 @@
                 page.split.bottom(per)
             }
 
-            if (valueEvent.elementBar.isDrag) {
-                let x = e.pageX - valueEvent.elementBar.criteria.x
-                let y = e.pageY - valueEvent.elementBar.criteria.y
+            if (nugget.element.bar.state.isDrag) {
+                let x = e.pageX - nugget.element.bar.state.criteria.x
+                let y = e.pageY - nugget.element.bar.state.criteria.y
 
                 nugget.element.bar.drag(x, y)
             }
 
-            if (valueEvent.elementBar.isResize) {
-                valueEvent.elementBar.isDrag = false
-                let elementId = valueEvent.elementBar.blob.split('/')[3]
+            if (nugget.element.bar.state.isResize) {
+                nugget.element.bar.state.isDrag = false
+                let elementId = nugget.element.bar.state.blob.split('/')[3]
                 let filetype = nugget.element.timeline[elementId].filetype
-                let x = e.pageX - valueEvent.elementBar.criteriaResize.x
-                let y = e.pageY - valueEvent.elementBar.criteriaResize.y
+                let x = e.pageX - nugget.element.bar.state.criteriaResize.x
+                let y = e.pageY - nugget.element.bar.state.criteriaResize.y
 
                 if (filetype == 'video') {
-                    nugget.element.bar.resizeRangeOnElement(x, valueEvent.elementBar.resizeLocation)
+                    nugget.element.bar.resizeRangeOnElement(x, nugget.element.bar.state.resizeLocation)
 
                 } else {
-                    nugget.element.bar.resizeDurationInTimeline(x, valueEvent.elementBar.resizeLocation)
+                    nugget.element.bar.resizeDurationInTimeline(x, nugget.element.bar.state.resizeLocation)
 
                 }
 

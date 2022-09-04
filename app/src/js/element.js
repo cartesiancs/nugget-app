@@ -51,54 +51,63 @@ const elementPlayer = {
 }
 
 const elementBar = {
+    state: {
+        isDrag: false,
+        isResize: false,
+        resizeLocation: 'left',
+        resizeRangeLeft: 0,
+        resizeRangeRight: 0,
+        e: undefined,
+        blob: '',
+        criteria: {x: 0, y: 0, duration: 1000},
+        criteriaResize: {x: 0, y: 0}
+    },
+    
     event: {
         drag: {
             onmousedown: function (e) {
-                valueEvent.elementBar.blob = e.getAttribute('value')
-                valueEvent.elementBar.isDrag = true
-                valueEvent.elementBar.e = e
-                valueEvent.elementBar.criteria.x = valueEvent.mouse.x - Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
-                valueEvent.elementBar.criteria.y = valueEvent.mouse.y
+                elementBar.state.blob = e.getAttribute('value')
+                elementBar.state.isDrag = true
+                elementBar.state.e = e
+                elementBar.state.criteria.x = valueEvent.mouse.x - Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
+                elementBar.state.criteria.y = valueEvent.mouse.y
             },
             onmouseup: function (e) {
-                valueEvent.elementBar.isDrag = false
+                elementBar.state.isDrag = false
 
             }
         },
         resize: {
-            rangeonmousedown: function (e, location = 'left') {
-                valueEvent.elementBar.e = e.parentNode.parentNode
-                valueEvent.elementBar.blob = valueEvent.elementBar.e.getAttribute('value')
-                valueEvent.elementBar.isResize = true
-                valueEvent.elementBar.resizeLocation = location
-                valueEvent.elementBar.isDrag = false
-
-                valueEvent.elementBar.criteria.duration = nugget.element.timeline[valueEvent.elementBar.blob.split('/')[3]].duration + Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
-
-                valueEvent.elementBar.criteriaResize.x = Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
+            onmousedownrange: function (e, location = 'left') {
+                elementBar.state.e = e.parentNode.parentNode
+                elementBar.state.blob = elementBar.state.e.getAttribute('value')
+                elementBar.state.isResize = true
+                elementBar.state.resizeLocation = location
+                elementBar.state.isDrag = false
+                elementBar.state.criteria.duration = elementTimeline[elementBar.state.blob.split('/')[3]].duration + Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
+                elementBar.state.criteriaResize.x = Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
                 
-                valueEvent.elementBar.resizeRangeLeft = Number(valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-left").style.width.split('px')[0])
-                valueEvent.elementBar.resizeRangeRight = Number(valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-right").style.width.split('px')[0])
-
+                elementBar.state.resizeRangeLeft = Number(elementBar.state.e.querySelector(".element-bar-hiddenspace-left").style.width.split('px')[0])
+                elementBar.state.resizeRangeRight = Number(elementBar.state.e.querySelector(".element-bar-hiddenspace-right").style.width.split('px')[0])
             },
             onmousedown: function (e, location = 'left') {
-                valueEvent.elementBar.blob = e.parentNode.getAttribute('value')
-                valueEvent.elementBar.isResize = true
-                valueEvent.elementBar.resizeLocation = location
-                valueEvent.elementBar.isDrag = false
-                valueEvent.elementBar.e = e.parentNode
+                elementBar.state.blob = e.parentNode.getAttribute('value')
+                elementBar.state.isResize = true
+                elementBar.state.resizeLocation = location
+                elementBar.state.isDrag = false
+                elementBar.state.e = e.parentNode
 
-                valueEvent.elementBar.criteriaResize.x = location == 'left' ? 
-                    valueEvent.mouse.x - Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, "")) : 
-                    Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
-                valueEvent.elementBar.criteriaResize.y = valueEvent.mouse.y
+                elementBar.state.criteriaResize.x = location == 'left' ? 
+                    valueEvent.mouse.x - Number(elementBar.state.e.style.left.replace(/[^0-9]/g, "")) : 
+                    Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
+                elementBar.state.criteriaResize.y = valueEvent.mouse.y
                 
-                valueEvent.elementBar.criteria.duration = nugget.element.timeline[valueEvent.elementBar.blob.split('/')[3]].duration + Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
+                elementBar.state.criteria.duration = elementTimeline[elementBar.state.blob.split('/')[3]].duration + Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
 
             },
             onmouseup: function (e) {
-                valueEvent.elementBar.isResize = false
-                //nugget.element.timeline[valueEvent.elementBar.blob.split('/')[3]].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
+                elementBar.state.isResize = false
+                //elementTimeline[elementBar.state.blob.split('/')[3]].duration = Number(elementBar.state.e.style.width.split('px')[0])
             }
         }
     },
@@ -123,11 +132,11 @@ const elementBar = {
             insertDynamicElement = `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
             ${filepath}
             <div class="element-bar-hiddenspace-left position-absolute">
-                <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="nugget.element.bar.event.resize.rangeonmousedown(this, 'left')">
+                <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedownrange(this, 'left')">
                 </div>
             </div>
             <div class="element-bar-hiddenspace-right position-absolute">
-                <div class="element-bar-resize-hiddenspace-right position-absolute" onmousedown="nugget.element.bar.event.resize.rangeonmousedown(this, 'right')">
+                <div class="element-bar-resize-hiddenspace-right position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedownrange(this, 'right')">
                 </div>
             </div>
             </div>`
@@ -138,47 +147,42 @@ const elementBar = {
         body.insertAdjacentHTML("beforeend", insertElement)
     },
     drag: function (x, y) {
-        valueEvent.elementBar.e.style.left = `${x}px`
-        let elementId = valueEvent.elementBar.blob.split('/')[3]
-        nugget.element.timeline[elementId].startTime = x
+        let elementId = elementBar.state.blob.split('/')[3]
+        elementBar.state.e.style.left = `${x}px`
+        elementTimeline[elementId].startTime = x
     },
     resizeDurationInTimeline: function (x, location = 'left') {
-        let elementId = valueEvent.elementBar.blob.split('/')[3]
-        let duration = valueEvent.elementBar.criteria.duration 
+        let elementId = elementBar.state.blob.split('/')[3]
+        let duration = elementBar.state.criteria.duration 
 
         if (location == 'left') {
-            valueEvent.elementBar.e.style.left = `${x}px`
-            valueEvent.elementBar.e.style.width = `${duration-x}px`
+            elementBar.state.e.style.left = `${x}px`
+            elementBar.state.e.style.width = `${duration-x}px`
             elementTimeline[elementId].startTime = x
-            elementTimeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
+            elementTimeline[elementId].duration = Number(elementBar.state.e.style.width.split('px')[0])
         } else {
-            valueEvent.elementBar.e.style.left = `${valueEvent.elementBar.criteriaResize.x}px`
-            valueEvent.elementBar.e.style.width = `${split_inner_bottom.scrollLeft+valueEvent.mouse.x-valueEvent.elementBar.criteriaResize.x}px`
-            elementTimeline[elementId].startTime = valueEvent.elementBar.criteriaResize.x
-            elementTimeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
+            elementBar.state.e.style.left = `${elementBar.state.criteriaResize.x}px`
+            elementBar.state.e.style.width = `${split_inner_bottom.scrollLeft+valueEvent.mouse.x-elementBar.state.criteriaResize.x}px`
+            elementTimeline[elementId].startTime = elementBar.state.criteriaResize.x
+            elementTimeline[elementId].duration = Number(elementBar.state.e.style.width.split('px')[0])
         }
     },
     resizeRangeOnElement: function (x, location = 'left') {
-        let elementId = valueEvent.elementBar.blob.split('/')[3]
-        let duration = valueEvent.elementBar.criteria.duration 
-        let originResizeRangeLeft = valueEvent.elementBar.resizeRangeLeft
-        let originResizeRangeRight = valueEvent.elementBar.resizeRangeRight
+        let elementId = elementBar.state.blob.split('/')[3]
+        let duration = elementBar.state.criteria.duration 
+        let originResizeRangeLeft = elementBar.state.resizeRangeLeft
+        let originResizeRangeRight = elementBar.state.resizeRangeRight
 
-        let resizeRangeTargetLeft = valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-left")
-        let resizeRangeTargetRight = valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-right")
+        let resizeRangeTargetLeft = elementBar.state.e.querySelector(".element-bar-hiddenspace-left")
+        let resizeRangeTargetRight = elementBar.state.e.querySelector(".element-bar-hiddenspace-right")
 
         if (location == 'left') {
             resizeRangeTargetLeft.style.width = `${(x)-5}px`
             elementTimeline[elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
-
-
         } else {
-            resizeRangeTargetRight.style.width = `${window.innerWidth-x-valueEvent.elementBar.criteriaResize.x}px`
+            resizeRangeTargetRight.style.width = `${window.innerWidth-x-elementBar.state.criteriaResize.x}px`
             elementTimeline[elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
-
         }
-
-
     },
 }
 
@@ -201,7 +205,7 @@ const elementControl = {
                 var width = img.width/division;
                 var height = img.height/division;
 
-                nugget.element.timeline[elementId] = {
+                elementTimeline[elementId] = {
                     startTime: 0,
                     duration: 1000,
                     location: {x: 0, y: 0},
@@ -234,7 +238,7 @@ const elementControl = {
                 let height = video.videoHeight/division;
                 let duration = video.duration*200
     
-                nugget.element.timeline[elementId] = {
+                elementTimeline[elementId] = {
                     startTime: 0,
                     duration: duration,
                     location: {x: 0, y: 0},
@@ -265,8 +269,8 @@ const elementControl = {
         target.style.top = `${y}px`
         target.style.left = `${x}px`
         //target.style.transform = `translate(${x}px, ${y}px)`
-        nugget.element.timeline[elementId].location.x = x 
-        nugget.element.timeline[elementId].location.y = y
+        elementTimeline[elementId].location.x = x 
+        elementTimeline[elementId].location.y = y
         preview.clear();
         //preview.render();
     },
@@ -336,10 +340,10 @@ const elementControl = {
                     break;
             }
 
-            nugget.element.timeline[elementId].location.y = Number(targetBody.style.top.split('px')[0])
-            nugget.element.timeline[elementId].location.x = Number(targetBody.style.left.split('px')[0])
-            nugget.element.timeline[elementId].width = Number(targetBody.style.width.split('px')[0])
-            nugget.element.timeline[elementId].height = Number(targetBody.style.height.split('px')[0])
+            elementTimeline[elementId].location.y = Number(targetBody.style.top.split('px')[0])
+            elementTimeline[elementId].location.x = Number(targetBody.style.left.split('px')[0])
+            elementTimeline[elementId].width = Number(targetBody.style.width.split('px')[0])
+            elementTimeline[elementId].height = Number(targetBody.style.height.split('px')[0])
         }
     }
 
@@ -352,7 +356,7 @@ const elementPreview = {
             let elementId = blob.split('/')[3]
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
+                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
                 <img src="${blob}" alt="" class="element-image" draggable="false">
                 <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
@@ -370,7 +374,7 @@ const elementPreview = {
             let elementId = blob.split('/')[3]
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
+                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
                 <video src="${blob}" alt="" class="element-video" draggable="false"></video>
                 <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
@@ -419,11 +423,11 @@ const elementPreview = {
         let key;
         //preview.render();
 
-        for(key in nugget.element.timeline) {
+        for(key in elementTimeline) {
             let blob = `blob:${location.origin}/${key}`
-            let filetype = nugget.element.timeline[key].filetype
-            let condition = nugget.element.timeline[key].startTime > elementPlayer.progress || 
-                nugget.element.timeline[key].startTime + nugget.element.timeline[key].duration < elementPlayer.progress
+            let filetype = elementTimeline[key].filetype
+            let condition = elementTimeline[key].startTime > elementPlayer.progress || 
+                elementTimeline[key].startTime + elementTimeline[key].duration < elementPlayer.progress
 
             if (filetype == 'video') {
                 condition = elementTimeline[key].startTime + elementTimeline[key].trim.startTime > elementPlayer.progress || 

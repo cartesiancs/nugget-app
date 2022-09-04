@@ -66,17 +66,35 @@ const elementBar = {
             }
         },
         resize: {
+            rangeonmousedown: function (e, location = 'left') {
+                valueEvent.elementBar.e = e.parentNode.parentNode
+                valueEvent.elementBar.blob = valueEvent.elementBar.e.getAttribute('value')
+                valueEvent.elementBar.isResize = true
+                valueEvent.elementBar.resizeLocation = location
+                valueEvent.elementBar.isDrag = false
+
+                valueEvent.elementBar.criteria.duration = nugget.element.timeline[valueEvent.elementBar.blob.split('/')[3]].duration + Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
+
+                valueEvent.elementBar.criteriaResize.x = Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
+                
+                valueEvent.elementBar.resizeRangeLeft = Number(valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-left").style.width.split('px')[0])
+                valueEvent.elementBar.resizeRangeRight = Number(valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-right").style.width.split('px')[0])
+
+            },
             onmousedown: function (e, location = 'left') {
                 valueEvent.elementBar.blob = e.parentNode.getAttribute('value')
                 valueEvent.elementBar.isResize = true
                 valueEvent.elementBar.resizeLocation = location
                 valueEvent.elementBar.isDrag = false
                 valueEvent.elementBar.e = e.parentNode
+
                 valueEvent.elementBar.criteriaResize.x = location == 'left' ? 
                     valueEvent.mouse.x - Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, "")) : 
                     Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
                 valueEvent.elementBar.criteriaResize.y = valueEvent.mouse.y
+                
                 valueEvent.elementBar.criteria.duration = nugget.element.timeline[valueEvent.elementBar.blob.split('/')[3]].duration + Number(valueEvent.elementBar.e.style.left.replace(/[^0-9]/g, ""))
+
             },
             onmouseup: function (e) {
                 valueEvent.elementBar.isResize = false
@@ -88,43 +106,80 @@ const elementBar = {
         let body = document.querySelector("#split_inner_bottom")
         let elementId = blob.split('/')[3]
         let width = elementTimeline[elementId].duration
+        let filetype = elementTimeline[elementId].filetype
 
-        body.insertAdjacentHTML("beforeend", `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
-            ${blob}
+        let splitedFilepath = elementTimeline[elementId].localpath.split('/')
+        let filepath = splitedFilepath[splitedFilepath.length-1]
+
+        let insertDynamicElement;
+        let insertStaticElement = `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+            ${filepath}
             <div class="element-bar-resize-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'left')"></div>
             <div class="element-bar-resize-right position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'right')"></div>
+            </div>`
 
-        </div>`)
+
+        if (filetype == 'video') {
+            insertDynamicElement = `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+            ${filepath}
+            <div class="element-bar-hiddenspace-left position-absolute">
+                <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="nugget.element.bar.event.resize.rangeonmousedown(this, 'left')">
+                </div>
+            </div>
+            <div class="element-bar-hiddenspace-right position-absolute">
+                <div class="element-bar-resize-hiddenspace-right position-absolute" onmousedown="nugget.element.bar.event.resize.rangeonmousedown(this, 'right')">
+                </div>
+            </div>
+            </div>`
+        }
+
+        let insertElement = filetype != 'video' ? insertStaticElement : insertDynamicElement
+
+        body.insertAdjacentHTML("beforeend", insertElement)
     },
     drag: function (x, y) {
         valueEvent.elementBar.e.style.left = `${x}px`
-        let elementId = valueEvent.elementBar.blob .split('/')[3]
+        let elementId = valueEvent.elementBar.blob.split('/')[3]
         nugget.element.timeline[elementId].startTime = x
     },
-    resizeTime: function (x, location = 'left') {
-        let elementId = valueEvent.elementBar.blob .split('/')[3]
+    resizeDurationInTimeline: function (x, location = 'left') {
+        let elementId = valueEvent.elementBar.blob.split('/')[3]
         let duration = valueEvent.elementBar.criteria.duration 
 
         if (location == 'left') {
             valueEvent.elementBar.e.style.left = `${x}px`
             valueEvent.elementBar.e.style.width = `${duration-x}px`
-            nugget.element.timeline[elementId].startTime = x
-            nugget.element.timeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
+            elementTimeline[elementId].startTime = x
+            elementTimeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
         } else {
             valueEvent.elementBar.e.style.left = `${valueEvent.elementBar.criteriaResize.x}px`
             valueEvent.elementBar.e.style.width = `${split_inner_bottom.scrollLeft+valueEvent.mouse.x-valueEvent.elementBar.criteriaResize.x}px`
+            elementTimeline[elementId].startTime = valueEvent.elementBar.criteriaResize.x
+            elementTimeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
+        }
+    },
+    resizeRangeOnElement: function (x, location = 'left') {
+        let elementId = valueEvent.elementBar.blob.split('/')[3]
+        let duration = valueEvent.elementBar.criteria.duration 
+        let originResizeRangeLeft = valueEvent.elementBar.resizeRangeLeft
+        let originResizeRangeRight = valueEvent.elementBar.resizeRangeRight
 
-            nugget.element.timeline[elementId].startTime = valueEvent.elementBar.criteriaResize.x
-            nugget.element.timeline[elementId].duration = Number(valueEvent.elementBar.e.style.width.split('px')[0])
+        let resizeRangeTargetLeft = valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-left")
+        let resizeRangeTargetRight = valueEvent.elementBar.e.querySelector(".element-bar-hiddenspace-right")
+
+        if (location == 'left') {
+            resizeRangeTargetLeft.style.width = `${(x)-5}px`
+            elementTimeline[elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
+
+
+        } else {
+            resizeRangeTargetRight.style.width = `${window.innerWidth-x-valueEvent.elementBar.criteriaResize.x}px`
+            elementTimeline[elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
 
         }
-        
 
 
-
-        //valueEvent.elementBar.e.style.left = `${x}px`
-
-    }
+    },
 }
 
 const elementControl = {
@@ -183,6 +238,7 @@ const elementControl = {
                     startTime: 0,
                     duration: duration,
                     location: {x: 0, y: 0},
+                    trim: {startTime: 0, endTime: 0},
                     width: width,
                     height: height,
                     localpath: path,
@@ -245,7 +301,6 @@ const elementControl = {
             elementControl.state.resizeTargetElementId = elementId
             elementControl.state.resizeDirection = direction
     
-            console.log('N')
         },
         action: function (x, y) {
             let elementId = elementControl.state.resizeTargetElementId
@@ -316,7 +371,7 @@ const elementPreview = {
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
                 <div id="element-${elementId}" class="element-drag" style='width: ${nugget.element.timeline[elementId].width}px; height: ${nugget.element.timeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
-                <video src="${blob}" alt="" class="element-video" width="${nugget.element.timeline[elementId].width}" height="${nugget.element.timeline[elementId].height}" draggable="false">
+                <video src="${blob}" alt="" class="element-video" draggable="false"></video>
                 <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
                 <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
@@ -354,11 +409,9 @@ const elementPreview = {
 
     hide: function (blob) {
         let elementId = blob.split('/')[3]
-        let video = document.getElementById(`element-${elementId}`).querySelector("video");
-        console.log(elementTimeline[elementId].filetype)
 
         if (elementTimeline[elementId].filetype == 'video') {
-            video.pause()
+            elementPreview.pauseVideo(elementId)
         }
         document.querySelector(`#element-${elementId}`).classList.add('d-none')
     },
@@ -369,14 +422,24 @@ const elementPreview = {
         for(key in nugget.element.timeline) {
             let blob = `blob:${location.origin}/${key}`
             let filetype = nugget.element.timeline[key].filetype
+            let condition = nugget.element.timeline[key].startTime > elementPlayer.progress || 
+                nugget.element.timeline[key].startTime + nugget.element.timeline[key].duration < elementPlayer.progress
 
-            if (nugget.element.timeline[key].startTime > elementPlayer.progress || 
-                nugget.element.timeline[key].startTime + nugget.element.timeline[key].duration < elementPlayer.progress) {
+            if (filetype == 'video') {
+                condition = elementTimeline[key].startTime + elementTimeline[key].trim.startTime > elementPlayer.progress || 
+                elementTimeline[key].startTime + elementTimeline[key].trim.endTime < elementPlayer.progress
+            }
+
+            if (condition) {
                 elementPreview.hide(blob)
             } else {
                 elementPreview.show[filetype](blob)
             }
         }
+    },
+    pauseVideo: function (elementId) {
+        let video = document.getElementById(`element-${elementId}`).querySelector("video");
+        video.pause()
     },
     pauseAllVideo: function () {
         let key;

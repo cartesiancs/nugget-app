@@ -24,16 +24,16 @@
         <div class="container-fluid h-100 ">
 
             <div id="split_top" class="row align-items-start" style="height: 80%;">
-                <div class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden" style="width: 30%;">
+                <div id="split_col_1" class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden position-relative pt-2" style="width: 30%;">
+                    <div class="split-col-bar" onmousedown="startSplitColumns(1)"></div>
 
-
-                    <button onclick="nugget.canvas.preview.export()">export</button>
-                    <button onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
-                    <button onclick="ipc.render()">render</button>
+                    <button class="btn btn-dark" onclick="nugget.canvas.preview.export()">export</button>
+                    <button class="btn btn-dark" onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
+                    <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
                     
 
 
-                    <input type="file" name="upload" id="upload">
+                    <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
 
 
                     <button class="btn btn-transparent" onclick="nugget.asset.loadPrevDirectory()"><i class="fas fa-level-up-alt text-light"></i></button>
@@ -44,18 +44,15 @@
 
                     </div>
 
-                콘텐츠
+                    콘텐츠
 
-                sdv
+                    sdv
 
-                효과
-
-
-
+                    효과
 
                 </div>
 
-                <div class="h-100 " style="width: 70%;">
+                <div id="split_col_2" class="h-100" style="width: 70%;">
                     <div class="d-flex justify-content-center">
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
@@ -124,6 +121,7 @@
 
         let valueEvent = {
             splitBottom: false,
+            splitColumns: false,
             moveElement: false,
             mouse: {
                 x: 0,
@@ -153,8 +151,14 @@
                 bottom: function (percent) {
                     document.getElementById("split_top").style.height = `${percent}%`
                     document.getElementById("split_bottom").style.height = `${100-percent}%`
-                }
-            }
+                },
+                columns: function (percent) {
+                    document.getElementById("split_col_1").style.width = `${percent}%`
+                    document.getElementById("split_col_2").style.width = `${100-percent}%`
+                },
+            },
+            minWidth: 20,
+            minHeight: 90
         }
 
 
@@ -245,6 +249,12 @@
                 page.split.bottom(per)
             }
 
+            if (valueEvent.splitColumns) {
+                let per = e.pageX/document.body.offsetWidth*100 <= page.minWidth ? page.minWidth : e.pageX/document.body.offsetWidth*100
+                page.split.columns(per)
+                nugget.canvas.preview.resize()
+            }
+
             if (nugget.element.bar.state.isDrag) {
                 let x = e.pageX - nugget.element.bar.state.criteria.x
                 let y = e.pageY - nugget.element.bar.state.criteria.y
@@ -281,16 +291,25 @@
 
         })
 
+        document.addEventListener("mouseup", (e) => {
+              valueEvent.splitBottom = false
+              valueEvent.splitColumns = false
+
+          })
+
 
           document.getElementById("split_inner_bottom").addEventListener("mousedown", (e) => {
                 e.stopPropagation();
           })
+
           document.getElementById("split_bottom").addEventListener("mousedown", (e) => {
               valueEvent.splitBottom = true
           })
-          document.getElementById("split_bottom").addEventListener("mouseup", (e) => {
-              valueEvent.splitBottom = false
-          })
+
+
+          function startSplitColumns(colNumber) {
+            valueEvent.splitColumns = true
+          }
 
 
 

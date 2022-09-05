@@ -79,6 +79,17 @@ html, body {
 
 }
 
+.split-col-bar {
+    position: absolute;
+    top: 50%;
+    right: -.2rem; 
+    transform: translateY(-50%);
+    width: .5rem;
+    height: 80%;
+    background-color: #868f9900;
+    cursor: col-resize;
+}
+
 .split-top {
     padding-top: 0.5rem;
 }

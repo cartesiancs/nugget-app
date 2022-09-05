@@ -5,7 +5,11 @@
 const canvasPreview = {
     mediaRecorder: undefined,
     resize: function () {
-        let width = window.innerWidth*0.65;
+        let innerWidth = document.getElementById("split_col_2").offsetWidth
+        let innerHeight = document.getElementById("split_col_2").offsetHeight
+
+
+        let width = innerWidth*0.95;
         let height = (width*9)/16
 
         preview.width = width

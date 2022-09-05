@@ -62,7 +62,7 @@ const elementBar = {
         criteria: {x: 0, y: 0, duration: 1000},
         criteriaResize: {x: 0, y: 0}
     },
-    
+
     event: {
         drag: {
             onmousedown: function (e) {
@@ -177,7 +177,7 @@ const elementBar = {
         let resizeRangeTargetRight = elementBar.state.e.querySelector(".element-bar-hiddenspace-right")
 
         if (location == 'left') {
-            resizeRangeTargetLeft.style.width = `${(x)-5}px`
+            resizeRangeTargetLeft.style.width = `${(x+split_inner_bottom.scrollLeft)-5}px`
             elementTimeline[elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
         } else {
             resizeRangeTargetRight.style.width = `${window.innerWidth-x-elementBar.state.criteriaResize.x}px`
@@ -199,11 +199,11 @@ const elementControl = {
             let img = document.createElement('img');
             let elementId = blob.split('/')[3]
 
-            img.src = blob;
+            img.src = blob
             img.onload = function() {
-                let division = 10;
-                var width = img.width/division;
-                var height = img.height/division;
+                let division = 10
+                var width = img.width/division
+                var height = img.height/division
 
                 elementTimeline[elementId] = {
                     startTime: 0,
@@ -225,24 +225,24 @@ const elementControl = {
         },
 
         video: function (blob, path) {
-            let video = document.createElement('video');
+            let video = document.createElement('video')
             let elementId = blob.split('/')[3]
 
             video.src = blob
-            video.preload = 'metadata';
+            video.preload = 'metadata'
 
             video.onloadedmetadata = function() {
-                let division = 10;
+                let division = 10
 
-                let width = video.videoWidth/division;
-                let height = video.videoHeight/division;
+                let width = video.videoWidth/division
+                let height = video.videoHeight/division
                 let duration = video.duration*200
     
                 elementTimeline[elementId] = {
                     startTime: 0,
                     duration: duration,
                     location: {x: 0, y: 0},
-                    trim: {startTime: 0, endTime: 0},
+                    trim: {startTime: 0, endTime: duration},
                     width: width,
                     height: height,
                     localpath: path,
@@ -271,16 +271,16 @@ const elementControl = {
         //target.style.transform = `translate(${x}px, ${y}px)`
         elementTimeline[elementId].location.x = x 
         elementTimeline[elementId].location.y = y
-        preview.clear();
-        //preview.render();
+        preview.clear()
+        //preview.render()
     },
     dragover: function (event) {
-        event.stopPropagation();
-        event.preventDefault();
+        event.stopPropagation()
+        event.preventDefault()
     },
     drop: function (event) {
-        event.stopPropagation();
-        event.preventDefault();
+        event.stopPropagation()
+        event.preventDefault()
     },
     onmouseup: function (event) {
         elementControl.state.isResize = false
@@ -383,15 +383,13 @@ const elementPreview = {
     
                 </div>
                 `)
-                let video = document.getElementById(`element-${elementId}`).querySelector("video");
-                
+                let video = document.getElementById(`element-${elementId}`).querySelector("video")
                 let secondsOfRelativeTime = (elementTimeline[elementId].startTime - elementPlayer.progress) / 200
 
-                console.log(secondsOfRelativeTime)
-                video.currentTime = secondsOfRelativeTime;
+                video.currentTime = secondsOfRelativeTime
 
             } else {
-                let video = document.getElementById(`element-${elementId}`).querySelector("video");
+                let video = document.getElementById(`element-${elementId}`).querySelector("video")
                 let secondsOfRelativeTime = -(elementTimeline[elementId].startTime - elementPlayer.progress) / 200
 
                 if (!!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
@@ -401,7 +399,7 @@ const elementPreview = {
                     }
                     console.log('isPlaying')
                 } else {
-                    video.currentTime = secondsOfRelativeTime;
+                    video.currentTime = secondsOfRelativeTime
                     video.play()
                 }
 
@@ -432,17 +430,19 @@ const elementPreview = {
             if (filetype == 'video') {
                 condition = elementTimeline[key].startTime + elementTimeline[key].trim.startTime > elementPlayer.progress || 
                 elementTimeline[key].startTime + elementTimeline[key].trim.endTime < elementPlayer.progress
+
             }
 
             if (condition) {
                 elementPreview.hide(blob)
             } else {
                 elementPreview.show[filetype](blob)
+
             }
         }
     },
     pauseVideo: function (elementId) {
-        let video = document.getElementById(`element-${elementId}`).querySelector("video");
+        let video = document.getElementById(`element-${elementId}`).querySelector("video")
         video.pause()
     },
     pauseAllVideo: function () {
@@ -452,7 +452,7 @@ const elementPreview = {
             let filetype = elementTimeline[key].filetype
 
             if (filetype == 'video') {
-                let video = document.getElementById(`element-${key}`).querySelector("video");
+                let video = document.getElementById(`element-${key}`).querySelector("video")
                 video.pause()
             }
         }

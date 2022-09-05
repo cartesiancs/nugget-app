@@ -37,6 +37,43 @@ html, body {
     font-weight: 700 !important;
 }
 
+
+.text-ellipsis {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.1rem 0.5rem 0.1rem 0.5rem;
+    text-overflow: ellipsis;
+    overflow: hidden; 
+    white-space: nowrap;
+
+}
+
+.text-ellipsis-scroll {
+    width: 95%;
+    margin-top: 0.5rem;
+    padding: 0.1rem 0.5rem 0.1rem 0.5rem;
+    text-overflow: ellipsis;
+    overflow: hidden; 
+    white-space: nowrap;
+    animation-play-state: paused;
+
+}
+
+.asset:hover > .text-ellipsis-scroll  {
+    width: 750%;
+    display: inline-block;
+    white-space: nowrap;
+    animation: scrollText 5s infinite linear;
+    padding-left: 220%; 
+}
+
+
+  @keyframes scrollText {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
 .card-title{
     font-family: 'Noto Sans KR', sans-serif;
 
@@ -168,16 +205,14 @@ body.swal2-height-auto {
 .element-bar {
     position: relative;
     margin-bottom: 0.5rem;
-
-    border-radius: 3px;
     background-color: #495057;
     color: #ffffff;
     padding: 0.3rem;
-
     text-overflow: ellipsis;
     overflow: hidden; 
     white-space: nowrap;
 }
+
 
 .element-image {
     width: 100%;

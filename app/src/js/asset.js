@@ -1,20 +1,23 @@
 const asset = {
     nowDirectory: '',
     loadFile: function (filename, dir) {
+        let splitedFilename = filename.split('.')
+        let splitedFilenameLength = splitedFilename.length
+        let fileType = splitedFilenameLength <= 2 ? '' : splitedFilename[splitedFilenameLength-1]
         document.querySelector("#assetBrowser").
             insertAdjacentHTML("beforeend", `
-            <div class="col-6 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="nugget.asset.add('${dir}/${filename}', '${dir}')">
+            <div class="col-4 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="nugget.asset.add('${dir}/${filename}', '${dir}')">
                 <i class="fas fa-file icon-lg align-self-center"></i>
-                <b class="align-self-center text-light">${filename}</b>
+                <b class="align-self-center text-ellipsis-scroll text-light text-center">${filename}</b> 
             </div>`)
     },
     loadFolder: function (filename, dir) {
         
         document.querySelector("#assetBrowser").
             insertAdjacentHTML("beforeend", `
-            <div class="col-6 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="ipc.requestAllDir('${dir}/${filename}')">
+            <div class="col-4 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="ipc.requestAllDir('${dir}/${filename}')">
                 <i class="fas fa-folder icon-lg align-self-center"></i>
-                <b class="align-self-center text-light">${filename}</b>
+                <b class="align-self-center text-ellipsis text-light text-center">${filename}</b>
             </div>`)
     },
     loadPrevDirectory: function () {

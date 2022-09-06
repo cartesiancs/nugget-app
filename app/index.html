@@ -27,30 +27,37 @@
                 <div id="split_col_1" class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden position-relative pt-2" style="width: 30%;">
                     <div class="split-col-bar" onmousedown="startSplitColumns(1)"></div>
 
-                    <button class="btn btn-dark" onclick="nugget.canvas.preview.export()">export</button>
-                    <button class="btn btn-dark" onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
-                    <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
+                    <ul class="nav nav-pills mb-3 mt-2 overflow-x-scroll" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                          <button class="btn btn-dark me-2 active" id="pills-asset-tab" data-bs-toggle="pill" data-bs-target="#pills-asset" type="button" role="tab" aria-controls="pills-asset" aria-selected="true">에셋</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="btn btn-dark me-2 " id="pills-preset-tab" data-bs-toggle="pill" data-bs-target="#pills-preset" type="button" role="tab" aria-controls="pills-preset" aria-selected="false">프리셋</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="btn btn-dark me-2 " id="pills-render-tab" data-bs-toggle="pill" data-bs-target="#pills-render" type="button" role="tab" aria-controls="pills-render" aria-selected="false">랜더링</button>
+                        </li>
+                    </ul>
                     
-
-
-                    <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
-
-
-                    <button class="btn btn-transparent" onclick="nugget.asset.loadPrevDirectory()"><i class="fas fa-level-up-alt text-light"></i></button>
-
-                    <div id="assetBrowser" class="row px-2">
-
-                        
-
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade show active" id="pills-asset" role="tabpanel" aria-labelledby="pills-asset-tab">
+                            <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
+                            <button class="btn btn-transparent" onclick="nugget.asset.loadPrevDirectory()"><i class="fas fa-level-up-alt text-light"></i></button>
+        
+                            <div id="assetBrowser" class="row px-2"></div>
+                        </div>
+                        <div class="tab-pane fade" id="pills-preset" role="tabpanel" aria-labelledby="pills-preset-tab">
+                            
+                        </div>
+                        <div class="tab-pane fade" id="pills-render" role="tabpanel" aria-labelledby="pills-render-tab">
+                            <button class="btn btn-dark" onclick="nugget.canvas.preview.export()">export</button>
+                            <button class="btn btn-dark" onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
+                            <button class="btn btn-green-fill" onclick="ipc.render()">render</button>
+                        </div>
                     </div>
-
-                    콘텐츠
-
-                    sdv
-
-                    효과
-
+                    
                 </div>
+
 
                 <div id="split_col_2" class="h-100" style="width: 70%;">
                     <div class="d-flex justify-content-center">
@@ -67,19 +74,16 @@
                         <button id="playToggle" class="btn btn-transparent" onclick="nugget.element.player.start()"><i class="fas fa-play text-light"></i></button>
                         <button class="btn btn-transparent" onclick="nugget.element.player.reset()"><i class="fas fa-backward text-light"></i></button>
                     </div>
-
                 </div>
 
             </div>
 
     
             <div id="split_bottom" class="row split-top align-items-end cursor-row-resize bg-darker line-top" style="height: 20%;">
-
                 <div id="split_inner_bottom" class="col-12 cursor-default line" style="height: 100%;" onmouseup="nugget.element.bar.event.drag.onmouseup(this); nugget.element.bar.event.resize.onmouseup(this);">
                     <div id="timeline_bar" class="timeline-bar" style="left: 0px;">
 
                     </div>
-
                 </div>
             </div>
         </div>

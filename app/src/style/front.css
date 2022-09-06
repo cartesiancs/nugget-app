@@ -9,6 +9,12 @@ html, body {
     overscroll-behavior-x: none;
 }
 
+input[type='file']::file-selector-button {
+    background-color: #16181b;
+    color: #ffffff;
+  }
+
+
 .bg-darklight {
     background-color: #495057;
 }
@@ -275,6 +281,10 @@ body.swal2-height-auto {
 
 .overflow-x-hidden {
     overflow-x: hidden;
+}
+
+.overflow-x-scroll {
+    overflow-x: scroll;
 }
 
 .resize-n {

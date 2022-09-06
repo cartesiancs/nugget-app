@@ -120,8 +120,10 @@ const elementBar = {
         let splitedFilepath = elementTimeline[elementId].localpath.split('/')
         let filepath = splitedFilepath[splitedFilepath.length-1]
 
+        let elementBarBackgroundColor = elementBar.getRandomColor()
+
         let insertDynamicElement;
-        let insertStaticElement = `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+        let insertStaticElement = `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
             ${filepath}
             <div class="element-bar-resize-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'left')"></div>
             <div class="element-bar-resize-right position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'right')"></div>
@@ -129,7 +131,7 @@ const elementBar = {
 
 
         if (filetype == 'video') {
-            insertDynamicElement = `<div class="element-bar" style="width: ${width}px; left: 0px;" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+            insertDynamicElement = `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
             ${filepath}
             <div class="element-bar-hiddenspace-left position-absolute">
                 <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedownrange(this, 'left')">
@@ -184,6 +186,10 @@ const elementBar = {
             elementTimeline[elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
         }
     },
+    getRandomColor: function () {
+        let color = "#" + Math.round(Math.random() * 0xffffff).toString(16) + '51'
+        return color
+    }
 }
 
 const elementControl = {

@@ -2,17 +2,24 @@ const { ipcRenderer } = require('electron')
 
 
 ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
+    let fileLists = {}
     nugget.asset.nowDirectory = dir
     assetBrowser.innerHTML = ''
     for (const key in result) {
         if (Object.hasOwnProperty.call(result, key)) {
             const element = result[key];
             if (!element.isDirectory) {
-                nugget.asset.loadFile(element.title, dir)
+                fileLists[key] = element
             } else {
                 nugget.asset.loadFolder(element.title, dir)
-
             }
+        }
+    }
+
+    for (const file in fileLists) {
+        if (Object.hasOwnProperty.call(fileLists, file)) {
+            const element = fileLists[file];
+            nugget.asset.loadFile(element.title, dir)
         }
     }
 })

@@ -42,7 +42,17 @@
                     <div class="tab-content" id="pills-tabContent">
                         <div class="tab-pane fade show active" id="pills-asset" role="tabpanel" aria-labelledby="pills-asset-tab">
                             <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
-                            <button class="btn btn-transparent" onclick="nugget.asset.loadPrevDirectory()"><i class="fas fa-level-up-alt text-light"></i></button>
+                            <div class="row p-0 mt-2">
+                                <div class="col-2">
+                                    <button class="btn btn-transparent" onclick="nugget.asset.loadPrevDirectory()"><i class="fas fa-level-up-alt text-light"></i></button>
+
+                                </div>
+
+                                <div class="col-10">
+                                    <input id="assetDir" type="text" class="form-control" aria-describedby="basic-addon1" value="" disabled>
+                                </div>
+
+                            </div>
         
                             <div id="assetBrowser" class="row px-2"></div>
                         </div>
@@ -60,11 +70,11 @@
 
 
                 <div id="split_col_2" class="h-100" style="width: 70%;">
-                    <div class="d-flex justify-content-center">
+                    <div class="d-flex justify-content-center" onmouseup="nugget.element.control.onmouseup(event)">
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
                             <div id="control" class="control">
-                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)" onmouseup="nugget.element.control.onmouseup(event)">
+                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)" >
     
                                 </div>
                             </div>
@@ -205,43 +215,7 @@
 
 
 
-        document.addEventListener("dragstart", (e) => {
-            let target = e.target
 
-            if (target.classList.contains('element-drag')) {
-                e.dataTransfer.effectAllowed = "copyMove";
-
-                //e.preventDefault();
-
-
-                valueEvent.element.isDrag = true
-                valueEvent.element.e = target.parentNode
-
-                valueEvent.element.initial.x = e.pageX - Number(target.style.left.split('px')[0])
-                valueEvent.element.initial.y = e.pageY - Number(target.style.top.split('px')[0])
-
-            }
-        })
-
-        document.addEventListener("drag", (e) => {
-            let target = e.target
-            //console.log(target, target.classList.contains('element-drag'))
-            if (target.classList.contains('element-drag')) {
-                let x =  e.clientX -valueEvent.element.initial.x
-                let y = e.clientY -valueEvent.element.initial.y
-                if (e.clientX + e.clientY != 0) nugget.element.control.drag(target, x, y);
-
-            }
-        })
-
-
-
-        document.addEventListener("dragend", (e) => {
-            let target = e.target
-            if (target.classList.contains('element-drag')) {
-                valueEvent.element.isDrag = false
-            }
-        })
 
 
         document.addEventListener("mousemove", (e) => {
@@ -282,6 +256,14 @@
                 }
 
             }
+
+
+            if (nugget.element.control.state.isDrag) {
+                let x =  e.clientX - nugget.element.control.state.criteriaDrag.x
+                let y = e.clientY - nugget.element.control.state.criteriaDrag.y
+                if (e.clientX + e.clientY != 0) nugget.element.control.drag(x, y);
+            }
+
 
             if (nugget.element.control.state.isResize) {
                 const videoBox = document.querySelector("#video");

@@ -194,10 +194,28 @@ const elementBar = {
 
 const elementControl = {
     state: {
+        isDrag: false,
         isResize: false,
+        e: undefined,
+        criteriaDrag: {x: 0, y: 0},
         criteriaResize: {x: 0, y: 0, w: 0, h: 0},
         resizeDirection: '',
         resizeTargetElementId: ''
+    },
+
+    event: {
+        drag: {
+            onmousedown: function (e) {
+                elementControl.state.isDrag = true
+                elementControl.state.e = e
+                elementControl.state.criteriaDrag.x = valueEvent.mouse.x - Number(elementControl.state.e.style.left.replace(/[^0-9]/g, ""))
+                elementControl.state.criteriaDrag.y = valueEvent.mouse.y - Number(elementControl.state.e.style.top.replace(/[^0-9]/g, ""))
+
+            },
+            onmouseup: function (e) {
+                elementControl.state.isDrag = false
+            }
+        }
     },
 
     upload: {
@@ -261,7 +279,8 @@ const elementControl = {
             }
         }
     },
-    drag: function (target, x, y) {
+    drag: function (x, y) {
+        let target = elementControl.state.e
         let checkTagName = ['img', 'video']
         let existTagName = ''
         for (let tagname = 0; tagname < checkTagName.length; tagname++) {
@@ -277,8 +296,7 @@ const elementControl = {
         //target.style.transform = `translate(${x}px, ${y}px)`
         elementTimeline[elementId].location.x = x 
         elementTimeline[elementId].location.y = y
-        preview.clear()
-        //preview.render()
+
     },
     dragover: function (event) {
         event.stopPropagation()
@@ -290,18 +308,21 @@ const elementControl = {
     },
     onmouseup: function (event) {
         elementControl.state.isResize = false
+        elementControl.state.isDrag = false
+        console.log("A")
 
         for (const elementId in elementTimeline) {
             if (Object.hasOwnProperty.call(elementTimeline, elementId)) {
                 let parentBody = document.querySelector(`#element-${elementId}`)
-                parentBody.setAttribute("draggable", 'true')                
+                // parentBody.setAttribute("draggable", 'true')                
             }
         }
     },
     resize: {
         init: function (elementId, direction = 'n') {
             let parentBody = document.querySelector(`#element-${elementId}`)
-            parentBody.setAttribute("draggable", 'false')
+            //parentBody.setAttribute("draggable", 'false')
+            elementControl.state.isDrag = false
             elementControl.state.criteriaResize.w = Number(parentBody.style.width.split('px')[0])
             elementControl.state.criteriaResize.h = Number(parentBody.style.height.split('px')[0])
             elementControl.state.criteriaResize.x = Number(parentBody.style.left.split('px')[0])
@@ -313,6 +334,8 @@ const elementControl = {
     
         },
         action: function (x, y) {
+            elementControl.state.isDrag = false
+
             let elementId = elementControl.state.resizeTargetElementId
             let targetBody = document.querySelector(`#element-${elementId}`)
 
@@ -362,7 +385,7 @@ const elementPreview = {
             let elementId = blob.split('/')[3]
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
+                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
                 <img src="${blob}" alt="" class="element-image" draggable="false">
                 <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
@@ -380,7 +403,7 @@ const elementPreview = {
             let elementId = blob.split('/')[3]
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' draggable="true">
+                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
                 <video src="${blob}" alt="" class="element-video" draggable="false"></video>
                 <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>

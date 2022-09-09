@@ -4,6 +4,8 @@ const { ipcRenderer } = require('electron')
 ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
     let fileLists = {}
     nugget.asset.nowDirectory = dir
+    assetDir.value = dir
+
     assetBrowser.innerHTML = ''
     for (const key in result) {
         if (Object.hasOwnProperty.call(result, key)) {

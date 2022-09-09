@@ -25,6 +25,7 @@ const asset = {
         let splitPrevDirectory = splitNowDirectory.slice(-splitNowDirectory.length, -1)
 
         ipc.requestAllDir(splitPrevDirectory.join('/'))
+
     },
     add: function (url, path) {
         fetch(`file://${url}`)

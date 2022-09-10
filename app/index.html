@@ -242,7 +242,7 @@
 
             if (nugget.element.bar.state.isResize) {
                 nugget.element.bar.state.isDrag = false
-                let elementId = nugget.element.bar.state.blob.split('/')[3]
+                let elementId = nugget.element.bar.state.elementId
                 let filetype = nugget.element.timeline[elementId].filetype
                 let x = e.pageX - nugget.element.bar.state.criteriaResize.x
                 let y = e.pageY - nugget.element.bar.state.criteriaResize.y

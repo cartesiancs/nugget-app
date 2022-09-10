@@ -1,3 +1,6 @@
+import { v4 as uuidv4 } from 'uuid';
+
+
 const elementTimeline = {
     /*
     "aa-aa": {
@@ -9,6 +12,8 @@ const elementTimeline = {
     }
     */
 }
+
+const elementLists = {}
 
 const elementPlayer = {
     scroller: undefined,
@@ -59,6 +64,7 @@ const elementBar = {
         resizeRangeRight: 0,
         e: undefined,
         blob: '',
+        elementId: '',
         criteria: {x: 0, y: 0, duration: 1000},
         criteriaResize: {x: 0, y: 0}
     },
@@ -66,7 +72,7 @@ const elementBar = {
     event: {
         drag: {
             onmousedown: function (e) {
-                elementBar.state.blob = e.getAttribute('value')
+                elementBar.state.elementId = e.getAttribute('value')
                 elementBar.state.isDrag = true
                 elementBar.state.e = e
                 elementBar.state.criteria.x = valueEvent.mouse.x - Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
@@ -80,18 +86,18 @@ const elementBar = {
         resize: {
             onmousedownrange: function (e, location = 'left') {
                 elementBar.state.e = e.parentNode.parentNode
-                elementBar.state.blob = elementBar.state.e.getAttribute('value')
+                elementBar.state.elementId = elementBar.state.e.getAttribute('value')
                 elementBar.state.isResize = true
                 elementBar.state.resizeLocation = location
                 elementBar.state.isDrag = false
-                elementBar.state.criteria.duration = elementTimeline[elementBar.state.blob.split('/')[3]].duration + Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
+                elementBar.state.criteria.duration = elementTimeline[elementBar.state.elementId].duration + Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
                 elementBar.state.criteriaResize.x = Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
                 
                 elementBar.state.resizeRangeLeft = Number(elementBar.state.e.querySelector(".element-bar-hiddenspace-left").style.width.split('px')[0])
                 elementBar.state.resizeRangeRight = Number(elementBar.state.e.querySelector(".element-bar-hiddenspace-right").style.width.split('px')[0])
             },
             onmousedown: function (e, location = 'left') {
-                elementBar.state.blob = e.parentNode.getAttribute('value')
+                elementBar.state.elementId = e.parentNode.getAttribute('value')
                 elementBar.state.isResize = true
                 elementBar.state.resizeLocation = location
                 elementBar.state.isDrag = false
@@ -102,7 +108,7 @@ const elementBar = {
                     Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
                 elementBar.state.criteriaResize.y = valueEvent.mouse.y
                 
-                elementBar.state.criteria.duration = elementTimeline[elementBar.state.blob.split('/')[3]].duration + Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
+                elementBar.state.criteria.duration = elementTimeline[elementBar.state.elementId].duration + Number(elementBar.state.e.style.left.replace(/[^0-9]/g, ""))
 
             },
             onmouseup: function (e) {
@@ -111,9 +117,8 @@ const elementBar = {
             }
         }
     },
-    append: function (blob) {
+    append: function (elementId) {
         let body = document.querySelector("#split_inner_bottom")
-        let elementId = blob.split('/')[3]
         let width = elementTimeline[elementId].duration
         let filetype = elementTimeline[elementId].filetype
 
@@ -123,7 +128,7 @@ const elementBar = {
         let elementBarBackgroundColor = elementBar.getRandomColor()
 
         let insertDynamicElement;
-        let insertStaticElement = `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+        let insertStaticElement = `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${elementId}">
             ${filepath}
             <div class="element-bar-resize-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'left')"></div>
             <div class="element-bar-resize-right position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedown(this, 'right')"></div>
@@ -131,7 +136,7 @@ const elementBar = {
 
 
         if (filetype == 'video') {
-            insertDynamicElement = `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${blob}">
+            insertDynamicElement = `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${elementId}">
             ${filepath}
             <div class="element-bar-hiddenspace-left position-absolute">
                 <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedownrange(this, 'left')">
@@ -149,12 +154,12 @@ const elementBar = {
         body.insertAdjacentHTML("beforeend", insertElement)
     },
     drag: function (x, y) {
-        let elementId = elementBar.state.blob.split('/')[3]
+        let elementId = elementBar.state.elementId
         elementBar.state.e.style.left = `${x}px`
         elementTimeline[elementId].startTime = x
     },
     resizeDurationInTimeline: function (x, location = 'left') {
-        let elementId = elementBar.state.blob.split('/')[3]
+        let elementId = elementBar.state.elementId
         let duration = elementBar.state.criteria.duration 
 
         if (location == 'left') {
@@ -170,7 +175,7 @@ const elementBar = {
         }
     },
     resizeRangeOnElement: function (x, location = 'left') {
-        let elementId = elementBar.state.blob.split('/')[3]
+        let elementId = elementBar.state.elementId
         let duration = elementBar.state.criteria.duration 
         let originResizeRangeLeft = elementBar.state.resizeRangeLeft
         let originResizeRangeRight = elementBar.state.resizeRangeRight
@@ -197,6 +202,7 @@ const elementControl = {
         isDrag: false,
         isResize: false,
         e: undefined,
+        elementId: '',
         criteriaDrag: {x: 0, y: 0},
         criteriaResize: {x: 0, y: 0, w: 0, h: 0},
         resizeDirection: '',
@@ -221,7 +227,7 @@ const elementControl = {
     upload: {
         image: function (blob, path) {
             let img = document.createElement('img');
-            let elementId = blob.split('/')[3]
+            let elementId = elementControl.generateUUID()
 
             img.src = blob
             img.onload = function() {
@@ -240,8 +246,12 @@ const elementControl = {
 
                 }
 
-                elementPreview.show.image(blob)
-                elementBar.append(blob)
+                elementLists[elementId] = {
+                    blob: blob
+                }
+
+                elementPreview.show.image(elementId)
+                elementBar.append(elementId)
 
             }
 
@@ -250,7 +260,7 @@ const elementControl = {
 
         video: function (blob, path) {
             let video = document.createElement('video')
-            let elementId = blob.split('/')[3]
+            let elementId = elementControl.generateUUID()
 
             video.src = blob
             video.preload = 'metadata'
@@ -272,9 +282,13 @@ const elementControl = {
                     localpath: path,
                     filetype: 'video'
                 }
+
+                elementLists[elementId] = {
+                    blob: blob
+                }
                 
-                elementPreview.show.video(blob)
-                elementBar.append(blob)
+                elementPreview.show.video(elementId)
+                elementBar.append(elementId)
 
             }
         }
@@ -289,7 +303,7 @@ const elementControl = {
             }
         }
 
-        let elementId = target.querySelector(existTagName).getAttribute('src').split('/')[3]
+        let elementId = target.querySelector(existTagName).parentNode.getAttribute('id').split("element-")[1]
 
         target.style.top = `${y}px`
         target.style.left = `${x}px`
@@ -309,7 +323,6 @@ const elementControl = {
     onmouseup: function (event) {
         elementControl.state.isResize = false
         elementControl.state.isDrag = false
-        console.log("A")
 
         for (const elementId in elementTimeline) {
             if (Object.hasOwnProperty.call(elementTimeline, elementId)) {
@@ -317,6 +330,11 @@ const elementControl = {
                 // parentBody.setAttribute("draggable", 'true')                
             }
         }
+    },
+
+    generateUUID: function () {
+        let uuid = uuidv4()
+        return uuid
     },
     resize: {
         init: function (elementId, direction = 'n') {
@@ -381,8 +399,8 @@ const elementControl = {
 const elementPreview = {
     previewRatio: 1920/preview.width, // 1920x1080을 기준으로
     show: {
-        image: function (blob) {
-            let elementId = blob.split('/')[3]
+        image: function (elementId) {
+            let blob = elementLists[elementId].blob
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
                 <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
@@ -399,8 +417,8 @@ const elementPreview = {
             }
     
         },
-        video: function (blob) {
-            let elementId = blob.split('/')[3]
+        video: function (elementId) {
+            let blob = elementLists[elementId].blob
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
                 <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
@@ -435,11 +453,10 @@ const elementPreview = {
                 document.querySelector(`#element-${elementId}`).classList.remove('d-none')
             }
     
-        },
+        }
     },
 
-    hide: function (blob) {
-        let elementId = blob.split('/')[3]
+    hide: function (elementId) {
 
         if (elementTimeline[elementId].filetype == 'video') {
             elementPreview.pauseVideo(elementId)
@@ -447,26 +464,25 @@ const elementPreview = {
         document.querySelector(`#element-${elementId}`).classList.add('d-none')
     },
     play: function () {
-        let key;
+        let elementId;
         //preview.render();
 
-        for(key in elementTimeline) {
-            let blob = `blob:${location.origin}/${key}`
-            let filetype = elementTimeline[key].filetype
-            let condition = elementTimeline[key].startTime > elementPlayer.progress || 
-                elementTimeline[key].startTime + elementTimeline[key].duration < elementPlayer.progress
+        for(elementId in elementTimeline) {
+            let blob = `blob:${location.origin}/${elementLists[elementId]}`
+            let filetype = elementTimeline[elementId].filetype
+            let condition = elementTimeline[elementId].startTime > elementPlayer.progress || 
+                elementTimeline[elementId].startTime + elementTimeline[elementId].duration < elementPlayer.progress
 
             if (filetype == 'video') {
-                condition = elementTimeline[key].startTime + elementTimeline[key].trim.startTime > elementPlayer.progress || 
-                elementTimeline[key].startTime + elementTimeline[key].trim.endTime < elementPlayer.progress
+                condition = elementTimeline[elementId].startTime + elementTimeline[elementId].trim.startTime > elementPlayer.progress || 
+                elementTimeline[elementId].startTime + elementTimeline[elementId].trim.endTime < elementPlayer.progress
 
             }
 
             if (condition) {
-                elementPreview.hide(blob)
+                elementPreview.hide(elementId)
             } else {
-                elementPreview.show[filetype](blob)
-
+                elementPreview.show[filetype](elementId)
             }
         }
     },

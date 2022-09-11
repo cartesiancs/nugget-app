@@ -58,6 +58,7 @@ function createWindow () {
 }
 
 let dir = "/Users/hhj"
+let elementCounts = 1
 
 
 
@@ -77,7 +78,7 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
 })
 
 ipcMain.on('RENDER', (evt, elements, options) => {
-  let elementCounts = 1
+  elementCounts = 1
   let resizeRatio = options.previewRatio
   let mediaFileLists = ['image', 'video']
   let textFileLists = ['text']
@@ -86,6 +87,15 @@ ipcMain.on('RENDER', (evt, elements, options) => {
   let command = ffmpeg()
   command.input('/Users/hhj/Desktop/_IMAGES/background.jpeg').loop(options.videoDuration)
 
+  filter.push({
+    "filter": "scale",
+    "options": {
+      "w": 1920,
+      "h": 1080
+    },
+    "inputs": `[0:v]`,
+    "outputs": `tmp`
+  })
 
 
   for (const key in elements) {
@@ -118,6 +128,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
 
 
+      console.log('text', elementCounts)
 
 
     }
@@ -160,8 +171,8 @@ function addFilterMedia(object) {
       "w": options.width,
       "h": options.height
     },
-    "inputs": `[${object.elementCounts}:v]`,
-    "outputs": `image${object.elementCounts}`
+    "inputs": `[${elementCounts}:v]`,
+    "outputs": `image${elementCounts}`
   })
 
   object.filter.push({
@@ -171,11 +182,11 @@ function addFilterMedia(object) {
       "x": options.x,
       "y": options.y
     },
-    "inputs": object.elementCounts == 1 ? `[0:v][image${object.elementCounts}]` : `[tmp][image${object.elementCounts}]`,
+    "inputs": `[tmp][image${elementCounts}]`,
     "outputs": `tmp`
   })
 
-  object.elementCounts += 1
+  elementCounts += 1
 }
 
 
@@ -205,12 +216,11 @@ function addFilterMedia(object) {
       "x": options.x,
       "y": options.y
     },
-    "inputs": object.elementCounts == 1 ? `[0:v]` : `[tmp]`,
+    "inputs": `tmp`,
     "outputs": `tmp`
   })
 
 
-  //object.elementCounts += 1
 }
 
 

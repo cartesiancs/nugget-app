@@ -221,10 +221,36 @@ const elementControl = {
             onmouseup: function (e) {
                 elementControl.state.isDrag = false
             }
+        },
+        resize: {
+            onmousedown: function (elementId, direction = 'n') {
+                let parentBody = document.querySelector(`#element-${elementId}`)
+                //parentBody.setAttribute("draggable", 'false')
+                elementControl.state.isDrag = false
+                elementControl.state.criteriaResize.w = Number(parentBody.style.width.split('px')[0])
+                elementControl.state.criteriaResize.h = Number(parentBody.style.height.split('px')[0])
+                elementControl.state.criteriaResize.x = Number(parentBody.style.left.split('px')[0])
+                elementControl.state.criteriaResize.y = Number(parentBody.style.top.split('px')[0])
+        
+                elementControl.state.isResize = true
+                elementControl.state.resizeTargetElementId = elementId
+                elementControl.state.resizeDirection = direction
+        
+            },
+        },
+        textinput: {
+            onkeyup: function (elementId) {
+                let elementBody = document.querySelector(`#element-${elementId}`)
+                let inputTarget = elementBody.querySelector('input')
+                let inputValue = inputTarget.value
+
+                console.log(elementId, inputValue)
+                elementTimeline[elementId].text = inputValue
+            }
         }
     },
 
-    upload: {
+    add: {
         image: function (blob, path) {
             let img = document.createElement('img');
             let elementId = elementControl.generateUUID()
@@ -254,8 +280,6 @@ const elementControl = {
                 elementBar.append(elementId)
 
             }
-
-
         },
 
         video: function (blob, path) {
@@ -291,11 +315,28 @@ const elementControl = {
                 elementBar.append(elementId)
 
             }
-        }
+        },
+
+        text: function () {
+            let elementId = elementControl.generateUUID()
+
+            elementTimeline[elementId] = {
+                startTime: 0,
+                duration: 1000,
+                text: "",
+                location: {x: 0, y: 0},
+                localpath: '/TESTELEMENT',
+                filetype: 'text'
+            }
+
+            elementPreview.show.text(elementId)
+            elementBar.append(elementId)
+
+        },
     },
     drag: function (x, y) {
         let target = elementControl.state.e
-        let checkTagName = ['img', 'video']
+        let checkTagName = ['img', 'video', 'input']
         let existTagName = ''
         for (let tagname = 0; tagname < checkTagName.length; tagname++) {
             if (target.querySelector(checkTagName[tagname])) {
@@ -337,20 +378,7 @@ const elementControl = {
         return uuid
     },
     resize: {
-        init: function (elementId, direction = 'n') {
-            let parentBody = document.querySelector(`#element-${elementId}`)
-            //parentBody.setAttribute("draggable", 'false')
-            elementControl.state.isDrag = false
-            elementControl.state.criteriaResize.w = Number(parentBody.style.width.split('px')[0])
-            elementControl.state.criteriaResize.h = Number(parentBody.style.height.split('px')[0])
-            elementControl.state.criteriaResize.x = Number(parentBody.style.left.split('px')[0])
-            elementControl.state.criteriaResize.y = Number(parentBody.style.top.split('px')[0])
-    
-            elementControl.state.isResize = true
-            elementControl.state.resizeTargetElementId = elementId
-            elementControl.state.resizeDirection = direction
-    
-        },
+
         action: function (x, y) {
             elementControl.state.isDrag = false
 
@@ -361,26 +389,21 @@ const elementControl = {
                 case 'n':
                     targetBody.style.top = `${elementControl.state.criteriaResize.y+y}px`
                     targetBody.style.height = `${elementControl.state.criteriaResize.h-y}px`
-
                     break;
 
                 case 's':
                     targetBody.style.top = `${elementControl.state.criteriaResize.y}px`
                     targetBody.style.height = `${y}px`
-
                     break;
 
                 case 'w':
                     targetBody.style.left = `${elementControl.state.criteriaResize.x+x}px`
                     targetBody.style.width = `${elementControl.state.criteriaResize.w-x}px`
-
                     break;
 
                 case 'e':
-
                     targetBody.style.left = `${elementControl.state.criteriaResize.x}px`
                     targetBody.style.width = `${x}px`
-
                     break;
             
                 default:
@@ -405,10 +428,10 @@ const elementPreview = {
                 control.insertAdjacentHTML("beforeend", `
                 <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
                 <img src="${blob}" alt="" class="element-image" draggable="false">
-                <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
-                <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
-                <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
-                <div class="resize-e" onmousedown="nugget.element.control.resize.init('${elementId}', 'e')"></div>
+                <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
+                <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>
+                <div class="resize-w" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'w')"></div>
+                <div class="resize-e" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'e')"></div>
     
                 </div>
                 `)
@@ -423,10 +446,10 @@ const elementPreview = {
                 control.insertAdjacentHTML("beforeend", `
                 <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
                 <video src="${blob}" alt="" class="element-video" draggable="false"></video>
-                <div class="resize-n" onmousedown="nugget.element.control.resize.init('${elementId}', 'n')"></div>
-                <div class="resize-s" onmousedown="nugget.element.control.resize.init('${elementId}', 's')"></div>
-                <div class="resize-w" onmousedown="nugget.element.control.resize.init('${elementId}', 'w')"></div>
-                <div class="resize-e" onmousedown="nugget.element.control.resize.init('${elementId}', 'e')"></div>
+                <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
+                <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>
+                <div class="resize-w" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'w')"></div>
+                <div class="resize-e" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'e')"></div>
     
                 </div>
                 `)
@@ -453,7 +476,25 @@ const elementPreview = {
                 document.querySelector(`#element-${elementId}`).classList.remove('d-none')
             }
     
-        }
+        },
+        text: function (elementId) {
+            if (document.getElementById(`element-${elementId}`) == null) {
+                control.insertAdjacentHTML("beforeend", `
+                <div id="element-${elementId}" class="element-drag" style='top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
+                <input type="text" class="form-transparent element-text" draggable="false" onkeyup="nugget.element.control.event.textinput.onkeyup('${elementId}')">
+                <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
+                <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>
+                <div class="resize-w" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'w')"></div>
+                <div class="resize-e" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'e')"></div>
+    
+                </div>
+                `)
+            } else {
+                document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+            }
+    
+        },
+
     },
 
     hide: function (elementId) {

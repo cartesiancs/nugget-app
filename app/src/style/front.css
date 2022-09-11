@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+
 
 html, body {
     -ms-user-select: none; 
@@ -15,7 +17,24 @@ input[type='file']::file-selector-button {
   }
 
 
+.form-transparent {
+    background-color: transparent;
+    outline: 0;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    margin: 0px;
 
+}
+
+.form-transparent:focus {
+    background-color: transparent;
+
+    outline: 0;
+    border-color: #d5d5d5 !important;
+    box-shadow: 0 0 5px #d5d5d5 !important;
+
+}
 
 .bg-darklight {
     background-color: #495057;
@@ -245,6 +264,14 @@ body.swal2-height-auto {
     height: 100%;
     cursor: grab !important;
     object-fit: inherit;
+}
+
+.element-text {
+    width: 100%;
+    height: 100%;
+    cursor: grab !important;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
 }
 
 .element-drag {

@@ -36,7 +36,7 @@ const asset = {
             let blobUrl = URL.createObjectURL(blob);
             let blobType = blob.type.split('/')[0] // image, video ...
             
-            nugget.element.control.upload[blobType](blobUrl, url)
+            nugget.element.control.add[blobType](blobUrl, url)
         });
 
     }

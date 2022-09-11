@@ -79,6 +79,8 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
 ipcMain.on('RENDER', (evt, elements, options) => {
   let elementCounts = 1
   let resizeRatio = options.previewRatio
+  let mediaFileLists = ['image', 'video']
+  let textFileLists = ['text']
 
   let filter = []
   let command = ffmpeg()
@@ -90,40 +92,34 @@ ipcMain.on('RENDER', (evt, elements, options) => {
     if (Object.hasOwnProperty.call(elements, key)) {
       const element = elements[key];
       //console.log(element)
-      command.input(element.localpath)
 
-      let options = {
-        width: String(element.width*resizeRatio),
-        height: String(element.height*resizeRatio),
-        x: String(element.location.x*resizeRatio),
-        y: String(element.location.y*resizeRatio),
-        startTime: element.startTime/200,
-        endTime: (element.startTime/200) + (element.duration/200)
+      let isMedia = mediaFileLists.indexOf(element.filetype) >= 0;
+      let isText = textFileLists.indexOf(element.filetype) >= 0;
+
+      if(isMedia)  {
+        addFilterMedia({
+          element: element,
+          command: command,
+          filter: filter,
+          elementCounts: elementCounts,
+          projectOptions: options
+        })
+      } else if (isText) {
+        console.log('text')
+        addFilterText({
+          element: element,
+          command: command,
+          filter: filter,
+          elementCounts: elementCounts,
+          projectOptions: options
+        })
+
       }
 
 
-      filter.push({
-        "filter": "scale",
-        "options": {
-          "w": options.width,
-          "h": options.height
-        },
-        "inputs": `[${elementCounts}:v]`,
-        "outputs": `image${elementCounts}`
-      })
 
-      filter.push({
-        "filter": "overlay",
-        "options": {
-          "enable": `between(t,${options.startTime},${options.endTime})`,
-          "x": options.x,
-          "y": options.y
-        },
-        "inputs": elementCounts == 1 ? `[0:v][image${elementCounts}]` : `[tmp][image${elementCounts}]`,
-        "outputs": `tmp`
-      })
 
-      elementCounts += 1
+
     }
   }
 
@@ -141,6 +137,84 @@ ipcMain.on('RENDER', (evt, elements, options) => {
       command.run();
   
 })
+
+/**
+ * @param {{element: object, filter, command, elementCounts: number, projectOptions}} object description
+ */
+function addFilterMedia(object) {
+  object.command.input(object.element.localpath)
+
+  let options = {
+    width: String(object.element.width * object.projectOptions.previewRatio),
+    height: String(object.element.height * object.projectOptions.previewRatio),
+    x: String(object.element.location.x * object.projectOptions.previewRatio),
+    y: String(object.element.location.y * object.projectOptions.previewRatio),
+    startTime: object.element.startTime/200,
+    endTime: (object.element.startTime/200) + (object.element.duration/200)
+  }
+
+
+  object.filter.push({
+    "filter": "scale",
+    "options": {
+      "w": options.width,
+      "h": options.height
+    },
+    "inputs": `[${object.elementCounts}:v]`,
+    "outputs": `image${object.elementCounts}`
+  })
+
+  object.filter.push({
+    "filter": "overlay",
+    "options": {
+      "enable": `between(t,${options.startTime},${options.endTime})`,
+      "x": options.x,
+      "y": options.y
+    },
+    "inputs": object.elementCounts == 1 ? `[0:v][image${object.elementCounts}]` : `[tmp][image${object.elementCounts}]`,
+    "outputs": `tmp`
+  })
+
+  object.elementCounts += 1
+}
+
+
+/**
+ * @param {{element: object, filter, command, elementCounts: number, projectOptions}} object description
+ */
+ function addFilterText(object) {
+
+  let options = {
+    text: object.element.text,
+    fontsize: 20 * object.projectOptions.previewRatio,
+    x: String(object.element.location.x * object.projectOptions.previewRatio),
+    y: String(object.element.location.y * object.projectOptions.previewRatio),
+    startTime: object.element.startTime/200,
+    endTime: (object.element.startTime/200) + (object.element.duration/200)
+  }
+
+
+  object.filter.push({
+    "filter": "drawtext",
+    "options": {
+      "enable": `between(t,${options.startTime},${options.endTime})`,
+      "fontfile": '/Users/hhj/Documents/nugget-app/assets/fonts/notosanskr-medium.otf',
+      "text": options.text,
+      "fontsize": options.fontsize,
+      "fontcolor": 'white',
+      "x": options.x,
+      "y": options.y
+    },
+    "inputs": object.elementCounts == 1 ? `[0:v]` : `[tmp]`,
+    "outputs": `tmp`
+  })
+
+
+  //object.elementCounts += 1
+}
+
+
+
 
 app.whenReady().then(() => {
   createWindow()

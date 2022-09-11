@@ -27,6 +27,7 @@ input[type='file']::file-selector-button {
 
 }
 
+
 .form-transparent:focus {
     background-color: transparent;
 

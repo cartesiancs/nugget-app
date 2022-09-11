@@ -177,17 +177,27 @@ const elementBar = {
     resizeRangeOnElement: function (x, location = 'left') {
         let elementId = elementBar.state.elementId
         let duration = elementBar.state.criteria.duration 
+        let originDuration = Number(elementBar.state.e.style.width.split('px')[0])
+
         let originResizeRangeLeft = elementBar.state.resizeRangeLeft
         let originResizeRangeRight = elementBar.state.resizeRangeRight
 
         let resizeRangeTargetLeft = elementBar.state.e.querySelector(".element-bar-hiddenspace-left")
         let resizeRangeTargetRight = elementBar.state.e.querySelector(".element-bar-hiddenspace-right")
 
+        let windowWidth = window.innerWidth
+        let timelineBodyWidth = split_inner_bottom.scrollWidth
+        let targetLeft = Number(elementBar.state.e.style.left.split('px')[0])
+        let scrollLeft = split_inner_bottom.scrollLeft
+        let scrollRight = timelineBodyWidth-windowWidth-scrollLeft
+        let marginLeftTargetToWidth = windowWidth-originDuration-targetLeft > 0 ? windowWidth-originDuration-targetLeft - 10 : 0
+
+
         if (location == 'left') {
             resizeRangeTargetLeft.style.width = `${(x+split_inner_bottom.scrollLeft)-5}px`
             elementTimeline[elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
         } else {
-            resizeRangeTargetRight.style.width = `${window.innerWidth-x-elementBar.state.criteriaResize.x}px`
+            resizeRangeTargetRight.style.width = `${(scrollRight+window.innerWidth-x-elementBar.state.criteriaResize.x)-marginLeftTargetToWidth}px`
             elementTimeline[elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
         }
     },
@@ -323,7 +333,7 @@ const elementControl = {
             elementTimeline[elementId] = {
                 startTime: 0,
                 duration: 1000,
-                text: "",
+                text: "텍스트",
                 location: {x: 0, y: 0},
                 localpath: '/TESTELEMENT',
                 filetype: 'text'
@@ -481,7 +491,7 @@ const elementPreview = {
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
                 <div id="element-${elementId}" class="element-drag" style='top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
-                <input type="text" class="form-transparent element-text" draggable="false" onkeyup="nugget.element.control.event.textinput.onkeyup('${elementId}')">
+                <input type="text" class="form-transparent element-text" draggable="false" onkeyup="nugget.element.control.event.textinput.onkeyup('${elementId}')" value="텍스트">
                 <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>
                 <div class="resize-w" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'w')"></div>

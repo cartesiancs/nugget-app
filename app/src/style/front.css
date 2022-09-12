@@ -14,7 +14,7 @@ html, body {
 input[type='file']::file-selector-button {
     background-color: #16181b;
     color: #ffffff;
-  }
+}
 
 
 .form-transparent {
@@ -24,7 +24,6 @@ input[type='file']::file-selector-button {
     color: #ffffff;
     font-size: 20px;
     margin: 0px;
-
 }
 
 
@@ -96,11 +95,11 @@ input[type='file']::file-selector-button {
 }
 
 
-  @keyframes scrollText {
+@keyframes scrollText {
     to {
-      transform: translateX(-100%);
+        transform: translateX(-100%);
     }
-  }
+}
 
 .card-title{
     font-family: 'Noto Sans KR', sans-serif;
@@ -282,6 +281,11 @@ body.swal2-height-auto {
     right: auto;
 }
 
+
+.element-outline {
+    outline: 1px dashed #ffffff;
+}
+
 .timeline-bar {
     position: absolute;
     width: 2px;
@@ -325,7 +329,7 @@ body.swal2-height-auto {
     width: 80%;
     height: .3rem;
     background-color: #868f9900;
-    cursor: n-resize;
+    cursor: ns-resize;
 
 }
 
@@ -337,7 +341,7 @@ body.swal2-height-auto {
     width: 80%;
     height: .3rem;
     background-color: #868f9900;
-    cursor: s-resize;
+    cursor: ns-resize;
 
 }
 
@@ -349,7 +353,7 @@ body.swal2-height-auto {
     width: .3rem;
     height: 80%;
     background-color: #868f9900;
-    cursor: w-resize;
+    cursor: ew-resize;
 
 }
 
@@ -361,6 +365,6 @@ body.swal2-height-auto {
     width: .3rem;
     height: 80%;
     background-color: #868f9900;
-    cursor: e-resize;
+    cursor: ew-resize;
 
 }

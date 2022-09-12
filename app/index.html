@@ -77,7 +77,7 @@
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
                             <div id="control" class="control">
-                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)" >
+                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)" ondblclick="nugget.element.control.event.click.deactivateAllOutline()">
     
                                 </div>
                             </div>
@@ -279,6 +279,8 @@
             }
 
         })
+
+
 
         document.addEventListener("mouseup", (e) => {
               valueEvent.splitBottom = false

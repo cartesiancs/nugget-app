@@ -209,6 +209,7 @@ const elementBar = {
 
 const elementControl = {
     state: {
+        activeElementId: "",
         isDrag: false,
         isResize: false,
         e: undefined,
@@ -220,8 +221,28 @@ const elementControl = {
     },
 
     event: {
+        click: {
+            activateOutline: function (elementId) {
+                elementControl.event.click.deactivateAllOutline()
+                elementControl.state.activeElementId = elementId
+                document.querySelector(`#element-${elementId}`).classList.add("element-outline")
+            
+            },
+            deactivateAllOutline: function () {
+                console.log("S")
+                for (const elementId in elementTimeline) {
+                    if (Object.hasOwnProperty.call(elementTimeline, elementId)) {
+                        document.querySelector(`#element-${elementId}`).classList.remove("element-outline")
+
+                    }
+                }
+                elementControl.state.activeElementId = ''
+
+            },
+        },
         drag: {
             onmousedown: function (e) {
+                elementControl.event.click.activateOutline(e.id.split("element-")[1])
                 elementControl.state.isDrag = true
                 elementControl.state.e = e
                 elementControl.state.criteriaDrag.x = valueEvent.mouse.x - Number(elementControl.state.e.style.left.replace(/[^0-9]/g, ""))
@@ -436,7 +457,7 @@ const elementPreview = {
             let blob = elementLists[elementId].blob
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
+                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)" onclick="nugget.element.control.event.click.activateOutline('${elementId}')">
                 <img src="${blob}" alt="" class="element-image" draggable="false">
                 <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>
@@ -454,7 +475,7 @@ const elementPreview = {
             let blob = elementLists[elementId].blob
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
+                <div id="element-${elementId}" class="element-drag" style='width: ${elementTimeline[elementId].width}px; height: ${elementTimeline[elementId].height}px; top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)" onclick="nugget.element.control.event.click.activateOutline('${elementId}')">
                 <video src="${blob}" alt="" class="element-video" draggable="false"></video>
                 <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>
@@ -490,7 +511,7 @@ const elementPreview = {
         text: function (elementId) {
             if (document.getElementById(`element-${elementId}`) == null) {
                 control.insertAdjacentHTML("beforeend", `
-                <div id="element-${elementId}" class="element-drag" style='top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)">
+                <div id="element-${elementId}" class="element-drag" style='top: 0px; left: 0px;' onmousedown="nugget.element.control.event.drag.onmousedown(this)" onclick="nugget.element.control.event.click.activateOutline('${elementId}')">
                 <input type="text" class="form-transparent element-text" draggable="false" onkeyup="nugget.element.control.event.textinput.onkeyup('${elementId}')" value="텍스트">
                 <div class="resize-n" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 'n')"></div>
                 <div class="resize-s" onmousedown="nugget.element.control.event.resize.onmousedown('${elementId}', 's')"></div>

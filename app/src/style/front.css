@@ -17,6 +17,18 @@ input[type='file']::file-selector-button {
 }
 
 
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 48
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem 0.4rem 0.8rem !important;
+}
+
 .form-transparent {
     background-color: transparent;
     outline: 0;
@@ -306,6 +318,21 @@ body.swal2-height-auto {
 .icon-lg {
     font-size: 3rem;
     color: #ffffff;
+}
+
+.icon-md {
+    font-size: 1.7rem;
+    color: #ffffff;
+}
+
+.icon-sm {
+    font-size: 1.3rem;
+    color: #ffffff;
+}
+
+.icon-white {
+    color: #ffffff;
+
 }
 
 

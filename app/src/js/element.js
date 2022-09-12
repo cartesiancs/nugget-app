@@ -22,7 +22,7 @@ const elementPlayer = {
     start: function () {
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `nugget.element.player.stop()`)
-        toggle.innerHTML = `<i class="fas fa-pause text-light"></i>`
+        toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> stop_circle </span>`
 
         elementPlayer.scroller = setInterval(function() {
             //split_inner_bottom.scrollBy(4, 0);
@@ -43,7 +43,7 @@ const elementPlayer = {
 
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `nugget.element.player.start()`)
-        toggle.innerHTML = `<i class="fas fa-play text-light"></i>`
+        toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`
 
         elementPreview.pauseAllVideo()
     },

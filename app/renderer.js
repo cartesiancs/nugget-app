@@ -3,17 +3,22 @@ const { ipcRenderer } = require('electron')
 
 ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
     let fileLists = {}
+    const assetList = document.querySelector("asset-list")
+    assetList.nowDirectory = dir
+    assetList.clearList()
+
     nugget.asset.nowDirectory = dir
     assetDir.value = dir
 
-    assetBrowser.innerHTML = ''
     for (const key in result) {
         if (Object.hasOwnProperty.call(result, key)) {
             const element = result[key];
             if (!element.isDirectory) {
                 fileLists[key] = element
             } else {
-                nugget.asset.loadFolder(element.title, dir)
+                assetList.getFolder(element.title)
+
+                //nugget.asset.loadFolder(element.title, dir)
             }
         }
     }
@@ -21,7 +26,8 @@ ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
     for (const file in fileLists) {
         if (Object.hasOwnProperty.call(fileLists, file)) {
             const element = fileLists[file];
-            nugget.asset.loadFile(element.title, dir)
+            assetList.getFile(element.title)
+            //nugget.asset.loadFile(element.title, dir)
         }
     }
 })

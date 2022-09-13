@@ -1,26 +1,26 @@
 const asset = {
     nowDirectory: '',
-    loadFile: function (filename, dir) {
-        let splitedFilename = filename.split('.')
-        let splitedFilenameLength = splitedFilename.length
-        let fileType = splitedFilenameLength <= 2 ? '' : splitedFilename[splitedFilenameLength-1]
+    // loadFile: function (filename, dir) {
+    //     let splitedFilename = filename.split('.')
+    //     let splitedFilenameLength = splitedFilename.length
+    //     let fileType = splitedFilenameLength <= 2 ? '' : splitedFilename[splitedFilenameLength-1]
 
-        document.querySelector("#assetBrowser").
-            insertAdjacentHTML("beforeend", `
-            <div class="col-4 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="nugget.asset.add('${dir}/${filename}', '${dir}')">
-                <span class="material-symbols-outlined icon-lg align-self-center"> draft </span>
-                <b class="align-self-center text-ellipsis-scroll text-light text-center">${filename}</b> 
-            </div>`)
-    },
-    loadFolder: function (filename, dir) {
+    //     document.querySelector("#assetBrowser").
+    //         insertAdjacentHTML("beforeend", `
+    //         <div class="col-4 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="nugget.asset.add('${dir}/${filename}', '${dir}')">
+    //             <span class="material-symbols-outlined icon-lg align-self-center"> draft </span>
+    //             <b class="align-self-center text-ellipsis-scroll text-light text-center">${filename}</b> 
+    //         </div>`)
+    // },
+    // loadFolder: function (filename, dir) {
         
-        document.querySelector("#assetBrowser").
-            insertAdjacentHTML("beforeend", `
-            <div class="col-4 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="ipc.requestAllDir('${dir}/${filename}')">
-            <span class="material-symbols-outlined icon-lg align-self-center"> folder </span>
-                <b class="align-self-center text-ellipsis text-light text-center">${filename}</b>
-            </div>`)
-    },
+    //     document.querySelector("#assetBrowser").
+    //         insertAdjacentHTML("beforeend", `
+    //         <div class="col-4 d-flex flex-column bd-highlight overflow-hidden asset mt-1" onclick="ipc.requestAllDir('${dir}/${filename}')">
+    //         <span class="material-symbols-outlined icon-lg align-self-center"> folder </span>
+    //             <b class="align-self-center text-ellipsis text-light text-center">${filename}</b>
+    //         </div>`)
+    // },
     loadPrevDirectory: function () {
         let splitNowDirectory = asset.nowDirectory.split('/')
         let splitPrevDirectory = splitNowDirectory.slice(-splitNowDirectory.length, -1)

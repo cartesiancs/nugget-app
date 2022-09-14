@@ -41,21 +41,10 @@
                     <div class="tab-content" id="pills-tabContent">
                         <div class="tab-pane fade show active" id="pills-asset" role="tabpanel" aria-labelledby="pills-asset-tab">
                             <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
-                            <div class="row p-0 mt-2">
-                                <div class="col-2">
-                                    <button class="btn btn-transparent btn-sm" onclick="nugget.asset.loadPrevDirectory()"><span class="material-symbols-outlined icon-sm"> arrow_upward </span> </button>
 
-                                </div>
-
-                                <div class="col-10">
-                                    <input id="assetDir" type="text" class="form-control" aria-describedby="basic-addon1" value="" disabled>
-                                </div>
-
-                            </div>
+                            <asset-browser></asset-browser>
 
                             <asset-list></asset-list>
-        
-                            <div id="assetBrowser" class="row px-2"></div>
                         </div>
                         <div class="tab-pane fade" id="pills-preset" role="tabpanel" aria-labelledby="pills-preset-tab">
                             

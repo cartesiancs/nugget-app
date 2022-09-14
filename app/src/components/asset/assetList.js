@@ -95,7 +95,7 @@ class AssetFolder extends HTMLElement {
 
     template() {
         return `<span class="material-symbols-outlined icon-lg align-self-center"> folder </span>
-        <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.foldername}</b>`
+        <b class="align-self-center text-ellipsis text-light text-center">${this.foldername}</b>`
     }
 
     handleClick() {

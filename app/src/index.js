@@ -8,7 +8,7 @@ import { AssetList, AssetFile, AssetFolder } from './components/asset/assetList.
 import { AssetBrowser } from './components/asset/assetBrowser.js';
 import { ElementTimeline } from './components/element/elementTimeline.js';
 import { ElementBarStatic } from './components/element/elementBar.js';
-import { ElementControl } from './components/element/elementControl.js';
+import { ElementControl, ElementControlImage } from './components/element/elementControl.js';
 
 
 customElements.define('asset-list', AssetList);
@@ -21,6 +21,7 @@ customElements.define('asset-browser', AssetBrowser);
 customElements.define('element-timeline', ElementTimeline);
 customElements.define('element-bar-static', ElementBarStatic);
 customElements.define('element-control', ElementControl);
+customElements.define('element-control-image', ElementControlImage);
 
 
 

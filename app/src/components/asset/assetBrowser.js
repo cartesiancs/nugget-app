@@ -15,12 +15,10 @@ class AssetBrowser extends HTMLElement {
         <div class="col-2">
             <button class="btn btn-transparent btn-sm"><span class="material-symbols-outlined icon-sm"> arrow_upward </span> </button>
         </div>
-
         <div class="col-10">
             <input type="text" class="form-control" aria-describedby="basic-addon1" value="" disabled>
         </div>
-
-    </div>`
+        </div>`
     }
 
     updateDirectoryInput(path) {

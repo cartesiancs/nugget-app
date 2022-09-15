@@ -1,15 +1,12 @@
 class AssetList extends HTMLElement { 
     constructor() {
         super();
-                
-        //this.attachShadow({mode: 'open'});
         this.nowDirectory = ''
 
     }
 
     render(){
         const template = this.template();
-        // this.shadowRoot.innerHTML = template;
         this.innerHTML = template;
     }
 

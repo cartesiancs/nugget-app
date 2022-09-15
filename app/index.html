@@ -66,11 +66,9 @@
                     <div class="d-flex justify-content-center" onmouseup="nugget.element.control.onmouseup(event)">
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
-                            <div id="control" class="control">
-                                <div id="control-inner" class="control-inner" ondrop="nugget.element.control.drop(event)" ondragover="nugget.element.control.dragover(event)" ondblclick="nugget.element.control.event.click.deactivateAllOutline()">
-    
-                                </div>
-                            </div>
+                            <element-control></element-control>
+
+
                         </div>
                     </div>
                     <div class="d-flex justify-content-center mt-2">
@@ -83,11 +81,8 @@
 
     
             <div id="split_bottom" class="row split-top align-items-end cursor-row-resize bg-darker line-top" style="height: 20%;">
-                <div id="split_inner_bottom" class="col-12 cursor-default line" style="height: 100%;" onmouseup="nugget.element.bar.event.drag.onmouseup(this); nugget.element.bar.event.resize.onmouseup(this);">
-                    <div id="timeline_bar" class="timeline-bar" style="left: 0px;">
+                <element-timeline id="split_inner_bottom"></element-timeline>
 
-                    </div>
-                </div>
             </div>
         </div>
 

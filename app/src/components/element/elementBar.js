@@ -1,4 +1,4 @@
-class ElementBarStatic extends HTMLElement { 
+class ElementBar extends HTMLElement { 
     constructor() {
         super();
 
@@ -6,6 +6,7 @@ class ElementBarStatic extends HTMLElement {
 
         this.timeline = document.querySelector("element-timeline").timeline
         this.elementId = this.getAttribute('element-id')
+        this.elementBarType = this.getAttribute('element-type') || 'static'
 
         
         this.width = this.timeline[this.elementId].duration
@@ -24,7 +25,13 @@ class ElementBarStatic extends HTMLElement {
     }
 
     render(){
-        const template = this.template();
+        let template;
+        if (this.elementBarType == 'static') {
+            template = this.templateStatic();
+        } else {
+            template = this.templateDynamic();
+
+        }
         const backgroundColor = this.getRandomColor()
 
         this.classList.add("element-bar", 'd-block')
@@ -35,12 +42,27 @@ class ElementBarStatic extends HTMLElement {
 
     }
 
-    template() {
+    templateStatic() {
 
         return `
         ${this.filepath}
         <div class="element-bar-resize-left position-absolute" onmousedown="this.parentNode.resizeMousedown(this, 'left')"></div>
         <div class="element-bar-resize-right position-absolute" onmousedown="this.parentNode.resizeMousedown(this, 'right')"></div>
+        `
+    }
+
+    templateDynamic() {
+
+        return `
+        ${this.filepath}
+        <div class="element-bar-hiddenspace-left position-absolute">
+            <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="this.parentNode.parentNode.resizeRangeMousedown(this, 'left')">
+            </div>
+        </div>
+        <div class="element-bar-hiddenspace-right position-absolute">
+            <div class="element-bar-resize-hiddenspace-right position-absolute" onmousedown="this.parentNode.parentNode.resizeRangeMousedown(this, 'right')">
+            </div>
+        </div>
         `
     }
 
@@ -101,20 +123,63 @@ class ElementBarStatic extends HTMLElement {
         }
     }
 
-    resizeMousedown(e, location) {
 
+    resizeRange(e) {
+        this.isDrag = false
+
+        let x = e.pageX - this.initialPosition.x
+        let y = e.pageY - this.initialPosition.y
+
+        let duration = this.initialDuration 
+        let originDuration = Number(this.style.width.split('px')[0])
+
+        let resizeRangeTargetLeft = this.querySelector(".element-bar-hiddenspace-left")
+        let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
+        let timelineElement = document.querySelector("element-timeline")
+
+        let windowWidth = window.innerWidth
+        let timelineBodyWidth = timelineElement.scrollWidth
+        let targetLeft = Number(this.style.left.split('px')[0])
+        let scrollLeft = timelineElement.scrollLeft
+        let scrollRight = timelineBodyWidth-windowWidth-scrollLeft
+        let marginLeftTargetToWidth = windowWidth-originDuration-targetLeft > 0 ? windowWidth-originDuration-targetLeft - 10 : 0
+
+
+        if (this.resizeLocation == 'left') {
+            resizeRangeTargetLeft.style.width = `${(x+scrollLeft)-5}px`
+            this.timeline[this.elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
+        } else {
+            resizeRangeTargetRight.style.width = `${(scrollRight+window.innerWidth-x-this.initialPosition.x)-marginLeftTargetToWidth}px`
+            this.timeline[this.elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
+        }
+    }
+
+    resizeMousedown(e, location) {
         this.isResize = true
         this.resizeLocation = location
         this.isDrag = false
-
         this.initialPosition.x = location == 'left' ? 
             e.pageX - Number(this.style.left.replace(/[^0-9]/g, "")) : 
             Number(this.style.left.replace(/[^0-9]/g, ""))
         this.initialPosition.y = e.pageY
-
         this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.replace(/[^0-9]/g, ""))
 
         this.resizeEventHandler = this.resize.bind(this)
+        document.addEventListener('mousemove', this.resizeEventHandler);
+
+    }
+
+    resizeRangeMousedown(e, location) {
+        this.isResize = true
+        this.resizeLocation = location
+        this.resizeRangeLeft = Number(this.querySelector(".element-bar-hiddenspace-left").style.width.split('px')[0])
+        this.resizeRangeRight = Number(this.querySelector(".element-bar-hiddenspace-right").style.width.split('px')[0])
+
+        this.isDrag = false
+        this.initialPosition.x = Number(this.style.left.replace(/[^0-9]/g, ""))
+        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.replace(/[^0-9]/g, ""))
+
+        this.resizeEventHandler = this.resizeRange.bind(this)
         document.addEventListener('mousemove', this.resizeEventHandler);
 
     }
@@ -142,4 +207,4 @@ class ElementBarStatic extends HTMLElement {
     }
 }
 
-export { ElementBarStatic }
+export { ElementBar }

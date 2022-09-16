@@ -4,6 +4,8 @@ class ElementTimeline extends HTMLElement {
 
         //this.directory = ''
 
+
+
         this.timeline = {
 
         }
@@ -21,8 +23,6 @@ class ElementTimeline extends HTMLElement {
 
     addElementBar(elementId) {
         const templateBar = this.templateElementBar(elementId)
-
-
         this.insertAdjacentHTML("beforeend", templateBar)
     }
 
@@ -36,20 +36,10 @@ class ElementTimeline extends HTMLElement {
         let elementType = this.getElementType(filetype)
 
         if (elementType == 'static') {
-            return `<element-bar-static element-id="${elementId}"></element-bar-static>`
+            return `<element-bar element-id="${elementId}" element-type="static"></element-bar>`
 
         } else if (elementType == 'dynamic') {
-            return `<div class="element-bar" style="width: ${width}px; left: 0px; background-color: ${elementBarBackgroundColor};" onmousedown="nugget.element.bar.event.drag.onmousedown(this)" value="${elementId}">
-                    ${elementFilepath}
-                    <div class="element-bar-hiddenspace-left position-absolute">
-                        <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedownrange(this, 'left')">
-                        </div>
-                    </div>
-                    <div class="element-bar-hiddenspace-right position-absolute">
-                        <div class="element-bar-resize-hiddenspace-right position-absolute" onmousedown="nugget.element.bar.event.resize.onmousedownrange(this, 'right')">
-                        </div>
-                    </div>
-                    </div>`
+            return `<element-bar element-id="${elementId}" element-type="dynamic"></element-bar>`
         } else {
             return `none`
         }
@@ -60,7 +50,7 @@ class ElementTimeline extends HTMLElement {
     getElementType(filetype) {
         let elementType = 'undefined'
         const elementFileExtensionType = {
-            "static": ['image', 'png', 'jpg', 'jpeg'],
+            "static": ['image', 'text', 'png', 'jpg', 'jpeg'],
             "dynamic": ['video', 'mp4', 'mp3', 'mov']
         }
 

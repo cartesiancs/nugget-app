@@ -41,11 +41,12 @@ const ipc = {
         ipcRenderer.send('REQ_ALL_DIR', dir)
     },
     render: function () {
+        let timeline = document.querySelector("element-timeline").timeline // nugget.element.timeline
         let options = {
             videoDuration: 10,
             previewRatio: nugget.element.preview.previewRatio,
             videoDestination: '/Users/hhj/Desktop/_FILES/_Video/result.mp4'
         }
-        ipcRenderer.send('RENDER', nugget.element.timeline, options)
+        ipcRenderer.send('RENDER', timeline, options)
     }
 }

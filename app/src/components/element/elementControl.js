@@ -7,13 +7,10 @@ class ElementControl extends HTMLElement {
         //this.directory = ''
 
         //this.setAttribute("id", 'control')
-        let inner = document.createElement('div')
-        inner.classList.add("control-inner")
 
-        this.classList.add('control')
-        this.appendChild(inner)
-
-        this.inner = this.querySelector("div")
+        this.scroller = undefined
+        this.isPaused = true
+        this.progress = 0
         
 
     }
@@ -58,7 +55,7 @@ class ElementControl extends HTMLElement {
         video.src = blob
         video.preload = 'metadata'
 
-        video.onloadedmetadata = function() {
+        video.onloadedmetadata = () => {
             let division = 10
 
             let width = video.videoWidth/division
@@ -78,7 +75,7 @@ class ElementControl extends HTMLElement {
             }
 
             
-            elementPreview.show.video(elementId)
+            this.showVideo(elementId)
             elementTimeline.addElementBar(elementId)
 
         }
@@ -98,7 +95,7 @@ class ElementControl extends HTMLElement {
             filetype: 'text'
         }
 
-        elementPreview.show.text(elementId)
+        this.showText(elementId)
         elementTimeline.addElementBar(elementId)
     }
 
@@ -108,26 +105,172 @@ class ElementControl extends HTMLElement {
         let blob = elementTimeline.timeline[elementId].blob
 
         if (document.getElementById(`element-${elementId}`) == null) {
-            this.inner.insertAdjacentHTML("beforeend", `<element-control-image element-id="${elementId}"></element-control-image>
+            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>
             `)
         } else {
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
         }
     }
 
+    showVideo(elementId) {
+        const elementTimeline = document.querySelector("element-timeline")
+
+        if (document.getElementById(`element-${elementId}`) == null) {
+            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`)
+
+            let video = document.getElementById(`element-${elementId}`).querySelector("video")
+            let secondsOfRelativeTime = (elementTimeline.timeline[elementId].startTime - this.progress) / 200
+
+            video.currentTime = secondsOfRelativeTime
+
+        } else {
+            let video = document.getElementById(`element-${elementId}`).querySelector("video")
+            let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
+
+            if (!!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
+                if (this.isPaused) {
+                    console.log('paused')
+
+                }
+                console.log('isPlaying')
+            } else {
+                video.currentTime = secondsOfRelativeTime
+                video.play()
+            }
+
+            document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+        }
+    }
+
+    showText(elementId) {
+        if (document.getElementById(`element-${elementId}`) == null) {
+            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>
+            `)
+        } else {
+            document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+        }
+    }
+
+    changeText(elementId) {
+        const elementTimeline = document.querySelector("element-timeline")
+        let elementBody = document.querySelector(`#element-${elementId}`)
+        let inputTarget = elementBody.querySelector('input')
+        let inputValue = inputTarget.value
+    
+        console.log(elementId, inputValue)
+        elementTimeline.timeline[elementId].text = inputValue
+    }
+
+
+
     generateUUID () {
         let uuid = uuidv4()
         return uuid
     }
+
+    hideElement (elementId) {
+        const timeline = document.querySelector("element-timeline").timeline
+
+        if (timeline[elementId].filetype == 'video') {
+            this.pauseVideo(elementId)
+        }
+        document.querySelector(`#element-${elementId}`).classList.add('d-none')
+    }
+
+    play() {
+        const timeline = document.querySelector("element-timeline").timeline
+
+        let toggle = document.querySelector("#playToggle")
+        toggle.setAttribute('onclick', `elementControlComponent.stop()`)
+        toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> stop_circle </span>`
+
+        this.scroller = setInterval(() => {
+            //split_inner_bottom.scrollBy(4, 0);
+            let nowTimelineProgress = Number(timeline_bar.style.left.split('px')[0]) + 4
+            timeline_bar.style.left = `${nowTimelineProgress}px`
+
+            this.progress = nowTimelineProgress
+            if ((this.innerWidth + this.offsetWidth) >= this.offsetWidth) {
+                this.stop();
+            }
+
+            
+            for(let elementId in timeline) {
+                let blob = timeline[elementId].blob
+                let filetype = timeline[elementId].filetype
+                let condition = timeline[elementId].startTime > this.progress || 
+                timeline[elementId].startTime + timeline[elementId].duration < this.progress
+    
+                if (filetype == 'video') {
+                    condition = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
+                    timeline[elementId].startTime + timeline[elementId].trim.endTime < this.progress
+    
+                }
+    
+                if (condition) {
+                    this.hideElement(elementId)
+                } else {
+                    if (filetype == 'image') {
+                        this.showImage(elementId)
+                    } else if (filetype == 'video') {
+                        this.showVideo(elementId)
+                    } else if (filetype == 'text') {
+                        this.showText(elementId)
+                    }
+                }
+            }
+
+
+        }, 20);
+        this.isPaused = false;
+    }
+
+    stop() {
+        clearInterval(this.scroller);
+        this.isPaused = true;
+
+        let toggle = document.querySelector("#playToggle")
+        toggle.setAttribute('onclick', `elementControlComponent.play()`)
+        toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`
+
+        this.pauseAllVideo()
+    }
+
+    pauseVideo (elementId) {
+        let video = document.getElementById(`element-${elementId}`).querySelector("video")
+        video.pause()
+    }
+
+    pauseAllVideo () {
+        const timeline = document.querySelector("element-timeline").timeline
+        let key;
+
+        for(key in timeline) {
+            let filetype = timeline[key].filetype
+
+            if (filetype == 'video') {
+                let video = document.getElementById(`element-${key}`).querySelector("video")
+                video.pause()
+            }
+        }
+    }
+
+    reset () {
+        timeline_bar.style.left = `0px`
+        this.progress = 0
+        this.isPaused = true;
+
+    }
 }
 
 
-class ElementControlImage extends HTMLElement { 
+class ElementControlAsset extends HTMLElement { 
     constructor() {
         super();
 
         this.timeline = document.querySelector("element-timeline").timeline
         this.elementId = this.getAttribute('element-id')
+        this.elementFiletype = this.getAttribute('element-filetype') || 'image'
 
         this.isDrag = false
         this.isResize = false
@@ -135,10 +278,22 @@ class ElementControlImage extends HTMLElement {
         this.initialPosition = {x: 0, y: 0, w: 0, h: 0}
         this.resizeDirection = 'n'
         this.resizeEventHandler
+        this.dragdownEventHandler
+        this.dragupEventHandler
+
     }
 
     render(){
-        const template = this.template();
+        let template
+        if (this.elementFiletype == 'image') {
+            template = this.templateImage() + this.templateResize()
+        } else if (this.elementFiletype == 'video') {
+            template = this.templateVideo() + this.templateResize()
+        } else if (this.elementFiletype == 'text') {
+            template = this.templateText() + this.templateResize()
+        }
+
+
         this.classList.add("element-drag")
         this.setAttribute("id", `element-${this.elementId}`)
         this.setAttribute("style", `width: ${this.timeline[this.elementId].width}px; height: ${this.timeline[this.elementId].height}px; top: 0px; left: 0px;`)
@@ -147,14 +302,30 @@ class ElementControlImage extends HTMLElement {
         this.innerHTML = template;
     }
 
-    template() {
+    templateImage() {
         return `
-        <img src="${this.timeline[this.elementId].blob}" alt="" class="element-image" draggable="false">
+        <img src="${this.timeline[this.elementId].blob}" alt="" class="element-image" draggable="false">`
+    }
+
+    templateVideo() {
+        return `
+        <video src="${this.timeline[this.elementId].blob}" alt="" class="element-video" draggable="false"></video>`
+    }
+
+    templateText() {
+        
+        return `<input type="text" class="form-transparent element-text" draggable="false" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="텍스트">`
+
+    }
+
+    templateResize() {
+        return `
         <div class="resize-n" onmousedown="this.parentNode.resizeMousedown('n')"></div>
         <div class="resize-s" onmousedown="this.parentNode.resizeMousedown('s')"></div>
         <div class="resize-w" onmousedown="this.parentNode.resizeMousedown('w')"></div>
         <div class="resize-e" onmousedown="this.parentNode.resizeMousedown('e')"></div>`
     }
+
 
     drag(e) {
         if (this.isDrag) {
@@ -180,19 +351,23 @@ class ElementControlImage extends HTMLElement {
     }
 
     dragMousedown(e) {
-        this.addEventListener('mousemove', this.drag);
+
 
         if (!this.isResize) {
             this.isDrag = true
             this.initialPosition.x = e.pageX - Number(this.style.left.replace(/[^0-9]/g, ""))
             this.initialPosition.y = e.pageY - Number(this.style.top.replace(/[^0-9]/g, ""))
+            this.dragdownEventHandler = this.drag.bind(this)
+            document.addEventListener('mousemove', this.dragdownEventHandler);
         }
 
 
     }
 
     dragMouseup() {
-        this.removeEventListener('mousemove', this.drag);
+        document.removeEventListener('mousemove', this.dragdownEventHandler);
+        //this.removeEventListener('mousemove', this.drag);
+
 
         this.isDrag = false
     }
@@ -272,4 +447,4 @@ class ElementControlImage extends HTMLElement {
 
 }
 
-export { ElementControl, ElementControlImage }
+export { ElementControl, ElementControlAsset }

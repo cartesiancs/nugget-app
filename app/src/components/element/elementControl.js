@@ -11,6 +11,7 @@ class ElementControl extends HTMLElement {
         this.scroller = undefined
         this.isPaused = true
         this.progress = 0
+        this.activeElementId = ''
         
 
     }
@@ -450,12 +451,35 @@ class ElementControlAsset extends HTMLElement {
         this.isResize = false
     }
 
+    activateOutline () {
+        const elementControl = document.querySelector("element-control")
+        this.deactivateAllOutline()
+        elementControl.activeElementId = this.elementId
+        this.classList.add("element-outline")
+    
+    }
+
+    deactivateAllOutline () {
+        const elementControl = document.querySelector("element-control")
+        const elementTimeline = document.querySelector("element-timeline")
+
+        for (const elementId in elementTimeline.timeline) {
+            if (Object.hasOwnProperty.call(elementTimeline.timeline, elementId)) {
+                document.querySelector(`#element-${elementId}`).classList.remove("element-outline")
+            }
+        }
+        elementControl.activeElementId = ''
+
+    }
+
 
     connectedCallback() {
         this.render();
 
         this.addEventListener('mousedown', this.dragMousedown.bind(this));
         this.addEventListener('mouseup', this.dragMouseup.bind(this));
+        this.addEventListener('mousedown', this.activateOutline.bind(this));
+
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
 
     }

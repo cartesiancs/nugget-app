@@ -19,14 +19,14 @@ const fs = require('fs');
 //   ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/win64/ffprobe.exe'));
 // } 
 
-// if (isDev) {
-// 	console.log('Running in development');
-//   require('electron-reload')(__dirname, {
-//     electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-//   });
-// } else {
-// 	console.log('Running in production');
-// }
+if (isDev) {
+	console.log('Running in development');
+  require('electron-reload')(__dirname, {
+    electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
+  });
+} else {
+	console.log('Running in production');
+}
 
 
 
@@ -134,9 +134,8 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
   command.complexFilter(filter, 'tmp')
   command.outputOptions(["-map 0:a?"])
-  command.fps(50);
+  command.fps(50)
   command.videoCodec('libx264')
-
   command.on('progress', function(progress) {
     console.log('Processing: ' + progress.timemark + ' done');
   })

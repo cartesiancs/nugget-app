@@ -66,10 +66,24 @@ class ElementBar extends HTMLElement {
         `
     }
 
+    getRandomArbitrary(min, max) {
+        return Math.round(Math.random() * (max - min) + min);
+    }
+
 
     getRandomColor() {
         let color = "#" + Math.round(Math.random() * 0xffffff).toString(16) + '51'
-        return color
+        let rgbMinColor = {r: 45, g: 23, b: 56}
+        let rgbMaxColor = {r: 167, g: 139, b: 180}
+
+        let rgb = {
+            r: this.getRandomArbitrary(rgbMinColor.r, rgbMaxColor.r),
+            g: this.getRandomArbitrary(rgbMinColor.g, rgbMaxColor.g),
+            b: this.getRandomArbitrary(rgbMinColor.b, rgbMaxColor.b)
+        }
+
+        let rgbColor = `rgb(${rgb.r},${rgb.g},${rgb.b})`
+        return rgbColor
     }
 
 

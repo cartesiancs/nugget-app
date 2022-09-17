@@ -181,8 +181,8 @@ body.swal2-height-auto {
 
 .line{
     position:relative;
-
     overflow-x: scroll !important;
+    padding: 0px;
 }
 
 

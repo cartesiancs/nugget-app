@@ -34,7 +34,8 @@
             "target": [
                 "dmg"
             ],
-            "icon": "assets/icons/mac/icon.icns"
+            "icon": "assets/icons/mac/icon.icns",
+            "asarUnpack": "**/*.node"
         },
         "dmg": {
             "internetEnabled": true

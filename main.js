@@ -14,21 +14,19 @@ const fs = require('fs');
 //     ffmpeg.setFfmpegPath(path.join(__dirname, '.', 'bin/osx/ffmpeg'));
 //     ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/osx/ffprobe'));
 //   }
-// } 
-
-// else {
+// } else {
 //   ffmpeg.setFfmpegPath(path.join(__dirname, '.', 'bin/win64/ffmpeg.exe'));
 //   ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/win64/ffprobe.exe'));
-// }
+// } 
 
-if (isDev) {
-	console.log('Running in development');
-  require('electron-reload')(__dirname, {
-    electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-  });
-} else {
-	console.log('Running in production');
-}
+// if (isDev) {
+// 	console.log('Running in development');
+//   require('electron-reload')(__dirname, {
+//     electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
+//   });
+// } else {
+// 	console.log('Running in production');
+// }
 
 
 
@@ -85,7 +83,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
   let filter = []
   let command = ffmpeg()
-  command.input('/Users/hhj/Desktop/_IMAGES/background.jpeg').loop(options.videoDuration)
+  command.input('/Users/hhj/Desktop/_IMAGES/background.png').loop(options.videoDuration)
 
   filter.push({
     "filter": "scale",
@@ -136,6 +134,9 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
   command.complexFilter(filter, 'tmp')
   command.outputOptions(["-map 0:a?"])
+  command.fps(50);
+  command.videoCodec('libx264')
+
   command.on('progress', function(progress) {
     console.log('Processing: ' + progress.timemark + ' done');
   })

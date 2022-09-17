@@ -161,12 +161,18 @@ class ElementControl extends HTMLElement {
         elementTimeline.timeline[elementId].text = inputValue
     }
 
-
+    progressToTime() {
+        let ms = this.progress * 5
+        let time = new Date(ms).toISOString().slice(11, 22)
+        return time
+    }
 
     generateUUID () {
         let uuid = uuidv4()
         return uuid
     }
+
+    
 
     hideElement (elementId) {
         const timeline = document.querySelector("element-timeline").timeline
@@ -179,6 +185,8 @@ class ElementControl extends HTMLElement {
 
     play() {
         const timeline = document.querySelector("element-timeline").timeline
+        const timelineBar = document.querySelector("element-timeline").querySelector('div')
+        const showTime = document.querySelector("#time") 
 
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `elementControlComponent.stop()`)
@@ -186,28 +194,28 @@ class ElementControl extends HTMLElement {
 
         this.scroller = setInterval(() => {
             //split_inner_bottom.scrollBy(4, 0);
-            let nowTimelineProgress = Number(timeline_bar.style.left.split('px')[0]) + 4
-            timeline_bar.style.left = `${nowTimelineProgress}px`
-
+            let nowTimelineProgress = Number(timelineBar.style.left.split('px')[0]) + 4
             this.progress = nowTimelineProgress
+
+            timelineBar.style.left = `${nowTimelineProgress}px`
+            showTime.innerHTML = this.progressToTime()
+
             if ((this.innerWidth + this.offsetWidth) >= this.offsetWidth) {
                 this.stop();
             }
 
             
             for(let elementId in timeline) {
-                let blob = timeline[elementId].blob
                 let filetype = timeline[elementId].filetype
-                let condition = timeline[elementId].startTime > this.progress || 
+                let checkFiletype = timeline[elementId].startTime > this.progress || 
                 timeline[elementId].startTime + timeline[elementId].duration < this.progress
     
                 if (filetype == 'video') {
-                    condition = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
+                    checkFiletype = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
                     timeline[elementId].startTime + timeline[elementId].trim.endTime < this.progress
-    
                 }
     
-                if (condition) {
+                if (checkFiletype) {
                     this.hideElement(elementId)
                 } else {
                     if (filetype == 'image') {
@@ -227,11 +235,15 @@ class ElementControl extends HTMLElement {
 
     stop() {
         clearInterval(this.scroller);
+        const toggle = document.querySelector("#playToggle")
+        const showTime = document.querySelector("#time") 
+
         this.isPaused = true;
 
-        let toggle = document.querySelector("#playToggle")
+
         toggle.setAttribute('onclick', `elementControlComponent.play()`)
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`
+        showTime.innerHTML = this.progressToTime()
 
         this.pauseAllVideo()
     }
@@ -256,10 +268,14 @@ class ElementControl extends HTMLElement {
     }
 
     reset () {
-        timeline_bar.style.left = `0px`
+        const showTime = document.querySelector("#time") 
+        const timelineBar = document.querySelector("element-timeline").querySelector('div')
+
         this.progress = 0
         this.isPaused = true;
 
+        showTime.innerHTML = this.progressToTime()
+        timelineBar.style.left = `0px`
     }
 }
 

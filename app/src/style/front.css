@@ -395,3 +395,48 @@ body.swal2-height-auto {
     cursor: ew-resize;
 
 }
+
+.element-drag.element-outline > .resize-nw,
+.element-drag.element-outline > .resize-ne,
+.element-drag.element-outline > .resize-sw,
+.element-drag.element-outline > .resize-se  {
+    background-color: #ffffffbc;
+}
+
+
+.resize-nw {
+    position: absolute;
+    top: -.4rem;
+    left: -.4rem; 
+    width: .6rem;
+    height: .6rem;
+
+    cursor: nwse-resize	;
+}
+
+.resize-ne {
+    position: absolute;
+    top: -.4rem;
+    left: calc(100% - .2rem); 
+    width: .6rem;
+    height: .6rem;
+    cursor: nesw-resize	;
+}
+
+.resize-sw {
+    position: absolute;
+    top: calc(100% - .2rem);
+    left: -.4rem; 
+    width: .6rem;
+    height: .6rem;
+    cursor: nesw-resize	;
+}
+
+.resize-se {
+    position: absolute;
+    top: calc(100% - .2rem);
+    left: calc(100% - .2rem); 
+    width: .6rem;
+    height: .6rem;
+    cursor: nwse-resize	;
+}

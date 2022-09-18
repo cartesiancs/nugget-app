@@ -340,7 +340,13 @@ class ElementControlAsset extends HTMLElement {
         <div class="resize-n" onmousedown="this.parentNode.resizeMousedown('n')"></div>
         <div class="resize-s" onmousedown="this.parentNode.resizeMousedown('s')"></div>
         <div class="resize-w" onmousedown="this.parentNode.resizeMousedown('w')"></div>
-        <div class="resize-e" onmousedown="this.parentNode.resizeMousedown('e')"></div>`
+        <div class="resize-e" onmousedown="this.parentNode.resizeMousedown('e')"></div>
+        <div class="resize-ne" onmousedown="this.parentNode.resizeMousedown('ne')"></div>
+        <div class="resize-nw" onmousedown="this.parentNode.resizeMousedown('nw')"></div>
+        <div class="resize-se" onmousedown="this.parentNode.resizeMousedown('se')"></div>
+        <div class="resize-sw" onmousedown="this.parentNode.resizeMousedown('sw')"></div>
+
+        `
     }
 
 
@@ -389,6 +395,14 @@ class ElementControlAsset extends HTMLElement {
         this.isDrag = false
     }
 
+    getGcd(a,b) {
+        if (b == 0) {
+            return a
+        }
+        return this.getGcd(b, a%b)
+    }
+
+
     resize(e) {
         this.isDrag = false
 
@@ -397,6 +411,10 @@ class ElementControlAsset extends HTMLElement {
 
         let x = e.pageX - rect.left - this.initialPosition.x
         let y = e.pageY - rect.top - this.initialPosition.y
+        let w = this.initialPosition.w
+        let h = this.initialPosition.h
+
+        let aspectRatio = w/h
 
         switch (this.resizeDirection) {
             case 'n':
@@ -415,6 +433,36 @@ class ElementControlAsset extends HTMLElement {
                 break;
 
             case 'e':
+                this.style.left = `${this.initialPosition.x}px`
+                this.style.width = `${x}px`
+                break;
+
+            case 'ne':
+                this.style.top = `${this.initialPosition.y+y}px`
+                //this.style.height = `${this.initialPosition.h-y}px`
+                //this.style.width = `${aspectRatio*(this.initialPosition.h-y)}px`
+                this.style.height = `${this.initialPosition.h-y}px`
+                this.style.width = `${x}px`
+
+                break;
+
+            case 'nw':
+                this.style.top = `${this.initialPosition.y+y}px`
+                this.style.height = `${this.initialPosition.h-y}px`
+                this.style.left = `${this.initialPosition.x+x}px`
+                this.style.width = `${this.initialPosition.w-x}px`
+                break;
+
+            case 'sw':
+                this.style.top = `${this.initialPosition.y}px`
+                this.style.height = `${y}px`
+                this.style.left = `${this.initialPosition.x+x}px`
+                this.style.width = `${this.initialPosition.w-x}px`
+                break;
+
+            case 'se':
+                this.style.top = `${this.initialPosition.y}px`
+                this.style.height = `${y}px`
                 this.style.left = `${this.initialPosition.x}px`
                 this.style.width = `${x}px`
                 break;

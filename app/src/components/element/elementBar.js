@@ -142,7 +142,6 @@ class ElementBar extends HTMLElement {
         this.isDrag = false
 
         let x = e.pageX - this.initialPosition.x
-        let y = e.pageY - this.initialPosition.y
 
         let duration = this.initialDuration 
         let originDuration = Number(this.style.width.split('px')[0])
@@ -153,17 +152,20 @@ class ElementBar extends HTMLElement {
 
         let windowWidth = window.innerWidth
         let timelineBodyWidth = timelineElement.scrollWidth
+        let targetWidth = Number(this.style.width.split('px')[0])
         let targetLeft = Number(this.style.left.split('px')[0])
+        let targetRight = windowWidth-originDuration-targetLeft < 0 ? timelineBodyWidth - (targetLeft + targetWidth) : 0
+
         let scrollLeft = timelineElement.scrollLeft
         let scrollRight = timelineBodyWidth-windowWidth-scrollLeft
         let marginLeftTargetToWidth = windowWidth-originDuration-targetLeft > 0 ? windowWidth-originDuration-targetLeft - 10 : 0
 
 
         if (this.resizeLocation == 'left') {
-            resizeRangeTargetLeft.style.width = `${(x+scrollLeft)-5}px`
+            resizeRangeTargetLeft.style.width = `${this.initialPosition.x+x+scrollLeft-targetLeft}px`
             this.timeline[this.elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
         } else {
-            resizeRangeTargetRight.style.width = `${(scrollRight+window.innerWidth-x-this.initialPosition.x)-marginLeftTargetToWidth}px`
+            resizeRangeTargetRight.style.width = `${(scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight}px`
             this.timeline[this.elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
         }
     }

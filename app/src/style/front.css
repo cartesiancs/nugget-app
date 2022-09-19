@@ -49,7 +49,7 @@ input[type='file']::file-selector-button {
 }
 
 .bg-darklight {
-    background-color: #495057;
+    background-color: #3a3f44;
 }
 .bg-darker {
     background-color: #16181b;
@@ -300,9 +300,10 @@ body.swal2-height-auto {
 
 .timeline-bar {
     position: absolute;
+    z-index: 90;
     width: 2px;
     height: 100%;
-    background-color: #868f99;
+    background-color: #cbd1d7;
 }
 
 
@@ -311,7 +312,7 @@ body.swal2-height-auto {
 }
 
 .asset:hover {
-    background-color: #373c43;
+    background-color: #2a3036;
     border-radius: 12px;
 }
 

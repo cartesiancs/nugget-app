@@ -113,7 +113,6 @@ ipcMain.on('RENDER', (evt, elements, options) => {
           projectOptions: options
         })
       } else if (isText) {
-        console.log('text')
         addFilterText({
           element: element,
           command: command,
@@ -123,10 +122,6 @@ ipcMain.on('RENDER', (evt, elements, options) => {
         })
 
       }
-
-
-
-      console.log('text', elementCounts)
 
 
     }
@@ -153,7 +148,13 @@ ipcMain.on('RENDER', (evt, elements, options) => {
  * @param {{element: object, filter, command, elementCounts: number, projectOptions}} object description
  */
 function addFilterMedia(object) {
+  let staticFiletype = ['image']
+  let dynamicFiletype = ['video']
+  let checkStaticCondition = staticFiletype.indexOf(object.element.filetype) >= 0
+  let checkDynamicCondition = dynamicFiletype.indexOf(object.element.filetype) >= 0
+
   object.command.input(object.element.localpath)
+  
 
   let options = {
     width: String(object.element.width * object.projectOptions.previewRatio),
@@ -162,6 +163,10 @@ function addFilterMedia(object) {
     y: String(object.element.location.y * object.projectOptions.previewRatio),
     startTime: object.element.startTime/200,
     endTime: (object.element.startTime/200) + (object.element.duration/200)
+  }
+
+  if (checkDynamicCondition) {
+    options.startTime = options.startTime + (object.element.trim.startTime/200)
   }
 
 

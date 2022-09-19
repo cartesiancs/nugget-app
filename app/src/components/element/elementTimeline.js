@@ -21,9 +21,21 @@ class ElementTimeline extends HTMLElement {
         return `<div id="timeline_bar" class="timeline-bar" style="left: 0px;"></div>`
     }
 
+    replaceTimelineBarHeight(height) {
+        let timelineBar = this.querySelector(".timeline-bar")
+        timelineBar.style.height = `${height}px`
+    }
+
+    getTimelineScrollHeight() {
+        return this.scrollHeight
+    }
+
     addElementBar(elementId) {
         const templateBar = this.templateElementBar(elementId)
         this.insertAdjacentHTML("beforeend", templateBar)
+
+        let height = this.getTimelineScrollHeight()
+        this.replaceTimelineBarHeight(height)
     }
 
     templateElementBar(elementId) {

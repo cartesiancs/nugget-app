@@ -349,6 +349,10 @@ class ElementControlAsset extends HTMLElement {
         `
     }
 
+    pxToInteger(px = '0px') {
+        return Number(px.split('px')[0])
+    }
+
 
     drag(e) {
         if (this.isDrag) {
@@ -363,35 +367,30 @@ class ElementControlAsset extends HTMLElement {
                 }
             }
     
-    
-            this.style.top = `${y}px`
-            this.style.left = `${x}px`
-            //target.style.transform = `translate(${x}px, ${y}px)`
-            this.timeline[this.elementId].location.x = x 
-            this.timeline[this.elementId].location.y = y
-        }
+            if (x > window.innerWidth) {
+                document.removeEventListener('mousemove', this.dragdownEventHandler);
+            } else {
+                this.style.top = `${y}px`
+                this.style.left = `${x}px`
 
+                this.timeline[this.elementId].location.x = x 
+                this.timeline[this.elementId].location.y = y
+            }
+        }
     }
 
     dragMousedown(e) {
-
-
         if (!this.isResize) {
             this.isDrag = true
-            this.initialPosition.x = e.pageX - Number(this.style.left.replace(/[^0-9]/g, ""))
-            this.initialPosition.y = e.pageY - Number(this.style.top.replace(/[^0-9]/g, ""))
+            this.initialPosition.x = e.pageX - this.pxToInteger(this.style.left)
+            this.initialPosition.y = e.pageY - this.pxToInteger(this.style.top)
             this.dragdownEventHandler = this.drag.bind(this)
             document.addEventListener('mousemove', this.dragdownEventHandler);
         }
-
-
     }
 
     dragMouseup() {
-        document.removeEventListener('mousemove', this.dragdownEventHandler);
-        //this.removeEventListener('mousemove', this.drag);
-
-
+        document.removeEventListener('mousemove', this.dragdownEventHandler)
         this.isDrag = false
     }
 
@@ -454,7 +453,6 @@ class ElementControlAsset extends HTMLElement {
                 break;
 
             case 'sw':
-                this.style.top = `${this.initialPosition.y}px`
                 this.style.height = `${y}px`
                 this.style.left = `${this.initialPosition.x+x}px`
                 this.style.width = `${this.initialPosition.w-x}px`

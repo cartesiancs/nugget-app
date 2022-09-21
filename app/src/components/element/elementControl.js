@@ -12,8 +12,29 @@ class ElementControl extends HTMLElement {
         this.isPaused = true
         this.progress = 0
         this.activeElementId = ''
+        this.previewRatio = 1920/1080
+
+        this.resize()
         
 
+    }
+
+    resize() {
+        let innerWidth = document.getElementById("split_col_2").offsetWidth
+        let innerHeight = document.getElementById("split_col_2").offsetHeight
+
+
+        let width = innerWidth*0.95;
+        let height = (width*9)/16
+
+        preview.width = width
+        preview.height = height
+        preview.style.width = `${width}px`
+        preview.style.height = `${height}px`
+        video.style.width = `${width}px`
+        video.style.height = `${height}px`
+
+        this.previewRatio = 1920/width
     }
 
     addImage(blob, path) {

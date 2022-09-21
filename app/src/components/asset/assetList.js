@@ -62,7 +62,26 @@ class AssetFile extends HTMLElement {
     }
 
     handleClick() {
-        nugget.asset.add(`${this.directory}/${this.filename}`, `${this.directory}`)
+        
+        this.patchToControl(`${this.directory}/${this.filename}`, `${this.directory}`)
+    }
+
+    patchToControl(url, path) {
+        fetch(`file://${url}`)
+        .then(res => {
+            return res.blob()
+        })
+        .then(blob => {
+            let blobUrl = URL.createObjectURL(blob);
+            let blobType = blob.type.split('/')[0] // image, video ...
+            let control = document.querySelector("element-control")
+
+            if (blobType == 'image') {
+                control.addImage(blobUrl, url)
+            } else if (blobType == 'video') {
+                control.addVideo(blobUrl, url)
+            }
+        })
     }
 
 

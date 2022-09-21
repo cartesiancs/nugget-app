@@ -1,6 +1,7 @@
 import element from './js/element.js';
 import canvas from './js/canvas.js';
 import asset from './js/asset.js';
+import directory from './js/directory.js';
 
 
 
@@ -25,4 +26,4 @@ customElements.define('element-control-asset', ElementControlAsset);
 
 
 
-export { element, canvas, asset }
+export { element, canvas, asset, directory }

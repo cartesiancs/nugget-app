@@ -23,47 +23,96 @@
         <div class="container-fluid h-100 ">
 
             <div id="split_top" class="row align-items-start" style="height: 80%;">
-                <div id="split_col_1" class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden position-relative pt-2" style="width: 30%;">
+                <div id="split_col_1" class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden position-relative p-0" style="width: 30%;">
                     <div class="split-col-bar" onmousedown="startSplitColumns(1)"></div>
 
-                    <ul class="nav nav-pills mb-3 mt-2 overflow-x-scroll" id="pills-tab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                          <button class="btn btn-dark me-2 active" id="pills-asset-tab" data-bs-toggle="pill" data-bs-target="#pills-asset" type="button" role="tab" aria-controls="pills-asset" aria-selected="true">에셋</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                          <button class="btn btn-dark me-2 " id="pills-preset-tab" data-bs-toggle="pill" data-bs-target="#pills-preset" type="button" role="tab" aria-controls="pills-preset" aria-selected="false">프리셋</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                          <button class="btn btn-dark me-2 " id="pills-render-tab" data-bs-toggle="pill" data-bs-target="#pills-render" type="button" role="tab" aria-controls="pills-render" aria-selected="false">랜더링</button>
-                        </li>
-                    </ul>
+                    <div class="accordion" id="accordionTab">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" >
+                                프로젝트 설정
+                              </button>
+                            </h2>
+                            <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#accordionTab">
+                              <div class="accordion-body">
+
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control bg-dark text-light" placeholder="프로젝트 이름" >
+                                </div>
+
+                                <div class="input-group mb-3">
+                                    <input id="projectFolder" type="text" class="form-control bg-dark text-light" placeholder="/" disabled>
+
+                                    <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.directory.select()">프로젝트 폴더 지정</button>
+
+                                </div>
+                                  
+                                <div class="input-group mb-3">
+                                    <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" value="10">
+                                    <span class="input-group-text bg-dark text-light" id="basic-addon2">초</span>
+
+                                </div>
+
+                              </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                          <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapseOne">
+                              에셋
+                            </button>
+                          </h2>
+                          <div id="collapse2" class="accordion-collapse collapse " data-bs-parent="#accordionTab">
+                            <div class="accordion-body">
+                                <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
+
+                                <asset-browser></asset-browser>
+    
+                                <asset-list></asset-list>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="accordion-item">
+                          <h2 class="accordion-header" >
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapseTwo">
+                              프리셋
+                            </button>
+                          </h2>
+                          <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
+                            <div class="accordion-body">
+                                <button class="btn btn-dark" onclick="elementControlComponent.addText()">text</button>
+
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="accordion-item">
+                          <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapseThree">
+                              랜더링
+                            </button>
+                          </h2>
+                          <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
+                            <div class="accordion-body">
+                                <button class="btn btn-dark" onclick="elementControlComponent.addText()">text</button>
+
+                                <button class="btn btn-dark" onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
+                                <button class="btn btn-green-fill" onclick="ipc.render()">render</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                     
-                    <div class="tab-content" id="pills-tabContent">
-                        <div class="tab-pane fade show active" id="pills-asset" role="tabpanel" aria-labelledby="pills-asset-tab">
-                            <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
 
-                            <asset-browser></asset-browser>
-
-                            <asset-list></asset-list>
-                        </div>
-                        <div class="tab-pane fade" id="pills-preset" role="tabpanel" aria-labelledby="pills-preset-tab">
-                            
-                        </div>
-                        <div class="tab-pane fade" id="pills-render" role="tabpanel" aria-labelledby="pills-render-tab">
-                            
-                            <button class="btn btn-dark" onclick="elementControlComponent.addText()">text</button>
-
-                            <button class="btn btn-dark" onclick="nugget.canvas.preview.export()">export</button>
-                            <button class="btn btn-dark" onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
-                            <button class="btn btn-green-fill" onclick="ipc.render()">render</button>
-                        </div>
-                    </div>
                     
                 </div>
 
 
                 <div id="split_col_2" class="h-100" style="width: 70%;">
-                    <div class="d-flex justify-content-center" onmouseup="nugget.element.control.onmouseup(event)">
+                    <div class="d-flex justify-content-center" ">
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
                             <element-control></element-control>
@@ -178,10 +227,10 @@
         };
 
 
-        window.addEventListener('resize', nugget.canvas.preview.resize, false);
+        //window.addEventListener('resize', nugget.canvas.preview.resize, false);
 
         window.addEventListener('load', (event) => {
-            nugget.canvas.preview.resize()
+            //nugget.canvas.preview.resize()
             ipc.requestAllDir('/Users/hhj/Desktop')
         });
                 
@@ -223,8 +272,11 @@
             if (valueEvent.splitColumns) {
                 let per = e.pageX/document.body.offsetWidth*100 <= page.minWidth ? page.minWidth : e.pageX/document.body.offsetWidth*100
                 page.split.columns(per)
-                nugget.canvas.preview.resize()
+                elementControlComponent.resize()
             }
+
+
+            /*
 
             if (nugget.element.bar.state.isDrag) {
                 let x = e.pageX - nugget.element.bar.state.criteria.x
@@ -267,7 +319,7 @@
 
                 nugget.element.control.resize.action(x, y)
             }
-
+            */
         })
 
 

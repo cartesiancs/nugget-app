@@ -60,6 +60,16 @@ let elementCounts = 1
 
 
 
+
+
+ipcMain.on('SELECT_DIR', async (evt) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
+  })
+  console.log('directories selected', result.filePaths)
+})
+
+
 ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
   let result = {}
 

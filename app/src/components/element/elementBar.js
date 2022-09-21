@@ -132,7 +132,7 @@ class ElementBar extends HTMLElement {
         } else {
             //this.style.left = `${this.initialPosition.x}px`
             this.style.width = `${timelineScrollLeft+e.pageX-Number(this.style.left.split('px')[0])}px`
-            this.timeline[this.elementId].startTime = this.initialPosition.x
+            //this.timeline[this.elementId].startTime = this.initialPosition.x
             this.timeline[this.elementId].duration = Number(this.style.width.split('px')[0])
         }
     }
@@ -171,12 +171,13 @@ class ElementBar extends HTMLElement {
     }
 
     resizeMousedown(e, location) {
+        console.log(this, Number(this.style.left.split("px")[0]))
         this.isResize = true
         this.resizeLocation = location
         this.isDrag = false
         this.initialPosition.x = location == 'left' ? 
-            e.pageX - Number(this.style.left.replace(/[^0-9]/g, "")) : 
-            Number(this.style.left.replace(/[^0-9]/g, ""))
+            e.pageX - Number(this.style.left.split("px")[0]) : 
+            Number(this.style.left.split("px")[0])
         this.initialPosition.y = e.pageY
         this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.replace(/[^0-9]/g, ""))
 

@@ -35,6 +35,61 @@ ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
 })
 
 
+ipcRenderer.on('PROCESSING', (evt, hms) => {
+    rendererUtil.showProgressModal()
+    let sec = rendererUtil.hmsToSeconds(hms)
+    let prog = rendererUtil.secondsToProgress(sec)
+    document.querySelector("#progress").style.width = `${prog}%`
+    document.querySelector("#progress").innerHTML = `${prog}%`
+
+})
+
+ipcRenderer.on('PROCESSING_FINISH', (evt) => {
+    rendererModal.progressModal.hide()
+    rendererModal.progressFinish.show()
+
+    document.querySelector("#progress").style.width = `100%`
+    document.querySelector("#progress").innerHTML = `100%`
+})
+
+
+
+const rendererModal = {
+    progressModal: new bootstrap.Modal(document.getElementById('progressRender'), {
+        keyboard: false
+    }),
+    progressFinish: new bootstrap.Modal(document.getElementById('progressFinish'), {
+        keyboard: false
+    })
+}
+
+const rendererUtil = {
+    hmsToSeconds(hms) {
+        let splitHMS = hms.split(':')
+        let seconds = (+splitHMS[0]) * 60 * 60 + (+splitHMS[1]) * 60 + (+splitHMS[2]); 
+        
+        return seconds
+    },
+
+    secondsToProgress(seconds) {
+        const projectDuration = Number(document.querySelector("#projectDuration").value)
+        return seconds/projectDuration*100
+    },
+
+    showProgressModal() {
+
+        rendererModal.progressModal.show()
+
+    },
+
+    openRenderedVideoFolder() {
+        const projectFolder = document.querySelector("#projectFolder").value
+        ipc.showFileInFolder(projectFolder)
+    }
+
+
+}
+
 
 const ipc = {
     requestAllDir: function (dir) {
@@ -52,5 +107,8 @@ const ipc = {
             videoDestination: `${projectFolder}/result.mp4`
         }
         ipcRenderer.send('RENDER', timeline, options)
+    },
+    showFileInFolder: function (path) {
+        shell.openPath(path)
     }
 }

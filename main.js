@@ -143,11 +143,14 @@ ipcMain.on('RENDER', (evt, elements, options) => {
   command.videoCodec('libx264')
   command.on('progress', function(progress) {
     console.log('Processing: ' + progress.timemark + ' done');
+    evt.sender.send('PROCESSING', progress.timemark)
   })
     
     
   command.output(options.videoDestination)
   command.on('end', function() {
+    evt.sender.send('PROCESSING_FINISH')
+
         console.log('Finished processing');
       })
       command.run();

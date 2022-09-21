@@ -4,8 +4,6 @@ class ElementTimeline extends HTMLElement {
 
         //this.directory = ''
 
-
-
         this.timeline = {
 
         }
@@ -16,6 +14,7 @@ class ElementTimeline extends HTMLElement {
         this.classList.add("col-12", "cursor-default", "h-100", "line")
         this.innerHTML = template;
     }
+
 
     template() {
         return `<div id="timeline_bar" class="timeline-bar" style="left: 0px;"></div>`

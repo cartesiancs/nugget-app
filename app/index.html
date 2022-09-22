@@ -83,6 +83,8 @@
                           <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
                             <div class="accordion-body">
                                 <button class="btn btn-dark" onclick="elementControlComponent.addText()">text</button>
+                                <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#option_top" aria-controls="option_top">Toggle right offcanvas</button>
+
 
                             </div>
                           </div>
@@ -111,8 +113,9 @@
                 </div>
 
 
-                <div id="split_col_2" class="h-100" style="width: 70%;">
-                    <div class="d-flex justify-content-center" ">
+                <div id="split_col_2" class="h-100 position-relative" style="width: 70%;">
+
+                    <div class="d-flex justify-content-center">
                         <div id="video" class="video">
                             <canvas id="preview" class="preview"></canvas>
                             <element-control></element-control>
@@ -129,6 +132,7 @@
                     </div>
                 </div>
 
+
             </div>
 
     
@@ -136,6 +140,23 @@
                 <element-timeline id="split_inner_bottom"></element-timeline>
 
             </div>
+        </div>
+
+
+        <div class="offcanvas offcanvas-start" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_top" aria-labelledby="offcanvasRightLabel" style="width: 30%;">
+        <div class="offcanvas-header">
+            <h5 id="offcanvasRightLabel" class="text-light">옵션</h5>
+            <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
+        </div>
+        <div class="offcanvas-body">
+            <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
+
+            <div id="option_text" class="d-none">
+                <label for="exampleColorInput" class="form-label">텍스트 색상 선택</label>
+                <input type="color" class="form-control form-control-color" onchange="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
+            </div>
+
+        </div>
         </div>
 
         <dds-modal
@@ -200,6 +221,7 @@
         let valueEvent = {
             splitBottom: false,
             splitColumns: false,
+            splitColumnsTarget: 1,
             moveElement: false,
             mouse: {
                 x: 0,
@@ -231,8 +253,11 @@
                     document.getElementById("split_bottom").style.height = `${100-percent}%`
                 },
                 columns: function (percent) {
-                    document.getElementById("split_col_1").style.width = `${percent}%`
-                    document.getElementById("split_col_2").style.width = `${100-percent}%`
+
+                    
+                    document.getElementById(`split_col_${valueEvent.splitColumnsTarget}`).style.width = `${percent}%`
+                    document.getElementById(`split_col_${valueEvent.splitColumnsTarget+1}`).style.width = `${(100-percent)}%`
+                    document.getElementById(`option_top`).style.width = `${percent}%` // 옵션 오프캔버스                    
                 },
             },
             minWidth: 20,
@@ -249,10 +274,9 @@
         };
 
 
-        //window.addEventListener('resize', nugget.canvas.preview.resize, false);
+        window.addEventListener('resize', elementControlComponent.resize, false);
 
         window.addEventListener('load', (event) => {
-            //nugget.canvas.preview.resize()
             ipc.requestAllDir('/Users/hhj/Desktop')
         });
                 
@@ -364,6 +388,7 @@
 
           function startSplitColumns(colNumber) {
             valueEvent.splitColumns = true
+            valueEvent.splitColumnsTarget = colNumber
           }
 
 

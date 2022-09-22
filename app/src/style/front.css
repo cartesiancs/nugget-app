@@ -118,6 +118,12 @@ input[type='file']::file-selector-button {
 
 }
 
+.offcanvas {
+    background-color: #3d40464d;
+    -webkit-backdrop-filter: saturate(100%) blur(36px);
+    backdrop-filter: saturate(100%) blur(36px);
+}
+
 .split-col-bar {
     position: absolute;
     top: 50%;

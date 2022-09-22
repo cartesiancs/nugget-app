@@ -112,8 +112,9 @@ class ElementControl extends HTMLElement {
             startTime: 0,
             duration: 1000,
             text: "텍스트",
+            textcolor: "#ffffff",
             location: {x: 0, y: 0},
-            localpath: '/TESTELEMENT',
+            localpath: '/TEXTELEMENT',
             filetype: 'text'
         }
 
@@ -178,9 +179,16 @@ class ElementControl extends HTMLElement {
         let elementBody = document.querySelector(`#element-${elementId}`)
         let inputTarget = elementBody.querySelector('input')
         let inputValue = inputTarget.value
-    
-        console.log(elementId, inputValue)
         elementTimeline.timeline[elementId].text = inputValue
+    }
+
+    changeTextColor(event) {
+        const elementTimeline = document.querySelector("element-timeline")
+        let elementId = document.querySelector(`#optionTargetElement`).value
+        let elementBody = document.querySelector(`#element-${elementId}`)
+        let inputTarget = elementBody.querySelector('input')
+        inputTarget.style.color = event.value
+        elementTimeline.timeline[elementId].textcolor = event.value
     }
 
     progressToTime() {
@@ -540,12 +548,31 @@ class ElementControlAsset extends HTMLElement {
     }
 
 
+    dblClick() {
+        let optionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_top'))
+        let offcanvasOptionListsId = ['option_text']
+
+        for (let index = 0; index < offcanvasOptionListsId.length; index++) {
+            const element = offcanvasOptionListsId[index];
+            document.querySelector(`#${element}`).classList.add("d-none")
+        }
+
+        if (this.elementFiletype == 'text') {
+            document.querySelector(`#option_text`).classList.remove("d-none")
+            document.querySelector(`#optionTargetElement`).value = this.elementId
+            optionOffcanvas.show()
+        }
+
+    }
+
+
     connectedCallback() {
         this.render();
 
         this.addEventListener('mousedown', this.dragMousedown.bind(this));
         this.addEventListener('mouseup', this.dragMouseup.bind(this));
         this.addEventListener('mousedown', this.activateOutline.bind(this));
+        this.addEventListener('dblclick', this.dblClick.bind(this));
 
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
 

@@ -215,6 +215,7 @@ function addFilterMedia(object) {
 
   let options = {
     text: object.element.text,
+    textcolor: object.element.textcolor,
     fontsize: 20 * object.projectOptions.previewRatio,
     x: String(object.element.location.x * object.projectOptions.previewRatio),
     y: String(object.element.location.y * object.projectOptions.previewRatio),
@@ -230,7 +231,7 @@ function addFilterMedia(object) {
       "fontfile": '/Users/hhj/Documents/nugget-app/assets/fonts/notosanskr-medium.otf',
       "text": options.text,
       "fontsize": options.fontsize,
-      "fontcolor": 'white',
+      "fontcolor": options.textcolor,
       "x": options.x,
       "y": options.y
     },

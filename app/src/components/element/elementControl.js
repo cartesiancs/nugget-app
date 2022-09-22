@@ -347,7 +347,7 @@ class ElementControlAsset extends HTMLElement {
         } else if (this.elementFiletype == 'video') {
             template = this.templateVideo() + this.templateResize()
         } else if (this.elementFiletype == 'text') {
-            template = this.templateText() + this.templateResize()
+            template = this.templateText() + this.templateResize('horizon')
         }
 
 
@@ -375,18 +375,41 @@ class ElementControlAsset extends HTMLElement {
 
     }
 
-    templateResize() {
-        return `
-        <div class="resize-n" onmousedown="this.parentNode.resizeMousedown('n')"></div>
-        <div class="resize-s" onmousedown="this.parentNode.resizeMousedown('s')"></div>
-        <div class="resize-w" onmousedown="this.parentNode.resizeMousedown('w')"></div>
-        <div class="resize-e" onmousedown="this.parentNode.resizeMousedown('e')"></div>
-        <div class="resize-ne" onmousedown="this.parentNode.resizeMousedown('ne')"></div>
-        <div class="resize-nw" onmousedown="this.parentNode.resizeMousedown('nw')"></div>
-        <div class="resize-se" onmousedown="this.parentNode.resizeMousedown('se')"></div>
-        <div class="resize-sw" onmousedown="this.parentNode.resizeMousedown('sw')"></div>
+    templateResize(type = 'full') {
+        // full horizon vertical
+        let resize = {
+            n: `<div class="resize-n" onmousedown="this.parentNode.resizeMousedown('n')"></div>`,
+            s: `<div class="resize-s" onmousedown="this.parentNode.resizeMousedown('s')"></div>`,
+            w: `<div class="resize-w" onmousedown="this.parentNode.resizeMousedown('w')"></div>`,
+            e: `<div class="resize-e" onmousedown="this.parentNode.resizeMousedown('e')"></div>`,
+            ne: `<div class="resize-ne" onmousedown="this.parentNode.resizeMousedown('ne')"></div>`,
+            nw: `<div class="resize-nw" onmousedown="this.parentNode.resizeMousedown('nw')"></div>`,
+            se: `<div class="resize-se" onmousedown="this.parentNode.resizeMousedown('se')"></div>`,
+            sw: `<div class="resize-sw" onmousedown="this.parentNode.resizeMousedown('sw')"></div>`
+        }
+        if (type == 'full') {
+            return `
+            ${resize.n}
+            ${resize.s}
+            ${resize.w}
+            ${resize.e}
+            ${resize.ne}
+            ${resize.nw}
+            ${resize.se}
+            ${resize.sw}
+            `
+        } else if (type == 'vertical') {
+            return `
+            ${resize.n}
+            ${resize.s}
+            `
+        } else if (type == 'horizon') {
+            return `
+            ${resize.w}
+            ${resize.e}
+            `
+        }
 
-        `
     }
 
     pxToInteger(px = '0px') {

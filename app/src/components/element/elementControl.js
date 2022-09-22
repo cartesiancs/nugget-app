@@ -113,6 +113,7 @@ class ElementControl extends HTMLElement {
             duration: 1000,
             text: "텍스트",
             textcolor: "#ffffff",
+            fontsize: 20,
             location: {x: 0, y: 0},
             localpath: '/TEXTELEMENT',
             filetype: 'text'
@@ -189,6 +190,16 @@ class ElementControl extends HTMLElement {
         let inputTarget = elementBody.querySelector('input')
         inputTarget.style.color = event.value
         elementTimeline.timeline[elementId].textcolor = event.value
+    }
+
+    changeTextSize(event) {
+        console.log(event)
+        const elementTimeline = document.querySelector("element-timeline")
+        let elementId = document.querySelector(`#optionTargetElement`).value
+        let elementBody = document.querySelector(`#element-${elementId}`)
+        let inputTarget = elementBody.querySelector('input')
+        inputTarget.style.fontSize = `${event.value}px`
+        elementTimeline.timeline[elementId].fontsize = Number(event.value)
     }
 
     progressToTime() {

@@ -152,8 +152,15 @@
             <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
 
             <div id="option_text" class="d-none">
-                <label for="exampleColorInput" class="form-label">텍스트 색상 선택</label>
-                <input type="color" class="form-control form-control-color" onchange="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
+                <div class="mb-2">
+                    <label class="form-label text-light">텍스트 색상 선택</label>
+                    <input type="color" class="form-control form-control-color" onchange="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label text-light">폰트 크기</label>
+                    <input type="number" class="form-control" onchange="elementControlComponent.changeTextSize(this)" value="20" >
+                </div>
             </div>
 
         </div>

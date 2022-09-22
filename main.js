@@ -216,7 +216,7 @@ function addFilterMedia(object) {
   let options = {
     text: object.element.text,
     textcolor: object.element.textcolor,
-    fontsize: 20 * object.projectOptions.previewRatio,
+    fontsize: object.element.fontsize * object.projectOptions.previewRatio,
     x: String(object.element.location.x * object.projectOptions.previewRatio),
     y: String(object.element.location.y * object.projectOptions.previewRatio),
     startTime: object.element.startTime/200,

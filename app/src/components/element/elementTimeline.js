@@ -62,7 +62,7 @@ class ElementTimeline extends HTMLElement {
         let elementType = 'undefined'
         const elementFileExtensionType = {
             "static": ['image', 'text', 'png', 'jpg', 'jpeg'],
-            "dynamic": ['video', 'mp4', 'mp3', 'mov']
+            "dynamic": ['video', 'audio', 'mp4', 'mp3', 'mov']
         }
 
         for (const type in elementFileExtensionType) {

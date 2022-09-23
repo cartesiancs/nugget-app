@@ -90,6 +90,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
   let resizeRatio = options.previewRatio
   let mediaFileLists = ['image', 'video']
   let textFileLists = ['text']
+  let audioFileLists = ['audio']
 
   let filter = []
   let command = ffmpeg()
@@ -113,6 +114,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
       let isMedia = mediaFileLists.indexOf(element.filetype) >= 0;
       let isText = textFileLists.indexOf(element.filetype) >= 0;
+      let isAudio = audioFileLists.indexOf(element.filetype) >= 0;
 
       if(isMedia)  {
         addFilterMedia({
@@ -130,7 +132,14 @@ ipcMain.on('RENDER', (evt, elements, options) => {
           elementCounts: elementCounts,
           projectOptions: options
         })
-
+      } else if (isAudio) {
+        addFilterAudio({
+          element: element,
+          command: command,
+          filter: filter,
+          elementCounts: elementCounts,
+          projectOptions: options
+        })
       }
 
 
@@ -141,6 +150,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
   command.outputOptions(["-map 0:a?"])
   command.fps(50)
   command.videoCodec('libx264')
+  command.audioCodec('libmp3lame')
   command.on('progress', function(progress) {
     console.log('Processing: ' + progress.timemark + ' done');
     evt.sender.send('PROCESSING', progress.timemark)
@@ -238,8 +248,31 @@ function addFilterMedia(object) {
     "inputs": `tmp`,
     "outputs": `tmp`
   })
+}
 
 
+function addFilterAudio(object) {
+  console.log(object)
+
+  object.command.input(object.element.localpath)
+
+  let options = {
+    startTime: object.element.startTime/200 + (object.element.trim.startTime/200),
+    endTime: (object.element.startTime/200) + (object.element.duration/200)
+  }
+
+
+  object.filter.push({
+    "filter": "atrim",
+    "options": {
+      "start": options.startTime,
+      "end": options.endTime
+    },
+    "inputs": `[tmp][image${elementCounts}]`,
+    "outputs": `tmp`
+  })
+
+  elementCounts += 1
 }
 
 

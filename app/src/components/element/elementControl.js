@@ -40,8 +40,7 @@ class ElementControl extends HTMLElement {
     addImage(blob, path) {
         const elementId = this.generateUUID()
         const elementTimeline = document.querySelector("element-timeline")
-
-        let img = document.createElement('img');
+        const img = document.createElement('img');
 
         img.src = blob
         img.onload = () => {
@@ -69,9 +68,9 @@ class ElementControl extends HTMLElement {
 
 
     addVideo(blob, path) {
-        let video = document.createElement('video')
         const elementId = this.generateUUID()
         const elementTimeline = document.querySelector("element-timeline")
+        const video = document.createElement('video')
 
 
         video.src = blob
@@ -124,6 +123,35 @@ class ElementControl extends HTMLElement {
     }
 
 
+    addAudio(blob, path) {
+        const elementId = this.generateUUID()
+        const elementTimeline = document.querySelector("element-timeline")
+        const audio = document.createElement('audio')
+
+        audio.src = blob
+
+        audio.onloadedmetadata = () => {
+            let duration = audio.duration*200
+
+            elementTimeline.timeline[elementId] = {
+                blob: blob,
+                startTime: 0,
+                duration: duration,
+                location: {x: 0, y: 0}, // NOT USING
+                trim: {startTime: 0, endTime: duration},
+                localpath: path,
+                filetype: 'audio'
+            }
+
+            
+            this.showAudio(elementId)
+            elementTimeline.addElementBar(elementId)
+
+        }
+
+    }
+
+
     showImage(elementId) {
         const elementTimeline = document.querySelector("element-timeline")
         let blob = elementTimeline.timeline[elementId].blob
@@ -160,6 +188,36 @@ class ElementControl extends HTMLElement {
             } else {
                 video.currentTime = secondsOfRelativeTime
                 video.play()
+            }
+
+            document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+        }
+    }
+
+    showAudio(elementId) {
+        const elementTimeline = document.querySelector("element-timeline")
+
+        if (document.getElementById(`element-${elementId}`) == null) {
+            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="audio"></element-control-asset>`)
+
+            let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
+            let secondsOfRelativeTime = (elementTimeline.timeline[elementId].startTime - this.progress) / 200
+
+            audio.currentTime = secondsOfRelativeTime
+
+        } else {
+            let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
+            let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
+
+            if (!!(audio.currentTime > 0 && !audio.paused && !audio.ended && audio.readyState > 2)) {
+                if (this.isPaused) {
+                    console.log('paused')
+
+                }
+                console.log('isPlaying')
+            } else {
+                audio.currentTime = secondsOfRelativeTime
+                audio.play()
             }
 
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
@@ -220,6 +278,8 @@ class ElementControl extends HTMLElement {
 
         if (timeline[elementId].filetype == 'video') {
             this.pauseVideo(elementId)
+        } else if (timeline[elementId].filetype == 'audio') {
+            this.pauseAudio(elementId)
         }
         document.querySelector(`#element-${elementId}`).classList.add('d-none')
     }
@@ -251,7 +311,7 @@ class ElementControl extends HTMLElement {
                 let checkFiletype = timeline[elementId].startTime > this.progress || 
                 timeline[elementId].startTime + timeline[elementId].duration < this.progress
     
-                if (filetype == 'video') {
+                if (filetype == 'video' || filetype == 'audio') {
                     checkFiletype = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
                     timeline[elementId].startTime + timeline[elementId].trim.endTime < this.progress
                 }
@@ -265,6 +325,8 @@ class ElementControl extends HTMLElement {
                         this.showVideo(elementId)
                     } else if (filetype == 'text') {
                         this.showText(elementId)
+                    } else if (filetype == 'audio') {
+                        this.showAudio(elementId)
                     }
                 }
             }
@@ -286,7 +348,7 @@ class ElementControl extends HTMLElement {
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`
         showTime.innerHTML = this.progressToTime()
 
-        this.pauseAllVideo()
+        this.pauseAllDynamicElements()
     }
 
     pauseVideo (elementId) {
@@ -294,7 +356,12 @@ class ElementControl extends HTMLElement {
         video.pause()
     }
 
-    pauseAllVideo () {
+    pauseAudio (elementId) {
+        let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
+        audio.pause()
+    }
+
+    pauseAllDynamicElements () {
         const timeline = document.querySelector("element-timeline").timeline
         let key;
 
@@ -302,11 +369,13 @@ class ElementControl extends HTMLElement {
             let filetype = timeline[key].filetype
 
             if (filetype == 'video') {
-                let video = document.getElementById(`element-${key}`).querySelector("video")
-                video.pause()
+                this.pauseVideo(key)
+            } else if (filetype == 'audio') {
+                this.pauseAudio(key)
             }
         }
     }
+
 
     reset () {
         const showTime = document.querySelector("#time") 
@@ -348,6 +417,8 @@ class ElementControlAsset extends HTMLElement {
             template = this.templateVideo() + this.templateResize()
         } else if (this.elementFiletype == 'text') {
             template = this.templateText() + this.templateResize('horizon')
+        } else if (this.elementFiletype == 'audio') {
+            template = this.templateAudio()
         }
 
 
@@ -367,6 +438,11 @@ class ElementControlAsset extends HTMLElement {
     templateVideo() {
         return `
         <video src="${this.timeline[this.elementId].blob}" alt="" class="element-video" draggable="false"></video>`
+    }
+
+    templateAudio() {
+        return `
+        <audio src="${this.timeline[this.elementId].blob}" class="d-none" draggable="false"></video>`
     }
 
     templateText() {

@@ -56,7 +56,10 @@ function createWindow () {
 }
 
 let dir = "/Users/hhj"
-let elementCounts = 1
+let elementCounts = {
+  video: 1,
+  audio: 0
+}
 
 
 
@@ -86,7 +89,9 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
 })
 
 ipcMain.on('RENDER', (evt, elements, options) => {
-  elementCounts = 1
+  elementCounts.video = 1
+  elementCounts.audio = 0
+
   let resizeRatio = options.previewRatio
   let mediaFileLists = ['image', 'video']
   let textFileLists = ['text']
@@ -121,7 +126,6 @@ ipcMain.on('RENDER', (evt, elements, options) => {
           element: element,
           command: command,
           filter: filter,
-          elementCounts: elementCounts,
           projectOptions: options
         })
       } else if (isText) {
@@ -129,7 +133,6 @@ ipcMain.on('RENDER', (evt, elements, options) => {
           element: element,
           command: command,
           filter: filter,
-          elementCounts: elementCounts,
           projectOptions: options
         })
       } else if (isAudio) {
@@ -137,7 +140,6 @@ ipcMain.on('RENDER', (evt, elements, options) => {
           element: element,
           command: command,
           filter: filter,
-          elementCounts: elementCounts,
           projectOptions: options
         })
       }
@@ -146,18 +148,25 @@ ipcMain.on('RENDER', (evt, elements, options) => {
     }
   }
 
-  command.complexFilter(filter, 'tmp')
-  command.outputOptions(["-map 0:a?"])
-  command.fps(50)
+  command.complexFilter(filter, ['tmp', 'audio'])
+  command.outputOptions(["-map tmp?"])
+  command.outputOptions(["-map audio?"])
+  command.output(options.videoDestination)
+  command.audioCodec('aac')
   command.videoCodec('libx264')
-  command.audioCodec('libmp3lame')
+  command.fps(50)
+  command.format('mp4');
+
+  //command.audioCodec('libmp3lame')
+
   command.on('progress', function(progress) {
     console.log('Processing: ' + progress.timemark + ' done');
     evt.sender.send('PROCESSING', progress.timemark)
   })
     
     
-  command.output(options.videoDestination)
+
+
   command.on('end', function() {
     evt.sender.send('PROCESSING_FINISH')
 
@@ -168,7 +177,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 })
 
 /**
- * @param {{element: object, filter, command, elementCounts: number, projectOptions}} object description
+ * @param {{element: object, filter, command, projectOptions}} object description
  */
 function addFilterMedia(object) {
   let staticFiletype = ['image']
@@ -199,8 +208,8 @@ function addFilterMedia(object) {
       "w": options.width,
       "h": options.height
     },
-    "inputs": `[${elementCounts}:v]`,
-    "outputs": `image${elementCounts}`
+    "inputs": `[${elementCounts.video}:v]`,
+    "outputs": `image${elementCounts.video}`
   })
 
   object.filter.push({
@@ -210,16 +219,16 @@ function addFilterMedia(object) {
       "x": options.x,
       "y": options.y
     },
-    "inputs": `[tmp][image${elementCounts}]`,
+    "inputs": `[tmp][image${elementCounts.video}]`,
     "outputs": `tmp`
   })
 
-  elementCounts += 1
+  elementCounts.video += 1
 }
 
 
 /**
- * @param {{element: object, filter, command, elementCounts: number, projectOptions}} object description
+ * @param {{element: object, filter, command, projectOptions}} object description
  */
  function addFilterText(object) {
 
@@ -252,27 +261,52 @@ function addFilterMedia(object) {
 
 
 function addFilterAudio(object) {
-  console.log(object)
-
-  object.command.input(object.element.localpath)
-
   let options = {
     startTime: object.element.startTime/200 + (object.element.trim.startTime/200),
+    trim: {
+      start: object.element.trim.startTime/200
+    },
+    duration: object.element.trim.endTime/200 - (object.element.trim.startTime/200),
     endTime: (object.element.startTime/200) + (object.element.duration/200)
   }
 
+  object.command.input(object.element.localpath)
+    .audioCodec('copy')
+    .audioChannels(2)
+    .inputOptions(`-itsoffset ${options.startTime}`)
+    .seekInput(options.trim.start)
+    .inputOptions(`-t ${options.duration}`)
+  console.log(object.element.localpath, elementCounts.video)
+
+
+
+
+  // object.filter.push({
+  //   "filter": "atrim",
+  //   "options": {
+  //     "start": options.startTime,
+  //     "end": options.endTime
+  //   },
+  //   "inputs": elementCounts.video == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+  //   "outputs": `audio`
+  // })
 
   object.filter.push({
-    "filter": "atrim",
+    "filter": "amix",
     "options": {
-      "start": options.startTime,
-      "end": options.endTime
-    },
-    "inputs": `[tmp][image${elementCounts}]`,
-    "outputs": `tmp`
-  })
 
-  elementCounts += 1
+      "inputs": elementCounts.audio == 0 ? 1 : 2,
+      "duration": "first",
+      "dropout_transition": 0
+    },
+    "inputs": elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+    "outputs": `audio`
+  })
+  
+
+  elementCounts.audio += 1
+  elementCounts.video += 1
+
 }
 
 

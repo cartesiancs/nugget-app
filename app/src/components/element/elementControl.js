@@ -35,6 +35,7 @@ class ElementControl extends HTMLElement {
         video.style.height = `${height}px`
 
         this.previewRatio = 1920/width
+
     }
 
     addImage(blob, path) {

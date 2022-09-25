@@ -148,14 +148,24 @@ ipcMain.on('RENDER', (evt, elements, options) => {
     }
   }
 
-  command.complexFilter(filter, ['tmp', 'audio'])
+  filterLists = ['tmp']
+
+  if (elementCounts.audio != 0) {
+    filterLists.push('audio')
+  }
+
+  command.complexFilter(filter, filterLists)
   command.outputOptions(["-map tmp?"])
-  command.outputOptions(["-map audio?"])
+  if (elementCounts.audio != 0) {
+    command.outputOptions(["-map audio?"])
+  }
   command.output(options.videoDestination)
   command.audioCodec('aac')
   command.videoCodec('libx264')
   command.fps(50)
   command.format('mp4');
+
+
 
   //command.audioCodec('libmp3lame')
 

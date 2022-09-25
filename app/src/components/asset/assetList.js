@@ -1,3 +1,5 @@
+
+
 class AssetList extends HTMLElement { 
     constructor() {
         super();
@@ -52,12 +54,48 @@ class AssetFile extends HTMLElement {
     }
 
     render(){
-        const template = this.template();
+        const fileType = NUGGET.mime.lookup(this.filename).type
+        let template;
+        if (fileType == 'image') {
+            template = this.templateImage(`file://${this.directory}/${this.filename}`);
+        } else {
+            template = this.template(fileType);
+        }
         this.innerHTML = template;
+        // fetch(`file://${this.directory}/${this.filename}`)
+        // .then(res => {
+        //     return res.blob()
+        // })
+        // .then(blob => {
+        //     let blobUrl = URL.createObjectURL(blob);
+        //     let blobType = blob.type.split('/')[0] // image, video, audio ...
+        //     let template
+
+        //     console.log(blobType)
+
+            // if (blobType == 'image') {
+            //     template = this.templateImage(blobUrl);
+            // } else {
+                
+            // }
+
+        //     this.innerHTML = template;
+        // })
+
     }
 
-    template() {
-        return `<span class="material-symbols-outlined icon-lg align-self-center"> draft </span>
+    template(filetype = 'unknown') {
+        const fileIcon = {
+            'video': 'video_file',
+            "audio": "audio_file",
+            "unknown": "draft"
+        }
+        return `<span class="material-symbols-outlined icon-lg align-self-center"> ${fileIcon[filetype]} </span>
+        <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`
+    }
+
+    templateImage(url) {
+        return `<img src="${url}" alt="" class="align-self-center" width="55px" height="55px">
         <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`
     }
 

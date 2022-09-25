@@ -1,8 +1,8 @@
-import element from './js/element.js';
-import canvas from './js/canvas.js';
-import asset from './js/asset.js';
-import directory from './js/directory.js';
-import mime from './js/mime.js';
+import element from './functions/element.js';
+import canvas from './functions/canvas.js';
+import asset from './functions/asset.js';
+import directory from './functions/directory.js';
+import mime from './functions/mime.js';
 
 
 

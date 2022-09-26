@@ -86,5 +86,30 @@ class ElementTimeline extends HTMLElement {
     }
 }
 
+class ElementTimelineEditor extends HTMLElement { 
+    constructor() {
+        super();
 
-export { ElementTimeline }
+    }
+
+    render(){
+        const template = this.template();
+        this.classList.add("col-12", "cursor-default", "h-100", "line")
+        this.innerHTML = template;
+    }
+
+
+    template() {
+        return `<div id="timeline_bar" class="timeline-bar" style="left: 0px;"></div>`
+    }
+
+
+
+    connectedCallback() {
+        this.render();
+
+    }
+}
+
+
+export { ElementTimeline, ElementTimelineEditor }

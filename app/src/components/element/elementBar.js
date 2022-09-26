@@ -21,6 +21,7 @@ class ElementBar extends HTMLElement {
         this.filepath = splitedFilepath[splitedFilepath.length-1]
 
         this.resizeEventHandler;
+        this.dragEventHandler;
 
     }
 
@@ -106,10 +107,13 @@ class ElementBar extends HTMLElement {
         this.isDrag = true
         this.initialPosition.x = e.pageX - Number(this.style.left.replace(/[^0-9]/g, ""))
         this.initialPosition.y = e.pageY
+
+        this.dragEventHandler = this.drag.bind(this)
+        document.addEventListener('mousemove', this.dragEventHandler);
     }
 
     dragMouseup() {
-        this.removeEventListener('mousemove', this.drag);
+        document.removeEventListener('mousemove', this.dragEventHandler);
 
         this.isDrag = false
     }
@@ -212,7 +216,7 @@ class ElementBar extends HTMLElement {
         this.render();
 
         this.addEventListener('mousedown', this.dragMousedown.bind(this));
-        this.addEventListener('mouseup', this.dragMouseup.bind(this));
+        document.addEventListener('mouseup', this.dragMouseup.bind(this));
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
 
     }

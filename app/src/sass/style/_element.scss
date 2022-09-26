@@ -1,0 +1,117 @@
+.element-bar-resize-left {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0.8rem;
+    height: 100%;
+    cursor: ew-resize;
+}
+
+.element-bar-resize-right {
+    position: absolute;
+    top: 50%;
+    right: 0rem; 
+    transform: translateY(-50%);
+    width: 0.8rem;
+    height: 100%;
+    cursor: ew-resize;
+}
+
+
+
+
+.element-bar-hiddenspace-left {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0rem;
+    height: 100%;
+    background-color: #00000081;
+}
+
+.element-bar-hiddenspace-right {
+    position: absolute;
+    top: 50%;
+    right: 0rem; 
+    transform: translateY(-50%);
+    width: 0rem;
+    height: 100%;
+    background-color: #00000081;
+
+}
+
+
+
+
+.element-bar-resize-hiddenspace-left {
+    position: absolute;
+    top: 50%;
+    right: -0.5rem; 
+    transform: translateY(-50%);
+    width: 0.8rem;
+    height: 100%;
+    cursor: ew-resize;
+}
+
+.element-bar-resize-hiddenspace-right {
+    position: absolute;
+    top: 0;
+    left: -0.5rem;
+    width: 0.8rem;
+    height: 100%;
+    cursor: ew-resize;
+}
+
+.element-bar {
+    position: relative;
+    margin-bottom: 0.3rem;
+    background-color: #495057;
+    color: #ffffff;
+    padding: 0.3rem;
+    text-overflow: ellipsis;
+    overflow: hidden; 
+    white-space: nowrap;
+}
+
+
+.element-image {
+    width: 100%;
+    height: 100%;
+    cursor: grab !important;
+
+}
+
+.element-video {
+    width: 100%;
+    height: 100%;
+    cursor: grab !important;
+    object-fit: inherit;
+}
+
+.element-text {
+    width: 100%;
+    height: 100%;
+    cursor: grab !important;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+}
+
+.element-drag {
+    position: absolute;
+    cursor: grab !important;
+    bottom: auto;
+    right: auto;
+}
+
+
+.element-outline {
+    outline: 1px dashed #ffffff;
+}
+
+
+.element-drag.element-outline > .resize-nw,
+.element-drag.element-outline > .resize-ne,
+.element-drag.element-outline > .resize-sw,
+.element-drag.element-outline > .resize-se  {
+    background-color: #ffffffbc;
+}

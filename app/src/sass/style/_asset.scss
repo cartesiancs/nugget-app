@@ -1,0 +1,16 @@
+.asset:hover > .text-ellipsis-scroll  {
+    width: 750%;
+    display: inline-block;
+    white-space: nowrap;
+    animation: scrollText 5s infinite linear;
+    padding-left: 220%; 
+}
+
+.asset {
+    padding: .5rem;
+}
+
+.asset:hover {
+    background-color: #2a3036;
+    border-radius: 12px;
+}

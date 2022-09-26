@@ -12,6 +12,8 @@ import { ElementTimeline } from './components/element/elementTimeline.js';
 import { ElementBar } from './components/element/elementBar.js';
 import { ElementControl, ElementControlAsset } from './components/element/elementControl.js';
 
+import "./sass/style.scss";
+
 
 customElements.define('asset-list', AssetList);
 customElements.define('asset-file', AssetFile);

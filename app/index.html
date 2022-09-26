@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Team-DeVent/devent-designsystem/dist/style.css"/>
 
-    <link rel="stylesheet" href="src/style/front.css">
+    <link rel="stylesheet" href="dist/style.css">
     
 </head>
     <body class="h-100 bg-dark">
@@ -283,6 +283,8 @@
 
         window.addEventListener('resize', elementControlComponent.resize, false);
 
+
+        
         window.addEventListener('load', (event) => {
             ipc.requestAllDir('/Users/hhj/Desktop')
         });

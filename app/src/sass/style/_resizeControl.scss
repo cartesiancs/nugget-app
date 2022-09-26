@@ -1,0 +1,86 @@
+
+.resize-n {
+    position: absolute;
+    top: -.2rem;
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 80%;
+    height: .3rem;
+    background-color: #868f9900;
+    cursor: ns-resize;
+
+}
+
+.resize-s {
+    position: absolute;
+    bottom: -.2rem;
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 80%;
+    height: .3rem;
+    background-color: #868f9900;
+    cursor: ns-resize;
+
+}
+
+.resize-w {
+    position: absolute;
+    top: 50%;
+    left: -.2rem; 
+    transform: translateY(-50%);
+    width: .3rem;
+    height: 80%;
+    background-color: #868f9900;
+    cursor: ew-resize;
+
+}
+
+.resize-e {
+    position: absolute;
+    top: 50%;
+    right: -.2rem; 
+    transform: translateY(-50%);
+    width: .3rem;
+    height: 80%;
+    background-color: #868f9900;
+    cursor: ew-resize;
+
+}
+
+
+.resize-nw {
+    position: absolute;
+    top: -.4rem;
+    left: -.4rem; 
+    width: .6rem;
+    height: .6rem;
+
+    cursor: nwse-resize	;
+}
+
+.resize-ne {
+    position: absolute;
+    top: -.4rem;
+    left: calc(100% - .2rem); 
+    width: .6rem;
+    height: .6rem;
+    cursor: nesw-resize	;
+}
+
+.resize-sw {
+    position: absolute;
+    top: calc(100% - .2rem);
+    left: -.4rem; 
+    width: .6rem;
+    height: .6rem;
+    cursor: nesw-resize	;
+}
+
+.resize-se {
+    position: absolute;
+    top: calc(100% - .2rem);
+    left: calc(100% - .2rem); 
+    width: .6rem;
+    height: .6rem;
+    cursor: nwse-resize	;
+}

@@ -1,0 +1,72 @@
+
+.timeline-editor {
+    position: relative;
+    display: table;
+    width: 100%;
+    margin-bottom: 1rem;
+    height: 2rem;
+    padding: 0rem;
+    margin: 0rem;
+    cursor: default;
+    color: #dddddd;
+}
+
+.ruler {
+    --ruler-num-c: #888;
+    --ruler-num-fz: 10px;
+    --ruler-num-pi: 0.75ch;
+    --ruler-unit: 4px;
+    --ruler-x: 1;
+    --ruler-y: 1;
+
+    --ruler1-bdw: 1px;
+    --ruler1-c:  #BBB;
+    --ruler1-h: 8px;
+    --ruler1-space: 5;
+
+    --ruler2-bdw: 1px;
+    --ruler2-c:  #BBB;
+    --ruler2-h: 20px;
+    --ruler2-space: 50;
+
+  background-image:
+    linear-gradient(90deg, var(--ruler1-c) 0 var(--ruler1-bdw), transparent 0),
+    linear-gradient(90deg, var(--ruler2-c) 0 var(--ruler2-bdw), transparent 0),
+    linear-gradient(0deg, var(--ruler1-c) 0 var(--ruler1-bdw), transparent 0),
+    linear-gradient(0deg, var(--ruler2-c) 0 var(--ruler2-bdw), transparent 0);
+  background-position: 0 0;
+  background-repeat: repeat-x, repeat-x;
+  background-size:
+    calc(var(--ruler-unit) * var(--ruler1-space) * var(--ruler-x)) var(--ruler1-h),
+    calc(var(--ruler-unit) * var(--ruler2-space) * var(--ruler-x)) var(--ruler2-h),
+    var(--ruler1-h) calc(var(--ruler-unit) * var(--ruler1-space) * var(--ruler-y)),
+    var(--ruler2-h) calc(var(--ruler-unit) * var(--ruler2-space) * var(--ruler-y));
+  }
+
+  .ruler-x {
+    color: var(--ruler-num-c);
+    counter-reset: d 0;
+    display: flex;
+    font-size: var(--ruler-num-fz);
+    height: var(--ruler2-h);
+    inset-block-start: 0;
+    inset-inline-start: calc(var(--ruler-unit) * var(--ruler2-space));
+    line-height: 1;
+    list-style: none;
+    margin: 0;
+    opacity: var(--ruler-x);
+    overflow: hidden;
+    padding: 0;
+    width: 100%;
+  }
+
+  .ruler-x li {
+    align-self: flex-end;
+    counter-increment: d var(--ruler2-space);
+    flex: 0 0 calc(var(--ruler-unit) * var(--ruler2-space));
+  }
+  .ruler-x li::after {
+    content: counter(d);
+    line-height: 1;
+    padding-inline-start: var(--ruler-num-pi);
+  }

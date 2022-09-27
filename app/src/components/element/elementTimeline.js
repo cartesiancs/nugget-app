@@ -17,7 +17,11 @@ class ElementTimeline extends HTMLElement {
 
 
     template() {
-        return `<div id="timeline_bar" class="timeline-bar" style="left: 0px;"></div>`
+        return `
+        <element-timeline-editor></element-timeline-editor>
+        <element-timeline-bar></element-timeline-bar>
+
+        `
     }
 
     replaceTimelineBarHeight(height) {
@@ -86,6 +90,28 @@ class ElementTimeline extends HTMLElement {
     }
 }
 
+
+class ElementTimelineBar extends HTMLElement { 
+    constructor() {
+        super();
+    }
+
+    render(){
+        this.classList.add("timeline-bar")
+        this.setAttribute("id", "timeline_bar")
+        this.style.left = `0px`
+    }
+
+    move(px) {
+        this.style.left = `${px}px`
+    }
+
+    connectedCallback() {
+        this.render();
+
+    }
+}
+
 class ElementTimelineEditor extends HTMLElement { 
     constructor() {
         super();
@@ -94,22 +120,59 @@ class ElementTimelineEditor extends HTMLElement {
 
     render(){
         const template = this.template();
-        this.classList.add("col-12", "cursor-default", "h-100", "line")
+        this.classList.add("timeline-editor", "ruler")
         this.innerHTML = template;
+        this.addTickNumber(10)
     }
 
 
     template() {
-        return `<div id="timeline_bar" class="timeline-bar" style="left: 0px;"></div>`
+        return `<ul class="ruler-x">
+        <li></li><li></li><li></li><li></li><li></li> <!-- repeat -->
+      </ul>`
+    }
+
+    addTickNumber(licount) {
+        let addedli = '<li></li>'.repeat(licount)
+        this.querySelector("ul").innerHTML = addedli
+
+    }
+
+
+    updateRulerLength(e) {
+        let duration = Number(e.value) * 200
+        console.log(duration)
+        this.changeWidth(duration)
+        this.addTickNumber(Number(e.value))
+    }
+
+
+    changeWidth(px) {
+        this.style.width = `${px}px`
+    }
+
+
+    mousedown(e) {
+        const elementTimelineBar = document.querySelector("element-timeline-bar")
+        const elementTimeline = document.querySelector("element-timeline")
+        const elementControl = document.querySelector("element-control")
+        
+        
+        elementControl.progress = e.pageX + elementTimeline.scrollLeft
+        elementControl.showTime() 
+
+        elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft)
+
     }
 
 
 
     connectedCallback() {
         this.render();
+        this.addEventListener('mousedown', this.mousedown.bind(this));
 
     }
 }
 
 
-export { ElementTimeline, ElementTimelineEditor }
+export { ElementTimeline, ElementTimelineBar, ElementTimelineEditor }

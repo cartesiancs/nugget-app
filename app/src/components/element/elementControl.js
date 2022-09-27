@@ -272,6 +272,12 @@ class ElementControl extends HTMLElement {
         return uuid
     }
 
+
+    showTime() {
+        const showTime = document.querySelector("#time") 
+        showTime.innerHTML = this.progressToTime()
+
+    }
     
 
     hideElement (elementId) {
@@ -287,8 +293,7 @@ class ElementControl extends HTMLElement {
 
     play() {
         const timeline = document.querySelector("element-timeline").timeline
-        const timelineBar = document.querySelector("element-timeline").querySelector('div')
-        const showTime = document.querySelector("#time") 
+        const timelineBar = document.querySelector("element-timeline-bar")
 
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `elementControlComponent.stop()`)
@@ -299,8 +304,9 @@ class ElementControl extends HTMLElement {
             let nowTimelineProgress = Number(timelineBar.style.left.split('px')[0]) + 4
             this.progress = nowTimelineProgress
 
-            timelineBar.style.left = `${nowTimelineProgress}px`
-            showTime.innerHTML = this.progressToTime()
+            //timelineBar.style.left = `${nowTimelineProgress}px`
+            timelineBar.move(nowTimelineProgress)
+            this.showTime()
 
             if ((this.innerWidth + this.offsetWidth) >= this.offsetWidth) {
                 this.stop();
@@ -340,15 +346,14 @@ class ElementControl extends HTMLElement {
     stop() {
         clearInterval(this.scroller);
         const toggle = document.querySelector("#playToggle")
-        const showTime = document.querySelector("#time") 
 
         this.isPaused = true;
 
 
         toggle.setAttribute('onclick', `elementControlComponent.play()`)
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`
-        showTime.innerHTML = this.progressToTime()
 
+        this.showTime()
         this.pauseAllDynamicElements()
     }
 
@@ -379,14 +384,13 @@ class ElementControl extends HTMLElement {
 
 
     reset () {
-        const showTime = document.querySelector("#time") 
-        const timelineBar = document.querySelector("element-timeline").querySelector('div')
+        const timelineBar = document.querySelector("element-timeline-bar")
 
         this.progress = 0
         this.isPaused = true;
 
-        showTime.innerHTML = this.progressToTime()
-        timelineBar.style.left = `0px`
+        this.showTime()
+        timelineBar.move(0)
     }
 }
 

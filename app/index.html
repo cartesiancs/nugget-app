@@ -48,7 +48,7 @@
                                 </div>
                                   
                                 <div class="input-group mb-3">
-                                    <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" value="10">
+                                    <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-editor').updateRulerLength(this)" value="10">
                                     <span class="input-group-text bg-dark text-light" id="basic-addon2">초</span>
 
                                 </div>
@@ -383,6 +383,11 @@
               valueEvent.splitBottom = false
               valueEvent.splitColumns = false
 
+          })
+
+
+          document.querySelector("element-timeline-editor").addEventListener("mousedown", (e) => {
+                e.stopPropagation();
           })
 
 

@@ -180,6 +180,7 @@ class ElementControl extends HTMLElement {
             let video = document.getElementById(`element-${elementId}`).querySelector("video")
             let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
 
+
             if (!!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
                 if (this.isPaused) {
                     console.log('paused')
@@ -188,7 +189,13 @@ class ElementControl extends HTMLElement {
                 console.log('isPlaying')
             } else {
                 video.currentTime = secondsOfRelativeTime
-                video.play()
+
+                if (this.isPaused) {
+                    video.pause()
+                } else {
+                    video.play()
+                }
+
             }
 
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
@@ -218,7 +225,12 @@ class ElementControl extends HTMLElement {
                 console.log('isPlaying')
             } else {
                 audio.currentTime = secondsOfRelativeTime
-                audio.play()
+
+                if (this.isPaused) {
+                    audio.pause()
+                } else {
+                    audio.play()
+                }
             }
 
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
@@ -291,8 +303,36 @@ class ElementControl extends HTMLElement {
         document.querySelector(`#element-${elementId}`).classList.add('d-none')
     }
 
-    play() {
+    appearAllElementInTime() {
         const timeline = document.querySelector("element-timeline").timeline
+
+        for(let elementId in timeline) {
+            let filetype = timeline[elementId].filetype
+            let checkFiletype = timeline[elementId].startTime > this.progress || 
+            timeline[elementId].startTime + timeline[elementId].duration < this.progress
+
+            if (filetype == 'video' || filetype == 'audio') {
+                checkFiletype = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
+                timeline[elementId].startTime + timeline[elementId].trim.endTime < this.progress
+            }
+
+            if (checkFiletype) {
+                this.hideElement(elementId)
+            } else {
+                if (filetype == 'image') {
+                    this.showImage(elementId)
+                } else if (filetype == 'video') {
+                    this.showVideo(elementId)
+                } else if (filetype == 'text') {
+                    this.showText(elementId)
+                } else if (filetype == 'audio') {
+                    this.showAudio(elementId)
+                }
+            }
+        }
+    }
+
+    play() {
         const timelineBar = document.querySelector("element-timeline-bar")
 
         let toggle = document.querySelector("#playToggle")
@@ -312,31 +352,8 @@ class ElementControl extends HTMLElement {
                 this.stop();
             }
 
-            
-            for(let elementId in timeline) {
-                let filetype = timeline[elementId].filetype
-                let checkFiletype = timeline[elementId].startTime > this.progress || 
-                timeline[elementId].startTime + timeline[elementId].duration < this.progress
-    
-                if (filetype == 'video' || filetype == 'audio') {
-                    checkFiletype = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
-                    timeline[elementId].startTime + timeline[elementId].trim.endTime < this.progress
-                }
-    
-                if (checkFiletype) {
-                    this.hideElement(elementId)
-                } else {
-                    if (filetype == 'image') {
-                        this.showImage(elementId)
-                    } else if (filetype == 'video') {
-                        this.showVideo(elementId)
-                    } else if (filetype == 'text') {
-                        this.showText(elementId)
-                    } else if (filetype == 'audio') {
-                        this.showAudio(elementId)
-                    }
-                }
-            }
+            this.appearAllElementInTime()
+
 
 
         }, 20);
@@ -390,6 +407,7 @@ class ElementControl extends HTMLElement {
         this.isPaused = true;
 
         this.showTime()
+        this.appearAllElementInTime()
         timelineBar.move(0)
     }
 }

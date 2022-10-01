@@ -141,7 +141,6 @@ class ElementTimelineEditor extends HTMLElement {
 
     updateRulerLength(e) {
         let duration = Number(e.value) * 200
-        console.log(duration)
         this.changeWidth(duration)
         this.addTickNumber(Number(e.value))
     }
@@ -159,7 +158,9 @@ class ElementTimelineEditor extends HTMLElement {
         
         
         elementControl.progress = e.pageX + elementTimeline.scrollLeft
+        elementControl.stop()
         elementControl.showTime() 
+        elementControl.appearAllElementInTime()
 
         elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft)
 

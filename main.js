@@ -50,6 +50,8 @@ function createWindow () {
     mainWindow.webContents.openDevTools();
   }
 
+  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS']=true
+
 
   // console.log(command)
 

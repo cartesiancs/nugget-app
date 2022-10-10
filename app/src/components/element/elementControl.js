@@ -10,6 +10,10 @@ class ElementControl extends HTMLElement {
 
         this.scroller = undefined
         this.isPaused = true
+        this.isPlay = {
+            
+        }
+
         this.progress = 0
         this.activeElementId = ''
         this.previewRatio = 1920/1080
@@ -188,12 +192,17 @@ class ElementControl extends HTMLElement {
                 }
                 console.log('isPlaying')
             } else {
-                video.currentTime = secondsOfRelativeTime
+                
 
                 if (this.isPaused) {
                     video.pause()
+                    this.isPlay[elementId] = false
                 } else {
-                    video.play()
+                    if (!this.isPlay[elementId]) {
+                        video.currentTime = secondsOfRelativeTime
+                        video.play()
+                    }
+                    this.isPlay[elementId] = true
                 }
 
             }
@@ -358,13 +367,21 @@ class ElementControl extends HTMLElement {
 
         }, 20);
         this.isPaused = false;
+        
     }
 
     stop() {
         clearInterval(this.scroller);
         const toggle = document.querySelector("#playToggle")
+        const timeline = document.querySelector("element-timeline").timeline
 
         this.isPaused = true;
+        for (const elementId in timeline) {
+            if (Object.hasOwnProperty.call(timeline, elementId)) {
+                this.isPlay[elementId] = false
+            }
+        }
+        
 
 
         toggle.setAttribute('onclick', `elementControlComponent.play()`)
@@ -375,7 +392,10 @@ class ElementControl extends HTMLElement {
     }
 
     pauseVideo (elementId) {
+        const elementTimeline = document.querySelector("element-timeline")
+        let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
         let video = document.getElementById(`element-${elementId}`).querySelector("video")
+        video.currentTime = secondsOfRelativeTime
         video.pause()
     }
 

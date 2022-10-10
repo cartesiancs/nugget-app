@@ -10,6 +10,8 @@ class ElementBar extends HTMLElement {
 
         
         this.width = this.timeline[this.elementId].duration
+        this.startTime = this.timeline[this.elementId].startTime
+
         this.isDrag = false
         this.isResize = false
         this.resizeLocation = 'left'
@@ -36,7 +38,7 @@ class ElementBar extends HTMLElement {
         const backgroundColor = this.getRandomColor()
 
         this.classList.add("element-bar", 'd-block')
-        this.setAttribute("style", `width: ${this.width}px; left: 0px; background-color: ${backgroundColor};`)
+        this.setAttribute("style", `width: ${this.width}px; left: ${this.startTime}px; background-color: ${backgroundColor};`)
         this.setAttribute("value", this.elementId)
 
         this.innerHTML = template;

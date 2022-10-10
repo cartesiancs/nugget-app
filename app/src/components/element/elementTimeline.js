@@ -33,6 +33,39 @@ class ElementTimeline extends HTMLElement {
         return this.scrollHeight
     }
 
+    async patchTimeline(timeline) {
+        const elementControl = document.querySelector("element-control")
+        this.timeline = timeline
+        for (const elementId in timeline) {
+            if (Object.hasOwnProperty.call(timeline, elementId)) {
+                const element = timeline[elementId];
+                if (element.filetype == 'image') {
+                    let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
+                    this.timeline[elementId].blob = String(blobUrl)
+                    elementControl.showImage(elementId)
+                } else if (element.filetype == 'video') {
+                    let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
+                    this.timeline[elementId].blob = String(blobUrl)
+                    elementControl.showVideo(elementId)
+                } else if (element.filetype == 'text') {
+                    elementControl.showText(elementId)
+                } else if (element.filetype == 'audio') {
+                    let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
+                    this.timeline[elementId].blob = String(blobUrl)
+                    elementControl.showAudio(elementId)
+                }
+                this.addElementBar(elementId)
+                
+            }
+        }
+    }
+
+    async getBlobUrl(url) {
+        const response = await fetch(url);
+        const data = await response.blob()
+        return URL.createObjectURL(data);
+    }
+
     addElementBar(elementId) {
         const templateBar = this.templateElementBar(elementId)
         this.insertAdjacentHTML("beforeend", templateBar)

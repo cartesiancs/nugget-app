@@ -95,7 +95,7 @@ class AssetFile extends HTMLElement {
     }
 
     templateImage(url) {
-        return `<img src="${url}" alt="" class="align-self-center" width="55px" height="55px">
+        return `<img src="${url}" alt="" class="align-self-center asset-preview">
         <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`
     }
 

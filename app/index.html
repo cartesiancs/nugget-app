@@ -53,6 +53,10 @@
 
                                 </div>
 
+                                <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.project.save()">프로젝트 저장</button>
+                                <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
+
+
                               </div>
                             </div>
                         </div>
@@ -65,7 +69,6 @@
                           </h2>
                           <div id="collapse2" class="accordion-collapse collapse " data-bs-parent="#accordionTab">
                             <div class="accordion-body">
-                                <input class="form-control bg-dark text-light mt-2"  type="file" name="upload" id="upload">
 
                                 <asset-browser></asset-browser>
     
@@ -103,10 +106,8 @@
                           </h2>
                           <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
                             <div class="accordion-body">
-                                <button class="btn btn-dark" onclick="elementControlComponent.addText()">text</button>
 
-                                <button class="btn btn-dark" onclick="ipc.requestAllDir('/Users/hhj')">getDir</button>
-                                <button class="btn btn-green-fill" onclick="ipc.render()">render</button>
+                                <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
                             </div>
                           </div>
                         </div>
@@ -215,6 +216,7 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.3.4/dist/sweetalert2.all.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/Team-DeVent/devent-designsystem/dist/main.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="dist/index.js"></script>
         <script src="renderer.js"></script>
 
@@ -294,22 +296,6 @@
             ipc.requestAllDir('/Users/hhj/Desktop')
         });
                 
-
-        upload.onchange = (event) => {
-            let [ uploadfile ] = upload.files
-
-            if (uploadfile) {
-                let blob = URL.createObjectURL(uploadfile)
-                let file = document.querySelector('#upload').files[0] || ''
-                let path = uploadfile.path
-                preview.src = blob
-
-                nugget.element.control.upload.image(blob, path)
-            }
-        }
-
-
-
 
 
         

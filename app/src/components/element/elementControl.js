@@ -447,7 +447,11 @@ class ElementControlAsset extends HTMLElement {
 
         this.classList.add("element-drag")
         this.setAttribute("id", `element-${this.elementId}`)
-        this.setAttribute("style", `width: ${this.timeline[this.elementId].width}px; height: ${this.timeline[this.elementId].height}px; top: 0px; left: 0px;`)
+        this.setAttribute("style", `width: ${this.timeline[this.elementId].width}px; top: ${this.timeline[this.elementId].location.y}px; left: ${this.timeline[this.elementId].location.x}px;`)
+        
+        if (this.elementFiletype !== 'text') {
+            this.setAttribute("style", `width: ${this.timeline[this.elementId].width}px; top: ${this.timeline[this.elementId].location.y}px; left: ${this.timeline[this.elementId].location.x}px; height: ${this.timeline[this.elementId].height}px;`)
+        }
         // onmousedown="nugget.element.control.event.drag.onmousedown(this)" onclick="nugget.element.control.event.click.activateOutline('${elementId}')"
 
         this.innerHTML = template;
@@ -470,7 +474,7 @@ class ElementControlAsset extends HTMLElement {
 
     templateText() {
         
-        return `<input type="text" class="form-transparent element-text" draggable="false" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="텍스트">`
+        return `<input type="text" class="form-transparent element-text" draggable="false" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
 
     }
 
@@ -703,7 +707,7 @@ class ElementControlAsset extends HTMLElement {
         this.render();
 
         this.addEventListener('mousedown', this.dragMousedown.bind(this));
-        this.addEventListener('mouseup', this.dragMouseup.bind(this));
+        document.addEventListener('mouseup', this.dragMouseup.bind(this));
         this.addEventListener('mousedown', this.activateOutline.bind(this));
         this.addEventListener('dblclick', this.dblClick.bind(this));
 

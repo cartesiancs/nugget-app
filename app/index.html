@@ -290,7 +290,10 @@
         };
 
 
-        window.addEventListener('resize', elementControlComponent.resize, false);
+        //window.addEventListener('resize', , false);
+        window.onresize = async function(event) {
+            await elementControlComponent.resizeEvent()
+        };
 
 
         
@@ -320,7 +323,7 @@
             if (valueEvent.splitColumns) {
                 let per = e.pageX/document.body.offsetWidth*100 <= page.minWidth ? page.minWidth : e.pageX/document.body.offsetWidth*100
                 page.split.columns(per)
-                elementControlComponent.resize()
+                elementControlComponent.resizeEvent()
             }
 
 

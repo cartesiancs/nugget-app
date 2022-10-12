@@ -9,6 +9,13 @@ class ElementControl extends HTMLElement {
         //this.setAttribute("id", 'control')
 
         this.scroller = undefined
+        this.resizeTimeout = undefined;
+        this.isResizeStart = false;
+        this.previousPreviewSize = {
+            w: 1920,
+            h: 1080
+        }
+
         this.isPaused = true
         this.isPlay = {
             
@@ -18,12 +25,31 @@ class ElementControl extends HTMLElement {
         this.activeElementId = ''
         this.previewRatio = 1920/1080
 
-        this.resize()
+        this.resizeEvent()
         
 
     }
 
-    resize() {
+
+    async resizeEvent() {
+        console.log('resize')
+        this.resizePreview()
+
+
+
+        let gapFromPreviousRatio = {
+            w: 2-(this.previousPreviewSize.w / Number(preview.style.width.split('px')[0])),
+            h: 2-(this.previousPreviewSize.h / Number(preview.style.height.split('px')[0]))
+        }
+
+        this.matchAllElementsSizeToPreview(gapFromPreviousRatio)
+        this.previousPreviewSize.w = Number(preview.style.width.split('px')[0])
+        this.previousPreviewSize.h = Number(preview.style.height.split('px')[0])
+
+
+    }
+
+    resizePreview() {
         let innerWidth = document.getElementById("split_col_2").offsetWidth
         let innerHeight = document.getElementById("split_col_2").offsetHeight
 
@@ -40,6 +66,34 @@ class ElementControl extends HTMLElement {
 
         this.previewRatio = 1920/width
 
+    }
+
+    matchAllElementsSizeToPreview(gapFromPreviousRatio) {
+        const timeline = document.querySelector("element-timeline").timeline
+
+        for (const elementId in timeline) {
+            if (Object.hasOwnProperty.call(timeline, elementId)) {
+                let targetElement = document.querySelector(`#element-${elementId}`)
+
+                let elementHeight = Number(targetElement.style.height.split("px")[0])*gapFromPreviousRatio.h
+                let elementWidth = Number(targetElement.style.width.split("px")[0])*gapFromPreviousRatio.w
+                let elementTop = Number(targetElement.style.top.split("px")[0])*gapFromPreviousRatio.h
+                let elementLeft = Number(targetElement.style.left.split("px")[0])*gapFromPreviousRatio.w
+
+                if (timeline[elementId].filetype != 'text') {
+                    targetElement.resizeStyle({
+                        x: elementLeft,
+                        y: elementTop,
+                        w: elementWidth,
+                        h: elementHeight
+                    })
+                }
+
+
+                
+            }
+        }
+    
     }
 
     addImage(blob, path) {
@@ -494,7 +548,7 @@ class ElementControlAsset extends HTMLElement {
 
     templateText() {
         
-        return `<input type="text" class="form-transparent element-text" draggable="false" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
+        return `<input type="text" class="asset-transparent element-text" draggable="false" style="color: rgb(255, 255, 255); font-size: 20px;" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
 
     }
 
@@ -603,52 +657,90 @@ class ElementControlAsset extends HTMLElement {
 
         switch (this.resizeDirection) {
             case 'n':
-                this.style.top = `${this.initialPosition.y+y}px`
-                this.style.height = `${this.initialPosition.h-y}px`
+                this.resizeStyle({
+                    y: this.initialPosition.y+y,
+                    h: this.initialPosition.h-y
+                })
+                // this.style.top = `${this.initialPosition.y+y}px`
+                // this.style.height = `${this.initialPosition.h-y}px`
                 break;
 
             case 's':
-                this.style.top = `${this.initialPosition.y}px`
-                this.style.height = `${y}px`
+                this.resizeStyle({
+                    y: this.initialPosition.y,
+                    h: y
+                })
+                // this.style.top = `${}px`
+                // this.style.height = `${y}px`
                 break;
 
             case 'w':
-                this.style.left = `${this.initialPosition.x+x}px`
-                this.style.width = `${this.initialPosition.w-x}px`
+                this.resizeStyle({
+                    x: this.initialPosition.x+x,
+                    w: this.initialPosition.w-x
+                })
+                // this.style.left = `${}px`
+                // this.style.width = `${this.initialPosition.w-x}px`
                 break;
 
             case 'e':
-                this.style.left = `${this.initialPosition.x}px`
-                this.style.width = `${x}px`
+                this.resizeStyle({
+                    x: this.initialPosition.x,
+                    w: x
+                })
+                // this.style.left = `${this.initialPosition.x}px`
+                // this.style.width = `${x}px`
                 break;
 
             case 'ne':
-                this.style.top = `${this.initialPosition.y+y}px`
-                //this.style.height = `${this.initialPosition.h-y}px`
-                //this.style.width = `${aspectRatio*(this.initialPosition.h-y)}px`
-                this.style.height = `${this.initialPosition.h-y}px`
-                this.style.width = `${x}px`
+                this.resizeStyle({
+                    y: this.initialPosition.y+y,
+                    h: this.initialPosition.h-y,
+                    w: x
+                })
+                // this.style.top = `${this.initialPosition.y+y}px`
+                // //this.style.height = `${this.initialPosition.h-y}px`
+                // //this.style.width = `${aspectRatio*(this.initialPosition.h-y)}px`
+                // this.style.height = `${this.initialPosition.h-y}px`
+                // this.style.width = `${x}px`
 
                 break;
 
             case 'nw':
-                this.style.top = `${this.initialPosition.y+y}px`
-                this.style.height = `${this.initialPosition.h-y}px`
-                this.style.left = `${this.initialPosition.x+x}px`
-                this.style.width = `${this.initialPosition.w-x}px`
+                this.resizeStyle({
+                    x: this.initialPosition.x+x,
+                    y: this.initialPosition.y+y,
+                    h: this.initialPosition.h-y,
+                    w: this.initialPosition.w-x
+                })
+                // this.style.top = `${this.initialPosition.y+y}px`
+                // this.style.height = `${this.initialPosition.h-y}px`
+                // this.style.left = `${this.initialPosition.x+x}px`
+                // this.style.width = `${this.initialPosition.w-x}px`
                 break;
 
             case 'sw':
-                this.style.height = `${y}px`
-                this.style.left = `${this.initialPosition.x+x}px`
-                this.style.width = `${this.initialPosition.w-x}px`
+                this.resizeStyle({
+                    x: this.initialPosition.x+x,
+                    h: y,
+                    w: this.initialPosition.w-x
+                })
+                // this.style.height = `${y}px`
+                // this.style.left = `${this.initialPosition.x+x}px`
+                // this.style.width = `${this.initialPosition.w-x}px`
                 break;
 
             case 'se':
-                this.style.top = `${this.initialPosition.y}px`
-                this.style.height = `${y}px`
-                this.style.left = `${this.initialPosition.x}px`
-                this.style.width = `${x}px`
+                this.resizeStyle({
+                    x: this.initialPosition.x,
+                    y: this.initialPosition.y,
+                    h: y,
+                    w: x
+                })
+                // this.style.top = `${this.initialPosition.y}px`
+                // this.style.height = `${y}px`
+                // this.style.left = `${this.initialPosition.x}px`
+                // this.style.width = `${x}px`
                 break;
         
             default:
@@ -659,6 +751,13 @@ class ElementControlAsset extends HTMLElement {
         this.timeline[this.elementId].location.x = Number(this.style.left.split('px')[0])
         this.timeline[this.elementId].width = Number(this.style.width.split('px')[0])
         this.timeline[this.elementId].height = Number(this.style.height.split('px')[0])
+    }
+
+    resizeStyle({x, y, w, h}) {
+        this.style.left = !x == false ? `${x}px` : this.style.left
+        this.style.top = !y == false ? `${y}px` : this.style.top
+        this.style.width = !w == false ? `${w}px` : this.style.width
+        this.style.height = !h == false ? `${h}px` : this.style.height
     }
 
     resizeMousedown(direction) {

@@ -125,8 +125,21 @@ class ElementTimeline extends HTMLElement {
         return elementType
     }
 
+    keydown(event) {
+        event.preventDefault();
+        console.log(event.keyCode)
+        if(event.keyCode == 32) { // Space
+            if (this.elementControl.isPaused == true) {
+                this.elementControl.play()
+            } else {
+                this.elementControl.stop()
+            }
+        }
+    }
+
     connectedCallback() {
         this.render();
+        document.addEventListener('keydown', this.keydown.bind(this));
 
     }
 }

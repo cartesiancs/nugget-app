@@ -1,5 +1,3 @@
-import element from './functions/element.js';
-import canvas from './functions/canvas.js';
 import asset from './functions/asset.js';
 import directory from './functions/directory.js';
 import mime from './functions/mime.js';
@@ -32,4 +30,4 @@ customElements.define('element-control-asset', ElementControlAsset);
 
 
 
-export { element, canvas, asset, directory, mime, project }
+export { asset, directory, mime, project }

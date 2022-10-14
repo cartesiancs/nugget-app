@@ -33,7 +33,6 @@ class ElementBar extends HTMLElement {
             template = this.templateStatic();
         } else {
             template = this.templateDynamic();
-
         }
         const backgroundColor = this.getRandomColor()
 
@@ -75,7 +74,7 @@ class ElementBar extends HTMLElement {
 
 
     getRandomColor() {
-        let color = "#" + Math.round(Math.random() * 0xffffff).toString(16) + '51'
+        //let color = "#" + Math.round(Math.random() * 0xffffff).toString(16) + '51'
         let rgbMinColor = {r: 45, g: 23, b: 56}
         let rgbMaxColor = {r: 167, g: 139, b: 180}
 
@@ -99,12 +98,10 @@ class ElementBar extends HTMLElement {
             this.style.left = `${x}px`
             this.timeline[this.elementId].startTime = x
         }
-
     }
 
     dragMousedown(e) {
         this.addEventListener('mousemove', this.drag);
-        console.log("DRG")
 
         this.isDrag = true
         this.initialPosition.x = e.pageX - Number(this.style.left.replace(/[^0-9]/g, ""))
@@ -177,7 +174,6 @@ class ElementBar extends HTMLElement {
     }
 
     resizeMousedown(e, location) {
-        console.log(this, Number(this.style.left.split("px")[0]))
         this.isResize = true
         this.resizeLocation = location
         this.isDrag = false

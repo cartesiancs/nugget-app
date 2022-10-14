@@ -4,9 +4,15 @@ class ElementControl extends HTMLElement {
     constructor() {
         super();
 
-        //this.directory = ''
+        this.elementTimeline;
+        this.timeline;
+        this.timelineBar;
 
-        //this.setAttribute("id", 'control')
+        window.addEventListener('DOMContentLoaded', () => {
+            this.elementTimeline = document.querySelector("element-timeline");
+            this.timeline = document.querySelector("element-timeline").timeline;
+            this.timelineBar = document.querySelector("element-timeline-bar");
+        });
 
         this.scroller = undefined
         this.resizeTimeout = undefined;
@@ -17,25 +23,19 @@ class ElementControl extends HTMLElement {
         }
 
         this.isPaused = true
-        this.isPlay = {
-            
-        }
+        this.isPlay = {}
 
         this.progress = 0
         this.activeElementId = ''
         this.previewRatio = 1920/1080
 
         this.resizeEvent()
-        
-
+    
     }
 
 
     async resizeEvent() {
-        console.log('resize')
         this.resizePreview()
-
-
 
         let gapFromPreviousRatio = {
             w: 2-(this.previousPreviewSize.w / Number(preview.style.width.split('px')[0])),
@@ -45,8 +45,6 @@ class ElementControl extends HTMLElement {
         this.matchAllElementsSizeToPreview(gapFromPreviousRatio)
         this.previousPreviewSize.w = Number(preview.style.width.split('px')[0])
         this.previousPreviewSize.h = Number(preview.style.height.split('px')[0])
-
-
     }
 
     resizePreview() {
@@ -69,10 +67,9 @@ class ElementControl extends HTMLElement {
     }
 
     matchAllElementsSizeToPreview(gapFromPreviousRatio) {
-        const timeline = document.querySelector("element-timeline").timeline
 
-        for (const elementId in timeline) {
-            if (Object.hasOwnProperty.call(timeline, elementId)) {
+        for (const elementId in this.timeline) {
+            if (Object.hasOwnProperty.call(this.timeline, elementId)) {
                 let targetElement = document.querySelector(`#element-${elementId}`)
 
                 let elementHeight = Number(targetElement.style.height.split("px")[0])*gapFromPreviousRatio.h
@@ -80,7 +77,7 @@ class ElementControl extends HTMLElement {
                 let elementTop = Number(targetElement.style.top.split("px")[0])*gapFromPreviousRatio.h
                 let elementLeft = Number(targetElement.style.left.split("px")[0])*gapFromPreviousRatio.w
 
-                if (timeline[elementId].filetype != 'text') {
+                if (this.timeline[elementId].filetype != 'text') {
                     targetElement.resizeStyle({
                         x: elementLeft,
                         y: elementTop,
@@ -98,7 +95,6 @@ class ElementControl extends HTMLElement {
 
     addImage(blob, path) {
         const elementId = this.generateUUID()
-        const elementTimeline = document.querySelector("element-timeline")
         const img = document.createElement('img');
 
         img.src = blob
@@ -107,7 +103,7 @@ class ElementControl extends HTMLElement {
             var width = img.width/division
             var height = img.height/division
 
-            elementTimeline.timeline[elementId] = {
+            this.timeline[elementId] = {
                 blob: blob,
                 startTime: 0,
                 duration: 1000,
@@ -120,7 +116,7 @@ class ElementControl extends HTMLElement {
             }
 
             this.showImage(elementId)
-            elementTimeline.addElementBar(elementId)
+            this.elementTimeline.addElementBar(elementId)
 
         }
     }
@@ -128,7 +124,6 @@ class ElementControl extends HTMLElement {
 
     addVideo(blob, path) {
         const elementId = this.generateUUID()
-        const elementTimeline = document.querySelector("element-timeline")
         const video = document.createElement('video')
 
 
@@ -142,7 +137,7 @@ class ElementControl extends HTMLElement {
             let height = video.videoHeight/division
             let duration = video.duration*200
 
-            elementTimeline.timeline[elementId] = {
+            this.timeline[elementId] = {
                 blob: blob,
                 startTime: 0,
                 duration: duration,
@@ -156,17 +151,15 @@ class ElementControl extends HTMLElement {
 
             
             this.showVideo(elementId)
-            elementTimeline.addElementBar(elementId)
+            this.elementTimeline.addElementBar(elementId)
 
         }
     }
 
     addText() {
         const elementId = this.generateUUID()
-        const elementTimeline = document.querySelector("element-timeline")
 
-
-        elementTimeline.timeline[elementId] = {
+        this.timeline[elementId] = {
             startTime: 0,
             duration: 1000,
             text: "텍스트",
@@ -178,13 +171,12 @@ class ElementControl extends HTMLElement {
         }
 
         this.showText(elementId)
-        elementTimeline.addElementBar(elementId)
+        this.elementTimeline.addElementBar(elementId)
     }
 
 
     addAudio(blob, path) {
         const elementId = this.generateUUID()
-        const elementTimeline = document.querySelector("element-timeline")
         const audio = document.createElement('audio')
 
         audio.src = blob
@@ -192,7 +184,7 @@ class ElementControl extends HTMLElement {
         audio.onloadedmetadata = () => {
             let duration = audio.duration*200
 
-            elementTimeline.timeline[elementId] = {
+            this.timeline[elementId] = {
                 blob: blob,
                 startTime: 0,
                 duration: duration,
@@ -204,7 +196,7 @@ class ElementControl extends HTMLElement {
 
             
             this.showAudio(elementId)
-            elementTimeline.addElementBar(elementId)
+            this.elementTimeline.addElementBar(elementId)
 
         }
 
@@ -212,31 +204,27 @@ class ElementControl extends HTMLElement {
 
 
     showImage(elementId) {
-        const elementTimeline = document.querySelector("element-timeline")
-        let blob = elementTimeline.timeline[elementId].blob
 
         if (document.getElementById(`element-${elementId}`) == null) {
-            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>
-            `)
+            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`)
         } else {
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
         }
     }
 
     showVideo(elementId) {
-        const elementTimeline = document.querySelector("element-timeline")
 
         if (document.getElementById(`element-${elementId}`) == null) {
             this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`)
 
             let video = document.getElementById(`element-${elementId}`).querySelector("video")
-            let secondsOfRelativeTime = (elementTimeline.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = (this.timeline[elementId].startTime - this.progress) / 200
 
             video.currentTime = secondsOfRelativeTime
 
         } else {
             let video = document.getElementById(`element-${elementId}`).querySelector("video")
-            let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progress) / 200
 
 
             if (!!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
@@ -246,8 +234,6 @@ class ElementControl extends HTMLElement {
                 }
                 console.log('isPlaying')
             } else {
-                
-
                 if (this.isPaused) {
                     video.pause()
                     this.isPlay[elementId] = false
@@ -266,19 +252,18 @@ class ElementControl extends HTMLElement {
     }
 
     showAudio(elementId) {
-        const elementTimeline = document.querySelector("element-timeline")
 
         if (document.getElementById(`element-${elementId}`) == null) {
             this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="audio"></element-control-asset>`)
 
             let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
-            let secondsOfRelativeTime = (elementTimeline.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = (this.timeline[elementId].startTime - this.progress) / 200
 
             audio.currentTime = secondsOfRelativeTime
 
         } else {
             let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
-            let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progress) / 200
 
             if (!!(audio.currentTime > 0 && !audio.paused && !audio.ended && audio.readyState > 2)) {
                 if (this.isPaused) {
@@ -302,38 +287,33 @@ class ElementControl extends HTMLElement {
 
     showText(elementId) {
         if (document.getElementById(`element-${elementId}`) == null) {
-            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>
-            `)
+            this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`)
         } else {
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
         }
     }
 
     changeText(elementId) {
-        const elementTimeline = document.querySelector("element-timeline")
         let elementBody = document.querySelector(`#element-${elementId}`)
         let inputTarget = elementBody.querySelector('input')
         let inputValue = inputTarget.value
-        elementTimeline.timeline[elementId].text = inputValue
+        this.timeline[elementId].text = inputValue
     }
 
     changeTextColor(event) {
-        const elementTimeline = document.querySelector("element-timeline")
         let elementId = document.querySelector(`#optionTargetElement`).value
         let elementBody = document.querySelector(`#element-${elementId}`)
         let inputTarget = elementBody.querySelector('input')
         inputTarget.style.color = event.value
-        elementTimeline.timeline[elementId].textcolor = event.value
+        this.timeline[elementId].textcolor = event.value
     }
 
     changeTextSize(event) {
-        console.log(event)
-        const elementTimeline = document.querySelector("element-timeline")
         let elementId = document.querySelector(`#optionTargetElement`).value
         let elementBody = document.querySelector(`#element-${elementId}`)
         let inputTarget = elementBody.querySelector('input')
         inputTarget.style.fontSize = `${event.value}px`
-        elementTimeline.timeline[elementId].fontsize = Number(event.value)
+        this.timeline[elementId].fontsize = Number(event.value)
     }
 
     progressToTime() {
@@ -351,32 +331,27 @@ class ElementControl extends HTMLElement {
     showTime() {
         const showTime = document.querySelector("#time") 
         showTime.innerHTML = this.progressToTime()
-
     }
     
 
     hideElement (elementId) {
-        const timeline = document.querySelector("element-timeline").timeline
-
-        if (timeline[elementId].filetype == 'video') {
+        if (this.timeline[elementId].filetype == 'video') {
             this.pauseVideo(elementId)
-        } else if (timeline[elementId].filetype == 'audio') {
+        } else if (this.timeline[elementId].filetype == 'audio') {
             this.pauseAudio(elementId)
         }
         document.querySelector(`#element-${elementId}`).classList.add('d-none')
     }
 
     appearAllElementInTime() {
-        const timeline = document.querySelector("element-timeline").timeline
-
-        for(let elementId in timeline) {
-            let filetype = timeline[elementId].filetype
-            let checkFiletype = timeline[elementId].startTime > this.progress || 
-            timeline[elementId].startTime + timeline[elementId].duration < this.progress
+        for(let elementId in this.timeline) {
+            let filetype = this.timeline[elementId].filetype
+            let checkFiletype = this.timeline[elementId].startTime > this.progress || 
+            this.timeline[elementId].startTime + this.timeline[elementId].duration < this.progress
 
             if (filetype == 'video' || filetype == 'audio') {
-                checkFiletype = timeline[elementId].startTime + timeline[elementId].trim.startTime > this.progress || 
-                timeline[elementId].startTime + timeline[elementId].trim.endTime < this.progress
+                checkFiletype = this.timeline[elementId].startTime + this.timeline[elementId].trim.startTime > this.progress || 
+                this.timeline[elementId].startTime + this.timeline[elementId].trim.endTime < this.progress
             }
 
             if (checkFiletype) {
@@ -396,19 +371,15 @@ class ElementControl extends HTMLElement {
     }
 
     play() {
-        const timelineBar = document.querySelector("element-timeline-bar")
-
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `elementControlComponent.stop()`)
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> stop_circle </span>`
 
         this.scroller = setInterval(() => {
             //split_inner_bottom.scrollBy(4, 0);
-            let nowTimelineProgress = Number(timelineBar.style.left.split('px')[0]) + 4
+            let nowTimelineProgress = Number(this.timelineBar.style.left.split('px')[0]) + 4
             this.progress = nowTimelineProgress
-
-            //timelineBar.style.left = `${nowTimelineProgress}px`
-            timelineBar.move(nowTimelineProgress)
+            this.timelineBar.move(nowTimelineProgress)
             this.showTime()
 
             if ((this.innerWidth + this.offsetWidth) >= this.offsetWidth) {
@@ -416,27 +387,20 @@ class ElementControl extends HTMLElement {
             }
 
             this.appearAllElementInTime()
-
-
-
         }, 20);
         this.isPaused = false;
-        
     }
 
     stop() {
         clearInterval(this.scroller);
         const toggle = document.querySelector("#playToggle")
-        const timeline = document.querySelector("element-timeline").timeline
 
         this.isPaused = true;
-        for (const elementId in timeline) {
-            if (Object.hasOwnProperty.call(timeline, elementId)) {
+        for (const elementId in this.timeline) {
+            if (Object.hasOwnProperty.call(this.timeline, elementId)) {
                 this.isPlay[elementId] = false
             }
         }
-        
-
 
         toggle.setAttribute('onclick', `elementControlComponent.play()`)
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`
@@ -446,8 +410,7 @@ class ElementControl extends HTMLElement {
     }
 
     pauseVideo (elementId) {
-        const elementTimeline = document.querySelector("element-timeline")
-        let secondsOfRelativeTime = -(elementTimeline.timeline[elementId].startTime - this.progress) / 200
+        let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progress) / 200
         let video = document.getElementById(`element-${elementId}`).querySelector("video")
         video.currentTime = secondsOfRelativeTime
         video.pause()
@@ -459,11 +422,10 @@ class ElementControl extends HTMLElement {
     }
 
     pauseAllDynamicElements () {
-        const timeline = document.querySelector("element-timeline").timeline
         let key;
 
-        for(key in timeline) {
-            let filetype = timeline[key].filetype
+        for(key in this.timeline) {
+            let filetype = this.timeline[key].filetype
 
             if (filetype == 'video') {
                 this.pauseVideo(key)
@@ -475,14 +437,12 @@ class ElementControl extends HTMLElement {
 
 
     reset () {
-        const timelineBar = document.querySelector("element-timeline-bar")
-
         this.progress = 0
         this.isPaused = true;
 
         this.showTime()
         this.appearAllElementInTime()
-        timelineBar.move(0)
+        this.timelineBar.move(0)
     }
 }
 

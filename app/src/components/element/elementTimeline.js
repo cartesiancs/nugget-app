@@ -3,6 +3,11 @@ class ElementTimeline extends HTMLElement {
         super();
 
         //this.directory = ''
+        this.elementControl
+
+        window.addEventListener('DOMContentLoaded', () => {
+            this.elementControl = document.querySelector("element-control");
+        });
 
         this.timeline = {
 
@@ -34,7 +39,6 @@ class ElementTimeline extends HTMLElement {
     }
 
     async patchTimeline(timeline) {
-        const elementControl = document.querySelector("element-control")
         this.timeline = timeline
         for (const elementId in timeline) {
             if (Object.hasOwnProperty.call(timeline, elementId)) {
@@ -42,22 +46,26 @@ class ElementTimeline extends HTMLElement {
                 if (element.filetype == 'image') {
                     let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
                     this.timeline[elementId].blob = String(blobUrl)
-                    elementControl.showImage(elementId)
+                    this.elementControl.showImage(elementId)
                 } else if (element.filetype == 'video') {
                     let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
                     this.timeline[elementId].blob = String(blobUrl)
-                    elementControl.showVideo(elementId)
+                    this.elementControl.showVideo(elementId)
                 } else if (element.filetype == 'text') {
-                    elementControl.showText(elementId)
+                    this.elementControl.showText(elementId)
                 } else if (element.filetype == 'audio') {
                     let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
                     this.timeline[elementId].blob = String(blobUrl)
-                    elementControl.showAudio(elementId)
+                    this.elementControl.showAudio(elementId)
                 }
                 this.addElementBar(elementId)
                 
             }
         }
+    }
+
+    resetTimelineData() {
+        this.timeline = {}
     }
 
     async getBlobUrl(url) {

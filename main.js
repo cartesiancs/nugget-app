@@ -201,10 +201,10 @@ function addFilterMedia(object) {
   
 
   let options = {
-    width: String(object.element.width * object.projectOptions.previewRatio),
-    height: String(object.element.height * object.projectOptions.previewRatio),
-    x: String(object.element.location.x * object.projectOptions.previewRatio),
-    y: String(object.element.location.y * object.projectOptions.previewRatio),
+    width: String(object.element.width),
+    height: String(object.element.height),
+    x: String(object.element.location.x),
+    y: String(object.element.location.y),
     startTime: object.element.startTime/200,
     endTime: (object.element.startTime/200) + (object.element.duration/200)
   }
@@ -247,9 +247,9 @@ function addFilterMedia(object) {
   let options = {
     text: object.element.text,
     textcolor: object.element.textcolor,
-    fontsize: object.element.fontsize * object.projectOptions.previewRatio,
-    x: String(object.element.location.x * object.projectOptions.previewRatio),
-    y: String(object.element.location.y * object.projectOptions.previewRatio),
+    fontsize: object.element.fontsize,
+    x: String(object.element.location.x),
+    y: String(object.element.location.y),
     startTime: object.element.startTime/200,
     endTime: (object.element.startTime/200) + (object.element.duration/200)
   }

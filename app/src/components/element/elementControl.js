@@ -16,6 +16,8 @@ class ElementControl extends HTMLElement {
 
         this.scroller = undefined
         this.resizeTimeout = undefined;
+        this.resizeInterval = undefined;
+
         this.isResizeStart = false;
         this.previousPreviewSize = {
             w: 1920,
@@ -27,7 +29,7 @@ class ElementControl extends HTMLElement {
 
         this.progress = 0
         this.activeElementId = ''
-        this.previewRatio = 1920/1080
+        this.previewRatio = 1920/1920
 
         this.resizeEvent()
     
@@ -36,15 +38,24 @@ class ElementControl extends HTMLElement {
 
     async resizeEvent() {
         this.resizePreview()
+        clearTimeout(this.resizeTimeout)
 
-        let gapFromPreviousRatio = {
-            w: 2-(this.previousPreviewSize.w / Number(preview.style.width.split('px')[0])),
-            h: 2-(this.previousPreviewSize.h / Number(preview.style.height.split('px')[0]))
+        if (this.isResizeStart == false) {
+            this.isResizeStart = true
+            this.resizeInterval = setInterval(() => {
+                console.log("RS")
+        
+                this.matchAllElementsSizeToPreview()
+
+
+            }, 50);
         }
 
-        this.matchAllElementsSizeToPreview(gapFromPreviousRatio)
-        this.previousPreviewSize.w = Number(preview.style.width.split('px')[0])
-        this.previousPreviewSize.h = Number(preview.style.height.split('px')[0])
+        this.resizeTimeout = setTimeout(() => {
+            clearInterval(this.resizeInterval)
+            this.isResizeStart = false
+        }, 300);
+
     }
 
     resizePreview() {
@@ -52,8 +63,8 @@ class ElementControl extends HTMLElement {
         let innerHeight = document.getElementById("split_col_2").offsetHeight
 
 
-        let width = innerWidth*0.95;
-        let height = (width*9)/16
+        let width = Math.round(innerWidth*0.95);
+        let height = Math.round((width*9)/16)
 
         preview.width = width
         preview.height = height
@@ -72,10 +83,10 @@ class ElementControl extends HTMLElement {
             if (Object.hasOwnProperty.call(this.timeline, elementId)) {
                 let targetElement = document.querySelector(`#element-${elementId}`)
 
-                let elementHeight = Number(targetElement.style.height.split("px")[0])*gapFromPreviousRatio.h
-                let elementWidth = Number(targetElement.style.width.split("px")[0])*gapFromPreviousRatio.w
-                let elementTop = Number(targetElement.style.top.split("px")[0])*gapFromPreviousRatio.h
-                let elementLeft = Number(targetElement.style.left.split("px")[0])*gapFromPreviousRatio.w
+                let elementHeight = Number(this.timeline[elementId].height) / this.previewRatio
+                let elementWidth = Number(this.timeline[elementId].width) / this.previewRatio
+                let elementTop = Number(this.timeline[elementId].location.y) / this.previewRatio
+                let elementLeft = Number(this.timeline[elementId].location.x)/  this.previewRatio
 
                 if (this.timeline[elementId].filetype != 'text') {
                     targetElement.resizeStyle({
@@ -99,9 +110,8 @@ class ElementControl extends HTMLElement {
 
         img.src = blob
         img.onload = () => {
-            let division = 10
-            var width = img.width/division
-            var height = img.height/division
+            var width = img.width
+            var height = img.height // /division
 
             this.timeline[elementId] = {
                 blob: blob,
@@ -131,10 +141,9 @@ class ElementControl extends HTMLElement {
         video.preload = 'metadata'
 
         video.onloadedmetadata = () => {
-            let division = 10
 
-            let width = video.videoWidth/division
-            let height = video.videoHeight/division
+            let width = video.videoWidth
+            let height = video.videoHeight
             let duration = video.duration*200
 
             this.timeline[elementId] = {
@@ -452,6 +461,8 @@ class ElementControlAsset extends HTMLElement {
         super();
 
         this.timeline = document.querySelector("element-timeline").timeline
+        this.elementControl = document.querySelector("element-control")
+
         this.elementId = this.getAttribute('element-id')
         this.elementFiletype = this.getAttribute('element-filetype') || 'image'
 
@@ -478,17 +489,43 @@ class ElementControlAsset extends HTMLElement {
             template = this.templateAudio()
         }
 
+        let resizeElement = this.convertAbsoluteToRelativeSize({
+            x: this.timeline[this.elementId].location.x,
+            y: this.timeline[this.elementId].location.y,
+            w: this.timeline[this.elementId].width,
+            h: this.timeline[this.elementId].height
+        })
+
 
         this.classList.add("element-drag")
         this.setAttribute("id", `element-${this.elementId}`)
-        this.setAttribute("style", `width: ${this.timeline[this.elementId].width}px; top: ${this.timeline[this.elementId].location.y}px; left: ${this.timeline[this.elementId].location.x}px;`)
+        this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px;`)
         
         if (this.elementFiletype !== 'text') {
-            this.setAttribute("style", `width: ${this.timeline[this.elementId].width}px; top: ${this.timeline[this.elementId].location.y}px; left: ${this.timeline[this.elementId].location.x}px; height: ${this.timeline[this.elementId].height}px;`)
+            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeElement.h}px;`)
         }
-        // onmousedown="nugget.element.control.event.drag.onmousedown(this)" onclick="nugget.element.control.event.click.activateOutline('${elementId}')"
 
         this.innerHTML = template;
+    }
+
+    convertAbsoluteToRelativeSize({x,y,w,h}) { 
+        let resizeRatio = this.elementControl.previewRatio
+        return {
+            x: x/resizeRatio,
+            y: y/resizeRatio,
+            w: w/resizeRatio,
+            h: h/resizeRatio,
+        }
+    }
+
+    convertRelativeToAbsoluteSize({x,y,w,h}) { 
+        let resizeRatio = this.elementControl.previewRatio
+        return {
+            x: x*resizeRatio,
+            y: y*resizeRatio,
+            w: w*resizeRatio,
+            h: h*resizeRatio,
+        }
     }
 
     templateImage() {
@@ -573,8 +610,10 @@ class ElementControlAsset extends HTMLElement {
                 this.style.top = `${y}px`
                 this.style.left = `${x}px`
 
-                this.timeline[this.elementId].location.x = x 
-                this.timeline[this.elementId].location.y = y
+                let convertLocation = this.convertRelativeToAbsoluteSize({x: x, y: y})
+
+                this.timeline[this.elementId].location.x = convertLocation.x 
+                this.timeline[this.elementId].location.y = convertLocation.y
             }
         }
     }
@@ -706,11 +745,12 @@ class ElementControlAsset extends HTMLElement {
             default:
                 break;
         }
+        let resizeRatio = this.elementControl.previewRatio
 
-        this.timeline[this.elementId].location.y = Number(this.style.top.split('px')[0])
-        this.timeline[this.elementId].location.x = Number(this.style.left.split('px')[0])
-        this.timeline[this.elementId].width = Number(this.style.width.split('px')[0])
-        this.timeline[this.elementId].height = Number(this.style.height.split('px')[0])
+        this.timeline[this.elementId].location.y = Math.round(Number(this.style.top.split('px')[0]) * resizeRatio)
+        this.timeline[this.elementId].location.x = Math.round(Number(this.style.left.split('px')[0]) * resizeRatio)
+        this.timeline[this.elementId].width = Math.round(Number(this.style.width.split('px')[0]) * resizeRatio)
+        this.timeline[this.elementId].height = Math.round(Number(this.style.height.split('px')[0]) * resizeRatio)
     }
 
     resizeStyle({x, y, w, h}) {

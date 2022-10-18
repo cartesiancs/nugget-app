@@ -27,8 +27,11 @@ class ElementControl extends HTMLElement {
         this.isPaused = true
         this.isPlay = {}
 
-        this.progress = 0
+        
         this.activeElementId = ''
+        this.existActiveElement = false
+
+        this.progress = 0
         this.previewRatio = 1920/1920
 
         this.resizeEvent()
@@ -444,6 +447,16 @@ class ElementControl extends HTMLElement {
         }
     }
 
+    deactivateAllOutline() {
+
+        for (const elementId in this.timeline) {
+            if (Object.hasOwnProperty.call(this.timeline, elementId)) {
+                document.querySelector(`#element-${elementId}`).classList.remove("element-outline")
+            }
+        }
+        this.activeElementId = ''
+        this.existActiveElement = false
+    }
 
     reset () {
         this.progress = 0
@@ -452,6 +465,15 @@ class ElementControl extends HTMLElement {
         this.showTime()
         this.appearAllElementInTime()
         this.timelineBar.move(0)
+    }
+
+    clickPreview() {
+        this.deactivateAllOutline()
+    }
+
+    connectedCallback() {
+        preview.addEventListener('click', this.clickPreview.bind(this));
+
     }
 }
 
@@ -783,25 +805,13 @@ class ElementControlAsset extends HTMLElement {
     }
 
     activateOutline () {
-        const elementControl = document.querySelector("element-control")
-        this.deactivateAllOutline()
-        elementControl.activeElementId = this.elementId
+        this.elementControl.deactivateAllOutline()
+        this.elementControl.activeElementId = this.elementId
+        this.elementControl.existActiveElement = true
         this.classList.add("element-outline")
-    
     }
 
-    deactivateAllOutline () {
-        const elementControl = document.querySelector("element-control")
-        const elementTimeline = document.querySelector("element-timeline")
 
-        for (const elementId in elementTimeline.timeline) {
-            if (Object.hasOwnProperty.call(elementTimeline.timeline, elementId)) {
-                document.querySelector(`#element-${elementId}`).classList.remove("element-outline")
-            }
-        }
-        elementControl.activeElementId = ''
-
-    }
 
 
     dblClick() {

@@ -126,9 +126,14 @@ class ElementTimeline extends HTMLElement {
     }
 
     keydown(event) {
-        event.preventDefault();
         console.log(event.keyCode)
+        if (this.elementControl.existActiveElement == true) {
+            return 0
+        }
+
         if(event.keyCode == 32) { // Space
+            event.preventDefault();
+
             if (this.elementControl.isPaused == true) {
                 this.elementControl.play()
             } else {
@@ -137,9 +142,14 @@ class ElementTimeline extends HTMLElement {
         }
     }
 
+    clickTimeline() {
+        this.elementControl.deactivateAllOutline()
+    }
+
     connectedCallback() {
         this.render();
         document.addEventListener('keydown', this.keydown.bind(this));
+        this.addEventListener('click', this.clickTimeline.bind(this));
 
     }
 }

@@ -40,6 +40,8 @@ class ElementTimeline extends HTMLElement {
 
     async patchTimeline(timeline) {
         this.timeline = timeline
+        this.elementControl.timeline = timeline
+
         for (const elementId in timeline) {
             if (Object.hasOwnProperty.call(timeline, elementId)) {
                 const element = timeline[elementId];
@@ -66,7 +68,17 @@ class ElementTimeline extends HTMLElement {
 
     resetTimelineData() {
         this.timeline = {}
+        this.removeAllTimelineBars()
+        this.elementControl.removeAllElementAsset()
     }
+
+    removeAllTimelineBars() {
+        const bars = this.querySelectorAll("element-bar")
+        bars.forEach(element => {
+            element.remove()
+        });
+    }
+
 
     async getBlobUrl(url) {
         const response = await fetch(url);
@@ -125,6 +137,31 @@ class ElementTimeline extends HTMLElement {
         return elementType
     }
 
+    togglePlayer() {
+        if (this.elementControl.isPaused == true) {
+            this.elementControl.play()
+        } else {
+            this.elementControl.stop()
+        }
+    }
+
+    removeElementInTimelineData(elementId) {
+        delete this.timeline[elementId]
+    }
+
+    removeElementById(elementId) {
+        this.querySelector(`element-bar[element-id="${elementId}"]`).remove()
+    }
+
+    removeSeletedElements() {
+        this.elementControl.selectElementsId.forEach(elementId => {
+            this.removeElementById(elementId)
+            this.removeElementInTimelineData(elementId)
+            this.elementControl.removeElementById(elementId)
+        });
+        this.elementControl.selectElementsId = []
+    }
+
     keydown(event) {
         console.log(event.keyCode)
         if (this.elementControl.existActiveElement == true) {
@@ -133,12 +170,15 @@ class ElementTimeline extends HTMLElement {
 
         if(event.keyCode == 32) { // Space
             event.preventDefault();
+            this.togglePlayer()
 
-            if (this.elementControl.isPaused == true) {
-                this.elementControl.play()
-            } else {
-                this.elementControl.stop()
-            }
+        }
+
+        if (event.keyCode == 8) { // backspace
+            event.preventDefault();
+            this.removeSeletedElements()
+            
+
         }
     }
 

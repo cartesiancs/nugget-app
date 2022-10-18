@@ -5,6 +5,8 @@ class ElementBar extends HTMLElement {
         //this.directory = ''
 
         this.timeline = document.querySelector("element-timeline").timeline
+        this.elementControl = document.querySelector("element-control")
+
         this.elementId = this.getAttribute('element-id')
         this.elementBarType = this.getAttribute('element-type') || 'static'
 
@@ -87,7 +89,6 @@ class ElementBar extends HTMLElement {
         let rgbColor = `rgb(${rgb.r},${rgb.g},${rgb.b})`
         return rgbColor
     }
-
 
 
     drag(e) {
@@ -209,11 +210,43 @@ class ElementBar extends HTMLElement {
         this.isResize = false
     }
 
+    changeOutlineColor(action = 'add') {
+        if (action == 'add') {
+            this.classList.add("border-inner-light")
+        } else if (action == 'remove') {
+            this.classList.remove("border-inner-light")
+        }
+    }
+
+    selectThisElement() {
+        const elementControl = document.querySelector('element-control')
+        elementControl.selectElementsId.push(this.elementId)
+        this.changeOutlineColor('add')
+    }
+
+    unselectThisElement() {
+        const elementControl = document.querySelector('element-control')
+        elementControl.selectElementsId = elementControl.selectElementsId.filter((item) => {
+            return item !== this.elementId;
+        });
+        this.changeOutlineColor('remove')
+    }
+
+    dblclick() {
+        const elementControl = document.querySelector('element-control')
+        if (elementControl.selectElementsId.includes(this.elementId)) {
+            this.unselectThisElement()
+        } else {
+            this.selectThisElement()
+        }
+    }
+
 
     connectedCallback() {
         this.render();
 
         this.addEventListener('mousedown', this.dragMousedown.bind(this));
+        this.addEventListener('dblclick', this.dblclick.bind(this));
         document.addEventListener('mouseup', this.dragMouseup.bind(this));
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
 
@@ -222,6 +255,7 @@ class ElementBar extends HTMLElement {
     disconnectedCallback(){
         this.removeEventListener('mousedown', this.dragMousedown);
         this.removeEventListener('mouseup', this.dragMouseup);
+        this.addEventListener('dblclick', this.dblclick);
 
     }
 }

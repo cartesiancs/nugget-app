@@ -24,6 +24,10 @@ input[type='file']::file-selector-button {
 }
 
 
+.border-inner-light {
+    box-shadow: 0 0 0 3px #ffffff inset; 
+}
+
 .material-symbols-outlined {
   font-variation-settings:
   'FILL' 1,

@@ -29,6 +29,8 @@ class ElementControl extends HTMLElement {
 
         
         this.activeElementId = ''
+        this.selectElementsId = []
+
         this.existActiveElement = false
 
         this.progress = 0
@@ -98,13 +100,23 @@ class ElementControl extends HTMLElement {
                         w: elementWidth,
                         h: elementHeight
                     })
-                }
-
-
-                
+                }                
             }
         }
-    
+    }
+
+    removeElementById(elementId) {
+        this.querySelector(`element-control-asset[element-id="${elementId}"]`).remove()
+        this.timeline = document.querySelector("element-timeline").timeline;
+
+    }
+
+    removeAllElementAsset() {
+        const assetLists = this.querySelectorAll("element-control-asset")
+        assetLists.forEach(element => {
+            element.remove()
+        });
+        this.timeline = document.querySelector("element-timeline").timeline;
     }
 
     addImage(blob, path) {
@@ -804,7 +816,7 @@ class ElementControlAsset extends HTMLElement {
         this.isResize = false
     }
 
-    activateOutline () {
+    activateOutline() {
         this.elementControl.deactivateAllOutline()
         this.elementControl.activeElementId = this.elementId
         this.elementControl.existActiveElement = true

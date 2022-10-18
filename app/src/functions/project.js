@@ -40,6 +40,8 @@ const project = {
         upload.addEventListener("change", handleFiles, false);
 
         function handleFiles() {
+            elementTimeline.resetTimelineData()
+
             let filepath = this.files[0].path
             fs.readFile(filepath, function(err, data) {
                 if (err) throw err;

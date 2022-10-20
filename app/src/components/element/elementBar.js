@@ -105,7 +105,7 @@ class ElementBar extends HTMLElement {
         this.addEventListener('mousemove', this.drag);
 
         this.isDrag = true
-        this.initialPosition.x = e.pageX - Number(this.style.left.replace(/[^0-9]/g, ""))
+        this.initialPosition.x = e.pageX - Number(this.style.left.split("px")[0])
         this.initialPosition.y = e.pageY
 
         this.dragEventHandler = this.drag.bind(this)
@@ -182,7 +182,7 @@ class ElementBar extends HTMLElement {
             e.pageX - Number(this.style.left.split("px")[0]) : 
             Number(this.style.left.split("px")[0])
         this.initialPosition.y = e.pageY
-        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.replace(/[^0-9]/g, ""))
+        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.split("px")[0])
 
         this.resizeEventHandler = this.resize.bind(this)
         document.addEventListener('mousemove', this.resizeEventHandler);
@@ -196,8 +196,8 @@ class ElementBar extends HTMLElement {
         this.resizeRangeRight = Number(this.querySelector(".element-bar-hiddenspace-right").style.width.split('px')[0])
 
         this.isDrag = false
-        this.initialPosition.x = Number(this.style.left.replace(/[^0-9]/g, ""))
-        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.replace(/[^0-9]/g, ""))
+        this.initialPosition.x = Number(this.style.left.split("px")[0])
+        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.split("px")[0])
 
         this.resizeEventHandler = this.resizeRange.bind(this)
         document.addEventListener('mousemove', this.resizeEventHandler);

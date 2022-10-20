@@ -12,6 +12,40 @@ class ElementTimeline extends HTMLElement {
         this.timeline = {
 
         }
+
+        this.timelineHashTable = {}
+        this.appendCheckpointInHashTable()
+    }
+
+    generateHash(text) {
+        let hash = 0, i, chr;
+        if (text.length === 0) return hash;
+        for (i = 0; i < text.length; i++) {
+            chr = text.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0;
+        }
+        return hash;
+    }
+
+    getTime() {
+        return Date.now()
+    }
+
+    appendCheckpointInHashTable() { // NOTE: 해시 테이블에 변경점 입력
+        let hashString = JSON.stringify(this.timeline)
+        let hash = this.generateHash(hashString)
+        let nowTimestamp = this.getTime()
+        this.timelineHashTable[nowTimestamp] = hash
+    }
+
+    isTimelineChange() {
+        let nowHashString = JSON.stringify(this.timeline)
+        let nowTimelineHash = this.generateHash(nowHashString)
+        let timelineHashLength = Object.keys(this.timelineHashTable).length
+        let firstKeyInTimelineHashTable = Object.keys(this.timelineHashTable)[timelineHashLength-1]
+        let prevTimelineHash = this.timelineHashTable[firstKeyInTimelineHashTable]
+        return nowTimelineHash != prevTimelineHash
     }
 
     render(){

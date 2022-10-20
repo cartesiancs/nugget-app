@@ -1,4 +1,5 @@
 const { ipcRenderer, shell } = require('electron')
+
 const fs = require('fs');
 var JSZip = require("jszip");
 
@@ -55,6 +56,21 @@ ipcRenderer.on('PROCESSING_FINISH', (evt) => {
 })
 
 
+ipcRenderer.on('WHEN_CLOSE_EVENT', (evt) => {
+    console.log("S")
+    let isTimelineChange = document.querySelector('element-timeline').isTimelineChange()
+    if (isTimelineChange == true) {
+        rendererModal.whenClose.show()
+    } else {
+        rendererUtil.forceClose()
+    }
+    
+})
+
+
+
+
+
 
 const rendererModal = {
     progressModal: new bootstrap.Modal(document.getElementById('progressRender'), {
@@ -62,7 +78,10 @@ const rendererModal = {
     }),
     progressFinish: new bootstrap.Modal(document.getElementById('progressFinish'), {
         keyboard: false
-    })
+    }),
+    whenClose: new bootstrap.Modal(document.getElementById('whenClose'), {
+        keyboard: false
+    })    
 }
 
 const rendererUtil = {
@@ -87,6 +106,10 @@ const rendererUtil = {
     openRenderedVideoFolder() {
         const projectFolder = document.querySelector("#projectFolder").value
         ipc.showFileInFolder(projectFolder)
+    },
+
+    forceClose() {
+        ipcRenderer.send('FORCE_CLOSE')
     }
 
 

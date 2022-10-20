@@ -28,10 +28,12 @@ if (isDev) {
 	console.log('Running in production');
 }
 
+const forceQuit = false;
+let mainWindow;
 
 
 function createWindow () {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1000,
     height: 600,
     webPreferences: {
@@ -52,6 +54,7 @@ function createWindow () {
 
   process.env['ELECTRON_DISABLE_SECURITY_WARNINGS']=true
 
+  return mainWindow
 
   // console.log(command)
 
@@ -62,6 +65,8 @@ let elementCounts = {
   video: 1,
   audio: 0
 }
+
+
 
 
 
@@ -325,13 +330,30 @@ function addFilterAudio(object) {
 
 
 app.whenReady().then(() => {
-  createWindow()
-  
+  const mainWindow = createWindow()
 
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  mainWindow.on('close', function(e){
+    e.preventDefault();
+    mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
+
+  });
+
+  
+  ipcMain.on('FORCE_CLOSE', async (evt) => {
+    console.log("CCCC")
+    app.exit(0)
+
+    mainWindow.hide();
+    app.quit();
+  
+  })
+
+
 })
 
 app.on('window-all-closed', function () {

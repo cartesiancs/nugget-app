@@ -4,11 +4,18 @@
 const project = {
     save: function() {
         const zip = new JSZip();
+  
 
+        const elementTimeline = document.querySelector('element-timeline')
         const timeline = document.querySelector('element-timeline').timeline
         const projectDuration = Number(document.querySelector("#projectDuration").value)
         const projectFolder = document.querySelector("#projectFolder").value
         const projectRatio = elementControlComponent.previewRatio
+
+        if (fs.existsSync(`${projectFolder}/project.ngt`)) {
+            fs.unlinkSync(`${projectFolder}/project.ngt`)
+        }
+
         const options = {
             videoDuration: projectDuration,
             previewRatio: projectRatio,
@@ -21,7 +28,10 @@ const project = {
         zip.generateAsync({type:"blob"}).then(async function(content) {
             const buffer = Buffer.from( await content.arrayBuffer() );
 
-            fs.writeFile( `${projectFolder}/project.ngt`, buffer, () => console.log('saved!') );
+            fs.writeFile( `${projectFolder}/project.ngt`, buffer, () => {
+                console.log('saved!')
+                elementTimeline.appendCheckpointInHashTable()
+            });
             //saveAs(content, `${projectFolder}/aaa.zip`);
         });
     },

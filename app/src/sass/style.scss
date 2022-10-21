@@ -23,6 +23,10 @@ input[type='file']::file-selector-button {
     color: #ffffff;
 }
 
+element-control-asset > input[type="text" i] {
+    padding: 0px;
+}
+
 
 .border-inner-light {
     box-shadow: 0 0 0 3px #ffffff inset; 

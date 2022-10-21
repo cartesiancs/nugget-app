@@ -91,7 +91,8 @@ class ElementControl extends HTMLElement {
                 let elementHeight = Number(this.timeline[elementId].height) / this.previewRatio
                 let elementWidth = Number(this.timeline[elementId].width) / this.previewRatio
                 let elementTop = Number(this.timeline[elementId].location.y) / this.previewRatio
-                let elementLeft = Number(this.timeline[elementId].location.x)/  this.previewRatio
+                let elementLeft = Number(this.timeline[elementId].location.x) / this.previewRatio
+                console.log(this.previewRatio)
 
                 if (this.timeline[elementId].filetype != 'text') {
                     targetElement.resizeStyle({
@@ -100,7 +101,18 @@ class ElementControl extends HTMLElement {
                         w: elementWidth,
                         h: elementHeight
                     })
-                }                
+                } else if (this.timeline[elementId].filetype == 'text') {
+                    let elementTextSize = Number(this.timeline[elementId].fontsize) / this.previewRatio
+
+                    targetElement.resizeStyle({
+                        x: elementLeft,
+                        y: elementTop
+                    })
+
+                    targetElement.resizeFont({
+                        px: elementTextSize
+                    })
+                }   
             }
         }
     }
@@ -188,7 +200,7 @@ class ElementControl extends HTMLElement {
             duration: 1000,
             text: "텍스트",
             textcolor: "#ffffff",
-            fontsize: 20,
+            fontsize: 52,
             location: {x: 0, y: 0},
             localpath: '/TEXTELEMENT',
             filetype: 'text'
@@ -336,7 +348,8 @@ class ElementControl extends HTMLElement {
         let elementId = document.querySelector(`#optionTargetElement`).value
         let elementBody = document.querySelector(`#element-${elementId}`)
         let inputTarget = elementBody.querySelector('input')
-        inputTarget.style.fontSize = `${event.value}px`
+        let textSize = Number(event.value) / this.previewRatio
+        inputTarget.style.fontSize = `${textSize}px`
         this.timeline[elementId].fontsize = Number(event.value)
     }
 
@@ -531,6 +544,7 @@ class ElementControlAsset extends HTMLElement {
         })
 
 
+
         this.classList.add("element-drag")
         this.setAttribute("id", `element-${this.elementId}`)
         this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px;`)
@@ -578,8 +592,10 @@ class ElementControlAsset extends HTMLElement {
     }
 
     templateText() {
-        
-        return `<input type="text" class="asset-transparent element-text" draggable="false" style="color: rgb(255, 255, 255); font-size: 20px;" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
+        let resizeRatio = this.elementControl.previewRatio
+        let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
+
+        return `<input type="text" class="asset-transparent element-text" draggable="false" style="color: rgb(255, 255, 255); font-size: ${resizeText}px;" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
 
     }
 
@@ -792,6 +808,14 @@ class ElementControlAsset extends HTMLElement {
         this.style.top = !y == false ? `${y}px` : this.style.top
         this.style.width = !w == false ? `${w}px` : this.style.width
         this.style.height = !h == false ? `${h}px` : this.style.height
+    }
+
+    resizeFont({px}) {
+        if (!this.querySelector("input")) {
+            return 0
+        }
+
+        this.querySelector("input").style.fontSize = `${px}px`
     }
 
     resizeMousedown(direction) {

@@ -28,6 +28,7 @@
     --ruler2-c:  #BBB;
     --ruler2-h: 20px;
     --ruler2-space: 50;
+    --ruler3-space: 1;
 
   background-image:
     linear-gradient(90deg, var(--ruler1-c) 0 var(--ruler1-bdw), transparent 0),
@@ -45,7 +46,7 @@
 
   .ruler-x {
     color: var(--ruler-num-c);
-    counter-reset: d 0;
+    counter-reset: d -1;
     display: flex;
     font-size: var(--ruler-num-fz);
     height: var(--ruler2-h);
@@ -62,11 +63,17 @@
 
   .ruler-x li {
     align-self: flex-end;
-    counter-increment: d var(--ruler2-space);
+    counter-increment: d var(--ruler3-space);
     flex: 0 0 calc(var(--ruler-unit) * var(--ruler2-space));
   }
-  .ruler-x li::after {
+
+  .ruler-x li::before {
     content: counter(d);
     line-height: 1;
     padding-inline-start: var(--ruler-num-pi);
+  }
+
+  .ruler-x li::after {
+    content: "s";
+
   }

@@ -216,6 +216,21 @@ function addFilterMedia(object) {
 
   if (checkDynamicCondition) {
     options.startTime = options.startTime + (object.element.trim.startTime/200)
+
+    object.filter.push({
+      "filter": "amix",
+      "options": {
+  
+        "inputs": elementCounts.audio == 0 ? 1 : 2,
+        "duration": "first",
+        "dropout_transition": 0
+      },
+      "inputs": elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+      "outputs": `audio`
+    })
+    
+  
+    elementCounts.audio += 1
   }
 
 

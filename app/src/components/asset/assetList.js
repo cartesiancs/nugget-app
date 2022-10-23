@@ -53,34 +53,21 @@ class AssetFile extends HTMLElement {
         this.directory = document.querySelector("asset-list").nowDirectory
     }
 
-    render(){
+    async render(){
         const fileType = NUGGET.mime.lookup(this.filename).type
+        const fileUrl = `file://${this.directory}/${this.filename}`
         let template;
         if (fileType == 'image') {
-            template = this.templateImage(`file://${this.directory}/${this.filename}`);
+            template = this.templateImage(fileUrl);
+        } else if (fileType == 'video') {
+            let thumbnailUrl = await this.captureVideoThumbnail(fileUrl)
+            template = this.templateVideoThumbnail(thumbnailUrl);
         } else {
             template = this.template(fileType);
         }
+
+        
         this.innerHTML = template;
-        // fetch(`file://${this.directory}/${this.filename}`)
-        // .then(res => {
-        //     return res.blob()
-        // })
-        // .then(blob => {
-        //     let blobUrl = URL.createObjectURL(blob);
-        //     let blobType = blob.type.split('/')[0] // image, video, audio ...
-        //     let template
-
-        //     console.log(blobType)
-
-            // if (blobType == 'image') {
-            //     template = this.templateImage(blobUrl);
-            // } else {
-                
-            // }
-
-        //     this.innerHTML = template;
-        // })
 
     }
 
@@ -99,9 +86,68 @@ class AssetFile extends HTMLElement {
         <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`
     }
 
+    templateVideoThumbnail(blobUrl) {
+        return `<img src="${blobUrl}" alt="" class="align-self-center asset-preview">
+        <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`
+    }
+
     handleClick() {
         
         this.patchToControl(`${this.directory}/${this.filename}`, `${this.directory}`)
+    }
+
+    async captureVideoThumbnail(url) {
+
+        const thumbnailUrl = await new Promise((resolve, reject) => {
+            fetch(`${url}`)
+            .then(res => {
+                return res.blob()
+            })
+            .then(blob => {
+                const blobUrl = URL.createObjectURL(blob);
+                const videoElement = document.createElement('video')
+        
+                videoElement.src = blobUrl
+                videoElement.preload = 'metadata'
+    
+                videoElement.onloadedmetadata = async () => {
+                    const thumbnailCanvas = document.createElement('canvas')
+
+                    videoElement.addEventListener('seeked', () => {
+                        let width = videoElement.videoWidth
+                        let height = videoElement.videoHeight
+                        thumbnailCanvas.width = width;
+                        thumbnailCanvas.height = height;
+                    
+                        let ctx = thumbnailCanvas.getContext('2d');
+                        ctx.drawImage(videoElement, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
+                    
+                        thumbnailCanvas.toBlob((blob) => {
+                            const newImg = document.createElement('img');
+                            const url = URL.createObjectURL(blob);
+                          
+                            newImg.onload = () => {
+                                URL.revokeObjectURL(url);
+                            };
+                          
+                            resolve(url)
+                        });
+                        
+                    });
+                    
+                    videoElement.currentTime = 1;
+            
+                    // let image = thumbnailCanvas.toDataURL('image/jpeg');
+                    // resolve(image)
+
+                }
+            })
+
+        })
+        console.log(thumbnailUrl, 'a')
+
+        return thumbnailUrl
+
     }
 
     patchToControl(url, path) {
@@ -125,8 +171,8 @@ class AssetFile extends HTMLElement {
     }
 
 
-    connectedCallback() {
-        this.render();
+    async connectedCallback() {
+        await this.render();
         this.addEventListener('click', this.handleClick.bind(this));
     }
 

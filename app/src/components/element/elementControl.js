@@ -347,9 +347,8 @@ class ElementControl extends HTMLElement {
     changeTextSize(event) {
         let elementId = document.querySelector(`#optionTargetElement`).value
         let elementBody = document.querySelector(`#element-${elementId}`)
-        let inputTarget = elementBody.querySelector('input')
         let textSize = Number(event.value) / this.previewRatio
-        inputTarget.style.fontSize = `${textSize}px`
+        elementBody.style.fontSize = `${textSize}px`
         this.timeline[elementId].fontsize = Number(event.value)
     }
 
@@ -547,11 +546,17 @@ class ElementControlAsset extends HTMLElement {
 
         this.classList.add("element-drag")
         this.setAttribute("id", `element-${this.elementId}`)
-        this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px;`)
         
         if (this.elementFiletype !== 'text') {
             this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeElement.h}px;`)
+        } else if (this.elementFiletype == 'text') {
+            let resizeRatio = this.elementControl.previewRatio
+            let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
+
+            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; font-size: ${resizeText}px;`)
         }
+
+        
 
         this.innerHTML = template;
     }
@@ -593,9 +598,8 @@ class ElementControlAsset extends HTMLElement {
 
     templateText() {
         let resizeRatio = this.elementControl.previewRatio
-        let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
 
-        return `<input type="text" class="asset-transparent element-text" draggable="false" style="color: rgb(255, 255, 255); font-size: ${resizeText}px;" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
+        return `<input type="text" class="asset-transparent element-text" draggable="false" style="color: rgb(255, 255, 255); " onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
 
     }
 
@@ -815,7 +819,7 @@ class ElementControlAsset extends HTMLElement {
             return 0
         }
 
-        this.querySelector("input").style.fontSize = `${px}px`
+        this.style.fontSize = `${px}px`
     }
 
     resizeMousedown(direction) {

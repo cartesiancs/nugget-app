@@ -58,6 +58,9 @@
                                 <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.project.save()">프로젝트 저장</button>
                                 <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
 
+                                <input type="range" class="form-range" min="0" max="10" step="0.2" id="timelineRange" value="4" oninput="elementControlComponent.changeTimelineRange()" onchange="elementControlComponent.changeTimelineRange()">
+
+
 
                               </div>
                             </div>
@@ -145,7 +148,9 @@
 
     
             <div id="split_bottom" class="row split-top align-items-end cursor-row-resize bg-darker line-top" style="height: 20%;">
+
                 <element-timeline id="split_inner_bottom"></element-timeline>
+
 
             </div>
         </div>

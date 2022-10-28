@@ -34,6 +34,7 @@ class ElementControl extends HTMLElement {
         this.existActiveElement = false
 
         this.progress = 0
+        this.progressTime = 0
         this.previewRatio = 1920/1920
 
         this.resizeEvent()
@@ -171,7 +172,8 @@ class ElementControl extends HTMLElement {
 
             let width = video.videoWidth
             let height = video.videoHeight
-            let duration = video.duration*200
+            let duration = video.duration * 1000
+            console.log(duration)
 
             this.timeline[elementId] = {
                 blob: blob,
@@ -218,7 +220,7 @@ class ElementControl extends HTMLElement {
         audio.src = blob
 
         audio.onloadedmetadata = () => {
-            let duration = audio.duration*200
+            let duration = audio.duration*1000
 
             this.timeline[elementId] = {
                 blob: blob,
@@ -254,13 +256,13 @@ class ElementControl extends HTMLElement {
             this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`)
 
             let video = document.getElementById(`element-${elementId}`).querySelector("video")
-            let secondsOfRelativeTime = (this.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = (this.timeline[elementId].startTime - this.progressTime) / 1000
 
             video.currentTime = secondsOfRelativeTime
 
         } else {
             let video = document.getElementById(`element-${elementId}`).querySelector("video")
-            let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progressTime) / 1000
 
 
             if (!!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2)) {
@@ -293,13 +295,13 @@ class ElementControl extends HTMLElement {
             this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="audio"></element-control-asset>`)
 
             let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
-            let secondsOfRelativeTime = (this.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = (this.timeline[elementId].startTime - this.progressTime) / 1000
 
             audio.currentTime = secondsOfRelativeTime
 
         } else {
             let audio = document.getElementById(`element-${elementId}`).querySelector("audio")
-            let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progress) / 200
+            let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progressTime) / 1000
 
             if (!!(audio.currentTime > 0 && !audio.paused && !audio.ended && audio.readyState > 2)) {
                 if (this.isPaused) {
@@ -352,11 +354,50 @@ class ElementControl extends HTMLElement {
         this.timeline[elementId].fontsize = Number(event.value)
     }
 
+    changeTimelineRange() {
+        const timelineRuler = document.querySelector("element-timeline-editor")
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+        timelineRuler.updateRulerSpace(timeMagnification)
+        this.adjustAllElementBarWidth(timeMagnification)
+    }
+
+    getTimeFromProgress() {
+        let timelineRange =  Number(document.querySelector("#timelineRange").value)
+        let timeMagnification = timelineRange / 4
+
+        let relativeMilliseconds = this.progress * 5
+        let absoluteMilliseconds = relativeMilliseconds / timeMagnification
+        return absoluteMilliseconds
+    }
+
+    adjustAllElementBarWidth(ratio) {
+        const allElementBar = document.querySelectorAll("element-bar")
+        allElementBar.forEach(element => {
+            let elementId = element.getAttribute("element-id")
+            let originalWidth = element.millisecondsToPx(this.timeline[elementId].duration) 
+            let originalLeft = element.millisecondsToPx(this.timeline[elementId].startTime)
+            let changedWidth = originalWidth
+            let changedLeft = originalLeft
+
+            element.setWidth(changedWidth)
+            element.setLeft(changedLeft)
+
+        });
+        console.log(allElementBar)
+    }
+
+    getMillisecondsToISOTime(milliseconds) {
+        let time = new Date(milliseconds).toISOString().slice(11, 22)
+        return time
+    }
+
     progressToTime() {
         let ms = this.progress * 5
         let time = new Date(ms).toISOString().slice(11, 22)
         return time
     }
+    
 
     generateUUID () {
         let uuid = uuidv4()
@@ -366,7 +407,10 @@ class ElementControl extends HTMLElement {
 
     showTime() {
         const showTime = document.querySelector("#time") 
-        showTime.innerHTML = this.progressToTime()
+        const milliseconds = this.getTimeFromProgress()
+        const ISOTime = this.getMillisecondsToISOTime(milliseconds)
+        
+        showTime.innerHTML = ISOTime
     }
     
 
@@ -382,12 +426,12 @@ class ElementControl extends HTMLElement {
     appearAllElementInTime() {
         for(let elementId in this.timeline) {
             let filetype = this.timeline[elementId].filetype
-            let checkFiletype = this.timeline[elementId].startTime > this.progress || 
-            this.timeline[elementId].startTime + this.timeline[elementId].duration < this.progress
+            let checkFiletype = this.timeline[elementId].startTime > this.progressTime || 
+            this.timeline[elementId].startTime + this.timeline[elementId].duration < this.progressTime
 
             if (filetype == 'video' || filetype == 'audio') {
-                checkFiletype = this.timeline[elementId].startTime + this.timeline[elementId].trim.startTime > this.progress || 
-                this.timeline[elementId].startTime + this.timeline[elementId].trim.endTime < this.progress
+                checkFiletype = this.timeline[elementId].startTime + this.timeline[elementId].trim.startTime > this.progressTime || 
+                this.timeline[elementId].startTime + this.timeline[elementId].trim.endTime < this.progressTime
             }
 
             if (checkFiletype) {
@@ -410,13 +454,17 @@ class ElementControl extends HTMLElement {
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `elementControlComponent.stop()`)
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> stop_circle </span>`
+        let nowTimelineRange = Number(document.querySelector("#timelineRange").value)
 
         this.scroller = setInterval(() => {
             //split_inner_bottom.scrollBy(4, 0);
-            let nowTimelineProgress = Number(this.timelineBar.style.left.split('px')[0]) + 4
+            let nowTimelineProgress = Number(this.timelineBar.style.left.split('px')[0]) + nowTimelineRange
             this.progress = nowTimelineProgress
+            this.progressTime = this.getTimeFromProgress()
+
             this.timelineBar.move(nowTimelineProgress)
             this.showTime()
+            
 
             if ((this.innerWidth + this.offsetWidth) >= this.offsetWidth) {
                 this.stop();
@@ -446,7 +494,7 @@ class ElementControl extends HTMLElement {
     }
 
     pauseVideo (elementId) {
-        let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progress) / 200
+        let secondsOfRelativeTime = -(this.timeline[elementId].startTime - this.progressTime) / 1000
         let video = document.getElementById(`element-${elementId}`).querySelector("video")
         video.currentTime = secondsOfRelativeTime
         video.pause()
@@ -484,6 +532,7 @@ class ElementControl extends HTMLElement {
 
     reset () {
         this.progress = 0
+        this.progressTime = 0
         this.isPaused = true;
 
         this.showTime()

@@ -11,8 +11,8 @@ class ElementBar extends HTMLElement {
         this.elementBarType = this.getAttribute('element-type') || 'static'
 
         
-        this.width = this.timeline[this.elementId].duration
-        this.startTime = this.timeline[this.elementId].startTime
+        this.width = this.millisecondsToPx(this.timeline[this.elementId].duration)
+        this.startTime = this.millisecondsToPx(this.timeline[this.elementId].startTime)
 
         this.isDrag = false
         this.isResize = false
@@ -97,7 +97,7 @@ class ElementBar extends HTMLElement {
             let y = e.pageY - this.initialPosition.y
     
             this.style.left = `${x}px`
-            this.timeline[this.elementId].startTime = x
+            this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
         }
     }
 
@@ -118,6 +118,28 @@ class ElementBar extends HTMLElement {
         this.isDrag = false
     }
 
+    setWidth(width) {
+        this.style.width = `${width}px`
+    }
+
+    setLeft(left) {
+        this.style.left = `${left}px`
+    }
+
+
+    millisecondsToPx(ms) {
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+        const convertPixel = ms / 5 * timeMagnification
+        return convertPixel
+    }
+
+    pxToMilliseconds(px) {
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+        const convertMs = px * 5 / timeMagnification
+        return convertMs
+    }
 
     resize(e) {
         this.isDrag = false
@@ -129,15 +151,16 @@ class ElementBar extends HTMLElement {
         let timelineScrollLeft = document.querySelector("element-timeline").scrollLeft
 
         if (this.resizeLocation == 'left') {
-            this.style.left = `${x}px`
-            this.style.width = `${duration-x}px`
-            this.timeline[this.elementId].startTime = x
-            this.timeline[this.elementId].duration = Number(this.style.width.split('px')[0])
+            this.setLeft(x)
+            this.setWidth(duration-x)
+            this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
+            this.timeline[this.elementId].duration = this.pxToMilliseconds(Number(this.style.width.split('px')[0]))
         } else {
             //this.style.left = `${this.initialPosition.x}px`
-            this.style.width = `${timelineScrollLeft+e.pageX-Number(this.style.left.split('px')[0])}px`
+            this.setWidth(timelineScrollLeft+e.pageX-Number(this.style.left.split('px')[0]))
+            
             //this.timeline[this.elementId].startTime = this.initialPosition.x
-            this.timeline[this.elementId].duration = Number(this.style.width.split('px')[0])
+            this.timeline[this.elementId].duration = this.pxToMilliseconds(Number(this.style.width.split('px')[0]))
         }
     }
 
@@ -182,7 +205,7 @@ class ElementBar extends HTMLElement {
             e.pageX - Number(this.style.left.split("px")[0]) : 
             Number(this.style.left.split("px")[0])
         this.initialPosition.y = e.pageY
-        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.split("px")[0])
+        this.initialDuration = this.millisecondsToPx(this.timeline[this.elementId].duration) + Number(this.style.left.split("px")[0])
 
         this.resizeEventHandler = this.resize.bind(this)
         document.addEventListener('mousemove', this.resizeEventHandler);

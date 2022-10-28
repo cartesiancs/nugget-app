@@ -210,12 +210,12 @@ function addFilterMedia(object) {
     height: String(object.element.height),
     x: String(object.element.location.x),
     y: String(object.element.location.y),
-    startTime: object.element.startTime/200,
-    endTime: (object.element.startTime/200) + (object.element.duration/200)
+    startTime: object.element.startTime/1000,
+    endTime: (object.element.startTime/1000) + (object.element.duration/1000)
   }
 
   if (checkDynamicCondition) {
-    options.startTime = options.startTime + (object.element.trim.startTime/200)
+    options.startTime = options.startTime + (object.element.trim.startTime/1000)
 
     object.filter.push({
       "filter": "amix",
@@ -270,8 +270,8 @@ function addFilterMedia(object) {
     fontsize: object.element.fontsize,
     x: String(object.element.location.x),
     y: String(object.element.location.y),
-    startTime: object.element.startTime/200,
-    endTime: (object.element.startTime/200) + (object.element.duration/200)
+    startTime: object.element.startTime/1000,
+    endTime: (object.element.startTime/1000) + (object.element.duration/1000)
   }
 
 
@@ -294,12 +294,12 @@ function addFilterMedia(object) {
 
 function addFilterAudio(object) {
   let options = {
-    startTime: object.element.startTime/200 + (object.element.trim.startTime/200),
+    startTime: object.element.startTime/1000 + (object.element.trim.startTime/1000),
     trim: {
-      start: object.element.trim.startTime/200
+      start: object.element.trim.startTime/1000
     },
-    duration: object.element.trim.endTime/200 - (object.element.trim.startTime/200),
-    endTime: (object.element.startTime/200) + (object.element.duration/200)
+    duration: object.element.trim.endTime/1000 - (object.element.trim.startTime/1000),
+    endTime: (object.element.startTime/1000) + (object.element.duration/1000)
   }
 
   object.command.input(object.element.localpath)

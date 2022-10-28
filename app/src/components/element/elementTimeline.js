@@ -277,6 +277,17 @@ class ElementTimelineEditor extends HTMLElement {
     }
 
 
+    updateRulerSpace(timeMagnification) {
+        const spaceRuler2 = 50 * timeMagnification
+        const spaceRuler1 = 5 * timeMagnification
+
+        this.style.setProperty('--ruler2-space', spaceRuler2); // NOTE: 기본값 50
+        this.style.setProperty('--ruler1-space', spaceRuler1); // NOTE: 기본값 5
+
+        
+    }
+
+
     updateRulerLength(e) {
         let duration = Number(e.value) * 200
         this.changeWidth(duration)
@@ -296,6 +307,8 @@ class ElementTimelineEditor extends HTMLElement {
         
         
         elementControl.progress = e.pageX + elementTimeline.scrollLeft
+        elementControl.progressTime = elementControl.getTimeFromProgress()
+
         elementControl.stop()
         elementControl.showTime() 
         elementControl.appearAllElementInTime()

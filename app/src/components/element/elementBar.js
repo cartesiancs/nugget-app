@@ -126,6 +126,16 @@ class ElementBar extends HTMLElement {
         this.style.left = `${left}px`
     }
 
+    setTrimStart(px) {
+        let resizeRangeTargetLeft = this.querySelector(".element-bar-hiddenspace-left")
+        resizeRangeTargetLeft.style.width = `${px}px`
+    }
+
+    setTrimEnd(px) {
+        let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
+        resizeRangeTargetRight.style.width = `${px}px`
+    }
+
 
     millisecondsToPx(ms) {
         const timelineRange =  Number(document.querySelector("#timelineRange").value)
@@ -189,11 +199,11 @@ class ElementBar extends HTMLElement {
 
 
         if (this.resizeLocation == 'left') {
-            resizeRangeTargetLeft.style.width = `${this.initialPosition.x+x+scrollLeft-targetLeft}px`
-            this.timeline[this.elementId].trim.startTime = Number(resizeRangeTargetLeft.style.width.split('px')[0])
+            this.setTrimStart(this.initialPosition.x+x+scrollLeft-targetLeft)
+            this.timeline[this.elementId].trim.startTime = this.pxToMilliseconds(Number(resizeRangeTargetLeft.style.width.split('px')[0]))
         } else {
-            resizeRangeTargetRight.style.width = `${(scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight}px`
-            this.timeline[this.elementId].trim.endTime = duration-Number(resizeRangeTargetRight.style.width.split('px')[0])
+            this.setTrimEnd((scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight)
+            this.timeline[this.elementId].trim.endTime = this.pxToMilliseconds(duration-Number(resizeRangeTargetRight.style.width.split('px')[0]))
         }
     }
 
@@ -220,7 +230,7 @@ class ElementBar extends HTMLElement {
 
         this.isDrag = false
         this.initialPosition.x = Number(this.style.left.split("px")[0])
-        this.initialDuration = this.timeline[this.elementId].duration + Number(this.style.left.split("px")[0])
+        this.initialDuration = this.millisecondsToPx(this.timeline[this.elementId].duration + Number(this.style.left.split("px")[0]))
 
         this.resizeEventHandler = this.resizeRange.bind(this)
         document.addEventListener('mousemove', this.resizeEventHandler);

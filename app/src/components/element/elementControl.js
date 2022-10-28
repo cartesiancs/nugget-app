@@ -383,6 +383,13 @@ class ElementControl extends HTMLElement {
             element.setWidth(changedWidth)
             element.setLeft(changedLeft)
 
+            if (element.elementBarType == 'dynamic') {
+                let trimStart = element.millisecondsToPx(this.timeline[elementId].trim.startTime) 
+                let trimEnd = element.millisecondsToPx(this.timeline[elementId].duration - this.timeline[elementId].trim.endTime) 
+
+                element.setTrimStart(trimStart)
+                element.setTrimEnd(trimEnd)
+            }
         });
         console.log(allElementBar)
     }

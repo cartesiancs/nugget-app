@@ -253,6 +253,9 @@ class ElementBar extends HTMLElement {
 
     selectThisElement() {
         const elementControl = document.querySelector('element-control')
+        if (elementControl.selectElementsId.includes(this.elementId)) {
+            return 0
+        }
         elementControl.selectElementsId.push(this.elementId)
         this.changeOutlineColor('add')
     }
@@ -265,13 +268,18 @@ class ElementBar extends HTMLElement {
         this.changeOutlineColor('remove')
     }
 
-    dblclick() {
-        const elementControl = document.querySelector('element-control')
-        if (elementControl.selectElementsId.includes(this.elementId)) {
-            this.unselectThisElement()
-        } else {
-            this.selectThisElement()
+    click() {
+        this.selectThisElement()
+    }
+
+    rightclick(e) {
+        const isRightClick = (e.which == 3) || (e.button == 2)
+
+        if(!isRightClick) {
+            return 0
         }
+
+        console.log("RC")
     }
 
 
@@ -279,7 +287,10 @@ class ElementBar extends HTMLElement {
         this.render();
 
         this.addEventListener('mousedown', this.dragMousedown.bind(this));
-        this.addEventListener('dblclick', this.dblclick.bind(this));
+        this.addEventListener('mouseup', this.rightclick.bind(this));
+        this.addEventListener('mousedown', this.click.bind(this));
+        this.addEventListener('mouseup', this.click.bind(this));
+
         document.addEventListener('mouseup', this.dragMouseup.bind(this));
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
 

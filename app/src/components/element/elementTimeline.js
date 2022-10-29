@@ -216,14 +216,23 @@ class ElementTimeline extends HTMLElement {
         }
     }
 
+    deactivateSeletedBar() {
+        this.elementControl.selectElementsId.forEach(elementId => {
+            let targetElement = document.querySelector(`element-bar[element-id='${elementId}']`)
+            targetElement.unselectThisElement()
+        });
+    }
+
     clickTimeline() {
         this.elementControl.deactivateAllOutline()
+        this.deactivateSeletedBar()
+        console.log("CLICKTIMELIONE")
     }
 
     connectedCallback() {
         this.render();
         document.addEventListener('keydown', this.keydown.bind(this));
-        this.addEventListener('click', this.clickTimeline.bind(this));
+        this.addEventListener('mousedown', this.clickTimeline.bind(this));
 
     }
 }

@@ -152,6 +152,7 @@ class ElementBar extends HTMLElement {
     }
 
     resize(e) {
+        this.unselectThisElement()
         this.isDrag = false
 
         let x = e.pageX - this.initialPosition.x
@@ -166,7 +167,7 @@ class ElementBar extends HTMLElement {
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
             this.timeline[this.elementId].duration = this.pxToMilliseconds(Number(this.style.width.split('px')[0]))
         } else {
-            //this.style.left = `${this.initialPosition.x}px`
+            //this.style.left = `${}px`
             this.setWidth(timelineScrollLeft+e.pageX-Number(this.style.left.split('px')[0]))
             
             //this.timeline[this.elementId].startTime = this.initialPosition.x
@@ -265,10 +266,12 @@ class ElementBar extends HTMLElement {
         elementControl.selectElementsId = elementControl.selectElementsId.filter((item) => {
             return item !== this.elementId;
         });
+
         this.changeOutlineColor('remove')
     }
 
     click() {
+        
         this.selectThisElement()
     }
 

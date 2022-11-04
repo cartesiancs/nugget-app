@@ -72,6 +72,7 @@ class ElementControl extends HTMLElement {
         let width = Math.round(innerWidth*0.95);
         let height = Math.round((width*9)/16)
 
+
         preview.width = width
         preview.height = height
         preview.style.width = `${width}px`

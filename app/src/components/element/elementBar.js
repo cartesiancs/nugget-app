@@ -132,6 +132,11 @@ class ElementBar extends HTMLElement {
     }
 
     setTrimEnd(px) {
+        let duration = this.millisecondsToPx(this.timeline[this.elementId].duration)
+        let startTrimWidth = this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
+        if (duration - startTrimWidth < px) {
+            return 0
+        }
         let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
         resizeRangeTargetRight.style.width = `${px}px`
     }

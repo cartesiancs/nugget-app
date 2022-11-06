@@ -22,7 +22,7 @@
     
 </head>
     <body class="h-100 bg-dark">
-        <div class="container-fluid h-100 ">
+        <div class="container-fluid" style="height: 97vh;">
 
             <div id="split_top" class="row align-items-start" style="height: 80%;">
                 <div id="split_col_1" class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden position-relative p-0" style="width: 30%;">
@@ -58,7 +58,6 @@
                                 <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.project.save()">프로젝트 저장</button>
                                 <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
 
-                                <input type="range" class="form-range" min="0" max="10" step="0.2" id="timelineRange" value="4" oninput="elementControlComponent.changeTimelineRange()" onchange="elementControlComponent.changeTimelineRange()">
 
 
 
@@ -154,6 +153,10 @@
 
 
             </div>
+        </div>
+        <div class="container-footer">
+            <input type="range" class="form-range" min="0" max="10" step="0.2" id="timelineRange" value="4" oninput="elementControlComponent.changeTimelineRange()" onchange="elementControlComponent.changeTimelineRange()">
+
         </div>
 
 
@@ -286,8 +289,8 @@
         const page = {
             split: {
                 bottom: function (percent) {
-                    document.getElementById("split_top").style.height = `${percent}%`
-                    document.getElementById("split_bottom").style.height = `${100-percent}%`
+                    document.getElementById("split_top").style.height = `${percent+3}%`
+                    document.getElementById("split_bottom").style.height = `${100-percent-3}%`
                 },
                 columns: function (percent) {
 

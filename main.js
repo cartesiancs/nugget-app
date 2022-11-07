@@ -1,23 +1,15 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const isDev = require('electron-is-dev');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
 
-
-// if (process.platform === "darwin") {
-//   if (!isDev) {
-//     ffmpeg.setFfmpegPath(path.join(path.dirname(app.getAppPath()), '..', './Resources', 'bin/ffmpeg'));
-//     ffmpeg.setFfprobePath(path.join(path.dirname(app.getAppPath()), '..', './Resources', 'bin/ffprobe'));
-//   } else {
-//     ffmpeg.setFfmpegPath(path.join(__dirname, '.', 'bin/osx/ffmpeg'));
-//     ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/osx/ffprobe'));
-//   }
-// } else {
-//   ffmpeg.setFfmpegPath(path.join(__dirname, '.', 'bin/win64/ffmpeg.exe'));
-//   ffmpeg.setFfprobePath(path.join(__dirname, '.', 'bin/win64/ffprobe.exe'));
-// } 
+const ffmpegPath = require('ffmpeg-static').replace(
+  'app.asar',
+  'app.asar.unpacked'
+);
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 if (isDev) {
 	console.log('Running in development');
@@ -59,15 +51,13 @@ function createWindow () {
   // console.log(command)
 
 }
+console.log(app.getPath('userData'));
 
-let dir = "/Users/hhj"
+let dir = app.getPath('userData')
 let elementCounts = {
   video: 1,
   audio: 0
 }
-
-
-
 
 
 
@@ -357,18 +347,23 @@ app.whenReady().then(() => {
     mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
 
   });
+})
 
-  
-  ipcMain.on('FORCE_CLOSE', async (evt) => {
-    console.log("CCCC")
-    app.exit(0)
+ipcMain.on('FORCE_CLOSE', async (evt) => {
+  console.log("CCCC")
+  app.exit(0)
+  app.quit();
+})
 
-    mainWindow.hide();
-    app.quit();
-  
+ipcMain.handle('dialog:openDirectory', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
   })
-
-
+  if (canceled) {
+    return
+  } else {
+    return filePaths[0]
+  }
 })
 
 app.on('window-all-closed', function () {

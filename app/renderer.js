@@ -1,8 +1,7 @@
 const { ipcRenderer, shell } = require('electron')
-
-
 const fs = require('fs');
 var JSZip = require("jszip");
+
 
 
 ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {

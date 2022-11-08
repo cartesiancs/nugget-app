@@ -7,7 +7,7 @@
         "start": "electron .",
         "bundle": "webpack --mode=production",
         "build:osx": "electron-builder build --mac",
-        "build:win": "electron-builder build --win portable --x64"
+        "build:win": "electron-builder build --win --x64"
 
     },
     "build": {
@@ -19,6 +19,15 @@
             "node_modules/ffmpeg-static/bin/${os}/${arch}/ffmpeg",
             "node_modules/ffmpeg-static/index.js",
             "node_modules/ffmpeg-static/package.json"
+        ],
+        "extraResources": [
+            {
+                "from": "./assets",
+                "to": "assets",
+                "filter": [
+                    "**/*"
+                ]
+            }
         ],
         "protocols": {
             "name": "nugget",
@@ -55,22 +64,22 @@
     },
     "author": "Dipokal",
     "dependencies": {
-        "css-loader": "^6.7.1",
         "electron-is-dev": "^2.0.0",
-        "electron-reload": "^2.0.0-alpha.1",
         "ffmpeg-static": "^5.1.0",
         "fluent-ffmpeg": "^2.1.2",
         "jszip": "^3.10.1",
+        "uuid": "^9.0.0"
+    },
+    "devDependencies": {
+        "electron": "^20.3.1",
+        "electron-builder": "^23.3.3",
+        "webpack": "^5.74.0",
+        "webpack-cli": "^4.10.0",
         "mini-css-extract-plugin": "^2.6.1",
         "sass": "^1.55.0",
         "sass-loader": "^13.0.2",
         "style-loader": "^3.3.1",
-        "uuid": "^9.0.0",
-        "webpack": "^5.74.0",
-        "webpack-cli": "^4.10.0"
-    },
-    "devDependencies": {
-        "electron": "^20.3.1",
-        "electron-builder": "^23.3.3"
+        "css-loader": "^6.7.1",
+        "electron-reload": "^2.0.0-alpha.1"
     }
 }

@@ -67,7 +67,10 @@ ipcRenderer.on('WHEN_CLOSE_EVENT', (evt) => {
     
 })
 
-
+// NOTE: ipcRenderer.send('INIT') 명령어로 실행중인 앱의 경로를 확인할 수 있습니다
+ipcRenderer.on('GET_PATH', (evt, path) => {
+    console.log(path)
+})
 
 
 

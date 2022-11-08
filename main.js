@@ -3,6 +3,7 @@ const path = require('path')
 const isDev = require('electron-is-dev');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
+let resourcesPath = ''
 
 
 const ffmpegPath = require('ffmpeg-static').replace(
@@ -12,16 +13,28 @@ const ffmpegPath = require('ffmpeg-static').replace(
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 if (isDev) {
+  resourcesPath = '.'
+
 	console.log('Running in development');
   require('electron-reload')(__dirname, {
     electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
   });
 } else {
+  resourcesPath = process.resourcesPath
+
 	console.log('Running in production');
 }
 
 const forceQuit = false;
 let mainWindow;
+
+ipcMain.on('INIT', async (evt) => {
+  evt.sender.send('GET_PATH', app.getPath("userData"))
+  evt.sender.send('GET_PATH', app.getAppPath())
+  evt.sender.send('GET_PATH', process.resourcesPath)
+
+  
+})
 
 
 function createWindow () {
@@ -51,7 +64,6 @@ function createWindow () {
   // console.log(command)
 
 }
-console.log(app.getPath('userData'));
 
 let dir = app.getPath('userData')
 let elementCounts = {
@@ -96,16 +108,16 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
   let filter = []
   let command = ffmpeg()
-  command.input('/Users/hhj/Desktop/_IMAGES/background.png').loop(options.videoDuration)
+  command.input(`${resourcesPath}/assets/images/background.png`).loop(options.videoDuration)
 
   filter.push({
-    "filter": "scale",
-    "options": {
-      "w": 1920,
-      "h": 1080
+    'filter': 'scale',
+    'options': {
+      'w': 1920,
+      'h': 1080
     },
-    "inputs": `[0:v]`,
-    "outputs": `tmp`
+    'inputs': '[0:v]',
+    'outputs': 'tmp'
   })
 
 
@@ -152,9 +164,9 @@ ipcMain.on('RENDER', (evt, elements, options) => {
   }
 
   command.complexFilter(filter, filterLists)
-  command.outputOptions(["-map tmp?"])
+  command.outputOptions(['-map tmp?'])
   if (elementCounts.audio != 0) {
-    command.outputOptions(["-map audio?"])
+    command.outputOptions(['-map audio?'])
   }
   command.output(options.videoDestination)
   command.audioCodec('aac')
@@ -208,41 +220,42 @@ function addFilterMedia(object) {
     options.startTime = options.startTime + (object.element.trim.startTime/1000)
 
     object.filter.push({
-      "filter": "amix",
-      "options": {
+      'filter': 'amix',
+      'options': {
   
-        "inputs": elementCounts.audio == 0 ? 1 : 2,
-        "duration": "first",
-        "dropout_transition": 0
+        'inputs': elementCounts.audio == 0 ? 1 : 2,
+        'duration': 'first',
+        'dropout_transition': 0
       },
-      "inputs": elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
-      "outputs": `audio`
+      'inputs': elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+      'outputs': `audio`
     })
-    
+
+
   
     elementCounts.audio += 1
   }
 
 
   object.filter.push({
-    "filter": "scale",
-    "options": {
-      "w": options.width,
-      "h": options.height
+    'filter': 'scale',
+    'options': {
+      'w': options.width,
+      'h': options.height
     },
-    "inputs": `[${elementCounts.video}:v]`,
-    "outputs": `image${elementCounts.video}`
+    'inputs': `[${elementCounts.video}:v]`,
+    'outputs': `image${elementCounts.video}`
   })
 
   object.filter.push({
-    "filter": "overlay",
-    "options": {
-      "enable": `between(t,${options.startTime},${options.endTime})`,
-      "x": options.x,
-      "y": options.y
+    'filter': 'overlay',
+    'options': {
+      'enable': `between(t,${options.startTime},${options.endTime})`,
+      'x': options.x,
+      'y': options.y
     },
-    "inputs": `[tmp][image${elementCounts.video}]`,
-    "outputs": `tmp`
+    'inputs': `[tmp][image${elementCounts.video}]`,
+    'outputs': `tmp`
   })
 
   elementCounts.video += 1
@@ -266,18 +279,18 @@ function addFilterMedia(object) {
 
 
   object.filter.push({
-    "filter": "drawtext",
-    "options": {
-      "enable": `between(t,${options.startTime},${options.endTime})`,
-      "fontfile": '/Users/hhj/Documents/nugget-app/assets/fonts/notosanskr-medium.otf',
-      "text": options.text,
-      "fontsize": options.fontsize,
-      "fontcolor": options.textcolor,
-      "x": options.x,
-      "y": options.y
+    'filter': 'drawtext',
+    'options': {
+      'enable': `between(t,${options.startTime},${options.endTime})`,
+      'fontfile': `${resourcesPath}/assets/fonts/notosanskr-medium.otf`,
+      'text': options.text,
+      'fontsize': options.fontsize,
+      'fontcolor': options.textcolor,
+      'x': options.x,
+      'y': options.y
     },
-    "inputs": `tmp`,
-    "outputs": `tmp`
+    'inputs': `tmp`,
+    'outputs': `tmp`
   })
 }
 
@@ -295,6 +308,7 @@ function addFilterAudio(object) {
   object.command.input(object.element.localpath)
     .audioCodec('copy')
     .audioChannels(2)
+    .inputOptions(`-ss ${options.startTime}`)
     .inputOptions(`-itsoffset ${options.startTime}`)
     .seekInput(options.trim.start)
     .inputOptions(`-t ${options.duration}`)
@@ -304,25 +318,25 @@ function addFilterAudio(object) {
 
 
   // object.filter.push({
-  //   "filter": "atrim",
-  //   "options": {
-  //     "start": options.startTime,
-  //     "end": options.endTime
+  //   'filter': 'atrim',
+  //   'options': {
+  //     'start': options.startTime,
+  //     'end': options.endTime
   //   },
-  //   "inputs": elementCounts.video == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
-  //   "outputs": `audio`
+  //   'inputs': elementCounts.video == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+  //   'outputs': `audio`
   // })
 
   object.filter.push({
-    "filter": "amix",
-    "options": {
+    'filter': 'amix',
+    'options': {
 
-      "inputs": elementCounts.audio == 0 ? 1 : 2,
-      "duration": "first",
-      "dropout_transition": 0
+      'inputs': elementCounts.audio == 0 ? 1 : 2,
+      'duration': 'first',
+      'dropout_transition': 0
     },
-    "inputs": elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
-    "outputs": `audio`
+    'inputs': elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+    'outputs': `audio`
   })
   
 

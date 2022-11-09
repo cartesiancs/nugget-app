@@ -66,11 +66,21 @@ class ElementControl extends HTMLElement {
 
     resizePreview() {
         let innerWidth = document.getElementById("split_col_2").offsetWidth
-        let innerHeight = document.getElementById("split_col_2").offsetHeight
+        let splitTopHeight = document.getElementById("split_top").offsetHeight
+        let splitBottomHeight = document.getElementById("split_bottom").offsetHeight
+        let videoBoxHeight = document.getElementById("videobox").offsetHeight
+        let videoHeight = document.getElementById("video").offsetHeight
 
+        let elementTimelineHeight = document.querySelector("element-timeline").offsetHeight
 
-        let width = Math.round(innerWidth*0.95);
-        let height = Math.round((width*9)/16)
+        let horizontalResizeWidth = Math.round(innerWidth*0.95);
+        let horizontalResizeHeight = Math.round((horizontalResizeWidth*9)/16);
+
+        let verticalResizeHeight = window.innerHeight - (splitBottomHeight + 20) - (videoBoxHeight - videoHeight)
+        let verticalResizeWidth = verticalResizeHeight * (16 / 9)
+
+        let width = horizontalResizeWidth > verticalResizeWidth ? verticalResizeWidth : horizontalResizeWidth
+        let height = horizontalResizeHeight > verticalResizeHeight ? verticalResizeHeight : horizontalResizeHeight
 
 
         preview.width = width

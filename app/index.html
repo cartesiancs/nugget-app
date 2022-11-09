@@ -289,8 +289,8 @@
         const page = {
             split: {
                 bottom: function (percent) {
-                    document.getElementById("split_top").style.height = `${percent+3}%`
-                    document.getElementById("split_bottom").style.height = `${100-percent-3}%`
+                    document.getElementById("split_top").style.height = `${percent+1}%`
+                    document.getElementById("split_bottom").style.height = `${100-percent-1}%`
                 },
                 columns: function (percent) {
 
@@ -341,8 +341,10 @@
 
             if (valueEvent.splitBottom) {
                 let videoboxHeightPer = videobox.offsetHeight / window.innerHeight * 100
-                let per = e.pageY/document.body.offsetHeight*100 <= videoboxHeightPer ? videoboxHeightPer : e.pageY/document.body.offsetHeight*100
+                let per = e.pageY/document.body.offsetHeight*100 
                 page.split.bottom(per)
+                elementControlComponent.resizeEvent()
+
             }
 
             if (valueEvent.splitColumns) {

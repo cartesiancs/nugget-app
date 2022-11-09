@@ -8,6 +8,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
 
 
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: rgba(136, 136, 136, 0.296);
+    border-radius: 10px;
+
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(85, 85, 85, 0.456);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+
+  }
+
 html, body {
     -ms-user-select: none; 
     -moz-user-select: -moz-none;
@@ -26,6 +56,8 @@ input[type='file']::file-selector-button {
 element-control-asset > input[type="text" i] {
     padding: 0px;
 }
+
+
 
 input[type=range]::-webkit-slider-runnable-track {
     width: 100%;

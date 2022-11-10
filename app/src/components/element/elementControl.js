@@ -49,7 +49,6 @@ class ElementControl extends HTMLElement {
         if (this.isResizeStart == false) {
             this.isResizeStart = true
             this.resizeInterval = setInterval(() => {
-                console.log("RS")
         
                 this.matchAllElementsSizeToPreview()
 
@@ -475,10 +474,10 @@ class ElementControl extends HTMLElement {
         let toggle = document.querySelector("#playToggle")
         toggle.setAttribute('onclick', `elementControlComponent.stop()`)
         toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> stop_circle </span>`
-        let nowTimelineRange = Number(document.querySelector("#timelineRange").value)
 
         this.scroller = setInterval(() => {
             //split_inner_bottom.scrollBy(4, 0);
+            let nowTimelineRange = Number(document.querySelector("#timelineRange").value)
             let nowTimelineProgress = Number(this.timelineBar.style.left.split('px')[0]) + nowTimelineRange
             this.progress = nowTimelineProgress
             this.progressTime = this.getTimeFromProgress()

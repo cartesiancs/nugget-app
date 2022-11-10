@@ -361,13 +361,13 @@ class ElementTimelineEditor extends HTMLElement {
 
 
         this.mousemoveEventHandler = this.mousemove.bind(this)
-        this.addEventListener('mousemove', this.mousemoveEventHandler);
+        document.addEventListener('mousemove', this.mousemoveEventHandler);
 
     }
 
 
     mouseup(e) {
-        this.removeEventListener('mousemove', this.mousemoveEventHandler);
+        document.removeEventListener('mousemove', this.mousemoveEventHandler);
 
     }
 

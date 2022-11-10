@@ -3,6 +3,7 @@
 class AssetList extends HTMLElement { 
     constructor() {
         super();
+        this.blobThumbnail = {}
         this.nowDirectory = ''
 
     }
@@ -56,12 +57,23 @@ class AssetFile extends HTMLElement {
     async render(){
         const fileType = NUGGET.mime.lookup(this.filename).type
         const fileUrl = `file://${this.directory}/${this.filename}`
+        const assetList = document.querySelector("asset-list")
+
         let template;
         if (fileType == 'image') {
             template = this.templateImage(fileUrl);
         } else if (fileType == 'video') {
-            let thumbnailUrl = await this.captureVideoThumbnail(fileUrl)
-            template = this.templateVideoThumbnail(thumbnailUrl);
+            console.log(fileUrl)
+            if (assetList.blobThumbnail.hasOwnProperty(fileUrl)) {
+                let savedThumbnailUrl = assetList.blobThumbnail[fileUrl]                
+                template = this.templateVideoThumbnail(savedThumbnailUrl);
+
+            } else {
+                let thumbnailUrl = await this.captureVideoThumbnail(fileUrl)
+                assetList.blobThumbnail[fileUrl] = thumbnailUrl
+                template = this.templateVideoThumbnail(thumbnailUrl);
+            }
+
         } else {
             template = this.template(fileType);
         }
@@ -87,7 +99,14 @@ class AssetFile extends HTMLElement {
     }
 
     templateVideoThumbnail(blobUrl) {
-        return `<img src="${blobUrl}" alt="" class="align-self-center asset-preview">
+        return `
+        <div class="position-relative align-self-center">
+        <img src="${blobUrl}" alt="" class="align-self-center asset-preview w-100">
+        <span class="material-symbols-outlined position-absolute icon-center ">
+        play_arrow
+        </span>
+        </div>
+        
         <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`
     }
 

@@ -173,26 +173,40 @@ ipcMain.on('RENDER', (evt, elements, options) => {
   command.videoCodec('libx264')
   command.fps(50)
   command.format('mp4');
-
-
+  command.run();
+  evt.sender.send('PROCESSING', '00:00:00.00')
 
   //command.audioCodec('libmp3lame')
+
+  // if (process.platform == 'darwin') {
+
+  // } else if (process.platform == 'win32') {
+  //   setTimeout(() => {
+  //     command.on('progress', function(progress) {
+  //       console.log('Processing: ' + progress.timemark + ' done');
+  //       evt.sender.send('PROCESSING', progress.timemark)
+  //     })
+  //   }, 100);
+  // }
 
   command.on('progress', function(progress) {
     console.log('Processing: ' + progress.timemark + ' done');
     evt.sender.send('PROCESSING', progress.timemark)
   })
-    
-    
+
 
 
   command.on('end', function() {
     evt.sender.send('PROCESSING_FINISH')
+    console.log('Finished processing');
+    command.kill();
+  })
 
-        console.log('Finished processing');
-      })
-      command.run();
-  
+  command.on('error', function(err, stdout, stderr) {
+    evt.sender.send('PROCESSING_ERROR', err.message)
+
+  });
+      
 })
 
 /**
@@ -235,6 +249,7 @@ function addFilterMedia(object) {
   
     elementCounts.audio += 1
   }
+
 
 
   object.filter.push({
@@ -377,6 +392,23 @@ ipcMain.handle('dialog:openDirectory', async () => {
     return
   } else {
     return filePaths[0]
+  }
+})
+
+ipcMain.handle('dialog:exportFile', async () => {
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: 'Export the File Path to save',
+    buttonLabel: 'Export',
+    filters: [
+        {
+            name: 'Export Video',
+            extensions: ['mp4']
+        }, ],
+    properties: []
+  })
+  if (!canceled) {
+    console.log(filePath.toString());
+    return filePath.toString()
   }
 })
 

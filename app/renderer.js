@@ -55,6 +55,14 @@ ipcRenderer.on('PROCESSING_FINISH', (evt) => {
     document.querySelector("#progress").innerHTML = `100%`
 })
 
+ipcRenderer.on('PROCESSING_ERROR', (evt, errormsg) => {
+    rendererModal.progressModal.hide()
+    rendererModal.progressError.show()
+
+    document.querySelector("#progressErrorMsg").innerHTML = `${errormsg}`
+})
+
+
 
 ipcRenderer.on('WHEN_CLOSE_EVENT', (evt) => {
     console.log("S")
@@ -80,6 +88,9 @@ const rendererModal = {
         keyboard: false
     }),
     progressFinish: new bootstrap.Modal(document.getElementById('progressFinish'), {
+        keyboard: false
+    }),
+    progressError: new bootstrap.Modal(document.getElementById('progressError'), {
         keyboard: false
     }),
     whenClose: new bootstrap.Modal(document.getElementById('whenClose'), {
@@ -128,13 +139,20 @@ const ipc = {
         const projectFolder = document.querySelector("#projectFolder").value
         const projectRatio = elementControlComponent.previewRatio
 
-        let timeline = document.querySelector("element-timeline").timeline // nugget.element.timeline
-        let options = {
-            videoDuration: projectDuration,
-            previewRatio: projectRatio,
-            videoDestination: `${projectFolder}/result.mp4`
-        }
-        ipcRenderer.send('RENDER', timeline, options)
+        ipcRenderer.invoke('dialog:exportFile').then((result) => {
+            let videoDestination = result || `${projectFolder}/result.mp4`
+            if (videoDestination == `${projectFolder}/result.mp4`) {
+                return 0
+            }
+            
+            let timeline = document.querySelector("element-timeline").timeline // nugget.element.timeline
+            let options = {
+                videoDuration: projectDuration,
+                previewRatio: projectRatio,
+                videoDestination: result || `${projectFolder}/result.mp4`
+            }
+            ipcRenderer.send('RENDER', timeline, options)
+        })
     },
     showFileInFolder: function (path) {
         shell.openPath(path)

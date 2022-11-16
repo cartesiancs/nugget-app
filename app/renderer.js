@@ -140,11 +140,11 @@ const ipc = {
         const projectRatio = elementControlComponent.previewRatio
 
         ipcRenderer.invoke('dialog:exportFile').then((result) => {
-            let videoDestination = result || `${projectFolder}/result.mp4`
-            if (videoDestination == `${projectFolder}/result.mp4`) {
+            let videoDestination = result || `nonefile`
+            if (videoDestination == `nonefile`) {
                 return 0
             }
-            
+
             let timeline = document.querySelector("element-timeline").timeline // nugget.element.timeline
             let options = {
                 videoDuration: projectDuration,

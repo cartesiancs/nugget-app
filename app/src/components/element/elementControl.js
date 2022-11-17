@@ -280,7 +280,6 @@ class ElementControl extends HTMLElement {
                     console.log('paused')
 
                 }
-                console.log('isPlaying')
             } else {
                 if (this.isPaused) {
                     video.pause()

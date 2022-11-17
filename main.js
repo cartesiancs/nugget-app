@@ -91,9 +91,9 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
   });
 })
 
-ipcMain.on('RENDER', (evt, elements, options) => {
+ipcMain.on('RENDER', async (evt, elements, options) => {
 
-  renderMain.start(evt, elements, options)
+  await renderMain.start(evt, elements, options)
       
 })
 

@@ -38,12 +38,12 @@ ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
 })
 
 
-ipcRenderer.on('PROCESSING', (evt, hms) => {
+ipcRenderer.on('PROCESSING', (evt, prog) => {
     rendererUtil.showProgressModal()
-    let sec = rendererUtil.hmsToSeconds(hms)
-    let prog = rendererUtil.secondsToProgress(sec).toFixed(2)
+    //let sec = rendererUtil.hmsToSeconds(hms)
+    //let prog = rendererUtil.secondsToProgress(sec).toFixed(2)
     document.querySelector("#progress").style.width = `${prog}%`
-    document.querySelector("#progress").innerHTML = `${prog}%`
+    document.querySelector("#progress").innerHTML = `${Math.round(prog)}%`
 
 })
 

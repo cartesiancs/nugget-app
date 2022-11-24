@@ -1,13 +1,21 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { autoUpdater } = require("electron-updater");
+
 
 const { renderMain, renderFilter } = require('./lib/render.js')
 const path = require('path')
 const isDev = require('electron-is-dev');
+const log = require('electron-log');
+
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
 let resourcesPath = ''
 let mainWindow;
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
 
 const forceQuit = false;
 const ffmpegPath = require('ffmpeg-static').replace(
@@ -19,14 +27,13 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 if (isDev) {
   resourcesPath = '.'
 
-	console.log('Running in development');
+	log.info('Running in development');
   require('electron-reload')(__dirname, {
     electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
   });
 } else {
   resourcesPath = process.resourcesPath
-
-	console.log('Running in production');
+	log.info('Running in production');
 }
 
 
@@ -46,6 +53,9 @@ function createWindow () {
 
 
   mainWindow.loadFile('app/index.html')
+  autoUpdater.checkForUpdatesAndNotify()
+
+
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
@@ -53,10 +63,63 @@ function createWindow () {
   process.env['ELECTRON_DISABLE_SECURITY_WARNINGS']=true
 
   return mainWindow
-
-  // console.log(command)
-
 }
+autoUpdater.on('checking-for-update', () => {
+  //sendStatusToWindow('Checking for update...');
+})
+
+autoUpdater.on('update-available', (info) => {
+  const dialogOpts = {
+    type: 'info',
+    buttons: ["업데이트", "닫기"],
+    defaultId: 0,
+    cancelId: 1,
+    title: 'Update Available',
+    message: '업데이트 가능',
+    detail: '새 버전으로 업데이트가 가능합니다.'
+ };
+  dialog.showMessageBox(dialogOpts).then(result => {
+    if (result.response === 0) {
+        // bound to buttons array
+        console.log("Default button clicked.");
+      }
+  });
+})
+
+autoUpdater.on('update-not-available', (info) => {
+  log.info('Update not available.');
+})
+
+autoUpdater.on('error', (err) => {
+  const dialogOpts = {
+    type: 'error',
+    buttons: ['확인'],
+    title: 'Error',
+    message: '업데이트에 실패했습니다',
+    detail: '새 버전을 확인하는 도중에 접속 오류가 있었습니다.'
+ };
+ dialog.showMessageBox(dialogOpts);
+ log.info('Error in auto-updater. ' + err);
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+  log.info(log_message);
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  const dialogOpts = {
+    type: 'info',
+    buttons: ['확인'],
+    title: '업데이트 다운로드 완료',
+    message: '업데이트 다운로드를 완료했습니다',
+    detail: '새 버전의 업데이트 다운로드를 완료했습니다.'
+ };
+ dialog.showMessageBox(dialogOpts);
+  //sendStatusToWindow('Update downloaded');
+});
 
 let dir = app.getPath('userData')
 
@@ -72,7 +135,6 @@ ipcMain.on('SELECT_DIR', async (evt) => {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory']
   })
-  console.log('directories selected', result.filePaths)
 })
 
 
@@ -114,7 +176,7 @@ app.whenReady().then(() => {
 })
 
 ipcMain.on('FORCE_CLOSE', async (evt) => {
-  console.log("CCCC")
+  log.info("Force close")
   app.exit(0)
   app.quit();
 })
@@ -142,7 +204,6 @@ ipcMain.handle('dialog:exportFile', async () => {
     properties: []
   })
   if (!canceled) {
-    console.log(filePath.toString());
     return filePath.toString()
   }
 })

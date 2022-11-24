@@ -1,6 +1,6 @@
 {
     "name": "nugget-app",
-    "version": "1.0.0",
+    "version": "0.1.1",
     "description": "Video Editor",
     "main": "main.js",
     "scripts": {
@@ -8,12 +8,14 @@
         "bundle": "webpack --mode=production",
         "build:osx": "electron-builder build --mac",
         "build:win": "electron-builder build --win --x64"
-
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Team-DeVent/nugget-release"
     },
     "build": {
         "productName": "Nugget",
         "appId": "kr.devent.nugget",
-
         "asar": true,
         "asarUnpack": [
             "node_modules/ffmpeg-static/bin/${os}/${arch}/ffmpeg",
@@ -36,6 +38,11 @@
             ]
         },
         "mac": {
+            "publish": {
+                "provider": "github",
+                "owner": "Team-DeVent",
+                "repo": "nugget-release"
+            },
             "target": [
                 "dmg"
             ],
@@ -46,6 +53,11 @@
             "internetEnabled": true
         },
         "win": {
+            "publish": {
+                "provider": "github",
+                "owner": "Team-DeVent",
+                "repo": "nugget-release"
+            },
             "target": [
                 "zip",
                 "nsis"
@@ -60,26 +72,32 @@
             "buildResources": "./assets/",
             "output": "./dist/",
             "app": "."
+        },
+        "publish": {
+            "provider": "github",
+            "owner": "Team-DeVent"
         }
     },
     "author": "Dipokal",
     "dependencies": {
         "electron-is-dev": "^2.0.0",
+        "electron-log": "^4.4.8",
+        "electron-updater": "^5.3.0",
         "ffmpeg-static": "^5.1.0",
         "fluent-ffmpeg": "^2.1.2",
         "jszip": "^3.10.1",
         "uuid": "^9.0.0"
     },
     "devDependencies": {
+        "css-loader": "^6.7.1",
         "electron": "^20.3.1",
-        "electron-builder": "^23.3.3",
-        "webpack": "^5.74.0",
-        "webpack-cli": "^4.10.0",
+        "electron-builder": "^23.6.0",
+        "electron-reload": "^2.0.0-alpha.1",
         "mini-css-extract-plugin": "^2.6.1",
         "sass": "^1.55.0",
         "sass-loader": "^13.0.2",
         "style-loader": "^3.3.1",
-        "css-loader": "^6.7.1",
-        "electron-reload": "^2.0.0-alpha.1"
+        "webpack": "^5.74.0",
+        "webpack-cli": "^4.10.0"
     }
 }

@@ -301,19 +301,17 @@
         const page = {
             split: {
                 bottom: function (percent) {
-                    document.getElementById("split_top").style.height = `${percent+1}%`
-                    document.getElementById("split_bottom").style.height = `${100-percent-1}%`
+                    document.getElementById("split_top").style.height = `calc(${percent}% + 0.5rem)`
+                    document.getElementById("split_bottom").style.height = `calc(${100-percent}% - 0.5rem)`
                 },
                 columns: function (percent) {
-
-                    
                     document.getElementById(`split_col_${valueEvent.splitColumnsTarget}`).style.width = `${percent}%`
                     document.getElementById(`split_col_${valueEvent.splitColumnsTarget+1}`).style.width = `${(100-percent)}%`
                     document.getElementById(`option_top`).style.width = `${percent}%` // 옵션 오프캔버스                    
                 },
             },
             minWidth: 20,
-            minHeight: 90
+            minHeight: 20
         }
 
 
@@ -350,10 +348,13 @@
         document.addEventListener("mousemove", (e) => {
             valueEvent.mouse.x = e.pageX
             valueEvent.mouse.y = e.pageY
+            let ssaf = e.pageY/document.body.offsetHeight*100 
+
+            console.log(ssaf)
 
             if (valueEvent.splitBottom) {
                 let videoboxHeightPer = videobox.offsetHeight / window.innerHeight * 100
-                let per = e.pageY/document.body.offsetHeight*100 
+                let per = e.pageY/document.body.offsetHeight*100  <= page.minHeight ? page.minHeight : e.pageY/document.body.offsetHeight*100
                 page.split.bottom(per)
                 elementControlComponent.resizeEvent()
 

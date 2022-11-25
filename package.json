@@ -73,6 +73,9 @@
             "output": "./dist/",
             "app": "."
         },
+        "files": [
+            "!src/*"
+        ],
         "publish": {
             "provider": "github",
             "owner": "Team-DeVent"

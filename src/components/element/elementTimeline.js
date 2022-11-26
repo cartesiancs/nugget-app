@@ -125,7 +125,6 @@ class ElementTimeline extends HTMLElement {
         this.insertAdjacentHTML("beforeend", templateBar)
 
         let height = this.getTimelineScrollHeight()
-        this.replaceTimelineBarHeight(height)
     }
 
     templateElementBar(elementId) {
@@ -231,8 +230,11 @@ class ElementTimeline extends HTMLElement {
 
     scroll() {
         const scrollTop = this.scrollTop
-        const elementRuler = document.querySelector("element-timeline-editor")
-        elementRuler.setTopPosition(scrollTop)
+        const elementTimelineRuler = document.querySelector("element-timeline-editor")
+        const elementTimelineBar = document.querySelector("element-timeline-bar")
+
+        elementTimelineRuler.setTopPosition(scrollTop)
+        elementTimelineBar.style.top = `${scrollTop}px`
 
     }
 
@@ -257,6 +259,8 @@ class ElementTimelineBar extends HTMLElement {
         this.classList.add("timeline-bar")
         this.setAttribute("id", "timeline_bar")
         this.style.left = `0px`
+        this.style.top = `0px`
+
     }
 
     move(px) {
@@ -343,8 +347,11 @@ class ElementTimelineEditor extends HTMLElement {
     mousemove(e) {
         const elementTimelineBar = document.querySelector("element-timeline-bar")
         const elementTimeline = document.querySelector("element-timeline")
+        const elementControl = document.querySelector("element-control")
+
 
         elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft)
+        elementControl.showTime() 
 
         clearTimeout(this.mouseTimeout)
 

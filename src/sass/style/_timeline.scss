@@ -13,6 +13,28 @@
     z-index: 300;
 }
 
+.timeline-bar {
+  position: absolute;
+  z-index: 90;
+  width: 2px;
+  height: 100%;
+  background-color: #cbd1d7;
+  z-index: 6000;
+}
+
+element-timeline-bar::after {
+  position: absolute;
+
+  display: block;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  background: #cbd1d7;
+  content: " ";
+  left: -200%;
+  top: 0;
+  width: 10px;
+  height: 17px;
+}
+
 .ruler {
     --ruler-num-c: #888;
     --ruler-num-fz: 10px;
@@ -34,9 +56,7 @@
 
   background-image:
     linear-gradient(90deg, var(--ruler1-c) 0 var(--ruler1-bdw), transparent 0),
-    linear-gradient(90deg, var(--ruler2-c) 0 var(--ruler2-bdw), transparent 0),
-    linear-gradient(45deg, var(--ruler1-c) 0 var(--ruler1-bdw), transparent 0),
-    linear-gradient(0deg, var(--ruler2-c) 0 var(--ruler2-bdw), transparent 0);
+    linear-gradient(90deg, var(--ruler2-c) 0 var(--ruler2-bdw), transparent 0);
   background-position: 0 0;
   background-repeat: repeat-x, repeat-x;
   background-size:

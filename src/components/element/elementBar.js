@@ -172,7 +172,7 @@ class ElementBar extends HTMLElement {
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
             this.timeline[this.elementId].duration = this.pxToMilliseconds(Number(this.style.width.split('px')[0]))
         } else {
-            //this.style.left = `${}px`
+            //this.style.left = `${x-duration}px`
             this.setWidth(timelineScrollLeft+e.pageX-Number(this.style.left.split('px')[0]))
             
             //this.timeline[this.elementId].startTime = this.initialPosition.x

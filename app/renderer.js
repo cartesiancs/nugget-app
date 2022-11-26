@@ -139,7 +139,7 @@ const ipc = {
         const projectFolder = document.querySelector("#projectFolder").value
         const projectRatio = elementControlComponent.previewRatio
 
-        ipcRenderer.invoke('dialog:exportFile').then((result) => {
+        ipcRenderer.invoke('dialog:exportVideo').then((result) => {
             let videoDestination = result || `nonefile`
             if (videoDestination == `nonefile`) {
                 return 0

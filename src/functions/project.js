@@ -12,28 +12,40 @@ const project = {
         const projectFolder = document.querySelector("#projectFolder").value
         const projectRatio = elementControlComponent.previewRatio
 
-        if (fs.existsSync(`${projectFolder}/project.ngt`)) {
-            fs.unlinkSync(`${projectFolder}/project.ngt`)
-        }
+        ipcRenderer.invoke('dialog:saveProject').then((result) => {
+            let projectDestination = result || `nonefile`
+            if (projectDestination == `nonefile`) {
+                return 0
+            }
 
-        const options = {
-            videoDuration: projectDuration,
-            previewRatio: projectRatio,
-            videoDestination: `${projectFolder}/result.mp4`
-        }
+            console.log(projectDestination)
 
-        zip.file("timeline.json", JSON.stringify(timeline));
-        zip.file("renderOptions.json", JSON.stringify(options));
 
-        zip.generateAsync({type:"blob"}).then(async function(content) {
-            const buffer = Buffer.from( await content.arrayBuffer() );
-
-            fs.writeFile( `${projectFolder}/project.ngt`, buffer, () => {
-                console.log('saved!')
-                elementTimeline.appendCheckpointInHashTable()
+            const options = {
+                videoDuration: projectDuration,
+                previewRatio: projectRatio,
+                videoDestination: projectDestination
+            }
+    
+            zip.file("timeline.json", JSON.stringify(timeline));
+            zip.file("renderOptions.json", JSON.stringify(options));
+    
+            zip.generateAsync({type:"blob"}).then(async function(content) {
+                const buffer = Buffer.from( await content.arrayBuffer() );
+    
+                fs.writeFile( projectDestination , buffer, () => {
+                    console.log('saved!')
+                    elementTimeline.appendCheckpointInHashTable()
+                });
+                //saveAs(content, `${projectFolder}/aaa.zip`);
             });
-            //saveAs(content, `${projectFolder}/aaa.zip`);
-        });
+        })
+
+        // if (fs.existsSync(`${projectFolder}/project.ngt`)) {
+        //     fs.unlinkSync(`${projectFolder}/project.ngt`)
+        // }
+
+
     },
 
     load: function() {

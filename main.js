@@ -192,14 +192,30 @@ ipcMain.handle('dialog:openDirectory', async () => {
   }
 })
 
-ipcMain.handle('dialog:exportFile', async () => {
+ipcMain.handle('dialog:exportVideo', async () => {
   const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
     title: 'Export the File Path to save',
     buttonLabel: 'Export',
     filters: [
         {
-            name: 'Export Video',
+          name: 'Export Video',
             extensions: ['mp4']
+        }, ],
+    properties: []
+  })
+  if (!canceled) {
+    return filePath.toString()
+  }
+})
+
+ipcMain.handle('dialog:saveProject', async () => {
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: 'Save the Project Path to save',
+    buttonLabel: 'Save',
+    filters: [
+        {
+          name: 'Save Project',
+            extensions: ['ngt']
         }, ],
     properties: []
   })

@@ -75,7 +75,7 @@ class ElementControl extends HTMLElement {
         let horizontalResizeWidth = Math.round(innerWidth*0.95);
         let horizontalResizeHeight = Math.round((horizontalResizeWidth*9)/16);
 
-        let verticalResizeHeight = window.innerHeight - (splitBottomHeight + 20) - (videoBoxHeight - videoHeight)
+        let verticalResizeHeight = (window.innerHeight - (splitBottomHeight + 20) - (videoBoxHeight - videoHeight))*0.92
         let verticalResizeWidth = verticalResizeHeight * (16 / 9)
 
         let width = horizontalResizeWidth > verticalResizeWidth ? verticalResizeWidth : horizontalResizeWidth
@@ -383,6 +383,15 @@ class ElementControl extends HTMLElement {
         return absoluteMilliseconds
     }
 
+    getTimeFromTimelineBar() {
+        let timelineBarProgress =  Number(document.querySelector("element-timeline-bar").style.left.split("px")[0])
+        let timelineRange =  Number(document.querySelector("#timelineRange").value)
+        let timeMagnification = timelineRange / 4
+
+        let milliseconds = (timelineBarProgress * 5) / timeMagnification
+        return milliseconds
+    }
+
     adjustAllElementBarWidth(ratio) {
         const allElementBar = document.querySelectorAll("element-bar")
         allElementBar.forEach(element => {
@@ -426,7 +435,7 @@ class ElementControl extends HTMLElement {
 
     showTime() {
         const showTime = document.querySelector("#time") 
-        const milliseconds = this.getTimeFromProgress()
+        const milliseconds = this.getTimeFromTimelineBar()
         const ISOTime = this.getMillisecondsToISOTime(milliseconds)
         
         showTime.innerHTML = ISOTime

@@ -337,27 +337,15 @@
                 
 
 
-        
-
-
-
-
-
-
-
         document.addEventListener("mousemove", (e) => {
             valueEvent.mouse.x = e.pageX
             valueEvent.mouse.y = e.pageY
-            let ssaf = e.pageY/document.body.offsetHeight*100 
-
-            console.log(ssaf)
 
             if (valueEvent.splitBottom) {
                 let videoboxHeightPer = videobox.offsetHeight / window.innerHeight * 100
                 let per = e.pageY/document.body.offsetHeight*100  <= page.minHeight ? page.minHeight : e.pageY/document.body.offsetHeight*100
                 page.split.bottom(per)
                 elementControlComponent.resizeEvent()
-
             }
 
             if (valueEvent.splitColumns) {

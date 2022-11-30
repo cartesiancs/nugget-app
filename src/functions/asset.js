@@ -21,6 +21,7 @@ const asset = {
     //             <b class="align-self-center text-ellipsis text-light text-center">${filename}</b>
     //         </div>`)
     // },
+
     loadPrevDirectory: function () {
         let splitNowDirectory = asset.nowDirectory.split('/')
         let splitPrevDirectory = splitNowDirectory.slice(-splitNowDirectory.length, -1)

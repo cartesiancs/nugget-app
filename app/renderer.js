@@ -1,7 +1,13 @@
 const { ipcRenderer, shell } = require('electron')
+const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 var JSZip = require("jszip");
 
+const ffmpegPath = require('ffmpeg-static').replace(
+    'app.asar',
+    'app.asar.unpacked'
+  );
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 
 ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {

@@ -267,8 +267,24 @@ class ElementTimelineBar extends HTMLElement {
         this.style.left = `${px}px`
     }
 
+    mousedown(e) {
+        const elementTimelineRuler = document.querySelector("element-timeline-editor")
+        elementTimelineRuler.moveTime(e)
+        elementTimelineRuler.mousemoveEventHandler = elementTimelineRuler.mousemove.bind(elementTimelineRuler)
+        document.addEventListener('mousemove', elementTimelineRuler.mousemoveEventHandler);
+    }
+
+
+    mouseup(e) {
+        const elementTimelineRuler = document.querySelector("element-timeline-editor")
+        document.removeEventListener('mousemove', elementTimelineRuler.mousemoveEventHandler);
+    }
+
+
     connectedCallback() {
         this.render();
+        this.addEventListener('mousedown', this.mousedown.bind(this));
+        document.addEventListener('mouseup', this.mouseup.bind(this));
 
     }
 }

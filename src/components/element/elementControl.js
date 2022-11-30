@@ -175,6 +175,8 @@ class ElementControl extends HTMLElement {
         const video = document.createElement('video')
 
 
+
+
         video.src = blob
         video.preload = 'metadata'
 
@@ -183,23 +185,37 @@ class ElementControl extends HTMLElement {
             let width = video.videoWidth
             let height = video.videoHeight
             let duration = video.duration * 1000
-            console.log(duration)
 
-            this.timeline[elementId] = {
-                blob: blob,
-                startTime: 0,
-                duration: duration,
-                location: {x: 0, y: 0},
-                trim: {startTime: 0, endTime: duration},
-                width: width,
-                height: height,
-                localpath: path,
-                filetype: 'video'
-            }
+            ffmpeg.ffprobe(path, (err, metadata) => {
+                let isExist = false
+                metadata.streams.forEach(element => {
+                    if (element.codec_type == "audio") {
+                        isExist = true
+                    }
+                });
 
-            
-            this.showVideo(elementId)
-            this.elementTimeline.addElementBar(elementId)
+                console.log(isExist, "AUDIO")
+
+                this.timeline[elementId] = {
+                    blob: blob,
+                    startTime: 0,
+                    duration: duration,
+                    location: {x: 0, y: 0},
+                    trim: {startTime: 0, endTime: duration},
+                    width: width,
+                    height: height,
+                    localpath: path,
+                    isExistAudio: isExist,
+                    filetype: 'video'
+                }
+    
+                
+                this.showVideo(elementId)
+                this.elementTimeline.addElementBar(elementId)
+            })
+    
+
+
 
         }
     }

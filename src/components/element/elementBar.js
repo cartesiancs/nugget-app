@@ -14,6 +14,8 @@ class ElementBar extends HTMLElement {
         this.width = this.millisecondsToPx(this.timeline[this.elementId].duration)
         this.startTime = this.millisecondsToPx(this.timeline[this.elementId].startTime)
 
+
+
         this.isDrag = false
         this.isResize = false
         this.resizeLocation = 'left'
@@ -44,6 +46,25 @@ class ElementBar extends HTMLElement {
 
         this.innerHTML = template;
 
+        this.setTrimBar()
+    }
+
+    setTrimBar() {
+        if (this.elementBarType == 'dynamic') {
+            let trimStart = this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
+            let trimEnd = this.millisecondsToPx(this.timeline[this.elementId].trim.endTime)
+
+            // let resizeRangeTargetLeft = this.querySelector(".element-bar-hiddenspace-left")
+            // let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
+
+            // resizeRangeTargetLeft.style.width = `${trimStart}px`
+            // resizeRangeTargetRight.style.width = `${trimEnd}px`
+
+            this.setTrimStart(trimStart)
+            this.setTrimEnd(trimEnd)
+            this.elementControl.changeTimelineRange()
+
+        }
     }
 
     templateStatic() {

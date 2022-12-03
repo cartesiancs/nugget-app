@@ -1,10 +1,9 @@
 {
     "name": "nugget-app",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Video Editor",
     "main": "main.js",
     "author": "DeVent",
-
     "scripts": {
         "start": "electron .",
         "bundle": "webpack --mode=production",
@@ -20,15 +19,17 @@
         "productName": "Nugget",
         "appId": "kr.devent.nugget",
         "asar": true,
-        "asarUnpack": [
-            "node_modules/ffmpeg-static/bin/${os}/${arch}/ffmpeg",
-            "node_modules/ffmpeg-static/index.js",
-            "node_modules/ffmpeg-static/package.json"
-        ],
         "extraResources": [
             {
                 "from": "./assets",
                 "to": "assets",
+                "filter": [
+                    "**/*"
+                ]
+            },
+            {
+                "from": "./bin",
+                "to": "bin",
                 "filter": [
                     "**/*"
                 ]
@@ -87,10 +88,12 @@
     "dependencies": {
         "electron-is-dev": "^2.0.0",
         "electron-log": "^4.4.8",
+        "electron-progressbar": "^2.0.1",
         "electron-updater": "^5.3.0",
         "ffmpeg-static": "^5.1.0",
         "fluent-ffmpeg": "^2.1.2",
         "jszip": "^3.10.1",
+        "request": "^2.88.2",
         "uuid": "^9.0.0"
     },
     "devDependencies": {

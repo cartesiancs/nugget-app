@@ -1,14 +1,14 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, net } = require('electron')
 const { autoUpdater } = require("electron-updater");
-
-
 const { renderMain, renderFilter } = require('./lib/render.js')
+
+const config = require('./config.json')
+
 const path = require('path')
 const isDev = require('electron-is-dev');
 const log = require('electron-log');
-
-const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
+const ProgressBar = require('electron-progressbar');
 
 let resourcesPath = ''
 let mainWindow;
@@ -16,25 +16,21 @@ let mainWindow;
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
-
-const forceQuit = false;
-const ffmpegPath = require('ffmpeg-static').replace(
-  'app.asar',
-  'app.asar.unpacked'
-);
-ffmpeg.setFfmpegPath(ffmpegPath);
-
+ 
 if (isDev) {
   resourcesPath = '.'
 
 	log.info('Running in development');
-  require('electron-reload')(__dirname, {
-    electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-  });
+  // require('electron-reload')(__dirname, {
+  //   electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
+  // });
 } else {
   resourcesPath = process.resourcesPath
 	log.info('Running in production');
 }
+
+
+
 
 
 function createWindow () {
@@ -124,6 +120,87 @@ autoUpdater.on('update-downloaded', (info) => {
 let dir = app.getPath('userData')
 
 
+const checkFfmpeg = () => {
+  fs.stat(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`, function(error, stats) {
+    if (error) {
+        console.log("ERR", `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`);
+        downloadFfmpeg('ffmpeg')
+  
+        return 0
+    }
+    console.log("파일 크기: ", stats.size);
+  });
+  
+  fs.stat(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`, function(error, stats) {
+    if (error) {
+        console.log("ERR", `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`);
+        downloadFfmpeg('ffprobe')
+  
+        return 0
+    }
+    console.log("파일 크기: ", stats.size);
+  });
+}
+
+
+const downloadFfmpeg = (binType) => {
+  let type = binType || 'ffmpeg' // ffmpeg, ffprobe
+  let receivedBytes = 0;
+  let totalBytes = 0;
+  let percentage = 0
+
+  let progressBar = new ProgressBar({
+    indeterminate: false,
+    text: type + ' 다운로드',
+    detail: type + ' 설치중...'
+  });
+
+  const request = net.request(config.ffmpegBin[process.platform][type].url)
+  request.on('response', (response) => {
+    totalBytes = parseInt(response.headers['content-length' ]);
+    response.pipe(fs.createWriteStream(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`))
+    
+    response.on('data', (chunk) => {
+      receivedBytes += chunk.length;
+      percentage = Math.round((receivedBytes * 100) / totalBytes);
+
+      if(!progressBar.isCompleted()){
+        progressBar.value = percentage;
+      }
+      log.info("ffmpeg download...", percentage) 
+    })
+    response.on('end', () => {
+      console.log('No more data in response.')
+      fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`, 0o755); 
+    })
+  })
+  request.end()
+  
+  progressBar
+    .on('completed', function() {
+      log.info("ffmpeg 설치 완료.") 
+      progressBar.detail = type + ' 설치 완료';
+    })
+    .on('aborted', function(value) {
+      log.info("ffmpeg 설치 취소.") 
+      console.info(`취소... ${value}`);
+    })
+    .on('progress', function(value) {
+      progressBar.detail = `100% 중 ${value}% 완료...`;
+    });
+}
+
+// ipcRenderer.send("DOWNLOAD_FFMPEG")
+ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {
+  // ffmpeg 다운로드
+
+  downloadFfmpeg('ffprobe')
+
+});
+
+ipcMain.on('CLIENT_READY', async (evt) => {
+  evt.sender.send('EXIST_FFMPEG', resourcesPath, config)
+})
 
 ipcMain.on('INIT', async (evt) => {
   evt.sender.send('GET_PATH', app.getPath("userData"))
@@ -167,6 +244,8 @@ app.whenReady().then(() => {
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  checkFfmpeg()
 
   mainWindow.on('close', function(e){
     e.preventDefault();

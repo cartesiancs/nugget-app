@@ -1,14 +1,31 @@
 const { ipcRenderer, shell } = require('electron')
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
-var JSZip = require("jszip");
+const JSZip = require("jszip");
 
-const ffmpegPath = require('ffmpeg-static').replace(
-    'app.asar',
-    'app.asar.unpacked'
-  );
-ffmpeg.setFfmpegPath(ffmpegPath);
 
+
+
+ipcRenderer.on('EXIST_FFMPEG', (evt, resourcesPath, config) => {
+    console.log("EXIST FF")
+    const ffmpegPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`
+    const ffprobePath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`
+
+    fs.stat(ffmpegPath, function(error, stats) {
+        if (error) {
+            return 0
+        }
+
+        ffmpeg.setFfmpegPath(ffmpegPath);
+    });
+      
+    fs.stat(ffprobePath, function(error, stats) {
+        if (error) {
+            return 0
+        }
+        ffmpeg.setFfprobePath(ffprobePath);
+    });
+})
 
 ipcRenderer.on('RES_ALL_DIR', (evt, dir, result) => {
     let fileLists = {}
@@ -86,7 +103,11 @@ ipcRenderer.on('GET_PATH', (evt, path) => {
     console.log(path)
 })
 
-
+ipcRenderer.on('DOWNLOAD_PROGRESS_FFMPEG', (evt, prog) => {
+    rendererModal.downloadFfmpeg.show()
+    document.querySelector("#download_progress_ffmpeg").style.width = `${prog}%`
+    document.querySelector("#download_progress_ffmpeg").innerHTML = `${Math.round(prog)}%`
+})
 
 
 const rendererModal = {
@@ -101,7 +122,10 @@ const rendererModal = {
     }),
     whenClose: new bootstrap.Modal(document.getElementById('whenClose'), {
         keyboard: false
-    })    
+    }),
+    downloadFfmpeg: new bootstrap.Modal(document.getElementById('downloadFfmpeg'), {
+        keyboard: false
+    })
 }
 
 const rendererUtil = {

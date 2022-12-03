@@ -57,7 +57,12 @@
 
                                 <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
                                 <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
+                                <button class="btn btn-sm bg-primary text-light mt-1" onclick="ipcRenderer.send('DOWNLOAD_FFMPEG')">ffmpeg 다운로드</button>
 
+
+                                
+                                
+                                
                               </div>
                             </div>
                         </div>
@@ -193,6 +198,8 @@
             <dds-modal-button button-color="btn-light" button-text-color="text-dark" is-dismiss="true">취소</dds-modal-button>
         </dds-modal>
 
+
+        
         <dds-modal
         modal-id="progressRender"
         modal-title="랜더링 중 이에요">
@@ -207,6 +214,19 @@
         </dds-modal>
 
   
+        <dds-modal
+        modal-id="downloadFfmpeg"
+        modal-title="FFMPEG 다운로드중">
+            <dds-content>
+                <div class="mb-3">
+                    <div class="progress">
+                        <div id="download_progress_ffmpeg" class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                    </div>
+                </div>
+            </dds-content>
+            <dds-modal-button button-color="btn-light" button-text-color="text-dark" is-dismiss="true">닫기</dds-modal-button>
+        </dds-modal>
+
         <dds-modal
         modal-id="progressFinish"
         modal-title="랜더링이 완료되었어요">
@@ -330,6 +350,7 @@
         
         window.addEventListener('load', (event) => {
             //ipc.requestAllDir('/Users/hhj')
+            ipcRenderer.send('CLIENT_READY')
         });
                 
 

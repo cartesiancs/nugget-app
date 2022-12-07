@@ -21,9 +21,9 @@ if (isDev) {
   resourcesPath = '.'
 
 	log.info('Running in development');
-  // require('electron-reload')(__dirname, {
-  //   electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-  // });
+  require('electron-reload')(__dirname, {
+    electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
+  });
 } else {
   resourcesPath = process.resourcesPath
 	log.info('Running in production');
@@ -49,6 +49,7 @@ function createWindow () {
 
 
   mainWindow.loadFile('app/index.html')
+
   autoUpdater.checkForUpdatesAndNotify()
 
 

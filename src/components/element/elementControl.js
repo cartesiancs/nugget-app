@@ -142,14 +142,32 @@ class ElementControl extends HTMLElement {
         this.timeline = document.querySelector("element-timeline").timeline;
     }
 
+    fitElementSizeOnPreview(width, height) {
+        let preview = {
+            w: Number(document.querySelector("#video").style.width.split("px")[0]),
+            h: Number(document.querySelector("#video").style.height.split("px")[0])
+        }
+
+        let originRatio = width/height
+        let resizeHeight = height < preview.h ? height : preview.h
+        let resizeWidth = resizeHeight * originRatio
+
+        return {
+            width: resizeWidth,
+            height: resizeHeight
+        }
+    }
+
     addImage(blob, path) {
         const elementId = this.generateUUID()
         const img = document.createElement('img');
 
         img.src = blob
         img.onload = () => {
-            var width = img.width
-            var height = img.height // /division
+
+            let resize = this.fitElementSizeOnPreview(img.width, img.height)
+            let width = resize.width
+            let height = resize.height // /division
 
             this.timeline[elementId] = {
                 blob: blob,

@@ -2,6 +2,7 @@ import asset from './functions/asset.js';
 import directory from './functions/directory.js';
 import mime from './functions/mime.js';
 import project from './functions/project.js';
+import renderAnimation from './functions/renderAnimation.js';
 
 
 
@@ -10,6 +11,7 @@ import { AssetBrowser } from './components/asset/assetBrowser.js';
 import { ElementTimeline, ElementTimelineBar, ElementTimelineEditor } from './components/element/elementTimeline.js';
 import { ElementBar } from './components/element/elementBar.js';
 import { ElementControl, ElementControlAsset } from './components/element/elementControl.js';
+import { KeyframeEditor } from './components/keyframe/keyframeEditor.js';
 
 import "./sass/style.scss";
 
@@ -28,6 +30,9 @@ customElements.define('element-bar', ElementBar);
 customElements.define('element-control', ElementControl);
 customElements.define('element-control-asset', ElementControlAsset);
 
+customElements.define('keyframe-editor', KeyframeEditor);
+
 
 
 export { asset, directory, mime, project }
+export { renderAnimation }

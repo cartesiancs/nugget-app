@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, net } = require('electron')
 const { autoUpdater } = require("electron-updater");
 const { renderMain, renderFilter } = require('./lib/render.js')
 
+
 const config = require('./config.json')
 
 const path = require('path')

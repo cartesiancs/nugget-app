@@ -60,6 +60,8 @@
                                 <button class="btn btn-sm bg-primary text-light mt-1" onclick="ipcRenderer.send('DOWNLOAD_FFMPEG')">ffmpeg 다운로드</button>
 
 
+                                <br>
+                                
                                 
                                 
                                 
@@ -163,26 +165,26 @@
 
 
         <div class="offcanvas offcanvas-start" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_top" aria-labelledby="offcanvasRightLabel" style="width: 30%;">
-        <div class="offcanvas-header">
-            <h5 id="offcanvasRightLabel" class="text-light">옵션</h5>
-            <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
-        </div>
-        <div class="offcanvas-body">
-            <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
-
-            <div id="option_text" class="d-none">
-                <div class="mb-2">
-                    <label class="form-label text-light">텍스트 색상 선택</label>
-                    <input type="color" class="form-control form-control-color" oninput="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
-                </div>
-
-                <div class="mb-2">
-                    <label class="form-label text-light">폰트 크기</label>
-                    <input type="number" class="form-control" onchange="elementControlComponent.changeTextSize(this)" value="52" >
-                </div>
+            <div class="offcanvas-header">
+                <h5 id="offcanvasRightLabel" class="text-light">옵션</h5>
+                <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
             </div>
+            <div class="offcanvas-body">
+                <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
 
-        </div>
+                <div id="option_text" class="d-none">
+                    <div class="mb-2">
+                        <label class="form-label text-light">텍스트 색상 선택</label>
+                        <input type="color" class="form-control form-control-color" oninput="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label text-light">폰트 크기</label>
+                        <input type="number" class="form-control" onchange="elementControlComponent.changeTextSize(this)" value="52" >
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         <dds-modal

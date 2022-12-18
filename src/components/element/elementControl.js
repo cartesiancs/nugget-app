@@ -177,7 +177,11 @@ class ElementControl extends HTMLElement {
                 width: width,
                 height: height,
                 localpath: path,
-                filetype: 'image'
+                filetype: 'image',
+                animation: {
+                    isActivate: false,
+                    allpoints: []
+                }
 
             }
 
@@ -249,7 +253,11 @@ class ElementControl extends HTMLElement {
             fontsize: 52,
             location: {x: 0, y: 0},
             localpath: '/TEXTELEMENT',
-            filetype: 'text'
+            filetype: 'text',
+            animation: {
+                isActivate: false,
+                allpoints: []
+            }
         }
 
         this.showText(elementId)
@@ -284,6 +292,14 @@ class ElementControl extends HTMLElement {
 
     }
 
+    showAnimation(elementId) {
+
+        let index = document.querySelector("element-control").progress
+
+        document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation.allpoints[index].y}px`
+
+    }
+
 
     showImage(elementId) {
 
@@ -291,6 +307,11 @@ class ElementControl extends HTMLElement {
             this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`)
         } else {
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+        }
+
+        if (this.timeline[elementId].animation.isActivate == true && 
+            this.timeline[elementId].animation.allpoints.length > document.querySelector("element-control").progress) {
+            this.showAnimation(elementId)
         }
     }
 
@@ -371,6 +392,11 @@ class ElementControl extends HTMLElement {
             this.insertAdjacentHTML("beforeend", `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`)
         } else {
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
+        }
+
+        if (this.timeline[elementId].animation.isActivate == true && 
+            this.timeline[elementId].animation.allpoints.length > document.querySelector("element-control").progress) {
+            this.showAnimation(elementId)
         }
     }
 

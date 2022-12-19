@@ -3,6 +3,7 @@ const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const JSZip = require("jszip");
+const lodash = require('lodash');
 
 
 
@@ -176,7 +177,8 @@ const ipc = {
                 return 0
             }
 
-            let timeline = document.querySelector("element-timeline").timeline // nugget.element.timeline
+            let timeline = lodash.cloneDeep(document.querySelector("element-timeline").timeline);
+
             let options = {
                 videoDuration: projectDuration,
                 videoDestination: result || `${projectFolder}/result.mp4`,

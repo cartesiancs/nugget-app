@@ -93,6 +93,7 @@
         "ffmpeg-static": "^5.1.0",
         "fluent-ffmpeg": "^2.1.2",
         "jszip": "^3.10.1",
+        "lodash": "^4.17.21",
         "request": "^2.88.2",
         "uuid": "^9.0.0"
     },

@@ -293,10 +293,15 @@ class ElementControl extends HTMLElement {
     }
 
     showAnimation(elementId) {
+        try {
+            let index = Math.round(document.querySelector("element-control").progress / 4)
+    
+            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation.allpoints[index].y}px`
+    
+        } catch (error) {
+            
+        }
 
-        let index = document.querySelector("element-control").progress
-
-        document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation.allpoints[index].y}px`
 
     }
 
@@ -310,7 +315,7 @@ class ElementControl extends HTMLElement {
         }
 
         if (this.timeline[elementId].animation.isActivate == true && 
-            this.timeline[elementId].animation.allpoints.length > document.querySelector("element-control").progress) {
+            this.timeline[elementId].animation.allpoints.length * 4 > document.querySelector("element-control").progress) {
             this.showAnimation(elementId)
         }
     }

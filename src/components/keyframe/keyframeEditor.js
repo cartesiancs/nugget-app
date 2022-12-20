@@ -117,9 +117,12 @@ class KeyframeEditor extends HTMLElement {
     
     getInterpolatedPoints(loadPointLength) {
         let points = []
+        let indexDivision = 4
+        let indexAt = 0
     
-        for (let index = 0; index < loadPointLength; index++) {
-            points.push(this.getPointAt(index))
+        for (let index = 0; index < Math.round(loadPointLength / indexDivision); index++) {
+            points.push(this.getPointAt(indexAt))
+            indexAt += 4
         }
     
         return points

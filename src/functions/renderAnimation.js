@@ -1,8 +1,11 @@
 
+//NOTE: 성능 최적화 개판입니다.
+//NOTE: 랜더링 버튼을 누르지 마세요.
 
 const renderAnimation = {
     renderFrameLength: 0,
     savedFrameCount: 0,
+    isCombineFrames: false,
     elements: undefined,
     options: undefined,
 
@@ -11,7 +14,7 @@ const renderAnimation = {
         renderAnimation.elements = elements
         renderAnimation.options = options
 
-        let path = `${options.videoDestinationFolder}/a`
+        let path = `${options.videoDestinationFolder}/temp`
 
         let canvas = document.createElement("canvas")
         canvas.classList.add("d-none")
@@ -24,6 +27,9 @@ const renderAnimation = {
             if (err) {
                 return 0
             }
+
+            fse.emptyDirSync(path);
+
 
             for (const elementId in elements) {
                 if (Object.hasOwnProperty.call(elements, elementId)) {
@@ -95,7 +101,8 @@ const renderAnimation = {
               console.log(err);
             else {
                 renderAnimation.savedFrameCount += 1
-                if (renderAnimation.savedFrameCount >= renderAnimation.renderFrameLength) {
+                if (renderAnimation.savedFrameCount >= renderAnimation.renderFrameLength && renderAnimation.isCombineFrames == false) {
+                    renderAnimation.isCombineFrames == true
                     renderAnimation.combineFrame({
                         elementId: elementId,
                         outputDir: outputDir
@@ -119,7 +126,6 @@ const renderAnimation = {
             renderAnimation.elements[elementId].filetype = 'video'
             renderAnimation.elements[elementId].isExistAudio = false
             renderAnimation.elements[elementId].localpath = outputVideoPath
-            renderAnimation.elements[elementId].duration = 2000,
             renderAnimation.elements[elementId].trim = { startTime: 0, endTime: renderAnimation.elements[elementId].duration }
             renderAnimation.elements[elementId].height = 1080
             renderAnimation.elements[elementId].width = 1920

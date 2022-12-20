@@ -2,6 +2,8 @@ const { ipcRenderer, shell } = require('electron')
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
+const fse = require('fs-extra')
+
 const JSZip = require("jszip");
 const lodash = require('lodash');
 

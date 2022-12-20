@@ -12,6 +12,7 @@ import { ElementTimeline, ElementTimelineBar, ElementTimelineEditor } from './co
 import { ElementBar } from './components/element/elementBar.js';
 import { ElementControl, ElementControlAsset } from './components/element/elementControl.js';
 import { KeyframeEditor } from './components/keyframe/keyframeEditor.js';
+import { MenuDropdownBody, MenuDropdownItem } from './components/menu/menuDropdown.js';
 
 import "./sass/style.scss";
 
@@ -31,6 +32,9 @@ customElements.define('element-control', ElementControl);
 customElements.define('element-control-asset', ElementControlAsset);
 
 customElements.define('keyframe-editor', KeyframeEditor);
+
+customElements.define('menu-dropdown-body', MenuDropdownBody);
+customElements.define('menu-dropdown-item', MenuDropdownItem);
 
 
 

@@ -308,7 +308,12 @@ class ElementBar extends HTMLElement {
             return 0
         }
 
-        console.log("RC")
+        document.querySelector("#menuRightClick").innerHTML = `
+            <menu-dropdown-body top="${e.clientY}" left="${e.clientX}">
+            <menu-dropdown-item item-name="sdvsd"></menu-dropdown-item>
+            <menu-dropdown-item item-name="sdvsd"> </menu-dropdown-item>
+        </menu-dropdown-body>`
+        console.log("RC", e)
     }
 
 

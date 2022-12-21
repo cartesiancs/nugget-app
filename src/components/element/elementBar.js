@@ -296,8 +296,16 @@ class ElementBar extends HTMLElement {
         this.changeOutlineColor('remove')
     }
 
+
+    showMenuDropdown({ x, y }) {
+        document.querySelector("#menuRightClick").innerHTML = `
+            <menu-dropdown-body top="${y}" left="${x}">
+            <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}')" item-name="키프레임 편집"></menu-dropdown-item>
+            <menu-dropdown-item onclick="document.querySelector('element-timeline').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
+        </menu-dropdown-body>`
+    }
+
     click() {
-        
         this.selectThisElement()
     }
 
@@ -308,11 +316,10 @@ class ElementBar extends HTMLElement {
             return 0
         }
 
-        document.querySelector("#menuRightClick").innerHTML = `
-            <menu-dropdown-body top="${e.clientY}" left="${e.clientX}">
-            <menu-dropdown-item item-name="sdvsd"></menu-dropdown-item>
-            <menu-dropdown-item onclick="document.querySelector('element-timeline').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
-        </menu-dropdown-body>`
+        this.showMenuDropdown({
+            x: e.clientX,
+            y: e.clientY
+        })
         console.log("RC", e)
 
         

@@ -35,12 +35,12 @@ class MenuDropdownBody extends HTMLElement {
     connectedCallback() {
         this.render();
 
-        document.addEventListener('mousedown', this.mousedown.bind(this));
+        document.addEventListener('click', this.mousedown.bind(this));
 
     }
 
     disconnectedCallback(){
-        document.removeEventListener('mousedown', this.mousedown.bind(this));
+        document.removeEventListener('click', this.mousedown.bind(this));
 
     }
 }

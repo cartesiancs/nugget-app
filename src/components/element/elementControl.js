@@ -180,6 +180,7 @@ class ElementControl extends HTMLElement {
                 filetype: 'image',
                 animation: {
                     isActivate: false,
+                    points: [],
                     allpoints: []
                 }
 
@@ -256,6 +257,7 @@ class ElementControl extends HTMLElement {
             filetype: 'text',
             animation: {
                 isActivate: false,
+                points: [],
                 allpoints: []
             }
         }

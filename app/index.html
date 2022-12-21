@@ -174,6 +174,23 @@
 
 
         <!-- 
+            TIMELINE OPTION
+        -->
+        <div class="offcanvas offcanvas-bottom" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_bottom" aria-labelledby="offcanvasRightLabel" style="height: 20%;">
+            <div class="offcanvas-header">
+                <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
+            </div>
+            <div class="">
+                <input type="hidden" id="timelineOptionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
+
+                <div id="timelineOptionBody" class="d-none">
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 
             MODAL
         -->
         <div>
@@ -316,6 +333,8 @@
                 bottom: function (percent) {
                     document.getElementById("split_top").style.height = `calc(${percent}% + 0.5rem)`
                     document.getElementById("split_bottom").style.height = `calc(${100-percent}% - 0.5rem)`
+                    document.getElementById(`option_bottom`).style.height = `calc(${100-percent}% - 0.5rem)` // 옵션 오프캔버스                    
+
                 },
                 columns: function (percent) {
                     document.getElementById(`split_col_${valueEvent.splitColumnsTarget}`).style.width = `${percent}%`

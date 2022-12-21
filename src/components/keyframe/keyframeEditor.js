@@ -32,6 +32,8 @@ class KeyframeEditor extends HTMLElement {
         this.querySelector("div").classList.add("h-100", "position-relative")
         this.classList.add("h-100", "w-100", "position-absolute")
 
+        this.loadPoint()
+
     }
 
 
@@ -48,12 +50,23 @@ class KeyframeEditor extends HTMLElement {
 
 
 
+    loadPoint() {
+        if (this.timeline[this.elementId].animation.isActivate == true) {
+            let points = this.timeline[this.elementId].animation.points
+            console.log(points)
+            for (let index = 0; index < points.length; index++) {
+                const element = points[index];
+                this.addPoint({
+                    x: element[0], 
+                    y: element[1]
+                })
+            }
+        }
+    }
 
-    addPoint(e) {
-        let x = Math.round(e.offsetX)
-        let y = Math.round(e.offsetY)
+    addPoint({ x, y }) {
 
-        this.points.push([x, y])
+        this.points.push([Math.round(x), Math.round(y)])
         this.divBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)
         this.path.setAttribute("d", this.drawPath(this.points, this.tension));
 
@@ -61,6 +74,7 @@ class KeyframeEditor extends HTMLElement {
         let allPoints = this.getInterpolatedPoints(loadPointLength)
 
         this.timeline[this.elementId].animation.isActivate = true
+        this.timeline[this.elementId].animation.points = this.points
         this.timeline[this.elementId].animation.allpoints = allPoints
 
     }
@@ -128,10 +142,17 @@ class KeyframeEditor extends HTMLElement {
         return points
     }
 
+    handleMousedown(e) {
+        this.addPoint({
+            x: e.offsetX,
+            y: e.offsetY
+        })
+    }
+
     connectedCallback() {
         this.render();
 
-        this.addEventListener("mousedown", this.addPoint.bind(this))
+        this.addEventListener("mousedown", this.handleMousedown.bind(this))
 
     }
 }

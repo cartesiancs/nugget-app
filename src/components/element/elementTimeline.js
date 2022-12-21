@@ -215,6 +215,17 @@ class ElementTimeline extends HTMLElement {
         }
     }
 
+    showKeyframeEditor(elementId) {
+        let timelineOptionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_bottom'))
+        let timelineOption = document.querySelector("#timelineOptionBody")
+
+        let targetElementId = document.querySelector("#timelineOptionTargetElement")
+        timelineOption.innerHTML = `<keyframe-editor element-id="${elementId}"></keyframe-editor>`
+        timelineOption.classList.remove("d-none")
+        targetElementId.value = elementId
+        timelineOptionOffcanvas.show()
+    }
+
     deactivateSeletedBar() {
         this.elementControl.selectElementsId.forEach(elementId => {
             let targetElement = document.querySelector(`element-bar[element-id='${elementId}']`)

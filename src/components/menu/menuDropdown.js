@@ -26,7 +26,9 @@ class MenuDropdownBody extends HTMLElement {
     }
 
     mousedown() {
-        this.remove()
+        setTimeout(() => {
+            this.remove()
+        }, 200);
     }
 
 
@@ -62,6 +64,7 @@ class MenuDropdownItem extends HTMLElement {
     template() {
         return `<li><a class="dropdown-item">${this.name}</a></li>`
     }
+
 
 
     connectedCallback() {

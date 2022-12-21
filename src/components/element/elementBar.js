@@ -311,9 +311,12 @@ class ElementBar extends HTMLElement {
         document.querySelector("#menuRightClick").innerHTML = `
             <menu-dropdown-body top="${e.clientY}" left="${e.clientX}">
             <menu-dropdown-item item-name="sdvsd"></menu-dropdown-item>
-            <menu-dropdown-item item-name="sdvsd"> </menu-dropdown-item>
+            <menu-dropdown-item onclick="document.querySelector('element-timeline').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
         </menu-dropdown-body>`
         console.log("RC", e)
+
+        
+        //document.querySelector('element-timeline').removeSeletedElements()
     }
 
 

@@ -137,8 +137,7 @@ class ElementTimeline extends HTMLElement {
         let elementType = this.getElementType(filetype)
 
         if (elementType == 'static') {
-            return `<element-bar element-id="${elementId}" element-type="static"></element-bar> 
-            <keyframe-editor element-id="${elementId}"></keyframe-editor>`
+            return `<element-bar element-id="${elementId}" element-type="static"></element-bar> `
 
         } else if (elementType == 'dynamic') {
             return `<element-bar element-id="${elementId}" element-type="dynamic"></element-bar>`

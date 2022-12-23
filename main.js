@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain, dialog, net } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, net, Menu } = require('electron')
 const { autoUpdater } = require("electron-updater");
 const { renderMain, renderFilter } = require('./lib/render.js')
+const { menu } = require('./lib/menu.js')
 
 
 const config = require('./config.json')
@@ -52,6 +53,7 @@ function createWindow () {
   mainWindow.loadFile('app/index.html')
 
   autoUpdater.checkForUpdatesAndNotify()
+  Menu.setApplicationMenu(menu)
 
 
   if (isDev) {

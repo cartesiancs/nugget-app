@@ -211,6 +211,7 @@ class ElementControl extends HTMLElement {
 
             ffmpeg.ffprobe(path, (err, metadata) => {
                 let isExist = false
+                console.log(metadata)
                 metadata.streams.forEach(element => {
                     if (element.codec_type == "audio") {
                         isExist = true
@@ -229,7 +230,8 @@ class ElementControl extends HTMLElement {
                     height: height,
                     localpath: path,
                     isExistAudio: isExist,
-                    filetype: 'video'
+                    filetype: 'video',
+                    codec: { video: "default", audio: "default" }
                 }
     
                 

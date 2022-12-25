@@ -29,8 +29,9 @@ const renderAnimation = {
 
     render: function (elements, options) {
         console.log(elements)
-        renderAnimation.elements = elements
-        renderAnimation.options = options
+        renderAnimation.state.elements = elements
+        renderAnimation.state.options = options
+        renderAnimation.state.numberOfRenderingRequired == 0
 
         let path = `${options.videoDestinationFolder}/temp`
 
@@ -51,9 +52,19 @@ const renderAnimation = {
 
             for (const elementId in elements) {
                 if (Object.hasOwnProperty.call(elements, elementId)) {
-                    const element = elements[elementId];    
+                    const element = elements[elementId];  
+                    
+                    console.log(element.hasOwnProperty("animation"))
+
+                    if (element.hasOwnProperty("animation") == false) {
+                        continue;
+                    }
+
+                    if (element.filetype !== 'image') {
+                        continue;
+                    }
     
-                    if (element.filetype == 'image' && element.animation.isActivate == true) {
+                    if (element.animation.isActivate == true) {
                         renderAnimation.initAnimateElementState(elementId)
                         renderAnimation.state.numberOfRenderingRequired += 1
 
@@ -74,7 +85,15 @@ const renderAnimation = {
                     }
                 }
             }
+
+            console.log(renderAnimation.state)
+
+            if (renderAnimation.state.numberOfRenderingRequired == 0) {
+                renderAnimation.renderOutput()
+            }
         })
+
+
 
 
     },
@@ -146,14 +165,14 @@ const renderAnimation = {
         command.format('webm')
         command.output(outputVideoPath)
         command.on('end', function() {
-            renderAnimation.elements[elementId].filetype = 'video'
-            renderAnimation.elements[elementId].isExistAudio = false
-            renderAnimation.elements[elementId].localpath = outputVideoPath
-            renderAnimation.elements[elementId].trim = { startTime: 0, endTime: renderAnimation.elements[elementId].duration }
-            renderAnimation.elements[elementId].height = 1080
-            renderAnimation.elements[elementId].width = 1920
-            renderAnimation.elements[elementId].location = {x: 0, y: 50}
-            renderAnimation.elements[elementId].codec = { video: "libvpx-vp9", audio: "default" }
+            renderAnimation.state.elements[elementId].filetype = 'video'
+            renderAnimation.state.elements[elementId].isExistAudio = false
+            renderAnimation.state.elements[elementId].localpath = outputVideoPath
+            renderAnimation.state.elements[elementId].trim = { startTime: 0, endTime: renderAnimation.elements[elementId].duration }
+            renderAnimation.state.elements[elementId].height = 1080
+            renderAnimation.state.elements[elementId].width = 1920
+            renderAnimation.state.elements[elementId].location = {x: 0, y: 50}
+            renderAnimation.state.elements[elementId].codec = { video: "libvpx-vp9", audio: "default" }
 
             
             renderAnimation.state.renderingCount += 1
@@ -169,7 +188,7 @@ const renderAnimation = {
     },
 
     renderOutput: function () {
-        ipcRenderer.send('RENDER', renderAnimation.elements, renderAnimation.options)
+        ipcRenderer.send('RENDER', renderAnimation.state.elements, renderAnimation.state.options)
 
     },
 

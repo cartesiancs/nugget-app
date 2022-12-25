@@ -305,7 +305,13 @@ class ElementBar extends HTMLElement {
         </menu-dropdown-body>`
     }
 
-    click() {
+    handleMousedown(e) {
+        this.selectThisElement()
+        this.dragMousedown(e)
+    }
+
+    handleMouseup(e) {
+        this.rightclick(e)
         this.selectThisElement()
     }
 
@@ -330,10 +336,12 @@ class ElementBar extends HTMLElement {
     connectedCallback() {
         this.render();
 
-        this.addEventListener('mousedown', this.dragMousedown.bind(this));
-        this.addEventListener('mouseup', this.rightclick.bind(this));
-        this.addEventListener('mousedown', this.click.bind(this));
-        this.addEventListener('mouseup', this.click.bind(this));
+        this.addEventListener('mousedown', this.handleMousedown.bind(this));
+        this.addEventListener('mouseup', this.handleMouseup.bind(this));
+
+        //this.addEventListener('mousedown', this.dragMousedown.bind(this));
+        // this.addEventListener('mouseup', this.rightclick.bind(this));
+        // this.addEventListener('mouseup', this.click.bind(this));
 
         document.addEventListener('mouseup', this.dragMouseup.bind(this));
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
@@ -341,10 +349,11 @@ class ElementBar extends HTMLElement {
     }
 
     disconnectedCallback(){
-        this.removeEventListener('mousedown', this.dragMousedown);
-        this.removeEventListener('mouseup', this.dragMouseup);
-        this.addEventListener('dblclick', this.dblclick);
+        this.removeEventListener('mousedown', this.handleMousedown);
+        this.removeEventListener('mouseup', this.handleMouseup);
 
+        document.removeEventListener('mouseup', this.dragMouseup);
+        document.removeEventListener('mouseup', this.resizeMouseup);
     }
 }
 

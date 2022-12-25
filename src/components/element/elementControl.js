@@ -637,12 +637,12 @@ class ElementControl extends HTMLElement {
         this.timelineBar.move(0)
     }
 
-    clickPreview() {
+    handleClickPreview() {
         this.deactivateAllOutline()
     }
 
     connectedCallback() {
-        preview.addEventListener('click', this.clickPreview.bind(this));
+        preview.addEventListener('click', this.handleClickPreview.bind(this));
 
     }
 }
@@ -999,8 +999,7 @@ class ElementControlAsset extends HTMLElement {
 
 
 
-
-    dblClick() {
+    showSideOption() {
         let optionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_top'))
         let offcanvasOptionListsId = ['option_text']
 
@@ -1014,19 +1013,30 @@ class ElementControlAsset extends HTMLElement {
             document.querySelector(`#optionTargetElement`).value = this.elementId
             optionOffcanvas.show()
         }
-
     }
 
+
+    handleMousedown(e) {
+        this.dragMousedown(e)
+        this.activateOutline(e)
+    }
+
+
+    handleDoubleClick(e) {
+        this.showSideOption()
+    }
 
     connectedCallback() {
         this.render();
 
-        this.addEventListener('mousedown', this.dragMousedown.bind(this));
-        document.addEventListener('mouseup', this.dragMouseup.bind(this));
-        this.addEventListener('mousedown', this.activateOutline.bind(this));
-        this.addEventListener('dblclick', this.dblClick.bind(this));
+        this.addEventListener('mousedown', this.handleMousedown.bind(this));
+        this.addEventListener('dblclick', this.handleDoubleClick.bind(this));
+
+        // this.addEventListener('mousedown', this.dragMousedown.bind(this));
+        // this.addEventListener('mousedown', this.activateOutline.bind(this));
 
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
+        document.addEventListener('mouseup', this.dragMouseup.bind(this));
 
     }
 

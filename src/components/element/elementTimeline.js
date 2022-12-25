@@ -195,25 +195,7 @@ class ElementTimeline extends HTMLElement {
         this.elementControl.selectElementsId = []
     }
 
-    keydown(event) {
-        console.log(event.keyCode)
-        if (this.elementControl.existActiveElement == true) {
-            return 0
-        }
 
-        if(event.keyCode == 32) { // Space
-            event.preventDefault();
-            this.togglePlayer()
-
-        }
-
-        if (event.keyCode == 8) { // backspace
-            event.preventDefault();
-            this.removeSeletedElements()
-            
-
-        }
-    }
 
     showKeyframeEditor(elementId) {
         let timelineOptionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_bottom'))
@@ -233,30 +215,49 @@ class ElementTimeline extends HTMLElement {
         });
     }
 
-    clickTimeline() {
-        this.elementControl.deactivateAllOutline()
-        this.deactivateSeletedBar()
-        console.log("CLICKTIMELIONE")
-    }
-
-    scroll() {
+    fixRulerOnTop() {
         const scrollTop = this.scrollTop
         const elementTimelineRuler = document.querySelector("element-timeline-editor")
         const elementTimelineBar = document.querySelector("element-timeline-bar")
 
         elementTimelineRuler.setTopPosition(scrollTop)
         elementTimelineBar.style.top = `${scrollTop}px`
+    }
 
+    handleKeydown(event) {
+        console.log(event.keyCode)
+        if (this.elementControl.existActiveElement == true) {
+            return 0
+        }
+
+        if(event.keyCode == 32) { // Space
+            event.preventDefault();
+            this.togglePlayer()
+
+        }
+
+        if (event.keyCode == 8) { // backspace
+            event.preventDefault();
+            this.removeSeletedElements()
+        
+        }
+    }
+
+    handleMousedown() {
+        this.elementControl.deactivateAllOutline()
+        this.deactivateSeletedBar()
+    }
+
+    handleScroll() {
+        this.fixRulerOnTop()
     }
 
     connectedCallback() {
         this.render();
-        document.addEventListener('keydown', this.keydown.bind(this));
-        this.addEventListener('mousedown', this.clickTimeline.bind(this));
-        this.addEventListener('scroll', this.scroll.bind(this));
+        this.addEventListener('mousedown', this.handleMousedown.bind(this));
+        this.addEventListener('scroll', this.handleScroll.bind(this));
 
-        
-
+        document.addEventListener('keydown', this.handleKeydown.bind(this));
     }
 }
 
@@ -278,7 +279,7 @@ class ElementTimelineBar extends HTMLElement {
         this.style.left = `${px}px`
     }
 
-    mousedown(e) {
+    handleMousedown(e) {
         const elementTimelineRuler = document.querySelector("element-timeline-editor")
         elementTimelineRuler.moveTime(e)
         elementTimelineRuler.mousemoveEventHandler = elementTimelineRuler.mousemove.bind(elementTimelineRuler)
@@ -286,7 +287,7 @@ class ElementTimelineBar extends HTMLElement {
     }
 
 
-    mouseup(e) {
+    handleMouseup(e) {
         const elementTimelineRuler = document.querySelector("element-timeline-editor")
         document.removeEventListener('mousemove', elementTimelineRuler.mousemoveEventHandler);
     }
@@ -294,8 +295,8 @@ class ElementTimelineBar extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        this.addEventListener('mousedown', this.mousedown.bind(this));
-        document.addEventListener('mouseup', this.mouseup.bind(this));
+        this.addEventListener('mousedown', this.handleMousedown.bind(this));
+        document.addEventListener('mouseup', this.handleMouseup.bind(this));
 
     }
 }
@@ -371,7 +372,7 @@ class ElementTimelineEditor extends HTMLElement {
         elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft)
     }
 
-    mousemove(e) {
+    handleMousemove(e) {
         const elementTimelineBar = document.querySelector("element-timeline-bar")
         const elementTimeline = document.querySelector("element-timeline")
         const elementControl = document.querySelector("element-control")
@@ -390,17 +391,15 @@ class ElementTimelineEditor extends HTMLElement {
     }
 
 
-    mousedown(e) {
+    handleMousedown(e) {
         this.moveTime(e)
-
-
-        this.mousemoveEventHandler = this.mousemove.bind(this)
+        this.mousemoveEventHandler = this.handleMousemove.bind(this)
         document.addEventListener('mousemove', this.mousemoveEventHandler);
 
     }
 
 
-    mouseup(e) {
+    handleMouseup(e) {
         document.removeEventListener('mousemove', this.mousemoveEventHandler);
 
     }
@@ -409,8 +408,8 @@ class ElementTimelineEditor extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        this.addEventListener('mousedown', this.mousedown.bind(this));
-        document.addEventListener('mouseup', this.mouseup.bind(this));
+        this.addEventListener('mousedown', this.handleMousedown.bind(this));
+        document.addEventListener('mouseup', this.handleMouseup.bind(this));
 
     }
 }

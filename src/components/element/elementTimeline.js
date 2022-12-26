@@ -282,7 +282,7 @@ class ElementTimelineBar extends HTMLElement {
     handleMousedown(e) {
         const elementTimelineRuler = document.querySelector("element-timeline-editor")
         elementTimelineRuler.moveTime(e)
-        elementTimelineRuler.mousemoveEventHandler = elementTimelineRuler.mousemove.bind(elementTimelineRuler)
+        elementTimelineRuler.mousemoveEventHandler = elementTimelineRuler.handleMousemove.bind(elementTimelineRuler)
         document.addEventListener('mousemove', elementTimelineRuler.mousemoveEventHandler);
     }
 

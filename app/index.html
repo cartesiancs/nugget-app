@@ -25,94 +25,98 @@
 
         <div class="container-fluid" style="height: 97vh;">
             <div id="split_top" class="row align-items-start" style="height: 80%;">
-                <div id="split_col_1" class="bg-darklight h-100 overflow-y-scroll overflow-x-hidden position-relative p-0" style="width: 30%;">
+                <div id="split_col_1" class="bg-darklight h-100 overflow-y-hidden overflow-x-hidden position-relative p-0" style="width: 30%;">
                     <div class="split-col-bar" onmousedown="startSplitColumns(1)"></div>
 
-                    <div class="accordion" id="accordionTab">
+                    <div class=" h-100 overflow-y-scroll overflow-x-hidden position-absolute ">
 
-                        <!-- accordion: 프로젝트 설정 -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" >
-                                    프로젝트 설정
-                                </button>
-                            </h2>
-                            <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#accordionTab">
-                                <div class="accordion-body">
-                                    <div class="input-group mb-3">
-                                        <input type="text" class="form-control bg-dark text-light" placeholder="프로젝트 이름" >
+                        <div class="accordion" id="accordionTab">
+
+                            <!-- accordion: 프로젝트 설정 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" >
+                                        프로젝트 설정
+                                    </button>
+                                </h2>
+                                <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#accordionTab">
+                                    <div class="accordion-body">
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control bg-dark text-light" placeholder="프로젝트 이름" >
+                                        </div>
+    
+                                        <div class="input-group mb-3">
+                                            <input id="projectFolder" type="text" class="form-control bg-dark text-light" placeholder="/" disabled>
+                                            <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.directory.select()">프로젝트 폴더 지정</button>
+                                        </div>
+                                        
+                                        <div class="input-group mb-3">
+                                            <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-editor').updateRulerLength(this)" value="10">
+                                            <span class="input-group-text bg-dark text-light" id="basic-addon2">초</span>
+                                        </div>
+                                        <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
+                                        <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
+                                        <button class="btn btn-sm bg-primary text-light mt-1" onclick="ipcRenderer.send('DOWNLOAD_FFMPEG')">ffmpeg 다운로드</button>
+                                        <br>
+    
+    
                                     </div>
-
-                                    <div class="input-group mb-3">
-                                        <input id="projectFolder" type="text" class="form-control bg-dark text-light" placeholder="/" disabled>
-                                        <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.directory.select()">프로젝트 폴더 지정</button>
-                                    </div>
-                                    
-                                    <div class="input-group mb-3">
-                                        <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-editor').updateRulerLength(this)" value="10">
-                                        <span class="input-group-text bg-dark text-light" id="basic-addon2">초</span>
-                                    </div>
-                                    <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
-                                    <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
-                                    <button class="btn btn-sm bg-primary text-light mt-1" onclick="ipcRenderer.send('DOWNLOAD_FFMPEG')">ffmpeg 다운로드</button>
-                                    <br>
-
-
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- accordion: 에셋 -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapseOne">
-                                에셋
-                                </button>
-                            </h2>
-                            <div id="collapse2" class="accordion-collapse collapse " data-bs-parent="#accordionTab">
-                                <div class="accordion-body">
-
-                                    <asset-browser></asset-browser>
-        
-                                    <asset-list></asset-list>
+    
+                            <!-- accordion: 에셋 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapseOne">
+                                    에셋
+                                    </button>
+                                </h2>
+                                <div id="collapse2" class="accordion-collapse collapse " data-bs-parent="#accordionTab">
+                                    <div class="accordion-body">
+    
+                                        <asset-browser></asset-browser>
+            
+                                        <asset-list></asset-list>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- accordion: 프리셋 -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" >
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapseTwo">
-                                프리셋
-                                </button>
-                            </h2>
-                            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
-                                <div class="accordion-body">
-                                    <div class="row px-2">
-                                        <div class="col-4 d-flex flex-column bd-highlight overflow-hidden mt-1 asset" onclick="elementControlComponent.addText()">
-                                            <span class="material-symbols-outlined icon-lg align-self-center"> text_fields </span>
-                                            <b class="align-self-center text-ellipsis text-light text-center">텍스트</b>
+    
+                            <!-- accordion: 프리셋 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" >
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapseTwo">
+                                    프리셋
+                                    </button>
+                                </h2>
+                                <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
+                                    <div class="accordion-body">
+                                        <div class="row px-2">
+                                            <div class="col-4 d-flex flex-column bd-highlight overflow-hidden mt-1 asset" onclick="elementControlComponent.addText()">
+                                                <span class="material-symbols-outlined icon-lg align-self-center"> text_fields </span>
+                                                <b class="align-self-center text-ellipsis text-light text-center">텍스트</b>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- accordion: 랜더링 -->
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapseThree">
-                                랜더링
-                                </button>
-                            </h2>
-                            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
-                                <div class="accordion-body">
-                                    <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
+    
+                            <!-- accordion: 랜더링 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapseThree">
+                                    랜더링
+                                    </button>
+                                </h2>
+                                <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionTab">
+                                    <div class="accordion-body">
+                                        <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
+                                    </div>
                                 </div>
                             </div>
+    
                         </div>
-
                     </div>
+
                 </div>
 
                 <!-- PREVIEW -->

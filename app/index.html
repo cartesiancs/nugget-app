@@ -51,7 +51,7 @@
                                         </div>
                                         
                                         <div class="input-group mb-3">
-                                            <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-editor').updateRulerLength(this)" value="10">
+                                            <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-ruler').updateRulerLength(this)" value="10">
                                             <span class="input-group-text bg-dark text-light" id="basic-addon2">초</span>
                                         </div>
                                         <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
@@ -180,7 +180,7 @@
         <!-- 
             TIMELINE OPTION
         -->
-        <div class="offcanvas offcanvas-bottom" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_bottom" aria-labelledby="offcanvasRightLabel" style="height: 20%;">
+        <div class="offcanvas offcanvas-bottom" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_bottom" aria-labelledby="offcanvasRightLabel" style="height: calc(20% - 2rem); ">
             <div class="offcanvas-header">
                 <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
             </div>
@@ -337,7 +337,7 @@
                 bottom: function (percent) {
                     document.getElementById("split_top").style.height = `calc(${percent}% + 0.5rem)`
                     document.getElementById("split_bottom").style.height = `calc(${100-percent}% - 0.5rem)`
-                    document.getElementById(`option_bottom`).style.height = `calc(${100-percent}% - 0.5rem)` // 옵션 오프캔버스                    
+                    document.getElementById(`option_bottom`).style.height = `calc(${100-percent}% - 2rem)` // 옵션 오프캔버스                    
 
                 },
                 columns: function (percent) {
@@ -447,9 +447,6 @@
           })
 
 
-          document.querySelector("element-timeline-editor").addEventListener("mousedown", (e) => {
-                e.stopPropagation();
-          })
 
 
           document.getElementById("split_inner_bottom").addEventListener("mousedown", (e) => {

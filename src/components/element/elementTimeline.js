@@ -57,7 +57,7 @@ class ElementTimeline extends HTMLElement {
 
     template() {
         return `
-        <element-timeline-editor></element-timeline-editor>
+        <element-timeline-ruler></element-timeline-ruler>
         <element-timeline-bar></element-timeline-bar>
 
         `
@@ -217,7 +217,7 @@ class ElementTimeline extends HTMLElement {
 
     fixRulerOnTop() {
         const scrollTop = this.scrollTop
-        const elementTimelineRuler = document.querySelector("element-timeline-editor")
+        const elementTimelineRuler = document.querySelector("element-timeline-ruler")
         const elementTimelineBar = document.querySelector("element-timeline-bar")
 
         elementTimelineRuler.setTopPosition(scrollTop)
@@ -265,6 +265,13 @@ class ElementTimeline extends HTMLElement {
 class ElementTimelineBar extends HTMLElement { 
     constructor() {
         super();
+
+        this.elementTimelineRuler;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            this.elementTimelineRuler = document.querySelector("element-timeline-ruler")
+        });
+        
     }
 
     render(){
@@ -280,16 +287,14 @@ class ElementTimelineBar extends HTMLElement {
     }
 
     handleMousedown(e) {
-        const elementTimelineRuler = document.querySelector("element-timeline-editor")
-        elementTimelineRuler.moveTime(e)
-        elementTimelineRuler.mousemoveEventHandler = elementTimelineRuler.handleMousemove.bind(elementTimelineRuler)
-        document.addEventListener('mousemove', elementTimelineRuler.mousemoveEventHandler);
+        this.elementTimelineRuler.moveTime(e)
+        this.elementTimelineRuler.mousemoveEventHandler = this.elementTimelineRuler.handleMousemove.bind(this.elementTimelineRuler)
+        document.addEventListener('mousemove', this.elementTimelineRuler.mousemoveEventHandler);
     }
 
 
     handleMouseup(e) {
-        const elementTimelineRuler = document.querySelector("element-timeline-editor")
-        document.removeEventListener('mousemove', elementTimelineRuler.mousemoveEventHandler);
+        document.removeEventListener('mousemove', this.elementTimelineRuler.mousemoveEventHandler);
     }
 
 
@@ -301,7 +306,7 @@ class ElementTimelineBar extends HTMLElement {
     }
 }
 
-class ElementTimelineEditor extends HTMLElement { 
+class ElementTimelineRuler extends HTMLElement { 
     constructor() {
         super();
         this.mousemoveEventHandler = undefined
@@ -310,7 +315,7 @@ class ElementTimelineEditor extends HTMLElement {
 
     render(){
         const template = this.template();
-        this.classList.add("timeline-editor", "ruler")
+        this.classList.add("timeline-ruler", "ruler")
 
         this.innerHTML = template;
         this.addTickNumber(10)
@@ -392,6 +397,7 @@ class ElementTimelineEditor extends HTMLElement {
 
 
     handleMousedown(e) {
+        e.stopPropagation();
         this.moveTime(e)
         this.mousemoveEventHandler = this.handleMousemove.bind(this)
         document.addEventListener('mousemove', this.mousemoveEventHandler);
@@ -415,4 +421,4 @@ class ElementTimelineEditor extends HTMLElement {
 }
 
 
-export { ElementTimeline, ElementTimelineBar, ElementTimelineEditor }
+export { ElementTimeline, ElementTimelineBar, ElementTimelineRuler }

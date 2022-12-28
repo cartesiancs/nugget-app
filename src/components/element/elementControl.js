@@ -433,7 +433,7 @@ class ElementControl extends HTMLElement {
     }
 
     changeTimelineRange() {
-        const timelineRuler = document.querySelector("element-timeline-editor")
+        const timelineRuler = document.querySelector("element-timeline-ruler")
         const timelineBar = document.querySelector("element-timeline-bar")
         const timelineRange =  Number(document.querySelector("#timelineRange").value)
         const timeMagnification = timelineRange / 4

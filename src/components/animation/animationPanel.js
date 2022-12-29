@@ -49,15 +49,26 @@ class AnimationPanel extends HTMLElement {
 class AnimationPanelItem extends HTMLElement { 
     constructor() {
         super();
+
+        this.animationType = this.getAttribute('animation-type')
     }
 
     render(){
+        if (this.checkAnimationType() == false) {
+            return 0
+        }
+        
         const template = this.template();
         this.innerHTML = template;
     }
 
     template() {
         return ` <b>panel item</b> `
+    }
+
+    checkAnimationType() {
+        let availableAnimationType = ["position", "opacity"] // scale, rotation
+        return availableAnimationType.includes(this.animationType)
     }
 
 

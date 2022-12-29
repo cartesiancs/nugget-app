@@ -139,9 +139,10 @@ class ElementTimeline extends HTMLElement {
         if (elementType == 'static') {
             return `
             <element-bar element-id="${elementId}" element-type="static"></element-bar> 
-            
+
             <animation-panel element-id="${elementId}"> 
-                <animation-panel-item></animation-panel-item> 
+                <animation-panel-item animation-type="position"></animation-panel-item> 
+
             </animation-panel> 
             `
 

@@ -15,6 +15,9 @@ import { ElementControl, ElementControlAsset } from './components/element/elemen
 import { KeyframeEditor } from './components/keyframe/keyframeEditor.js';
 import { MenuDropdownBody, MenuDropdownItem } from './components/menu/menuDropdown.js';
 
+import { AnimationPanel, AnimationPanelItem } from './components/animation/animationPanel.js';
+
+
 import "./sass/style.scss";
 
 
@@ -37,6 +40,10 @@ customElements.define('keyframe-editor', KeyframeEditor);
 
 customElements.define('menu-dropdown-body', MenuDropdownBody);
 customElements.define('menu-dropdown-item', MenuDropdownItem);
+
+customElements.define('animation-panel', AnimationPanel);
+customElements.define('animation-panel-item', AnimationPanelItem);
+
 
 
 

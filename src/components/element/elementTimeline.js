@@ -137,7 +137,13 @@ class ElementTimeline extends HTMLElement {
         let elementType = this.getElementType(filetype)
 
         if (elementType == 'static') {
-            return `<element-bar element-id="${elementId}" element-type="static"></element-bar> `
+            return `
+            <element-bar element-id="${elementId}" element-type="static"></element-bar> 
+            
+            <animation-panel element-id="${elementId}"> 
+                <animation-panel-item></animation-panel-item> 
+            </animation-panel> 
+            `
 
         } else if (elementType == 'dynamic') {
             return `<element-bar element-id="${elementId}" element-type="dynamic"></element-bar>`
@@ -196,6 +202,13 @@ class ElementTimeline extends HTMLElement {
     }
 
 
+    showAnimationPanel(elementId) {
+        this.querySelector(`animation-panel[element-id='${elementId}']`).show()
+    }
+
+    hideAnimationPanel(elementId) {
+        this.querySelector(`animation-panel[element-id='${elementId}']`).hide()
+    }
 
     showKeyframeEditor(elementId) {
         let timelineOptionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_bottom'))

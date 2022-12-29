@@ -296,11 +296,25 @@ class ElementBar extends HTMLElement {
         this.changeOutlineColor('remove')
     }
 
+    animationPanelDropdownTemplate() {
+        let isShowPanel = this.isShowAnimationPanel()
+        let itemName = isShowPanel == true ? "애니메이션 패널 닫기" : "애니메이션 패널 열기"
+        let itemOnclickEvent = isShowPanel == true ? `document.querySelector("animation-panel[element-id='${this.elementId}']").hide()` : `document.querySelector("animation-panel[element-id='${this.elementId}']").show()`
+
+        let template = `<menu-dropdown-item onclick=${itemOnclickEvent} item-name="${itemName}"></menu-dropdown-item>`
+        return template
+    }
+
+    isShowAnimationPanel() {
+        return document.querySelector(`animation-panel[element-id='${this.elementId}']`).isShow
+    }
+
 
     showMenuDropdown({ x, y }) {
+        let animationPanel = this.animationPanelDropdownTemplate()
         document.querySelector("#menuRightClick").innerHTML = `
             <menu-dropdown-body top="${y}" left="${x}">
-            <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}')" item-name="키프레임 편집"></menu-dropdown-item>
+            ${animationPanel}
             <menu-dropdown-item onclick="document.querySelector('element-timeline').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
         </menu-dropdown-body>`
     }

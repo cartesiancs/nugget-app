@@ -49,9 +49,35 @@ class AnimationPanel extends HTMLElement {
         return `<div class="bg-dark">  </div>`
     }
 
+    
+    showMenuDropdown({ x, y }) {
+        document.querySelector("#menuRightClick").innerHTML = `<menu-dropdown-body top="${y}" left="${x}">
+            <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}')" item-name="키프레임 편집"></menu-dropdown-item>
+        </menu-dropdown-body>`
+    }
+
+
+    handleMouseup(e) {
+        this.rightclick(e)
+    }
+
+    rightclick(e) {
+        const isRightClick = (e.which == 3) || (e.button == 2)
+
+        if(!isRightClick) {
+            return 0
+        }
+
+        this.showMenuDropdown({
+            x: e.clientX,
+            y: e.clientY
+        })
+    }
+
 
     connectedCallback() {
         this.render();
+        this.addEventListener('mouseup', this.handleMouseup.bind(this));
 
 
     }

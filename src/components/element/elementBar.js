@@ -315,7 +315,6 @@ class ElementBar extends HTMLElement {
         document.querySelector("#menuRightClick").innerHTML = `
             <menu-dropdown-body top="${y}" left="${x}">
             ${animationPanel}
-            <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}')" item-name="키프레임 편집"></menu-dropdown-item>
 
             <menu-dropdown-item onclick="document.querySelector('element-timeline').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
         </menu-dropdown-body>`

@@ -57,6 +57,9 @@ class KeyframeEditor extends HTMLElement {
             console.log(points)
             for (let index = 0; index < points.length; index++) {
                 const element = points[index];
+                if (element[0] == 0) {
+                    continue;
+                }
                 this.addPoint({
                     x: element[0], 
                     y: element[1]

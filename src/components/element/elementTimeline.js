@@ -141,7 +141,7 @@ class ElementTimeline extends HTMLElement {
             <element-bar element-id="${elementId}" element-type="static"></element-bar> 
 
             <animation-panel element-id="${elementId}"> 
-                <animation-panel-item animation-type="position"></animation-panel-item> 
+                <animation-panel-item animation-type="position" element-id="${elementId}"></animation-panel-item> 
 
             </animation-panel> 
             `
@@ -214,8 +214,8 @@ class ElementTimeline extends HTMLElement {
     showKeyframeEditor(elementId) {
         let timelineOptionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_bottom'))
         let timelineOption = document.querySelector("#timelineOptionBody")
-
         let targetElementId = document.querySelector("#timelineOptionTargetElement")
+
         timelineOption.innerHTML = `<keyframe-editor element-id="${elementId}"></keyframe-editor>`
         timelineOption.classList.remove("d-none")
         targetElementId.value = elementId

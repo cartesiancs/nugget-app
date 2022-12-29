@@ -5,6 +5,7 @@ class KeyframeEditor extends HTMLElement {
         this.timeline = document.querySelector("element-timeline").timeline
 
         this.elementId = this.getAttribute('element-id')
+        this.animationType = this.getAttribute('animation-type')
 
         this.tension = 1;
         this.divBody = undefined
@@ -65,6 +66,10 @@ class KeyframeEditor extends HTMLElement {
     }
 
     addPoint({ x, y }) {
+
+        let animationPanel = document.querySelector(`animation-panel[element-id="${this.elementId}"]`)
+        animationPanel.updateItem()
+        
 
         this.points.push([Math.round(x), Math.round(y)])
         this.divBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)

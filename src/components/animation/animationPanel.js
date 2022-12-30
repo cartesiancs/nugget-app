@@ -30,6 +30,10 @@ class AnimationPanel extends HTMLElement {
 
     }
 
+    move(left) {
+        this.style.left = `${left}px`
+    }
+
     clearItem() {
         this.innerHTML = ''
 

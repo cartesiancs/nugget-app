@@ -111,6 +111,9 @@ class ElementBar extends HTMLElement {
         return rgbColor
     }
 
+    animationPanelMove(left) {
+        document.querySelector(`animation-panel[element-id="${this.elementId}"]`).move(left)
+    }
 
     drag(e) {
         if (this.isDrag) {
@@ -118,6 +121,7 @@ class ElementBar extends HTMLElement {
             let y = e.pageY - this.initialPosition.y
     
             this.style.left = `${x}px`
+            this.animationPanelMove(x)
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
         }
     }
@@ -192,6 +196,9 @@ class ElementBar extends HTMLElement {
             this.setWidth(duration-x)
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
             this.timeline[this.elementId].duration = this.pxToMilliseconds(Number(this.style.width.split('px')[0]))
+
+            this.animationPanelMove(x)
+
         } else {
             //this.style.left = `${x-duration}px`
             this.setWidth(timelineScrollLeft+e.pageX-Number(this.style.left.split('px')[0]))

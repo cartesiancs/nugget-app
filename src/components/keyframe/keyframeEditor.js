@@ -52,8 +52,8 @@ class KeyframeEditor extends HTMLElement {
 
 
     loadPoint() {
-        if (this.timeline[this.elementId].animation.isActivate == true) {
-            let points = this.timeline[this.elementId].animation.points
+        if (this.timeline[this.elementId].animation[this.animationType].isActivate == true) {
+            let points = this.timeline[this.elementId].animation[this.animationType].points
             console.log(points)
             for (let index = 0; index < points.length; index++) {
                 const element = points[index];
@@ -81,9 +81,9 @@ class KeyframeEditor extends HTMLElement {
         let loadPointLength = this.points[this.points.length-1][0] - 1
         let allPoints = this.getInterpolatedPoints(loadPointLength)
 
-        this.timeline[this.elementId].animation.isActivate = true
-        this.timeline[this.elementId].animation.points = this.points
-        this.timeline[this.elementId].animation.allpoints = allPoints
+        this.timeline[this.elementId].animation[this.animationType].isActivate = true
+        this.timeline[this.elementId].animation[this.animationType].points = this.points
+        this.timeline[this.elementId].animation[this.animationType].allpoints = allPoints
 
     }
 

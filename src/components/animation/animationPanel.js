@@ -54,34 +54,10 @@ class AnimationPanel extends HTMLElement {
     }
 
     
-    showMenuDropdown({ x, y }) {
-        document.querySelector("#menuRightClick").innerHTML = `<menu-dropdown-body top="${y}" left="${x}">
-            <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}')" item-name="키프레임 편집"></menu-dropdown-item>
-        </menu-dropdown-body>`
-    }
-
-
-    handleMouseup(e) {
-        this.rightclick(e)
-    }
-
-    rightclick(e) {
-        const isRightClick = (e.which == 3) || (e.button == 2)
-
-        if(!isRightClick) {
-            return 0
-        }
-
-        this.showMenuDropdown({
-            x: e.clientX,
-            y: e.clientY
-        })
-    }
 
 
     connectedCallback() {
         this.render();
-        this.addEventListener('mouseup', this.handleMouseup.bind(this));
 
 
     }
@@ -113,8 +89,10 @@ class AnimationPanelItem extends HTMLElement {
         //     return 0
         // }
 
+        this.style.width = `100%`
+        this.style.height = `1.5rem`
+        this.style.display = `inline-block`
 
-        this.style.padding = `1rem`
         this.classList.add("position-relative")
         
         this.clearPoints()
@@ -123,7 +101,7 @@ class AnimationPanelItem extends HTMLElement {
 
     // NOTE: 포인트 타입 지정안되어이ㅛ음
     insertPointFromTimeline() {
-        let points = this.timeline[this.elementId].animation.points
+        let points = this.timeline[this.elementId].animation[this.animationType].points
 
         for (let index = 0; index < points.length; index++) {
             let x = points[index][0];
@@ -145,13 +123,39 @@ class AnimationPanelItem extends HTMLElement {
     }
 
 
+    showMenuDropdown({ x, y }) {
+        
+        document.querySelector("#menuRightClick").innerHTML = `<menu-dropdown-body top="${y}" left="${x}">
+            <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}', '${this.animationType}')" item-name="키프레임 편집"></menu-dropdown-item>
+        </menu-dropdown-body>`
+    }
+
+
+    handleMouseup(e) {
+        this.rightclick(e)
+    }
+
+    rightclick(e) {
+        const isRightClick = (e.which == 3) || (e.button == 2)
+
+        if(!isRightClick) {
+            return 0
+        }
+
+        this.showMenuDropdown({
+            x: e.clientX,
+            y: e.clientY
+        })
+    }
+
+
     connectedCallback() {
         this.render();
-
-
+        this.addEventListener('mouseup', this.handleMouseup.bind(this));
     }
 
     disconnectedCallback(){
+        this.removeEventListener('mouseup', this.handleMouseup);
 
     }
 }

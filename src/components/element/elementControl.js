@@ -179,9 +179,16 @@ class ElementControl extends HTMLElement {
                 localpath: path,
                 filetype: 'image',
                 animation: {
-                    isActivate: false,
-                    points: [],
-                    allpoints: []
+                    position: {
+                        isActivate: false,
+                        points: [],
+                        allpoints: []
+                    },
+                    opacity: {
+                        isActivate: false,
+                        points: [],
+                        allpoints: []
+                    },
                 }
 
             }
@@ -258,9 +265,16 @@ class ElementControl extends HTMLElement {
             localpath: '/TEXTELEMENT',
             filetype: 'text',
             animation: {
-                isActivate: false,
-                points: [],
-                allpoints: []
+                position: {
+                    isActivate: false,
+                    points: [],
+                    allpoints: []
+                },
+                opacity: {
+                    isActivate: false,
+                    points: [],
+                    allpoints: []
+                }
             }
         }
 
@@ -296,11 +310,11 @@ class ElementControl extends HTMLElement {
 
     }
 
-    showAnimation(elementId) {
+    showAnimation(elementId, animationType) {
         try {
             let index = Math.round(document.querySelector("element-control").progress / 4)
     
-            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation.allpoints[index].y}px`
+            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[index].y}px`
     
         } catch (error) {
             
@@ -318,9 +332,10 @@ class ElementControl extends HTMLElement {
             document.querySelector(`#element-${elementId}`).classList.remove('d-none')
         }
 
-        if (this.timeline[elementId].animation.isActivate == true && 
-            this.timeline[elementId].animation.allpoints.length * 4 > document.querySelector("element-control").progress) {
-            this.showAnimation(elementId)
+        let animationType = "position"
+        if (this.timeline[elementId].animation[animationType].isActivate == true && 
+            this.timeline[elementId].animation[animationType].allpoints.length * 4 > document.querySelector("element-control").progress) {
+            this.showAnimation(elementId, animationType)
         }
     }
 

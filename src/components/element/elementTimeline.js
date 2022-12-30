@@ -211,12 +211,12 @@ class ElementTimeline extends HTMLElement {
         this.querySelector(`animation-panel[element-id='${elementId}']`).hide()
     }
 
-    showKeyframeEditor(elementId) {
+    showKeyframeEditor(elementId, animationType) {
         let timelineOptionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_bottom'))
         let timelineOption = document.querySelector("#timelineOptionBody")
         let targetElementId = document.querySelector("#timelineOptionTargetElement")
 
-        timelineOption.innerHTML = `<keyframe-editor element-id="${elementId}"></keyframe-editor>`
+        timelineOption.innerHTML = `<keyframe-editor element-id="${elementId}" animation-type="${animationType}"></keyframe-editor>`
         timelineOption.classList.remove("d-none")
         targetElementId.value = elementId
         timelineOptionOffcanvas.show()

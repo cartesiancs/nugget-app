@@ -29,26 +29,24 @@ const asset = {
         ipc.requestAllDir(splitPrevDirectory.join('/'))
 
     },
-    add: function (url, path) {
-        fetch(`file://${url}`)
+    add: function (path) {
+        fetch(`file://${path}`)
         .then(res => {
             return res.blob()
         })
         .then(blob => {
             let blobUrl = URL.createObjectURL(blob);
-            let blobType = blob.type.split('/')[0] // image, video ...
-
+            let blobType = blob.type.split('/')[0] // image, video, audio ...
             let control = document.querySelector("element-control")
-            if (blobType == 'image') {
-                control.addImage(blobUrl, url)
-            } else if (blobType == 'video') {
-                control.addVideo(blobUrl, url)
 
+            if (blobType == 'image') {
+                control.addImage(blobUrl, path)
+            } else if (blobType == 'video') {
+                control.addVideo(blobUrl, path)
+            } else if (blobType == 'audio') {
+                control.addAudio(blobUrl, path)
             }
-            
-            
-            //nugget.element.control.add[blobType](blobUrl, url)
-        });
+        })
 
     }
 }

@@ -112,6 +112,9 @@ class ElementBar extends HTMLElement {
     }
 
     animationPanelMove(left) {
+        if (this.elementBarType == 'dynamic') {
+            return 0
+        }
         document.querySelector(`animation-panel[element-id="${this.elementId}"]`).move(left)
     }
 
@@ -196,7 +199,6 @@ class ElementBar extends HTMLElement {
             this.setWidth(duration-x)
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
             this.timeline[this.elementId].duration = this.pxToMilliseconds(Number(this.style.width.split('px')[0]))
-
             this.animationPanelMove(x)
 
         } else {

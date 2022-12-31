@@ -111,8 +111,8 @@ class AssetFile extends HTMLElement {
     }
 
     handleClick() {
-        
-        this.patchToControl(`${this.directory}/${this.filename}`, `${this.directory}`)
+        NUGGET.asset.add(`${this.directory}/${this.filename}`)
+        //this.patchToControl(`${this.directory}/${this.filename}`, `${this.directory}`)
     }
 
     async captureVideoThumbnail(url) {
@@ -167,26 +167,6 @@ class AssetFile extends HTMLElement {
 
         return thumbnailUrl
 
-    }
-
-    patchToControl(url, path) {
-        fetch(`file://${url}`)
-        .then(res => {
-            return res.blob()
-        })
-        .then(blob => {
-            let blobUrl = URL.createObjectURL(blob);
-            let blobType = blob.type.split('/')[0] // image, video, audio ...
-            let control = document.querySelector("element-control")
-
-            if (blobType == 'image') {
-                control.addImage(blobUrl, url)
-            } else if (blobType == 'video') {
-                control.addVideo(blobUrl, url)
-            } else if (blobType == 'audio') {
-                control.addAudio(blobUrl, url)
-            }
-        })
     }
 
 

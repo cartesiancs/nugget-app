@@ -86,7 +86,7 @@ const renderAnimation = {
                 }
             }
 
-            console.log(renderAnimation.state)
+            console.log("state", renderAnimation.state)
 
             if (renderAnimation.state.numberOfRenderingRequired == 0) {
                 renderAnimation.renderOutput()

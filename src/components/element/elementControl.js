@@ -311,10 +311,19 @@ class ElementControl extends HTMLElement {
     }
 
     showAnimation(elementId, animationType) {
+        let index = Math.round(document.querySelector("element-control").progress / 4)
+        let indexToMs = index * 20
+        let startTime = Number(this.timeline[elementId].startTime)
+        let indexPoint = Math.round((indexToMs - startTime) / 20)
+
+        console.log(indexPoint)
+
         try {
-            let index = Math.round(document.querySelector("element-control").progress / 4)
-    
-            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[index].y}px`
+            if (indexPoint < 0) {
+                return 0
+            }
+
+            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[indexPoint].y}px`
     
         } catch (error) {
             
@@ -333,8 +342,7 @@ class ElementControl extends HTMLElement {
         }
 
         let animationType = "position"
-        if (this.timeline[elementId].animation[animationType].isActivate == true && 
-            this.timeline[elementId].animation[animationType].allpoints.length * 4 > document.querySelector("element-control").progress) {
+        if (this.timeline[elementId].animation[animationType].isActivate == true) {
             this.showAnimation(elementId, animationType)
         }
     }

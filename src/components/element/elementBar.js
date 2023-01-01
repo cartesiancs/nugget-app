@@ -306,6 +306,10 @@ class ElementBar extends HTMLElement {
     }
 
     animationPanelDropdownTemplate() {
+        // NOTE: 영상 애니메이션은 아직 지원 안함
+        if (this.elementBarType == "dynamic") {
+            return ''
+        }
         let isShowPanel = this.isShowAnimationPanel()
         let itemName = isShowPanel == true ? "애니메이션 패널 닫기" : "애니메이션 패널 열기"
         let itemOnclickEvent = isShowPanel == true ? `document.querySelector("animation-panel[element-id='${this.elementId}']").hide()` : `document.querySelector("animation-panel[element-id='${this.elementId}']").show()`

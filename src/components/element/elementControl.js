@@ -267,13 +267,13 @@ class ElementControl extends HTMLElement {
             animation: {
                 position: {
                     isActivate: false,
-                    points: [],
-                    allpoints: []
+                    points: [[], []],
+                    allpoints: [[], []]
                 },
                 opacity: {
                     isActivate: false,
-                    points: [],
-                    allpoints: []
+                    points: [[]],
+                    allpoints: [[]]
                 }
             }
         }
@@ -323,8 +323,9 @@ class ElementControl extends HTMLElement {
                 return 0
             }
 
-            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[indexPoint].y}px`
-    
+            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[0][indexPoint].y}px`
+            document.querySelector(`#element-${elementId}`).style.top = `${this.timeline[elementId].animation[animationType].allpoints[1][indexPoint].y}px`
+
         } catch (error) {
             
         }

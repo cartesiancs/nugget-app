@@ -101,7 +101,7 @@ class AnimationPanelItem extends HTMLElement {
 
     // NOTE: 포인트 타입 지정안되어이ㅛ음
     insertPointFromTimeline() {
-        let points = this.timeline[this.elementId].animation[this.animationType].points
+        let points = this.timeline[this.elementId].animation[this.animationType].points[0]
         console.log(points)
 
         for (let index = 0; index < points.length; index++) {

@@ -104,11 +104,15 @@ const renderAnimation = {
 
         let allPoints = elements.animation["position"].allpoints
         let canvasImage = []
-        renderAnimation.state.animateElements[elementId].renderFrameLength = allPoints.length
+        renderAnimation.state.animateElements[elementId].renderFrameLength = allPoints[0].length
     
-        for (let index = 0; index < allPoints.length; index++) {
+        for (let index = 0; index < allPoints[0].length; index++) {
             context.clearRect(0, 0, canvas.width, canvas.height);
-            renderAnimation.drawImage(elementId, context, allPoints[index])
+            let point = {
+                x: allPoints[0][index].y,
+                y: allPoints[1][index].y
+            }
+            renderAnimation.drawImage(elementId, context, point)
             context.stroke();
             canvasImage.push(canvas.toDataURL("image/png"))        
         }   
@@ -119,7 +123,7 @@ const renderAnimation = {
     drawImage: function (elementId, context, point) {
         let elementBody = document.querySelector(`element-control-asset[element-id='${elementId}']`).querySelector("img")
 
-        context.drawImage(elementBody, 0 + point.y, 0);
+        context.drawImage(elementBody, 0 + point.x, point.y);
     },
     
 

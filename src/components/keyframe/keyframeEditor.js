@@ -113,7 +113,7 @@ class KeyframeEditor extends HTMLElement {
 
         this.timeline[this.elementId].animation[this.animationType].isActivate = true
         this.timeline[this.elementId].animation[this.animationType].points[line] = this.points[line]
-        this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints[line]
+        this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
 
     }
 

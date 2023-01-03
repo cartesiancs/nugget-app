@@ -181,13 +181,13 @@ class ElementControl extends HTMLElement {
                 animation: {
                     position: {
                         isActivate: false,
-                        points: [],
-                        allpoints: []
+                        points: [[], []],
+                        allpoints: [[], []]
                     },
                     opacity: {
                         isActivate: false,
-                        points: [],
-                        allpoints: []
+                        points: [[]],
+                        allpoints: [[]]
                     },
                 }
 

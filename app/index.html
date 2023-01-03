@@ -190,8 +190,16 @@
             TIMELINE OPTION
         -->
         <div class="offcanvas offcanvas-bottom" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_bottom" aria-labelledby="offcanvasRightLabel" style="height: calc(20% - 2rem); ">
-            <div class="offcanvas-header">
-                <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
+            <div class="offcanvas-header row d-flex justify-content-between">
+                <div class="col">
+                    <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
+
+                </div>
+                <div class="col text-end">
+                    <div class="btn-group" role="group" id="timelineOptionLineEditor">
+                    </div>
+                </div>
+
             </div>
             <div class="">
                 <input type="hidden" id="timelineOptionTargetElement" value="aaaa-aaaa-aaaa-aaaa">

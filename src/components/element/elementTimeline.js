@@ -185,6 +185,15 @@ class ElementTimeline extends HTMLElement {
         }
     }
 
+    removeAnimationPanelById(elementId) {
+        let target = this.querySelector(`animation-panel[element-id="${elementId}"]`)
+        if (!target) {
+            return 0
+        }
+
+        target.remove()
+    }
+
     removeElementInTimelineData(elementId) {
         delete this.timeline[elementId]
     }
@@ -197,6 +206,7 @@ class ElementTimeline extends HTMLElement {
         this.elementControl.selectElementsId.forEach(elementId => {
             this.removeElementById(elementId)
             this.removeElementInTimelineData(elementId)
+            this.removeAnimationPanelById(elementId)
             this.elementControl.removeElementById(elementId)
         });
         this.elementControl.selectElementsId = []

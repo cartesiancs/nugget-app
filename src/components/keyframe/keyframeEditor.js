@@ -29,6 +29,8 @@ class KeyframeEditor extends HTMLElement {
         this.svgBody = this.divBody.querySelector("svg")
         this.lineCount = this.timeline[this.elementId].animation[this.animationType].points.length
 
+        this.clearLineEditorGroup()
+
         for (let line = 0; line < this.lineCount; line++) {
             this.addLineEditor(line)
             this.drawLine(line)
@@ -80,6 +82,10 @@ class KeyframeEditor extends HTMLElement {
         document.querySelector("#timelineOptionLineEditor").insertAdjacentHTML("beforeend", 
         `<button line="${line}" onclick="document.querySelector('keyframe-editor').changeLineEditor('${line}')" type="button" class="btn btn-secondary btn-sm">Line${line}</button>`)
         
+    }
+
+    clearLineEditorGroup() {
+        document.querySelector("#timelineOptionLineEditor").innerHTML = ''
     }
 
 

@@ -1,13 +1,23 @@
 
 //NOTE: 성능 최적화 개판입니다.
 
+const renderProgress = {
+    show: function (prog) {
+        rendererUtil.showProgressModal()
+        document.querySelector("#progress").style.width = `${prog}%`
+        document.querySelector("#progress").innerHTML = `${Math.round(prog)}%`
+    }
+}
+
 const renderAnimation = {
     state: {
         animateElements: {},
         elements: undefined,
         options: undefined,
         numberOfRenderingRequired: 0,
-        renderingCount: 0
+        renderingCount: 0,
+        renderingProgress: 0
+
     },
 
     initAnimateElementState: function (elementId) {
@@ -32,6 +42,8 @@ const renderAnimation = {
         renderAnimation.state.elements = elements
         renderAnimation.state.options = options
         renderAnimation.state.numberOfRenderingRequired = 0
+
+        renderProgress.show(0)
 
         let path = `${options.videoDestinationFolder}/temp`
 
@@ -110,7 +122,7 @@ const renderAnimation = {
             context.clearRect(0, 0, canvas.width, canvas.height);
             let point = {
                 x: allPoints[0][index].y,
-                y: allPoints[1][index].y
+                y: index < allPoints[1].length ? allPoints[1][index].y : allPoints[1][allPoints[1].length - 1].y
             }
             renderAnimation.drawImage(elementId, context, point)
             context.stroke();
@@ -186,6 +198,10 @@ const renderAnimation = {
 
             
             renderAnimation.state.renderingCount += 1
+            renderAnimation.state.renderingProgress = renderAnimation.state.renderingCount/renderAnimation.state.numberOfRenderingRequired*100
+
+            renderProgress.show(renderAnimation.state.renderingProgress)
+            
 
             if (renderAnimation.state.renderingCount >= renderAnimation.state.numberOfRenderingRequired) {
                 renderAnimation.renderOutput()

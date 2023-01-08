@@ -323,8 +323,8 @@ class ElementControl extends HTMLElement {
                 return 0
             }
 
-            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[0][indexPoint].y}px`
-            document.querySelector(`#element-${elementId}`).style.top = `${this.timeline[elementId].animation[animationType].allpoints[1][indexPoint].y}px`
+            document.querySelector(`#element-${elementId}`).style.left = `${this.timeline[elementId].animation[animationType].allpoints[0][indexPoint].y / this.previewRatio}px`
+            document.querySelector(`#element-${elementId}`).style.top = `${this.timeline[elementId].animation[animationType].allpoints[1][indexPoint].y / this.previewRatio}px`
 
         } catch (error) {
             
@@ -838,6 +838,8 @@ class ElementControlAsset extends HTMLElement {
 
                 this.timeline[this.elementId].location.x = convertLocation.x 
                 this.timeline[this.elementId].location.y = convertLocation.y
+
+
             }
         }
     }
@@ -854,7 +856,36 @@ class ElementControlAsset extends HTMLElement {
 
     dragMouseup() {
         document.removeEventListener('mousemove', this.dragdownEventHandler)
+        if (this.isDrag == true) {
+            this.addAnimationPoint({
+                animationType: "position"
+            })
+        }
         this.isDrag = false
+    }
+
+    addAnimationPoint({ animationType }) {
+        let keyframeEditor = document.querySelector(`keyframe-editor[element-id="${this.elementId}"]`)
+        let progress = this.elementControl.progress
+        
+        const addPoint = {
+            "position": () => {
+                keyframeEditor.addPoint({
+                    x: progress, 
+                    y: this.timeline[this.elementId].location.x,
+                    line: 0
+                })
+
+                keyframeEditor.addPoint({
+                    x: progress, 
+                    y: this.timeline[this.elementId].location.y,
+                    line: 1
+                })
+            }
+        }
+
+        addPoint[animationType]()
+
     }
 
     getGcd(a,b) {

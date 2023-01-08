@@ -109,6 +109,19 @@ class KeyframeEditor extends HTMLElement {
     }
 
     addPoint({ x, y, line }) {
+        // x: time , y: value
+
+        // this.points[line] = this.getRemovedDuplicatePoint({
+        //     x: Math.round(x),
+        //     line: line
+        // })
+
+        // console.log(this.getRemovedDuplicatePoint({
+        //     x: Math.round(x),
+        //     line: line
+        // }))
+
+        // this.removeKeyframPointInDiv({x: x-4})
 
         this.points[line].push([Math.round(x), Math.round(y)])
         this.divBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)
@@ -122,6 +135,29 @@ class KeyframeEditor extends HTMLElement {
         this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
 
     }
+
+    removeKeyframPointInDiv({ x }) {
+        let target = this.divBody.querySelectorAll("div.keyframe-point")
+
+        target.forEach(ele => {
+            if (ele.style.left == `${x}px`) {
+                ele.remove()
+            }
+            console.log(ele.style.left)
+        })
+
+    }
+
+    getRemovedDuplicatePoint({x, line}) {
+        let tmp = []
+        this.points[line].forEach((element) => {
+            if (element[0] != x) {
+                tmp.push(element)
+            }
+        })
+        return tmp
+    }
+      
 
     drawLine(line) {
         this.querySelector("svg").insertAdjacentHTML("beforeend", `

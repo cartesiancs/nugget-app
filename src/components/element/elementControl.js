@@ -865,9 +865,13 @@ class ElementControlAsset extends HTMLElement {
     }
 
     addAnimationPoint({ animationType }) {
+        if (this.timeline[this.elementId].animation[animationType].isActivate == false) {
+            return 0
+        }
+
         let keyframeEditor = document.querySelector(`keyframe-editor[element-id="${this.elementId}"]`)
         let progress = this.elementControl.progress
-        
+
         const addPoint = {
             "position": () => {
                 keyframeEditor.addPoint({
@@ -885,7 +889,6 @@ class ElementControlAsset extends HTMLElement {
         }
 
         addPoint[animationType]()
-
     }
 
     getGcd(a,b) {

@@ -29,6 +29,8 @@ class KeyframeEditor extends HTMLElement {
         this.svgBody = this.divBody.querySelector("svg")
         this.lineCount = this.timeline[this.elementId].animation[this.animationType].points.length
 
+        this.timeline[this.elementId].animation[this.animationType].isActivate = true
+
         this.clearLineEditorGroup()
 
         for (let line = 0; line < this.lineCount; line++) {

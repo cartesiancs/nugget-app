@@ -109,21 +109,12 @@ class KeyframeEditor extends HTMLElement {
     }
 
     addPoint({ x, y, line }) {
-        // x: time , y: value
 
-        // this.points[line] = this.getRemovedDuplicatePoint({
-        //     x: Math.round(x),
-        //     line: line
-        // })
-
-        // console.log(this.getRemovedDuplicatePoint({
-        //     x: Math.round(x),
-        //     line: line
-        // }))
-
-        // this.removeKeyframPointInDiv({x: x-4})
-
-        this.points[line].push([Math.round(x), Math.round(y)])
+        this.insertPointInMiddle({
+            x: Math.round(x), 
+            y: Math.round(y),
+            line: line
+        })
         this.divBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)
         this.path[line].setAttribute("d", this.drawPath(this.points[line], this.tension));
 
@@ -136,16 +127,24 @@ class KeyframeEditor extends HTMLElement {
 
     }
 
-    removeKeyframPointInDiv({ x }) {
-        let target = this.divBody.querySelectorAll("div.keyframe-point")
+    insertPointInMiddle({ x, y, line }) {
 
-        target.forEach(ele => {
-            if (ele.style.left == `${x}px`) {
-                ele.remove()
+        if (this.points[line].length - 1 == 0) {
+            this.points[line].push([x, y])
+            return 0
+        }
+
+        for (let index = 0; index < this.points[line].length; index++) {
+            if (this.points[line].length - 1 == index) {
+                this.points[line].splice(index + 1, 0, [x, y])
+                return 0
+
+            } else if (this.points[line][index][0] < x && this.points[line][index + 1][0] > x) {
+                this.points[line].splice(index + 1, 0, [x, y])
+                return 0
+
             }
-            console.log(ele.style.left)
-        })
-
+        }
     }
 
     getRemovedDuplicatePoint({x, line}) {

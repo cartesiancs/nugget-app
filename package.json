@@ -2,11 +2,15 @@
     "name": "nugget-app",
     "version": "0.1.2",
     "description": "Video Editor",
-    "main": "main.js",
+    "main": "main/main.js",
     "author": "DeVent",
     "scripts": {
         "start": "electron .",
-        "bundle": "webpack --mode=production",
+        "compile": "tsc -w",
+
+        "bundle": "npm run bundle:src",
+        "bundle:src": "webpack --mode=production",
+
         "build:osx": "electron-builder build --mac --universal",
         "build:win": "electron-builder build --win --x64",
         "build": "npm run build:osx && npm run build:win"
@@ -78,7 +82,8 @@
             "app": "."
         },
         "files": [
-            "!src/*"
+            "!src/*",
+            "!electron/*"
         ],
         "publish": {
             "provider": "github",
@@ -96,6 +101,7 @@
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
         "request": "^2.88.2",
+        "typescript": "^4.9.4",
         "uuid": "^9.0.0"
     },
     "devDependencies": {

@@ -20,5 +20,7 @@ const fileSystem = {
 
 
 
-exports.util = util
-exports.fileSystem = fileSystem
+// exports.util = util
+// exports.fileSystem = fileSystem
+
+export { util, fileSystem }

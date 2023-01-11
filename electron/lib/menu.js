@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron')
+import { app, BrowserWindow, Menu } from 'electron'
 
 const isMac = process.platform === 'darwin'
 
@@ -107,6 +107,8 @@ const template = [
 
 const menu = Menu.buildFromTemplate(template)
 
-exports.menu = menu
+//exports.menu = menu
+
+export { menu }
 
 // Menu.setApplicationMenu(menu)

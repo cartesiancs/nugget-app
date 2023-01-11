@@ -1,31 +1,31 @@
-const { app, BrowserWindow, ipcMain, dialog, net, Menu } = require('electron')
-const { autoUpdater } = require("electron-updater");
-const { renderMain, renderFilter } = require('./lib/render.js')
-const { menu } = require('./lib/menu.js')
+import { app, BrowserWindow, ipcMain, dialog, net, Menu } from 'electron'
+import { autoUpdater } from "electron-updater"
+import { renderMain, renderFilter } from './lib/render.js'
+import { menu } from './lib/menu.js'
 
 
-const config = require('./config.json')
+import config from './config.json'
 
-const path = require('path')
-const isDev = require('electron-is-dev');
-const log = require('electron-log');
-const fs = require('fs');
-const ProgressBar = require('electron-progressbar');
+import path from 'path'
+import isDev from 'electron-is-dev'
+import log from 'electron-log'
+import fs from 'fs'
+import ProgressBar from 'electron-progressbar'
 
 let resourcesPath = ''
 let mainWindow;
 
 autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
+//autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
  
 if (isDev) {
   resourcesPath = '.'
 
 	log.info('Running in development');
-  require('electron-reload')(__dirname, {
-    electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-  });
+  // require('electron-reload')(__dirname, {
+  //   electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
+  // });
 } else {
   resourcesPath = process.resourcesPath
 	log.info('Running in production');
@@ -41,9 +41,7 @@ function createWindow () {
     height: 600,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true,
-      preload: path.join(__dirname, 'preload.js')
+      contextIsolation: false
     },
     backgroundColor: '#252729',
     icon: path.join(__dirname, 'assets/icons/png/512x512.png')
@@ -60,7 +58,7 @@ function createWindow () {
     mainWindow.webContents.openDevTools();
   }
 
-  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS']=true
+  //process.env['ELECTRON_DISABLE_SECURITY_WARNINGS']=true
 
   return mainWindow
 }
@@ -161,8 +159,8 @@ const downloadFfmpeg = (binType) => {
 
   const request = net.request(config.ffmpegBin[process.platform][type].url)
   request.on('response', (response) => {
-    totalBytes = parseInt(response.headers['content-length' ]);
-    response.pipe(fs.createWriteStream(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`))
+    // totalBytes = parseInt(response.headers['content-length']);
+    // response.pipe(fs.createWriteStream(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`))
     
     response.on('data', (chunk) => {
       receivedBytes += chunk.length;

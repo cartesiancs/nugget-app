@@ -1,9 +1,9 @@
-const ffmpeg = require('fluent-ffmpeg');
-const isDev = require('electron-is-dev');
-const log = require('electron-log');
-const fs = require('fs');
+import ffmpeg from 'fluent-ffmpeg'
+import isDev from 'electron-is-dev'
+import log from 'electron-log'
+import fs from 'fs'
 
-const config = require('../config.json')
+import config from '../config.json'
 
 let resourcesPath = ''
 let elementCounts = {
@@ -112,7 +112,7 @@ const renderMain = {
         }, 500);
 
       
-        filterLists = ['tmp']
+        let filterLists = ['tmp']
       
         if (elementCounts.audio != 0) {
 
@@ -391,5 +391,7 @@ const renderFilter = {
     }
 }
 
-exports.renderMain = renderMain
-exports.renderFilter = renderFilter
+// exports.renderMain = renderMain
+// exports.renderFilter = renderFilter
+
+export { renderMain, renderFilter }

@@ -870,7 +870,7 @@ class ElementControlAsset extends HTMLElement {
         }
 
         let keyframeEditor = document.querySelector(`keyframe-editor[element-id="${this.elementId}"]`)
-        let progress = this.elementControl.progress
+        let progress = this.elementControl.progress - (this.timeline[this.elementId].startTime / 5)
 
         const addPoint = {
             "position": () => {

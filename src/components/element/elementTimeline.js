@@ -248,6 +248,15 @@ class ElementTimeline extends HTMLElement {
         elementTimelineBar.style.top = `${scrollTop}px`
     }
 
+    scrollKeyframeEditor() {
+        let isExistKeyframeEditor = !!document.querySelector("keyframe-editor")
+        if (isExistKeyframeEditor == false) {
+            return 0
+        }
+
+        document.querySelector("keyframe-editor").scrollTo(this.scrollLeft, this.scrollTop)
+    }
+
     handleKeydown(event) {
         console.log(event.keyCode)
         if (this.elementControl.existActiveElement == true) {
@@ -274,6 +283,7 @@ class ElementTimeline extends HTMLElement {
 
     handleScroll() {
         this.fixRulerOnTop()
+        this.scrollKeyframeEditor()
     }
 
     connectedCallback() {

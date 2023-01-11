@@ -12,6 +12,12 @@ class KeyframeEditor extends HTMLElement {
         this.svgBody = {}
         this.poly = {}
         this.path = {}
+
+        this.padding = {
+            "start": 0,
+            "end": 0
+
+        }
         
         this.lineCount = 1
         this.points = [
@@ -27,6 +33,8 @@ class KeyframeEditor extends HTMLElement {
 
         this.divBody = this.querySelector("div")
         this.svgBody = this.divBody.querySelector("svg")
+        this.keyframePointBody = this.divBody.querySelector("keyframe-point")
+
         this.lineCount = this.timeline[this.elementId].animation[this.animationType].points.length
 
         this.timeline[this.elementId].animation[this.animationType].isActivate = true
@@ -39,9 +47,13 @@ class KeyframeEditor extends HTMLElement {
             this.loadPoint(line)
         }
 
+        this.addPadding({
+            px: this.timeline[this.elementId].startTime / 5,
+            type: "start"
+        })
 
         this.querySelector("div").classList.add("h-100", "position-relative")
-        this.classList.add("h-100", "w-100", "position-absolute")
+        this.classList.add("h-100", "w-100", "position-absolute", "overflow-scroll")
 
 
         let animationPanel = document.querySelector(`animation-panel[element-id="${this.elementId}"]`)
@@ -54,11 +66,30 @@ class KeyframeEditor extends HTMLElement {
     template() {
         return `
         <div>
-        <svg class="keyframe-svg">
+        <keyframe-padding class="keyframe-padding" style="width: 100px;"></keyframe-padding>
+        <svg class="keyframe-svg" style="left: 100px;">
 
         </svg>
-        </div>
-`
+        <keyframe-point style="left: 100px;" class="position-absolute"></keyframe-point>
+
+        </div>`
+    }
+
+    addPadding({ px, type }) {
+        let keyframePadding = this.divBody.querySelector("keyframe-padding")
+        let keyframePoint = this.keyframePointBody
+        let svgBody = this.svgBody
+
+        const typeFunction = {
+            "start": () => {
+                keyframePadding.style.width = `${px}px`
+                keyframePoint.style.left = `${px}px`
+                svgBody.style.left = `${px}px`
+            }
+        }
+
+        this.padding["start"] = px
+        typeFunction[type]()
     }
 
     highlightLineEditorButton(line) {
@@ -117,7 +148,7 @@ class KeyframeEditor extends HTMLElement {
             y: Math.round(y),
             line: line
         })
-        this.divBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)
+        this.keyframePointBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)
         this.path[line].setAttribute("d", this.drawPath(this.points[line], this.tension));
 
         let loadPointLength = this.points[line][this.points[line].length-1][0] - 1
@@ -246,10 +277,21 @@ class KeyframeEditor extends HTMLElement {
         animationPanel.updateItem()   
     }
 
+    handleScroll(e) {
+        let optionBottom = document.querySelector("#option_bottom")
+        let isShowOptionBottom = optionBottom.classList.contains("show")
+        if (isShowOptionBottom == false) {
+            return 0
+        }
+        let elementTimeline = document.querySelector("element-timeline")
+        elementTimeline.scrollTo(this.scrollLeft, elementTimeline.scrollTop)
+    }
+
     connectedCallback() {
         this.render();
 
-        this.addEventListener("mousedown", this.handleMousedown.bind(this))
+        this.svgBody.addEventListener("mousedown", this.handleMousedown.bind(this))
+        this.addEventListener("scroll", this.handleScroll.bind(this))
 
     }
 }

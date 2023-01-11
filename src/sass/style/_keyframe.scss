@@ -3,7 +3,14 @@
     width: 100%;
     height: 100%;
     background-color: #222326;
-  }
+}
+
+.keyframe-padding {
+    position: absolute;
+    height: 100%;
+    background-color: #141516;
+    z-index: 900;
+}
   
   
 .keyframe-path {

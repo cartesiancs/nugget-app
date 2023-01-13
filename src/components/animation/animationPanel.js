@@ -93,7 +93,7 @@ class AnimationPanelItem extends HTMLElement {
         this.style.height = `1.5rem`
         this.style.display = `inline-block`
 
-        this.classList.add("position-relative")
+        this.classList.add("position-relative", "d-flex", "align-items-center")
         
         this.clearPoints()
         this.insertPointFromTimeline()

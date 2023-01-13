@@ -74,19 +74,19 @@ const template = [
       {
         label: 'About Nugget',
         click: async () => {
-            mainWindow = new BrowserWindow({
-                width: 600,
-                height: 240,
-                webPreferences: {
-                  nodeIntegration: true,
-                  contextIsolation: false,
-                  enableRemoteModule: true
-                },
-                backgroundColor: '#252729'
+            let mainWindow = new BrowserWindow({
+              width: 600,
+              height: 240,
+              webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+                enableRemoteModule: true
+              },
+              backgroundColor: '#252729'
             })
             
             
-            mainWindow.loadFile('app/page/about.html')
+            mainWindow.loadFile('./app/page/about.html')
         }
       }
     ]

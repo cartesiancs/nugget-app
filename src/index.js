@@ -8,7 +8,7 @@ import renderAnimation from './functions/renderAnimation.js';
 
 import { AssetList, AssetFile, AssetFolder } from './components/asset/assetList.js';
 import { AssetBrowser } from './components/asset/assetBrowser.js';
-import { ElementTimeline, ElementTimelineBar, ElementTimelineRuler } from './components/element/elementTimeline.js';
+import { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler } from './components/element/elementTimeline.js';
 import { ElementBar } from './components/element/elementBar.js';
 import { ElementControl, ElementControlAsset } from './components/element/elementControl.js';
 
@@ -28,7 +28,7 @@ customElements.define('asset-browser', AssetBrowser);
 
 
 customElements.define('element-timeline', ElementTimeline);
-customElements.define('element-timeline-bar', ElementTimelineBar);
+customElements.define('element-timeline-cursor', ElementTimelineCursor);
 customElements.define('element-timeline-ruler', ElementTimelineRuler);
 
 customElements.define('element-bar', ElementBar);

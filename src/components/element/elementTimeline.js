@@ -58,7 +58,7 @@ class ElementTimeline extends HTMLElement {
     template() {
         return `
         <element-timeline-ruler></element-timeline-ruler>
-        <element-timeline-bar></element-timeline-bar>
+        <element-timeline-cursor></element-timeline-cursor>
 
         `
     }
@@ -242,10 +242,10 @@ class ElementTimeline extends HTMLElement {
     fixRulerOnTop() {
         const scrollTop = this.scrollTop
         const elementTimelineRuler = document.querySelector("element-timeline-ruler")
-        const elementTimelineBar = document.querySelector("element-timeline-bar")
+        const elementTimelineCursor = document.querySelector("element-timeline-cursor")
 
         elementTimelineRuler.setTopPosition(scrollTop)
-        elementTimelineBar.style.top = `${scrollTop}px`
+        elementTimelineCursor.style.top = `${scrollTop}px`
     }
 
     scrollKeyframeEditor() {
@@ -296,7 +296,7 @@ class ElementTimeline extends HTMLElement {
 }
 
 
-class ElementTimelineBar extends HTMLElement { 
+class ElementTimelineCursor extends HTMLElement { 
     constructor() {
         super();
 
@@ -396,7 +396,7 @@ class ElementTimelineRuler extends HTMLElement {
     }
 
     moveTime(e) {
-        const elementTimelineBar = document.querySelector("element-timeline-bar")
+        const elementTimelineBar = document.querySelector("element-timeline-cursor")
         const elementTimeline = document.querySelector("element-timeline")
         const elementControl = document.querySelector("element-control")
         
@@ -412,7 +412,7 @@ class ElementTimelineRuler extends HTMLElement {
     }
 
     handleMousemove(e) {
-        const elementTimelineBar = document.querySelector("element-timeline-bar")
+        const elementTimelineBar = document.querySelector("element-timeline-cursor")
         const elementTimeline = document.querySelector("element-timeline")
         const elementControl = document.querySelector("element-control")
 
@@ -455,4 +455,4 @@ class ElementTimelineRuler extends HTMLElement {
 }
 
 
-export { ElementTimeline, ElementTimelineBar, ElementTimelineRuler }
+export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler }

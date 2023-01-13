@@ -6,12 +6,12 @@ class ElementControl extends HTMLElement {
 
         this.elementTimeline;
         this.timeline;
-        this.timelineBar;
+        this.timelineCursor;
 
         window.addEventListener('DOMContentLoaded', () => {
             this.elementTimeline = document.querySelector("element-timeline");
             this.timeline = document.querySelector("element-timeline").timeline;
-            this.timelineBar = document.querySelector("element-timeline-bar");
+            this.timelineCursor = document.querySelector("element-timeline-cursor");
         });
 
         this.scroller = undefined
@@ -458,12 +458,11 @@ class ElementControl extends HTMLElement {
 
     changeTimelineRange() {
         const timelineRuler = document.querySelector("element-timeline-ruler")
-        const timelineBar = document.querySelector("element-timeline-bar")
         const timelineRange =  Number(document.querySelector("#timelineRange").value)
         const timeMagnification = timelineRange / 4
         
         timelineRuler.updateRulerSpace(timeMagnification)
-        timelineBar.move(this.progressTime / 5 * timeMagnification)
+        this.timelineCursor.move(this.progressTime / 5 * timeMagnification)
         this.adjustAllElementBarWidth(timeMagnification)
     }
 
@@ -477,11 +476,11 @@ class ElementControl extends HTMLElement {
     }
 
     getTimeFromTimelineBar() {
-        let timelineBarProgress =  Number(document.querySelector("element-timeline-bar").style.left.split("px")[0])
+        let timelineCursorProgress =  Number(this.timelineCursor.style.left.split("px")[0])
         let timelineRange =  Number(document.querySelector("#timelineRange").value)
         let timeMagnification = timelineRange / 4
 
-        let milliseconds = (timelineBarProgress * 5) / timeMagnification
+        let milliseconds = (timelineCursorProgress * 5) / timeMagnification
         return milliseconds
     }
 
@@ -579,11 +578,11 @@ class ElementControl extends HTMLElement {
         this.scroller = setInterval(() => {
             //split_inner_bottom.scrollBy(4, 0);
             let nowTimelineRange = Number(document.querySelector("#timelineRange").value)
-            let nowTimelineProgress = Number(this.timelineBar.style.left.split('px')[0]) + nowTimelineRange
+            let nowTimelineProgress = Number(this.timelineCursor.style.left.split('px')[0]) + nowTimelineRange
             this.progress = nowTimelineProgress
             this.progressTime = this.getTimeFromProgress()
 
-            this.timelineBar.move(nowTimelineProgress)
+            this.timelineCursor.move(nowTimelineProgress)
             this.showTime()
             
 
@@ -658,7 +657,7 @@ class ElementControl extends HTMLElement {
 
         this.showTime()
         this.appearAllElementInTime()
-        this.timelineBar.move(0)
+        this.timelineCursor.move(0)
     }
 
     handleClickPreview() {

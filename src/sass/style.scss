@@ -136,6 +136,18 @@ input[type=range]::-webkit-slider-thumb {
 
 }
 
+.btn-nav {
+    background-color: transparent;
+    outline: none;
+    border: none;
+    padding: .4rem .4rem;
+    color: #eeeef1;
+}
+
+.btn-nav.active {
+    color: #0d6efd;
+}
+
 .bg-darklight {
     background-color: #3a3f44;
 }
@@ -317,7 +329,10 @@ input[type=range]::-webkit-slider-thumb {
 
 
 .overflow-y-scroll {
-    overflow-x: scroll;
+    overflow-y: scroll;
+}
+.overflow-y-hidden {
+    overflow-y: hidden;
 }
 
 .overflow-x-hidden {

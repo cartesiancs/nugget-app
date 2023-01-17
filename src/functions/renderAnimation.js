@@ -135,7 +135,12 @@ const renderAnimation = {
     drawImage: function (elementId, context, point) {
         let elementBody = document.querySelector(`element-control-asset[element-id='${elementId}']`).querySelector("img")
 
-        context.drawImage(elementBody, 0 + point.x, point.y);
+        let x = 0 + point.x
+        let y = point.y
+        let w = renderAnimation.state.elements[elementId].width
+        let h = renderAnimation.state.elements[elementId].height
+
+        context.drawImage(elementBody, x, y, w, h);
     },
     
 

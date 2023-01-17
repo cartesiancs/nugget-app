@@ -42,6 +42,7 @@ class AnimationPanel extends HTMLElement {
     show() {
         this.classList.remove("d-none")
         this.isShow = true
+        this.updateItem()
     }
 
     hide() {
@@ -101,11 +102,14 @@ class AnimationPanelItem extends HTMLElement {
 
     // NOTE: 포인트 타입 지정안되어이ㅛ음
     insertPointFromTimeline() {
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+        
         let points = this.timeline[this.elementId].animation[this.animationType].points[0]
         console.log(points)
 
         for (let index = 0; index < points.length; index++) {
-            let x = points[index][0];
+            let x = points[index][0] * timeMagnification
             this.addPoint(x)
         }
     }

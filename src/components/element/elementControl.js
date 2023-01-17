@@ -311,7 +311,7 @@ class ElementControl extends HTMLElement {
     }
 
     showAnimation(elementId, animationType) {
-        let index = Math.round(document.querySelector("element-control").progress / 4)
+        let index = Math.round(document.querySelector("element-control").progressTime / 20)
         let indexToMs = index * 20
         let startTime = Number(this.timeline[elementId].startTime)
         let indexPoint = Math.round((indexToMs - startTime) / 20)
@@ -464,6 +464,32 @@ class ElementControl extends HTMLElement {
         timelineRuler.updateRulerSpace(timeMagnification)
         this.timelineCursor.move(this.progressTime / 5 * timeMagnification)
         this.adjustAllElementBarWidth(timeMagnification)
+        this.updateAllAnimationPanel()
+
+    }
+
+    updateAllAnimationPanel() {
+        for (const elementId in this.timeline) {
+            if (Object.hasOwnProperty.call(this.timeline, elementId)) {
+                const element = this.timeline[elementId];
+                
+                if (element.filetype != 'image') {
+                    continue
+                }
+    
+                if (element.animation.position.isActivate == false) {
+                    continue
+                }
+
+                let targetAnimationPanel = document.querySelector(`animation-panel[element-id="${elementId}"]`)
+                let targetElementBar = document.querySelector(`element-bar[element-id="${elementId}"]`)
+
+                let originalLeft = targetElementBar.millisecondsToPx(this.timeline[elementId].startTime)
+
+                targetAnimationPanel.updateItem()
+                targetElementBar.animationPanelMove(originalLeft)
+            }
+        }
     }
 
     getTimeFromProgress() {
@@ -868,26 +894,36 @@ class ElementControlAsset extends HTMLElement {
             return 0
         }
 
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+
         let keyframeEditor = document.querySelector(`keyframe-editor[element-id="${this.elementId}"]`)
         let progress = this.elementControl.progress - (this.timeline[this.elementId].startTime / 5)
 
         const addPoint = {
             "position": () => {
                 keyframeEditor.addPoint({
-                    x: progress, 
+                    x: progress / timeMagnification, 
                     y: this.timeline[this.elementId].location.x,
                     line: 0
                 })
 
                 keyframeEditor.addPoint({
-                    x: progress, 
+                    x: progress / timeMagnification, 
                     y: this.timeline[this.elementId].location.y,
                     line: 1
                 })
+
+                keyframeEditor.drawLine(0)
+                keyframeEditor.drawLine(1)
+
             }
         }
 
         addPoint[animationType]()
+
+        let animationPanel = document.querySelector(`animation-panel[element-id="${this.elementId}"]`)
+        animationPanel.updateItem() 
     }
 
     getGcd(a,b) {

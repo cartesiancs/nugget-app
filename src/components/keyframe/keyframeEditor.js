@@ -12,6 +12,7 @@ class KeyframeEditor extends HTMLElement {
         this.svgBody = {}
         this.poly = {}
         this.path = {}
+        this.hiddenPath = {}
 
         this.padding = {
             "start": 0,
@@ -43,12 +44,15 @@ class KeyframeEditor extends HTMLElement {
 
         for (let line = 0; line < this.lineCount; line++) {
             this.addLineEditor(line)
-            this.drawLine(line)
+            this.drawLine(line, true)
             this.loadPoint(line)
         }
 
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+
         this.addPadding({
-            px: this.timeline[this.elementId].startTime / 5,
+            px: this.timeline[this.elementId].startTime / 5 * timeMagnification,
             type: "start"
         })
 
@@ -138,6 +142,8 @@ class KeyframeEditor extends HTMLElement {
                     line: line
                 })
             }
+
+            this.drawLine(line, true)
         }
     }
 
@@ -148,15 +154,33 @@ class KeyframeEditor extends HTMLElement {
             y: Math.round(y),
             line: line
         })
-        this.keyframePointBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${y-4}px; left: ${x-4}px;"></div>`)
-        this.path[line].setAttribute("d", this.drawPath(this.points[line], this.tension));
+
+        console.log(this.points)
+
+        this.drawPoint({
+            x: x, 
+            y: y,
+            line: line
+        })
 
         let loadPointLength = this.points[line][this.points[line].length-1][0] - 1
-        let allPoints = this.getInterpolatedPoints(loadPointLength, line)
+        //let allPoints = this.getInterpolatedPoints(loadPointLength, line)
 
         this.timeline[this.elementId].animation[this.animationType].isActivate = true
         this.timeline[this.elementId].animation[this.animationType].points[line] = this.points[line]
-        this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
+        //this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
+
+    }
+
+    drawPoint({ x, y, line }) {
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+
+        let insertY = (y-4)
+        let insertX = (x-4) * timeMagnification
+
+
+        this.keyframePointBody.insertAdjacentHTML("beforeend", `<div class="position-absolute keyframe-point" style="top: ${insertY}px; left: ${insertX}px;"></div>`)
 
     }
 
@@ -191,16 +215,36 @@ class KeyframeEditor extends HTMLElement {
     }
       
 
-    drawLine(line) {
+    drawLine(line, isinit = true) {
+
         this.querySelector("svg").insertAdjacentHTML("beforeend", `
         <polyline id="keyframePolyline${line}" />
-        <path id="keyframePath${line}" class="keyframe-path" />`)
+        <path id="keyframePath${line}" class="keyframe-path" />
+        <path id="keyframeHiddenPath${line}" class="d-none" />`)
 
-        //this.poly[line] = this.svgBody[line].querySelector("polyline")
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+
+        let points = []
+
+        for (let index = 0; index < this.points[line].length; index++) {
+            points.push([this.points[line][index][0] * timeMagnification, this.points[line][index][1]])
+        }
+
+        console.log(">>>>>", this.points[line], points)
+
         this.path[line] = this.svgBody.querySelector(`path[id='keyframePath${line}']`)
+        this.path[line].setAttribute("d", this.drawPath(points, this.tension));
 
-        //this.poly.setAttribute("points", this.points[line]);
-        this.path[line].setAttribute("d", this.drawPath(this.points[line], this.tension));
+        this.hiddenPath[line] = this.svgBody.querySelector(`path[id='keyframeHiddenPath${line}']`)
+        this.hiddenPath[line].setAttribute("d", this.drawPath(this.points[line], this.tension))
+
+        let loadPointLength = this.points[line][this.points[line].length-1][0] - 1
+        let allPoints = this.getInterpolatedPoints(loadPointLength, line, points)
+        this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
+
+        console.log(this.drawPath(this.points[line], this.tension), this.drawPath(points, this.tension))
+
     }
 
 
@@ -234,9 +278,9 @@ class KeyframeEditor extends HTMLElement {
     
     getPointAt(x, line) {
         let from = 0;
-        let to = this.path[line].getTotalLength();
+        let to = this.hiddenPath[line].getTotalLength();
         let current = (from + to) / 2;
-        let point = this.path[line].getPointAtLength(current);
+        let point = this.hiddenPath[line].getPointAtLength(current);
         
         while (Math.abs(point.x - x) > 0.5) {
             if (point.x < x)
@@ -244,7 +288,7 @@ class KeyframeEditor extends HTMLElement {
             else
                 to = current;
             current = (from + to) / 2;
-            point = this.path[line].getPointAtLength(current);
+            point = this.hiddenPath[line].getPointAtLength(current);
         }
     
         return {
@@ -267,11 +311,18 @@ class KeyframeEditor extends HTMLElement {
     }
 
     handleMousedown(e) {
+        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timeMagnification = timelineRange / 4
+
+        let insertX = e.offsetX / timeMagnification
+        let insertY = e.offsetY
         this.addPoint({
-            x: e.offsetX,
-            y: e.offsetY,
+            x: insertX,
+            y: insertY,
             line: this.selectLine
         })
+
+        this.drawLine(this.selectLine, true)
 
         let animationPanel = document.querySelector(`animation-panel[element-id="${this.elementId}"]`)
         animationPanel.updateItem()   

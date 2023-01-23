@@ -12,7 +12,11 @@ import ffmpeg from 'fluent-ffmpeg'
 import path from 'path'
 import isDev from 'electron-is-dev'
 import log from 'electron-log'
+
 import fs from 'fs'
+import * as fsp from 'fs/promises';
+import fse from 'fs-extra'
+
 import ProgressBar from 'electron-progressbar'
 
 let resourcesPath = ''
@@ -220,6 +224,34 @@ ipcMain.on('GET_METADATA', async (evt, bloburl, mediapath) => {
   })
 })
 
+ipcMain.handle('ffmpeg:combineFrame', async (event, outputDir, elementId) => {
+  let isFinish = false
+  let command = ffmpeg()
+  let outputVideoPath = `${outputDir}/${elementId}.webm`
+
+  command.input(`${outputDir}/frame-${elementId}-%04d.png`)
+  command.inputFPS(50);
+  command.videoCodec('libvpx-vp9')
+  command.inputOptions('-pix_fmt yuva420p');
+  command.format('webm')
+  command.output(outputVideoPath)
+  command.on('end', function() {
+      log.info('combineFrame Finish processing');
+      mainWindow.webContents.send('FINISH_COMBINE_FRAME', elementId)
+      isFinish = true
+      return isFinish
+  })
+
+  command.on('error', function(err, stdout, stderr) {
+    log.info('combineFrame Render Error', err.message);
+    return isFinish
+
+  });
+
+  command.run();
+})
+
+
 ipcMain.on('CLIENT_READY', async (evt) => {
   evt.sender.send('EXIST_FFMPEG', resourcesPath, config)
 })
@@ -359,6 +391,45 @@ ipcMain.handle('dialog:saveProject', async () => {
     return filePath.toString()
   }
 })
+
+
+
+
+ipcMain.handle('filesystem:test', async () => {
+  const data = await fsp.readFile("/Users/hhj/Desktop/Screenshot 2023-01-20 at 10.22.13 AM.png", "utf-8");
+  return [data];
+})
+
+
+ipcMain.handle('filesystem:mkdir', async (event, path, options) => {
+  let mkdir = await fsp.mkdir(path, options)
+
+  let status = mkdir == null ? false : true
+  log.info(mkdir, status)
+  return status
+})
+
+
+ipcMain.handle('filesystem:emptyDirSync', async (event, path) => {
+  let status = true
+  fse.emptyDirSync(path);
+  return status
+})
+
+
+ipcMain.handle('filesystem:writeFile', async (event, filename, data, options) => {
+  fs.writeFile(filename, data, options, (error) => {
+    if (error) {
+      log.error(error)
+      return false
+    }
+
+    return true
+
+  });
+})
+
+
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()

@@ -7,10 +7,8 @@
     "scripts": {
         "start": "electron .",
         "compile": "tsc -w",
-
         "bundle": "npm run bundle:src",
         "bundle:src": "webpack --mode=production",
-
         "build:osx": "electron-builder build --mac --universal",
         "build:win": "electron-builder build --win --x64",
         "build": "npm run build:osx && npm run build:win"

@@ -183,7 +183,7 @@ const ipc = {
                 return 0
             }
 
-            let timeline = lodash.cloneDeep(document.querySelector("element-timeline").timeline);
+            let timeline = _.cloneDeep(document.querySelector("element-timeline").timeline);
 
             let options = {
                 videoDuration: projectDuration,

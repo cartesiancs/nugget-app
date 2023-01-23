@@ -4,10 +4,14 @@
 const directory = {
     select: function() {
         const projectFolder = document.querySelector("#projectFolder")
-        ipcRenderer.invoke('dialog:openDirectory').then((result) => {
+        window.electronAPI.req.dialog.openDirectory().then((result) => {
             projectFolder.value = result || '/'
-            ipc.requestAllDir(result || '/')
+            window.electronAPI.req.filesystem.getAllDirectory(String(projectFolder.value))
+            //ipc.requestAllDir(result || '/')
         })
+
+        
+
         // const upload = document.createElement("input")
         // const projectFolder = document.querySelector("#projectFolder")
         // upload.setAttribute("type", 'file')

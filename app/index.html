@@ -71,6 +71,8 @@
                                 <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
                                 <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
                                 <button class="btn btn-sm bg-primary text-light mt-1" onclick="ipcRenderer.send('DOWNLOAD_FFMPEG')">ffmpeg 다운로드</button>
+                                <button class="btn btn-sm bg-primary text-light mt-1" onclick="window.electronAPI.req.progressBar.test()">PROGRESSBARTEST </button>
+
                                 <br>
                               </div>
 
@@ -278,6 +280,8 @@
         <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/Team-DeVent/devent-designsystem/dist/main.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+
         <script src="dist/index.js"></script>
         <script src="renderer.js"></script>
 
@@ -358,7 +362,7 @@
         
         window.addEventListener('load', (event) => {
             //ipc.requestAllDir('/Users/hhj')
-            ipcRenderer.send('CLIENT_READY')
+            //ipcRenderer.send('CLIENT_READY')
         });
                 
 

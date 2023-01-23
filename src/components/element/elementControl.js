@@ -204,9 +204,6 @@ class ElementControl extends HTMLElement {
         const elementId = this.generateUUID()
         const video = document.createElement('video')
 
-
-
-
         video.src = blob
         video.preload = 'metadata'
 
@@ -216,9 +213,14 @@ class ElementControl extends HTMLElement {
             let height = video.videoHeight
             let duration = video.duration * 1000
 
-            ffmpeg.ffprobe(path, (err, metadata) => {
+            window.electronAPI.req.ffmpeg.getMetadata(blob, path)
+            
+            window.electronAPI.res.ffmpeg.getMetadata( (evt, blobdata, metadata) => {
+                if (blobdata != blob) {
+                    return 0
+                }
                 let isExist = false
-                console.log(metadata)
+                console.log("MATA", metadata)
                 metadata.streams.forEach(element => {
                     if (element.codec_type == "audio") {
                         isExist = true
@@ -245,6 +247,11 @@ class ElementControl extends HTMLElement {
                 this.showVideo(elementId)
                 this.elementTimeline.addElementBar(elementId)
             })
+
+
+            // ffmpeg.ffprobe(path, (err, metadata) => {
+
+            // })
     
 
 

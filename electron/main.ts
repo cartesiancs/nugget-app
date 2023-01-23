@@ -6,6 +6,9 @@ import { menu } from './lib/menu.js'
 
 import config from './config.json'
 
+import ffmpeg from 'fluent-ffmpeg'
+
+
 import path from 'path'
 import isDev from 'electron-is-dev'
 import log from 'electron-log'
@@ -31,7 +34,11 @@ if (isDev) {
 	log.info('Running in production');
 }
 
+const ffmpegPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`
+const ffprobePath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`
 
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 
 
@@ -40,8 +47,9 @@ function createWindow () {
     width: 1000,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     },
     backgroundColor: '#252729',
     icon: path.join(__dirname, 'assets/icons/png/512x512.png')
@@ -200,6 +208,18 @@ ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {
 
 });
 
+
+
+
+ipcMain.on('GET_METADATA', async (evt, bloburl, mediapath) => {
+  log.info(mediapath)
+  ffmpeg.ffprobe(mediapath, (err, metadata) => {
+    log.info(metadata)
+
+    mainWindow.webContents.send('GET_METADATA', bloburl, metadata)
+  })
+})
+
 ipcMain.on('CLIENT_READY', async (evt) => {
   evt.sender.send('EXIST_FFMPEG', resourcesPath, config)
 })
@@ -228,9 +248,44 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
         title: file
       }
     });
-    evt.sender.send('RES_ALL_DIR', dir, result)
+
+    log.info("RES_ALL_DIR", mainWindow.webContents)
+    mainWindow.webContents.send('RES_ALL_DIR', dir, result)
   });
 })
+
+
+ipcMain.on('PROGRESSBARTEST', (evt, dir) => {
+  let percentage = 0
+  let progressBar = new ProgressBar({
+    indeterminate: false,
+    text: '프로그래스바 테스트',
+    detail: '테스트 중...'
+  });
+  
+  setInterval(() => {
+
+    if(!progressBar.isCompleted()){
+      percentage += 0.45
+      progressBar.value = percentage;
+    }
+  }, 100)
+
+  progressBar
+  .on('completed', function() {
+    log.info("프로그래스바 테스트 완료.") 
+    progressBar.detail =  ' 설치 완료';
+  })
+  .on('aborted', function(value) {
+    log.info("프로그래스바 테스트 취소.") 
+    console.info(`취소... ${value}`);
+  })
+  .on('progress', function(value) {
+    progressBar.detail = `100% 중 ${value}% 완료...`;
+  });
+})
+
+
 
 ipcMain.on('RENDER', (evt, elements, options) => {
 

@@ -429,6 +429,13 @@ ipcMain.handle('filesystem:writeFile', async (event, filename, data, options) =>
   });
 })
 
+ipcMain.handle('filesystem:readFile', async (event, filename) => {
+  let data =  await fsp.readFile(filename)
+  return data
+
+})
+
+
 
 
 app.on('window-all-closed', function () {

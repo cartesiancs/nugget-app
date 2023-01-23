@@ -9,14 +9,17 @@ const request = {
         exportVideo: () => ipcRenderer.invoke('dialog:exportVideo')
         
     },
+    project: {
+        save: () => ipcRenderer.invoke('dialog:saveProject')        
+    },
     filesystem: {
         getAllDirectory: (dir) => ipcRenderer.send('REQ_ALL_DIR', dir),
         openDirectory: (path) => shell.openPath(path),
         test: () => ipcRenderer.invoke('filesystem:test'),
         mkdir: (path, options) => ipcRenderer.invoke('filesystem:mkdir', path, options),
         emptyDirSync: (path) => ipcRenderer.invoke('filesystem:emptyDirSync', path),
-        writeFile: (filename, data, options) => ipcRenderer.invoke('filesystem:writeFile', filename, data, options)
-
+        writeFile: (filename, data, options) => ipcRenderer.invoke('filesystem:writeFile', filename, data, options),
+        readFile: (filename) => ipcRenderer.invoke('filesystem:readFile', filename)
         
     },
     progressBar: {

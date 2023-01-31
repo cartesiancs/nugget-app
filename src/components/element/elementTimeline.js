@@ -1,3 +1,6 @@
+import { v4 as uuidv4 } from 'uuid';
+
+
 class ElementTimeline extends HTMLElement { 
     constructor() {
         super();
@@ -15,6 +18,7 @@ class ElementTimeline extends HTMLElement {
 
         this.timelineHashTable = {}
         this.appendCheckpointInHashTable()
+        this.copyedTimelineData = {};
     }
 
     generateHash(text) {
@@ -79,25 +83,30 @@ class ElementTimeline extends HTMLElement {
         for (const elementId in timeline) {
             if (Object.hasOwnProperty.call(timeline, elementId)) {
                 const element = timeline[elementId];
-                if (element.filetype == 'image') {
-                    let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
-                    this.timeline[elementId].blob = String(blobUrl)
-                    this.elementControl.showImage(elementId)
-                } else if (element.filetype == 'video') {
-                    let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
-                    this.timeline[elementId].blob = String(blobUrl)
-                    this.elementControl.showVideo(elementId)
-                } else if (element.filetype == 'text') {
-                    this.elementControl.showText(elementId)
-                } else if (element.filetype == 'audio') {
-                    let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
-                    this.timeline[elementId].blob = String(blobUrl)
-                    this.elementControl.showAudio(elementId)
-                }
-                this.addElementBar(elementId)
+                this.patchElementInTimeline({ elementId: elementId, element: element })
+
                 
             }
         }
+    }
+
+    async patchElementInTimeline({ elementId, element }) {
+        if (element.filetype == 'image') {
+            let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
+            this.timeline[elementId].blob = String(blobUrl)
+            this.elementControl.showImage(elementId)
+        } else if (element.filetype == 'video') {
+            let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
+            this.timeline[elementId].blob = String(blobUrl)
+            this.elementControl.showVideo(elementId)
+        } else if (element.filetype == 'text') {
+            this.elementControl.showText(elementId)
+        } else if (element.filetype == 'audio') {
+            let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)
+            this.timeline[elementId].blob = String(blobUrl)
+            this.elementControl.showAudio(elementId)
+        }
+        this.addElementBar(elementId)
     }
 
     resetTimelineData() {
@@ -212,6 +221,21 @@ class ElementTimeline extends HTMLElement {
         this.elementControl.selectElementsId = []
     }
 
+    copySeletedElement() {
+        let selected = {}
+        
+        this.elementControl.selectElementsId.forEach(elementId => {
+            let changedUUID = uuidv4()
+            selected[changedUUID] = this.timeline[elementId]
+        });
+
+        this.copyedTimelineData = selected
+    }
+
+    pasteElement({ elementId, element }) {
+        this.timeline[elementId] = _.cloneDeep(element);
+    }
+
 
     showAnimationPanel(elementId) {
         this.querySelector(`animation-panel[element-id='${elementId}']`).show()
@@ -273,6 +297,34 @@ class ElementTimeline extends HTMLElement {
             event.preventDefault();
             this.removeSeletedElements()
         
+        }
+
+        if(event.ctrlKey && event.keyCode == 86 ){  //CTL v
+            console.log("CV", this, this.copyedTimelineData)
+
+
+            for (const elementId in this.copyedTimelineData) {
+                if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
+                    this.pasteElement({
+                        elementId: elementId,
+                        element: this.copyedTimelineData[elementId]
+                    })
+
+                    this.patchElementInTimeline({
+                        elementId: elementId,
+                        element: this.copyedTimelineData[elementId]
+                    })
+                }
+            }
+
+    
+        }
+        
+        if(event.ctrlKey && event.keyCode == 67 ){  //CTL c
+    
+            console.log("CC")
+            this.copySeletedElement()
+
         }
     }
 

@@ -326,6 +326,14 @@ class ElementTimeline extends HTMLElement {
             this.copySeletedElement()
 
         }
+
+        if(event.ctrlKey && event.keyCode == 88 ){  //CTL x
+    
+            this.copySeletedElement()
+            this.removeSeletedElements()
+
+
+        }
     }
 
     handleMousedown() {

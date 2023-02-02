@@ -717,6 +717,7 @@ class ElementControlAsset extends HTMLElement {
         this.isDrag = false
         this.isResize = false
 
+
         this.initialPosition = {x: 0, y: 0, w: 0, h: 0}
         this.resizeDirection = 'n'
         this.resizeEventHandler
@@ -864,24 +865,32 @@ class ElementControlAsset extends HTMLElement {
 
         if (elementPositions.top < 6) {
             dragAlignmentGuide.showGuide({ position: 'top' })
+            this.style.top = `0px`
+
         } else {
             dragAlignmentGuide.hideGuide({ position: 'top' })
         }
 
         if (elementPositions.top + elementPositions.height > canvas.height - 6) {
             dragAlignmentGuide.showGuide({ position: 'bottom' })
+            this.style.top = `${canvas.height - elementPositions.height}px`
+
         } else {
             dragAlignmentGuide.hideGuide({ position: 'bottom' })
         }
 
         if (elementPositions.left < 6) {
             dragAlignmentGuide.showGuide({ position: 'left' })
+            this.style.left = `0px`
+
         } else {
             dragAlignmentGuide.hideGuide({ position: 'left' })
         }
 
         if (elementPositions.left + elementPositions.width > canvas.width - 6) {
             dragAlignmentGuide.showGuide({ position: 'right' })
+            this.style.left = `${canvas.width - elementPositions.width}px`
+
         } else {
             dragAlignmentGuide.hideGuide({ position: 'right' })
         }
@@ -890,6 +899,10 @@ class ElementControlAsset extends HTMLElement {
     hideDragAlignmentGuide() {
         let dragAlignmentGuide = document.querySelector("drag-alignment-guide")
         dragAlignmentGuide.hideGuide({ position: 'top' })
+        dragAlignmentGuide.hideGuide({ position: 'bottom' })
+        dragAlignmentGuide.hideGuide({ position: 'left' })
+        dragAlignmentGuide.hideGuide({ position: 'right' })
+
     }
 
     drag(e) {

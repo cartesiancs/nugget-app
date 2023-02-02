@@ -1,3 +1,6 @@
+$timeline-cursor-width: 1.6px;
+$timeline-cursor-color: #cbd1d79d;
+
 
 .timeline-ruler {
     position: relative;
@@ -13,25 +16,24 @@
     z-index: 300;
 }
 
-.timeline-bar {
+element-timeline-cursor {
   position: absolute;
   z-index: 90;
-  width: 2px;
+  width: $timeline-cursor-width;
   height: 100%;
-  background-color: #cbd1d7;
+  background-color: $timeline-cursor-color;
   z-index: 6000;
 }
 
 element-timeline-cursor::after {
   position: absolute;
-
   display: block;
   clip-path: polygon(50% 100%, 0 0, 100% 0);
-  background: #cbd1d7;
+  background: $timeline-cursor-color;
   content: " ";
   left: -200%;
   top: 0;
-  width: 10px;
+  width: calc($timeline-cursor-width * 5);
   height: 17px;
 }
 

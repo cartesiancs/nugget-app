@@ -115,3 +115,65 @@
 .element-drag.element-outline > .resize-se  {
     background-color: #ffffffbc;
 }
+
+
+$alignment-guide-thickness: 1px;
+$alignment-guide-color: #ffffff;
+
+
+.alignment-guide {
+    position: absolute;
+}
+
+.alignment-guide-top {
+    top: 0px;
+    width: 100%;
+    height: $alignment-guide-thickness;
+    background-color: $alignment-guide-color;
+
+}
+
+.alignment-guide-bottom {
+    top: 100%;
+    width: 100%;
+    height: $alignment-guide-thickness;
+    background-color: $alignment-guide-color;
+
+}
+
+.alignment-guide-left {
+    top: 0px;
+    left: 0px;
+    width: $alignment-guide-thickness;;
+    height: 100%;
+    background-color: $alignment-guide-color;
+
+}
+
+.alignment-guide-right {
+    top: 0px;
+    left: 100%;
+    width: $alignment-guide-thickness;;
+    height: 100%;
+    background-color: $alignment-guide-color;
+
+}
+
+.alignment-guide-horizontal {
+    top: 50%;
+    left: -50%;
+    transform: translate(50%,-50%);
+    width: 100%;
+    height: $alignment-guide-thickness;
+    background-color: $alignment-guide-color;
+}
+
+.alignment-guide-vertical {
+    top: 50%;
+    left: 50%;
+    transform: translate(50%,-50%);
+    width: $alignment-guide-thickness;
+    height: 100%;
+    background-color: $alignment-guide-color;
+}
+

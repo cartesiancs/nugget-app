@@ -740,7 +740,7 @@ class ElementControlAsset extends HTMLElement {
         let resizeElement = this.convertAbsoluteToRelativeSize({
             x: this.timeline[this.elementId].location.x,
             y: this.timeline[this.elementId].location.y,
-            w: this.timeline[this.elementId].width,
+            w: !this.timeline[this.elementId].width ? 500 : this.timeline[this.elementId].width,
             h: this.timeline[this.elementId].height
         })
 
@@ -846,6 +846,51 @@ class ElementControlAsset extends HTMLElement {
         return Number(px.split('px')[0])
     }
 
+    showDragAlignmentGuide() {
+        let dragAlignmentGuide = document.querySelector("drag-alignment-guide")
+        let videoCanvas = document.querySelector("#video")
+
+        let canvas = {
+            width: Number(videoCanvas.style.width.split("px")[0]),
+            height: Number(videoCanvas.style.height.split("px")[0])
+        }
+
+        let elementPositions = {
+            top: Number(this.style.top.split("px")[0]),
+            left: Number(this.style.left.split("px")[0]),
+            width: Number(this.style.width.split("px")[0]),
+            height: Number(this.style.height.split("px")[0])
+        }
+
+        if (elementPositions.top < 6) {
+            dragAlignmentGuide.showGuide({ position: 'top' })
+        } else {
+            dragAlignmentGuide.hideGuide({ position: 'top' })
+        }
+
+        if (elementPositions.top + elementPositions.height > canvas.height - 6) {
+            dragAlignmentGuide.showGuide({ position: 'bottom' })
+        } else {
+            dragAlignmentGuide.hideGuide({ position: 'bottom' })
+        }
+
+        if (elementPositions.left < 6) {
+            dragAlignmentGuide.showGuide({ position: 'left' })
+        } else {
+            dragAlignmentGuide.hideGuide({ position: 'left' })
+        }
+
+        if (elementPositions.left + elementPositions.width > canvas.width - 6) {
+            dragAlignmentGuide.showGuide({ position: 'right' })
+        } else {
+            dragAlignmentGuide.hideGuide({ position: 'right' })
+        }
+    }
+
+    hideDragAlignmentGuide() {
+        let dragAlignmentGuide = document.querySelector("drag-alignment-guide")
+        dragAlignmentGuide.hideGuide({ position: 'top' })
+    }
 
     drag(e) {
         if (this.isDrag) {
@@ -873,6 +918,8 @@ class ElementControlAsset extends HTMLElement {
 
 
             }
+
+            this.showDragAlignmentGuide()
         }
     }
 
@@ -894,6 +941,8 @@ class ElementControlAsset extends HTMLElement {
             })
         }
         this.isDrag = false
+        this.hideDragAlignmentGuide()
+
     }
 
     addAnimationPoint({ animationType }) {
@@ -1143,4 +1192,36 @@ class ElementControlAsset extends HTMLElement {
 
 }
 
-export { ElementControl, ElementControlAsset }
+class DragAlignmentGuide extends HTMLElement {
+    constructor() {
+        super()
+
+        this.videoCanvas = document.querySelector("#video")
+        this.allPositions = ['top', 'bottom', 'left', 'right', 'horizontal', 'vertical']
+    }
+
+    addGuide() {
+        for (let index = 0; index < this.allPositions.length; index++) {
+            const position = this.allPositions[index];
+            this.videoCanvas.insertAdjacentHTML("beforeend", `<alignment-guide position="${position}" class="alignment-guide alignment-guide-${position}"></alignment-guide>`)
+            this.hideGuide({ position: position })
+
+        }
+    }
+
+    hideGuide({ position }) {
+        let target = this.videoCanvas.querySelector(`alignment-guide[position='${position}']`)
+        target.classList.add("d-none")
+    }
+
+    showGuide({ position }) {
+        let target = this.videoCanvas.querySelector(`alignment-guide[position='${position}']`)
+        target.classList.remove("d-none")
+    }
+
+    connectedCallback() {
+        this.addGuide()
+    }
+}
+
+export { ElementControl, ElementControlAsset, DragAlignmentGuide }

@@ -13,7 +13,7 @@ import { AssetDropUploader } from './components/asset/assetUploader.js';
 
 import { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler } from './components/element/elementTimeline.js';
 import { ElementBar } from './components/element/elementBar.js';
-import { ElementControl, ElementControlAsset } from './components/element/elementControl.js';
+import { ElementControl, ElementControlAsset, DragAlignmentGuide } from './components/element/elementControl.js';
 
 import { KeyframeEditor } from './components/keyframe/keyframeEditor.js';
 import { MenuDropdownBody, MenuDropdownItem } from './components/menu/menuDropdown.js';
@@ -40,6 +40,8 @@ customElements.define('element-timeline-ruler', ElementTimelineRuler);
 customElements.define('element-bar', ElementBar);
 customElements.define('element-control', ElementControl);
 customElements.define('element-control-asset', ElementControlAsset);
+customElements.define('drag-alignment-guide', DragAlignmentGuide);
+
 
 
 customElements.define('keyframe-editor', KeyframeEditor);

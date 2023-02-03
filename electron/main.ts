@@ -41,8 +41,7 @@ if (isDev) {
 const ffmpegPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`
 const ffprobePath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
+
 
 
 
@@ -137,22 +136,32 @@ let dir = app.getPath('userData')
 const checkFfmpeg = () => {
   fs.stat(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`, function(error, stats) {
     if (error) {
-        console.log("ERR", `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`);
-        downloadFfmpeg('ffmpeg')
-  
-        return 0
+      downloadFfmpeg('ffmpeg')
+      return 0
     }
-    console.log("파일 크기: ", stats.size);
+
+    fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`, 0o755); 
+    ffmpeg.setFfmpegPath(ffmpegPath);
+
+    log.info("FFMPEG downloaded successfully")
+    log.info("FFMPEG binary size: " + stats.size)
+
+    checkffprobe()
   });
-  
+}
+
+const checkffprobe = () => {
   fs.stat(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`, function(error, stats) {
     if (error) {
-        console.log("ERR", `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`);
-        downloadFfmpeg('ffprobe')
-  
-        return 0
+      downloadFfmpeg('ffprobe')
+      return 0
     }
-    console.log("파일 크기: ", stats.size);
+
+    fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`, 0o755); 
+    ffmpeg.setFfprobePath(ffprobePath);
+
+    log.info("FFPROBE downloaded successfully.")
+    log.info("FFPROBE binary size: " + stats.size)
   });
 }
 
@@ -170,9 +179,9 @@ const downloadFfmpeg = (binType) => {
   });
 
   const request = net.request(config.ffmpegBin[process.platform][type].url)
-  request.on('response', (response) => {
-    // totalBytes = parseInt(response.headers['content-length']);
-    // response.pipe(fs.createWriteStream(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`))
+  request.on('response', (response: any) => {
+    totalBytes = parseInt(response.headers['content-length']);
+    response.pipe(fs.createWriteStream(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`))
     
     response.on('data', (chunk) => {
       receivedBytes += chunk.length;
@@ -184,7 +193,7 @@ const downloadFfmpeg = (binType) => {
       log.info("ffmpeg download...", percentage) 
     })
     response.on('end', () => {
-      console.log('No more data in response.')
+      log.info(binType + " No more data in response.")
       fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`, 0o755); 
     })
   })
@@ -192,12 +201,15 @@ const downloadFfmpeg = (binType) => {
   
   progressBar
     .on('completed', function() {
-      log.info("ffmpeg 설치 완료.") 
+
+      if (binType == 'ffmpeg') {
+        checkffprobe()
+      }
+
       progressBar.detail = type + ' 설치 완료';
     })
     .on('aborted', function(value) {
-      log.info("ffmpeg 설치 취소.") 
-      console.info(`취소... ${value}`);
+      log.info("Cancel ffmpeg installation.") 
     })
     .on('progress', function(value) {
       progressBar.detail = `100% 중 ${value}% 완료...`;
@@ -216,10 +228,8 @@ ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {
 
 
 ipcMain.on('GET_METADATA', async (evt, bloburl, mediapath) => {
-  log.info(mediapath)
+  log.info("Request media metadata.", mediapath)
   ffmpeg.ffprobe(mediapath, (err, metadata) => {
-    log.info(metadata)
-
     mainWindow.webContents.send('GET_METADATA', bloburl, metadata)
   })
 })
@@ -281,7 +291,6 @@ ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
       }
     });
 
-    log.info("RES_ALL_DIR", mainWindow.webContents)
     mainWindow.webContents.send('RES_ALL_DIR', dir, result)
   });
 })
@@ -305,12 +314,11 @@ ipcMain.on('PROGRESSBARTEST', (evt, dir) => {
 
   progressBar
   .on('completed', function() {
-    log.info("프로그래스바 테스트 완료.") 
+    log.info("Completed the progress bar test.") 
     progressBar.detail =  ' 설치 완료';
   })
   .on('aborted', function(value) {
-    log.info("프로그래스바 테스트 취소.") 
-    console.info(`취소... ${value}`);
+    log.info("Cancelled the progress bar test.") 
   })
   .on('progress', function(value) {
     progressBar.detail = `100% 중 ${value}% 완료...`;
@@ -344,7 +352,7 @@ app.whenReady().then(() => {
 })
 
 ipcMain.on('FORCE_CLOSE', async (evt) => {
-  log.info("Force close")
+  log.info("Forced shutdown of the app.")
   app.exit(0)
   app.quit();
 })
@@ -405,7 +413,6 @@ ipcMain.handle('filesystem:mkdir', async (event, path, options) => {
   let mkdir = await fsp.mkdir(path, options)
 
   let status = mkdir == null ? false : true
-  log.info(mkdir, status)
   return status
 })
 

@@ -10,7 +10,7 @@
         "bundle": "npm run bundle:src",
         "bundle:src": "webpack --mode=production",
         "build:osx": "electron-builder build --mac --universal",
-        "build:win": "electron-builder build --win --x64",
+        "build:win": "cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
         "build": "npm run build:osx && npm run build:win"
     },
     "repository": {
@@ -65,7 +65,6 @@
                 "repo": "nugget-release"
             },
             "target": [
-                "zip",
                 "nsis"
             ],
             "icon": "./assets/icons/win/icon.ico"
@@ -103,6 +102,7 @@
         "uuid": "^9.0.0"
     },
     "devDependencies": {
+        "cross-env": "^7.0.3",
         "css-loader": "^6.7.1",
         "electron": "^20.3.1",
         "electron-builder": "^23.6.0",

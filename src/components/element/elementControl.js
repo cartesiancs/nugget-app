@@ -865,7 +865,10 @@ class ElementControlAsset extends HTMLElement {
 
         if (elementPositions.top < 6) {
             dragAlignmentGuide.showGuide({ position: 'top' })
-            this.style.top = `0px`
+            let y = 0
+            this.style.top = `${y}px`
+            let convertLocation = this.convertRelativeToAbsoluteSize({y: y})
+            this.timeline[this.elementId].location.y = convertLocation.y
 
         } else {
             dragAlignmentGuide.hideGuide({ position: 'top' })
@@ -873,7 +876,10 @@ class ElementControlAsset extends HTMLElement {
 
         if (elementPositions.top + elementPositions.height > canvas.height - 6) {
             dragAlignmentGuide.showGuide({ position: 'bottom' })
-            this.style.top = `${canvas.height - elementPositions.height}px`
+            let y = canvas.height - elementPositions.height
+            this.style.top = `${y}px`
+            let convertLocation = this.convertRelativeToAbsoluteSize({y: y})
+            this.timeline[this.elementId].location.y = convertLocation.y
 
         } else {
             dragAlignmentGuide.hideGuide({ position: 'bottom' })
@@ -881,7 +887,10 @@ class ElementControlAsset extends HTMLElement {
 
         if (elementPositions.left < 6) {
             dragAlignmentGuide.showGuide({ position: 'left' })
-            this.style.left = `0px`
+            let x = 0
+            this.style.left = `${x}px`
+            let convertLocation = this.convertRelativeToAbsoluteSize({x: x})
+            this.timeline[this.elementId].location.x = convertLocation.x
 
         } else {
             dragAlignmentGuide.hideGuide({ position: 'left' })
@@ -889,8 +898,10 @@ class ElementControlAsset extends HTMLElement {
 
         if (elementPositions.left + elementPositions.width > canvas.width - 6) {
             dragAlignmentGuide.showGuide({ position: 'right' })
-            this.style.left = `${canvas.width - elementPositions.width}px`
-
+            let x = canvas.width - elementPositions.width
+            this.style.left = `${x}px`
+            let convertLocation = this.convertRelativeToAbsoluteSize({x: x})
+            this.timeline[this.elementId].location.x = convertLocation.x
         } else {
             dragAlignmentGuide.hideGuide({ position: 'right' })
         }

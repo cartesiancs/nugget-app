@@ -14,7 +14,7 @@ const request = {
     },
     filesystem: {
         getAllDirectory: (dir) => ipcRenderer.send('REQ_ALL_DIR', dir),
-        openDirectory: (path) => shell.openPath(path),
+        openDirectory: (path) => ipcRenderer.send('OPEN_PATH', path),
         test: () => ipcRenderer.invoke('filesystem:test'),
         mkdir: (path, options) => ipcRenderer.invoke('filesystem:mkdir', path, options),
         emptyDirSync: (path) => ipcRenderer.invoke('filesystem:emptyDirSync', path),

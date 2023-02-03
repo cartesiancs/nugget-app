@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, net, Menu } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, net, Menu, shell } from 'electron'
 import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
 import { menu } from './lib/menu.js'
@@ -277,6 +277,12 @@ ipcMain.on('SELECT_DIR', async (evt) => {
     properties: ['openDirectory']
   })
 })
+
+ipcMain.on('OPEN_PATH', async (evt, path) => {
+  shell.openPath(path)
+})
+
+
 
 
 ipcMain.on('REQ_ALL_DIR', (evt, dir) => {

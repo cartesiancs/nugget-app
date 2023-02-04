@@ -860,7 +860,10 @@ class ElementControlAsset extends HTMLElement {
             top: Number(this.style.top.split("px")[0]),
             left: Number(this.style.left.split("px")[0]),
             width: Number(this.style.width.split("px")[0]),
-            height: Number(this.style.height.split("px")[0])
+            height: Number(this.style.height.split("px")[0]),
+            centerTop: (Number(this.style.height.split("px")[0]) / 2) + Number(this.style.top.split("px")[0]),
+            centerLeft: (Number(this.style.width.split("px")[0]) / 2) + Number(this.style.left.split("px")[0])
+
         }
 
         if (elementPositions.top < 6) {
@@ -905,6 +908,31 @@ class ElementControlAsset extends HTMLElement {
         } else {
             dragAlignmentGuide.hideGuide({ position: 'right' })
         }
+
+        // 'horizontal', 'vertical'
+        
+
+        if (elementPositions.centerTop < (canvas.height / 2) + 6 && elementPositions.centerTop >  (canvas.height / 2) - 6) {
+            dragAlignmentGuide.showGuide({ position: 'horizontal' })
+
+            let y = (canvas.height / 2) - (elementPositions.height / 2)
+            this.style.top = `${y}px`
+            let convertLocation = this.convertRelativeToAbsoluteSize({y: y})
+            this.timeline[this.elementId].location.y = convertLocation.y
+
+        } else {
+            dragAlignmentGuide.hideGuide({ position: 'horizontal' })
+        }
+
+        if (elementPositions.centerLeft < (canvas.width / 2) + 6 && elementPositions.centerLeft >  (canvas.width / 2) - 6) {
+            dragAlignmentGuide.showGuide({ position: 'vertical' })
+            let x = (canvas.width / 2) - (elementPositions.width / 2)
+            this.style.left = `${x}px`
+            let convertLocation = this.convertRelativeToAbsoluteSize({x: x})
+            this.timeline[this.elementId].location.x = convertLocation.x
+        } else {
+            dragAlignmentGuide.hideGuide({ position: 'vertical' })
+        }
     }
 
     hideDragAlignmentGuide() {
@@ -913,6 +941,8 @@ class ElementControlAsset extends HTMLElement {
         dragAlignmentGuide.hideGuide({ position: 'bottom' })
         dragAlignmentGuide.hideGuide({ position: 'left' })
         dragAlignmentGuide.hideGuide({ position: 'right' })
+        dragAlignmentGuide.hideGuide({ position: 'horizontal' })
+        dragAlignmentGuide.hideGuide({ position: 'vertical' })
 
     }
 

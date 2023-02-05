@@ -9,6 +9,7 @@ class ElementBar extends HTMLElement {
 
         this.elementId = this.getAttribute('element-id')
         this.elementBarType = this.getAttribute('element-type') || 'static'
+        this.elementFileType = this.timeline[this.elementId].filetype
 
         
         this.width = this.millisecondsToPx(this.timeline[this.elementId].duration)
@@ -307,7 +308,7 @@ class ElementBar extends HTMLElement {
 
     animationPanelDropdownTemplate() {
         // NOTE: 영상 애니메이션은 아직 지원 안함
-        if (this.elementBarType == "dynamic") {
+        if (this.elementBarType == "dynamic" || this.elementFileType == 'text') {
             return ''
         }
         let isShowPanel = this.isShowAnimationPanel()

@@ -460,7 +460,11 @@ class ElementControl extends HTMLElement {
         let elementBody = document.querySelector(`#element-${elementId}`)
         let textSize = Number(event.value) / this.previewRatio
         elementBody.style.fontSize = `${textSize}px`
+        elementBody.style.height = `${textSize}px`
+
         this.timeline[elementId].fontsize = Number(event.value)
+        this.timeline[elementId].height = Number(event.value)
+
     }
 
     changeTimelineRange() {
@@ -756,7 +760,7 @@ class ElementControlAsset extends HTMLElement {
             let resizeRatio = this.elementControl.previewRatio
             let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
 
-            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; font-size: ${resizeText}px;`)
+            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeText}px; font-size: ${resizeText}px;`)
         }
 
         
@@ -1169,6 +1173,8 @@ class ElementControlAsset extends HTMLElement {
         }
 
         this.style.fontSize = `${px}px`
+        this.style.height = `${px}px`
+
     }
 
     resizeMousedown(direction) {

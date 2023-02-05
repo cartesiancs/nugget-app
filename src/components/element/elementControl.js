@@ -1209,7 +1209,8 @@ class ElementControlAsset extends HTMLElement {
 
 
     showSideOption() {
-        let optionOffcanvas = new bootstrap.Offcanvas(document.getElementById('option_top'))
+
+        let optionTab = new bootstrap.Tab(document.querySelector('#sidebar button[data-bs-target="#nav-option"]'))
         let offcanvasOptionListsId = ['option_text']
 
         for (let index = 0; index < offcanvasOptionListsId.length; index++) {
@@ -1220,7 +1221,7 @@ class ElementControlAsset extends HTMLElement {
         if (this.elementFiletype == 'text') {
             document.querySelector(`#option_text`).classList.remove("d-none")
             document.querySelector(`#optionTargetElement`).value = this.elementId
-            optionOffcanvas.show()
+            optionTab.show()
         }
     }
 

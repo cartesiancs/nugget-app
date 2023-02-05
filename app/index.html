@@ -32,7 +32,7 @@
                     <div class=" h-100 w-100 overflow-y-hidden overflow-x-hidden position-absolute ">
 
                         <div class="d-flex align-items-start h-100">
-                            <div class="nav flex-column nav-pills bg-dark h-100 pt-1" style="width: 2.5rem;" role="tablist" aria-orientation="vertical">
+                            <div id="sidebar" class="nav flex-column nav-pills bg-dark h-100 pt-1" style="width: 2.5rem;" role="tablist" aria-orientation="vertical">
 
                                 <button class="btn-nav active" data-bs-toggle="pill" data-bs-target="#nav-home" type="button" role="tab" aria-selected="true"><span class="material-symbols-outlined">
                                     settings</span>
@@ -45,10 +45,16 @@
                                 <button class="btn-nav" data-bs-toggle="pill" data-bs-target="#nav-text" type="button" role="tab" aria-selected="false"><span class="material-symbols-outlined">
                                     text_fields</span>
                                 </button>
+
+                                <button class="btn-nav" data-bs-toggle="pill" data-bs-target="#nav-option" type="button" role="tab" aria-selected="false"><span class="material-symbols-outlined">
+                                    tune</span>
+                                </button>
                            
                                 <button class="btn-nav" data-bs-toggle="pill" data-bs-target="#nav-output" type="button" role="tab" aria-selected="false"><span class="material-symbols-outlined">
                                     output</span>
                                 </button>
+
+
                                 
                             </div>
                             <div class="tab-content overflow-y-scroll overflow-x-hidden  p-2 h-100" style="width: calc(100% - 2.5rem);">
@@ -88,6 +94,24 @@
                                     </div>
                                 </div>
                               </div>
+
+
+                              <div class="tab-pane fade" id="nav-option" role="tabpanel" >
+                                <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
+
+                                <div id="option_text" class="d-none">
+                                    <div class="mb-2">
+                                        <label class="form-label text-light">텍스트 색상 선택</label>
+                                        <input type="color" class="form-control form-control-color" oninput="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
+                                    </div>
+                
+                                    <div class="mb-2">
+                                        <label class="form-label text-light">폰트 크기</label>
+                                        <input type="number" class="form-control" onchange="elementControlComponent.changeTextSize(this)" value="52" >
+                                    </div>
+                                </div>
+                              </div>
+
 
                               <div class="tab-pane fade" id="nav-output" role="tabpanel" >
                                 <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
@@ -141,19 +165,7 @@
                 <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
             </div>
             <div class="offcanvas-body">
-                <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
 
-                <div id="option_text" class="d-none">
-                    <div class="mb-2">
-                        <label class="form-label text-light">텍스트 색상 선택</label>
-                        <input type="color" class="form-control form-control-color" oninput="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label text-light">폰트 크기</label>
-                        <input type="number" class="form-control" onchange="elementControlComponent.changeTextSize(this)" value="52" >
-                    </div>
-                </div>
 
             </div>
         </div>

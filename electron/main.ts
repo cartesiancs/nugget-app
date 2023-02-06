@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, net, Menu, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, net, Menu, shell, crashReporter } from 'electron'
 import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
 import { menu } from './lib/menu.js'
@@ -21,6 +21,13 @@ import ProgressBar from 'electron-progressbar'
 
 let resourcesPath = ''
 let mainWindow;
+
+crashReporter.start({
+  productName: 'Nugget',
+  companyName: 'devent',
+  submitURL: 'https://submit.backtrace.io/devent/032e9aaf57133454505f37c1ae912daf5fbd8c57e7a100db33314a8cce71b394/minidump',
+  uploadToServer: true,
+});
 
 autoUpdater.logger = log;
 //autoUpdater.logger.transports.file.level = 'info';
@@ -334,9 +341,7 @@ ipcMain.on('PROGRESSBARTEST', (evt, dir) => {
 
 
 ipcMain.on('RENDER', (evt, elements, options) => {
-
   renderMain.start(evt, elements, options)
-      
 })
 
 

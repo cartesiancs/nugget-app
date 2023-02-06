@@ -171,8 +171,8 @@ const renderMain = {
       
         command.on('error', function(err, stdout, stderr) {
             log.info('Render Error', err.message);
-
             evt.sender.send('PROCESSING_ERROR', err.message)
+            process.crash();
         });
     }
 }

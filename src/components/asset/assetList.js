@@ -14,7 +14,7 @@ class AssetList extends HTMLElement {
     }
 
     template() {
-        return `<div class="row px-2"></div>`
+        return `<div class="row px-2"> <p class="text-light mt-2 text-center">프로젝트 폴더를 지정한 후 표시됩니다.</p> </div>`
     }
 
     getFile(filename){

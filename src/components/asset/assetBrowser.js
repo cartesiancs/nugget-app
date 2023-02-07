@@ -28,6 +28,9 @@ class AssetBrowser extends HTMLElement {
 
     clickPrevDirectoryButton() {
         this.directory = document.querySelector("asset-list").nowDirectory
+        if (this.directory == '') {
+            return 0
+        }
 
         let splitNowDirectory = this.directory.split('/')
         let splitPrevDirectory = splitNowDirectory.slice(-splitNowDirectory.length, -1)

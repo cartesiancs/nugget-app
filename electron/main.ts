@@ -178,6 +178,7 @@ const downloadFfmpeg = (binType) => {
   let receivedBytes = 0;
   let totalBytes = 0;
   let percentage = 0
+  let downloadPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`
 
   let progressBar = new ProgressBar({
     indeterminate: false,
@@ -188,7 +189,7 @@ const downloadFfmpeg = (binType) => {
   const request = net.request(config.ffmpegBin[process.platform][type].url)
   request.on('response', (response: any) => {
     totalBytes = parseInt(response.headers['content-length']);
-    response.pipe(fs.createWriteStream(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`))
+    response.pipe(fs.createWriteStream(downloadPath))
     
     response.on('data', (chunk) => {
       receivedBytes += chunk.length;
@@ -201,7 +202,14 @@ const downloadFfmpeg = (binType) => {
     })
     response.on('end', () => {
       log.info(binType + " No more data in response.")
-      fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`, 0o755); 
+      fs.chmodSync(downloadPath, 0o755); 
+      
+      if (type == 'ffmpeg') {
+        ffmpeg.setFfmpegPath(downloadPath);
+      } else if (type == 'ffprobe') {
+        ffmpeg.setFfprobePath(downloadPath);
+      }
+
     })
   })
   request.end()

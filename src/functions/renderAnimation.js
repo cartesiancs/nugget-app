@@ -45,7 +45,7 @@ const renderAnimation = {
 
         renderProgress.show(0)
 
-        let path = `${options.videoDestinationFolder}/temp`
+        let path = `${options.videoDestinationFolder}/renderAnimation`
 
         // let canvas = document.createElement("canvas")
         // canvas.classList.add("d-none")

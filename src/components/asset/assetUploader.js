@@ -32,13 +32,11 @@ class AssetDropUploader extends HTMLElement {
 
 
     handleDragEnter() {
-        console.log('dragenter');
         this.classList.remove("d-none")
     }
 
     handleDragOver(e) {
         e.preventDefault();
-        console.log('dragover');
 
         this.classList.remove("d-none")
     }
@@ -49,11 +47,7 @@ class AssetDropUploader extends HTMLElement {
 
     handleDrop(e) {
         e.preventDefault();
-
-        console.log('drop');
-
         let filePath = e.dataTransfer.files[0].path
-        console.log(filePath)
         NUGGET.asset.add(filePath)
         this.classList.add("d-none")
     }

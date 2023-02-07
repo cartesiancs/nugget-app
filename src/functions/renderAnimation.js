@@ -43,8 +43,6 @@ const renderAnimation = {
         renderAnimation.state.options = options
         renderAnimation.state.numberOfRenderingRequired = 0
 
-        renderProgress.show(0)
-
         let path = `${options.videoDestinationFolder}/renderAnimation`
 
         // let canvas = document.createElement("canvas")
@@ -56,6 +54,7 @@ const renderAnimation = {
 
 
         window.electronAPI.req.filesystem.mkdir(path, { recursive: true }).then((isCompleted) => {
+            renderProgress.show(0)
 
 
             window.electronAPI.req.filesystem.emptyDirSync(path)
@@ -158,7 +157,6 @@ const renderAnimation = {
                     outputDir: outputDir
                 })
             }
-            console.log("File written successfully\n");
         })
 
     },

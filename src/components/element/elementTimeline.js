@@ -282,7 +282,7 @@ class ElementTimeline extends HTMLElement {
     }
 
     handleKeydown(event) {
-        console.log(event.keyCode)
+        console.log("event keycode > ", event.keyCode)
         if (this.elementControl.existActiveElement == true) {
             return 0
         }
@@ -300,9 +300,6 @@ class ElementTimeline extends HTMLElement {
         }
 
         if(event.ctrlKey && event.keyCode == 86 ){  //CTL v
-            console.log("CV", this, this.copyedTimelineData)
-
-
             for (const elementId in this.copyedTimelineData) {
                 if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
                     this.pasteElement({
@@ -321,8 +318,6 @@ class ElementTimeline extends HTMLElement {
         }
         
         if(event.ctrlKey && event.keyCode == 67 ){  //CTL c
-    
-            console.log("CC")
             this.copySeletedElement()
 
         }

@@ -63,11 +63,10 @@ class AssetFile extends HTMLElement {
         if (fileType == 'image') {
             template = this.templateImage(fileUrl);
         } else if (fileType == 'video') {
-            console.log(fileUrl)
+
             if (assetList.blobThumbnail.hasOwnProperty(fileUrl)) {
                 let savedThumbnailUrl = assetList.blobThumbnail[fileUrl]                
                 template = this.templateVideoThumbnail(savedThumbnailUrl);
-
             } else {
                 let thumbnailUrl = await this.captureVideoThumbnail(fileUrl)
                 assetList.blobThumbnail[fileUrl] = thumbnailUrl
@@ -163,7 +162,6 @@ class AssetFile extends HTMLElement {
             })
 
         })
-        console.log(thumbnailUrl, 'a')
 
         return thumbnailUrl
 

@@ -103,7 +103,6 @@ class ElementControl extends HTMLElement {
                 let elementWidth = Number(this.timeline[elementId].width) / this.previewRatio
                 let elementTop = Number(this.timeline[elementId].location.y) / this.previewRatio
                 let elementLeft = Number(this.timeline[elementId].location.x) / this.previewRatio
-                console.log(this.previewRatio)
 
                 if (this.timeline[elementId].filetype != 'text') {
                     targetElement.resizeStyle({
@@ -220,14 +219,13 @@ class ElementControl extends HTMLElement {
                     return 0
                 }
                 let isExist = false
-                console.log("MATA", metadata)
+
                 metadata.streams.forEach(element => {
                     if (element.codec_type == "audio") {
                         isExist = true
                     }
                 });
 
-                console.log(isExist, "AUDIO")
 
                 this.timeline[elementId] = {
                     blob: blob,
@@ -322,8 +320,6 @@ class ElementControl extends HTMLElement {
         let indexToMs = index * 20
         let startTime = Number(this.timeline[elementId].startTime)
         let indexPoint = Math.round((indexToMs - startTime) / 20)
-
-        console.log(indexPoint)
 
         try {
             if (indexPoint < 0) {
@@ -541,7 +537,6 @@ class ElementControl extends HTMLElement {
                 element.setTrimEnd(trimEnd)
             }
         });
-        console.log(allElementBar)
     }
 
     getMillisecondsToISOTime(milliseconds) {

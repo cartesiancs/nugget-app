@@ -130,7 +130,7 @@ class KeyframeEditor extends HTMLElement {
     loadPoint(line) {
         if (this.timeline[this.elementId].animation[this.animationType].isActivate == true) {
             let points = this.timeline[this.elementId].animation[this.animationType].points[line]
-            console.log(points)
+
             for (let index = 0; index < points.length; index++) {
                 const element = points[index];
                 if (element[0] == 0) {
@@ -154,8 +154,6 @@ class KeyframeEditor extends HTMLElement {
             y: Math.round(y),
             line: line
         })
-
-        console.log(this.points)
 
         this.drawPoint({
             x: x, 
@@ -231,8 +229,6 @@ class KeyframeEditor extends HTMLElement {
             points.push([this.points[line][index][0] * timeMagnification, this.points[line][index][1]])
         }
 
-        console.log(">>>>>", this.points[line], points)
-
         this.path[line] = this.svgBody.querySelector(`path[id='keyframePath${line}']`)
         this.path[line].setAttribute("d", this.drawPath(points, this.tension));
 
@@ -242,8 +238,6 @@ class KeyframeEditor extends HTMLElement {
         let loadPointLength = this.points[line][this.points[line].length-1][0] - 1
         let allPoints = this.getInterpolatedPoints(loadPointLength, line, points)
         this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
-
-        console.log(this.drawPath(this.points[line], this.tension), this.drawPath(points, this.tension))
 
     }
 

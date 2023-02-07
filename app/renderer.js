@@ -32,7 +32,6 @@
 
 
 window.electronAPI.res.filesystem.getAllDirectory((evt, dir, result) => {
-    console.log("adfae")
     let fileLists = {}
     const assetList = document.querySelector("asset-list")
     const assetBrowser = document.querySelector("asset-browser")
@@ -91,7 +90,6 @@ window.electronAPI.res.render.error((evt, errormsg) => {
 
 
 window.electronAPI.res.app.forceClose( (evt) => {
-    console.log("S")
     let isTimelineChange = document.querySelector('element-timeline').isTimelineChange()
     if (isTimelineChange == true) {
         rendererModal.whenClose.show()
@@ -103,9 +101,9 @@ window.electronAPI.res.app.forceClose( (evt) => {
 
 
 // NOTE: ipcRenderer.send('INIT') 명령어로 실행중인 앱의 경로를 확인할 수 있습니다
-window.electronAPI.res.app.getAppPath((evt, path) => {
-    console.log(path)
-})
+// window.electronAPI.res.app.getAppPath((evt, path) => {
+//     console.log(path)
+// })
 
 // ipcRenderer.on('DOWNLOAD_PROGRESS_FFMPEG', (evt, prog) => {
 //     rendererModal.downloadFfmpeg.show()
@@ -175,6 +173,10 @@ const ipc = {
         const projectDuration = Number(document.querySelector("#projectDuration").value)
         const projectFolder = document.querySelector("#projectFolder").value
         const projectRatio = elementControlComponent.previewRatio
+
+        if (projectFolder == '') {
+            return 0
+        }
 
         
         window.electronAPI.req.dialog.exportVideo().then((result) => {

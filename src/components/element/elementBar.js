@@ -355,9 +355,6 @@ class ElementBar extends HTMLElement {
             x: e.clientX,
             y: e.clientY
         })
-        console.log("RC", e)
-
-        
         //document.querySelector('element-timeline').removeSeletedElements()
     }
 

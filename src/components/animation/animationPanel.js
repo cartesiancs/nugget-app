@@ -106,7 +106,6 @@ class AnimationPanelItem extends HTMLElement {
         const timeMagnification = timelineRange / 4
         
         let points = this.timeline[this.elementId].animation[this.animationType].points[0]
-        console.log(points)
 
         for (let index = 0; index < points.length; index++) {
             let x = points[index][0] * timeMagnification

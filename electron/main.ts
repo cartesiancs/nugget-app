@@ -203,7 +203,7 @@ const downloadFfmpeg = (binType) => {
     response.on('end', () => {
       log.info(binType + " No more data in response.")
       fs.chmodSync(downloadPath, 0o755); 
-      
+
       if (type == 'ffmpeg') {
         ffmpeg.setFfmpegPath(downloadPath);
       } else if (type == 'ffprobe') {
@@ -422,10 +422,10 @@ ipcMain.handle('dialog:saveProject', async () => {
 
 
 
-ipcMain.handle('filesystem:test', async () => {
-  const data = await fsp.readFile("/Users/hhj/Desktop/Screenshot 2023-01-20 at 10.22.13 AM.png", "utf-8");
-  return [data];
-})
+// ipcMain.handle('filesystem:test', async () => {
+//   const data = await fsp.readFile("/Users/hhj/Desktop/Screenshot 2023-01-20 at 10.22.13 AM.png", "utf-8");
+//   return [data];
+// })
 
 
 ipcMain.handle('filesystem:mkdir', async (event, path, options) => {
@@ -433,6 +433,7 @@ ipcMain.handle('filesystem:mkdir', async (event, path, options) => {
 
   let status = mkdir == null ? false : true
   return status
+
 })
 
 

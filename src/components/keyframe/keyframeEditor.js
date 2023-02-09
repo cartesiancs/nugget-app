@@ -42,7 +42,9 @@ class KeyframeEditor extends HTMLElement {
             //NOTE: 나중에 opacity 추가할때는 따로 수정
             this.points[0][0][1] = this.timeline[this.elementId].location.x
             this.points[1][0][1] = this.timeline[this.elementId].location.y
-
+        } else {
+            this.points[0][0][1] = this.timeline[this.elementId].animation[this.animationType].points[0][0][1]
+            this.points[1][0][1] = this.timeline[this.elementId].animation[this.animationType].points[1][0][1]
         }
 
         this.timeline[this.elementId].animation[this.animationType].isActivate = true

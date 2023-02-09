@@ -38,6 +38,13 @@ class KeyframeEditor extends HTMLElement {
 
         this.lineCount = this.timeline[this.elementId].animation[this.animationType].points.length
 
+        if (this.timeline[this.elementId].animation[this.animationType].isActivate == false) {
+            //NOTE: 나중에 opacity 추가할때는 따로 수정
+            this.points[0][0][1] = this.timeline[this.elementId].location.x
+            this.points[1][0][1] = this.timeline[this.elementId].location.y
+
+        }
+
         this.timeline[this.elementId].animation[this.animationType].isActivate = true
 
         this.clearLineEditorGroup()

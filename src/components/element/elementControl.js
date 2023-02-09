@@ -1007,18 +1007,18 @@ class ElementControlAsset extends HTMLElement {
         const timeMagnification = timelineRange / 4
 
         let keyframeEditor = document.querySelector(`keyframe-editor[element-id="${this.elementId}"]`)
-        let progress = this.elementControl.progress - (this.timeline[this.elementId].startTime / 5)
+        let progress = (this.elementControl.progressTime - this.timeline[this.elementId].startTime) / 5
 
         const addPoint = {
             "position": () => {
                 keyframeEditor.addPoint({
-                    x: progress / timeMagnification, 
+                    x: progress, 
                     y: this.timeline[this.elementId].location.x,
                     line: 0
                 })
 
                 keyframeEditor.addPoint({
-                    x: progress / timeMagnification, 
+                    x: progress, 
                     y: this.timeline[this.elementId].location.y,
                     line: 1
                 })

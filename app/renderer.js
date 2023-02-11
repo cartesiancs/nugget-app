@@ -127,6 +127,9 @@ const rendererModal = {
     }),
     downloadFfmpeg: new bootstrap.Modal(document.getElementById('downloadFfmpeg'), {
         keyboard: false
+    }),
+    whenTimelineChanged: new bootstrap.Modal(document.getElementById('whenTimelineChanged'), {
+        keyboard: false
     })
 }
 

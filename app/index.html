@@ -63,6 +63,7 @@
                               <div class="tab-pane fade show active" id="nav-home" role="tabpanel">
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control bg-dark text-light" placeholder="프로젝트 이름" >
+                                    <input id="projectFile" type="text" class="d-none" name="">
                                 </div>
 
                                 <div class="input-group mb-3">
@@ -280,6 +281,17 @@
                 </dds-content>
                 <dds-modal-button button-color="btn-red-fill" is-dismiss="false" onclick="rendererUtil.forceClose()">네, 종료할게요</dds-modal-button>
                 <dds-modal-button button-color="btn-light" button-text-color="text-dark" is-dismiss="true">아니요</dds-modal-button>
+            </dds-modal>
+
+            <dds-modal
+            modal-id="whenTimelineChanged"
+            modal-title="저장되지 않은 변경사항이 있어요.">
+                <dds-content>
+                    <div class="mb-3">
+                        <p id="whenTimelineChangedMsg" class="text-secondary"></p>
+                    </div>
+                </dds-content>
+                <dds-modal-button button-color="btn-light" button-text-color="text-dark" is-dismiss="true">닫기</dds-modal-button>
             </dds-modal>
         </div>
 

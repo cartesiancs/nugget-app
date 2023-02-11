@@ -8,16 +8,19 @@ import config from './config.json'
 
 import ffmpeg from 'fluent-ffmpeg'
 
+import { v4 as uuidv4 } from 'uuid';
 
 import path from 'path'
 import isDev from 'electron-is-dev'
 import log from 'electron-log'
+import axios from 'axios';
 
 import fs from 'fs'
 import * as fsp from 'fs/promises';
 import fse from 'fs-extra'
 
 import ProgressBar from 'electron-progressbar'
+
 
 let resourcesPath = ''
 let mainWindow;
@@ -70,7 +73,6 @@ function createWindow () {
 
   autoUpdater.checkForUpdatesAndNotify()
   Menu.setApplicationMenu(menu)
-
 
   if (isDev) {
     mainWindow.webContents.openDevTools();
@@ -230,6 +232,8 @@ const downloadFfmpeg = (binType) => {
       progressBar.detail = `100% 중 ${value}% 완료...`;
     });
 }
+
+
 
 // ipcRenderer.send("DOWNLOAD_FFMPEG")
 ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {

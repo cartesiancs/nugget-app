@@ -202,6 +202,10 @@ class ElementControl extends HTMLElement {
     addVideo(blob, path) {
         const elementId = this.generateUUID()
         const video = document.createElement('video')
+        const toastMetadata = bootstrap.Toast.getInstance(document.getElementById('loadMetadataToast'))
+        toastMetadata.show()
+
+        
 
         video.src = blob
         video.preload = 'metadata'
@@ -219,6 +223,10 @@ class ElementControl extends HTMLElement {
                     return 0
                 }
                 let isExist = false
+
+                setTimeout(() => {
+                    toastMetadata.hide()
+                }, 1000)
 
                 metadata.streams.forEach(element => {
                     if (element.codec_type == "audio") {
@@ -987,14 +995,17 @@ class ElementControlAsset extends HTMLElement {
     }
 
     dragMouseup() {
+        this.hideDragAlignmentGuide()
+
         document.removeEventListener('mousemove', this.dragdownEventHandler)
-        if (this.isDrag == true) {
+
+        //NOTE: 추후에 이미지 말고 오디오, 영상의 경우 filetype 수정
+        if (this.isDrag == true && this.timeline[this.elementId].filetype == 'image') {
             this.addAnimationPoint({
                 animationType: "position"
             })
         }
         this.isDrag = false
-        this.hideDragAlignmentGuide()
 
     }
 

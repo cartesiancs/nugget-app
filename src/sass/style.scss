@@ -138,6 +138,11 @@ input[type=range]::-webkit-slider-thumb {
     color: #ffffffc0;
 }
 
+
+.form-control:focus {
+    background-color: $button-background-color;
+}
+
 .form-transparent {
     background-color: transparent;
     outline: 0;

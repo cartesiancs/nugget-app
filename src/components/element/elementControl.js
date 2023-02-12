@@ -1227,7 +1227,7 @@ class ElementControlAsset extends HTMLElement {
         if (this.elementFiletype == 'text') {
             document.querySelector(`#option_text`).classList.remove("d-none")
             document.querySelector(`#optionTargetElement`).value = this.elementId
-            optionTab.show()
+            //optionTab.show()
         }
     }
 
@@ -1235,11 +1235,13 @@ class ElementControlAsset extends HTMLElement {
     handleMousedown(e) {
         this.dragMousedown(e)
         this.activateOutline(e)
+        this.showSideOption()
+
     }
 
 
     handleDoubleClick(e) {
-        this.showSideOption()
+        //this.showSideOption()
     }
 
     connectedCallback() {

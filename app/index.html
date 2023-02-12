@@ -98,19 +98,7 @@
 
 
                               <div class="tab-pane fade" id="nav-option" role="tabpanel" >
-                                <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
 
-                                <div id="option_text" class="d-none">
-                                    <div class="mb-2">
-                                        <label class="form-label text-light">텍스트 색상 선택</label>
-                                        <input type="color" class="form-control form-control-color" oninput="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
-                                    </div>
-                
-                                    <div class="mb-2">
-                                        <label class="form-label text-light">폰트 크기</label>
-                                        <input type="number" class="form-control" onchange="elementControlComponent.changeTextSize(this)" value="52" >
-                                    </div>
-                                </div>
                               </div>
 
 
@@ -126,7 +114,9 @@
                 </div>
 
                 <!-- PREVIEW -->
-                <div id="split_col_2" class="h-100 position-relative d-flex align-items-center justify-content-center" style="width: 70%;">
+                <div id="split_col_2" class="h-100 position-relative d-flex align-items-center justify-content-center" style="width: 50%;">
+                    <div class="split-col-bar" onmousedown="startSplitColumns(2)"></div>
+
                     <div id="videobox">
                         <div class="d-flex justify-content-center">
                             <div id="video" class="video">
@@ -137,6 +127,23 @@
                         </div>
 
   
+                    </div>
+                </div>
+
+                <!-- OPTION-->
+                <div id="split_col_3" class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative p-2" style="width: 20%;">
+                    <input type="hidden" id="optionTargetElement" value="aaaa-aaaa-aaaa-aaaa">
+
+                    <div id="option_text" class="d-none">
+                        <div class="mb-2">
+                            <label class="form-label text-light">텍스트 색상 선택</label>
+                            <input type="color" class="form-control bg-default form-control-color" oninput="elementControlComponent.changeTextColor(this)" value="#ffffff" title="Choose your color">
+                        </div>
+    
+                        <div class="mb-2">
+                            <label class="form-label text-light">폰트 크기</label>
+                            <input type="number" class="form-control bg-default text-light" onchange="elementControlComponent.changeTextSize(this)" value="52" >
+                        </div>
                     </div>
                 </div>
             </div>
@@ -382,9 +389,17 @@
 
                 },
                 columns: function (percent) {
-                    document.getElementById(`split_col_${valueEvent.splitColumnsTarget}`).style.width = `${percent}%`
-                    document.getElementById(`split_col_${valueEvent.splitColumnsTarget+1}`).style.width = `${(100-percent)}%`
-                    document.getElementById(`option_top`).style.width = `${percent}%` // 옵션 오프캔버스                    
+                    if (valueEvent.splitColumnsTarget == 1) {
+                        let otherCol = Number(document.getElementById(`split_col_3`).style.width.split('%')[0])
+                        document.getElementById(`split_col_1`).style.width = `${percent}%`
+                        document.getElementById(`split_col_2`).style.width = `${(100-percent) - otherCol}%`       
+                    } else if (valueEvent.splitColumnsTarget == 2) {
+                        let otherCol = Number(document.getElementById(`split_col_1`).style.width.split('%')[0])
+                        document.getElementById(`split_col_2`).style.width = `${percent - otherCol}%`
+                        document.getElementById(`split_col_3`).style.width = `${(100 - percent)}%`    
+                    }
+
+                
                 },
             },
             minWidth: 20,

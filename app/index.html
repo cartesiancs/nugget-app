@@ -26,7 +26,7 @@
 
         <div class="container-fluid" style="height: 97vh;">
             <div id="split_top" class="row align-items-start" style="height: 80%;">
-                <div id="split_col_1" class="bg-darklight h-100 overflow-y-hidden overflow-x-hidden position-relative p-0" style="width: 30%;">
+                <div id="split_col_1" class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative p-0" style="width: 30%;">
                     <div class="split-col-bar" onmousedown="startSplitColumns(1)"></div>
 
                     <div class=" h-100 w-100 overflow-y-hidden overflow-x-hidden position-absolute ">
@@ -62,21 +62,21 @@
 
                               <div class="tab-pane fade show active" id="nav-home" role="tabpanel">
                                 <div class="input-group mb-3">
-                                    <input type="text" class="form-control bg-dark text-light" placeholder="프로젝트 이름" >
+                                    <input type="text" class="form-control bg-default text-light" placeholder="프로젝트 이름" >
                                     <input id="projectFile" type="text" class="d-none" name="">
                                 </div>
 
                                 <div class="input-group mb-3">
-                                    <input id="projectFolder" type="text" class="form-control bg-dark text-light" placeholder="/" disabled>
-                                    <button class="btn btn-sm bg-dark text-light" onclick="NUGGET.directory.select()">프로젝트 폴더 지정</button>
+                                    <input id="projectFolder" type="text" class="form-control bg-default text-light" placeholder="/" disabled>
+                                    <button class="btn btn-sm btn-default text-light" onclick="NUGGET.directory.select()">프로젝트 폴더 지정</button>
                                 </div>
                                 
                                 <div class="input-group mb-3">
-                                    <input id="projectDuration" type="number" class="form-control bg-dark text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-ruler').updateRulerLength(this)" value="10">
-                                    <span class="input-group-text bg-dark text-light" id="basic-addon2">초</span>
+                                    <input id="projectDuration" type="number" class="form-control bg-default text-light" placeholder="진행초 e.g) 0" onchange="document.querySelector('element-timeline-ruler').updateRulerLength(this)" value="10">
+                                    <span class="input-group-text bg-default text-light" id="basic-addon2">초</span>
                                 </div>
-                                <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
-                                <button class="btn btn-sm bg-dark text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
+                                <button class="btn btn-sm btn-default text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
+                                <button class="btn btn-sm btn-default text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
                                 <!-- <button class="btn btn-sm bg-primary text-light mt-1" onclick="window.electronAPI.req.progressBar.test()">PROGRESSBARTEST </button> -->
 
                                 <br>
@@ -135,26 +135,35 @@
                                 <drag-alignment-guide></drag-alignment-guide>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-center mt-2">
-                            <button id="playToggle" class="btn btn-transparent" onclick="elementControlComponent.play()"><span class="material-symbols-outlined icon-white icon-md"> play_circle </span></button>
-                            <button class="btn btn-transparent" onclick="elementControlComponent.reset()"><span class="material-symbols-outlined icon-white icon-md"> replay_circle_filled </span></button>
-                        </div>
-                        <div class="d-flex justify-content-center mt-2">
-                            <b id="time" class="text-light">00:00:00.00</b>
-                        </div>
+
+  
                     </div>
                 </div>
             </div>
 
     
-            <div id="split_bottom" class="row split-top align-items-end cursor-row-resize bg-darker line-top" style="height: 20%;">
+            <div id="split_bottom" class="row position-relative split-top align-items-end bg-darker line-top" style="height: 20%;">
+                <div class="split-bottom-bar cursor-row-resize " onmousedown="startSplitBottom()"></div>
+                <div class="row">
+                    <div class="col-4">
+                        <div class="d-flex justify-content-start">
+                            <button id="playToggle" class="btn btn-xs btn-transparent" onclick="elementControlComponent.play()"><span class="material-symbols-outlined icon-white icon-md"> play_circle </span></button>
+                            <button class="btn btn-xs btn-transparent ms-2" onclick="elementControlComponent.reset()"><span class="material-symbols-outlined icon-white icon-md"> replay_circle_filled </span></button>
+                            <b id="time" class="text-light ms-2">00:00:00.00</b>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                    </div>
+
+                    <div class="col-3">
+                        <input type="range" class="form-range" min="0" max="10" step="0.2" id="timelineRange" value="4" oninput="elementControlComponent.changeTimelineRange()" onchange="elementControlComponent.changeTimelineRange()">
+                    </div>
+
+                </div>
                 <element-timeline id="split_inner_bottom"></element-timeline>
             </div>
         </div>
 
-        <div class="container-footer">
-            <input type="range" class="form-range" min="0" max="10" step="0.2" id="timelineRange" value="4" oninput="elementControlComponent.changeTimelineRange()" onchange="elementControlComponent.changeTimelineRange()">
-        </div>
 
 
         <!-- 
@@ -494,9 +503,9 @@
                 e.stopPropagation();
           })
 
-          document.getElementById("split_bottom").addEventListener("mousedown", (e) => {
-            valueEvent.splitBottom = true
-          })
+        //   document.getElementById("split_bottom").addEventListener("mousedown", (e) => {
+        //     valueEvent.splitBottom = true
+        //   })
 
 
           function startSplitColumns(colNumber) {
@@ -504,6 +513,9 @@
             valueEvent.splitColumnsTarget = colNumber
           }
 
+          function startSplitBottom() {
+            valueEvent.splitBottom = true
+          }
 
 
       </script>

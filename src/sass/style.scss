@@ -6,9 +6,13 @@
 @import 'style/keyframe';
 @import 'style/dropdown';
 @import 'style/animation';
+@import 'var';
 
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+
+
+
 
 
 ::-webkit-scrollbar {
@@ -117,6 +121,23 @@ input[type=range]::-webkit-slider-thumb {
     padding: 0.4rem 0.8rem 0.4rem 0.8rem !important;
 }
 
+.btn-xs {
+    padding: 0rem !important;
+}
+
+.btn-default {
+    background-color: $button-background-color;
+}
+
+.bg-default {
+    background-color: $button-background-color;
+}
+
+.form-control:disabled, .form-control[readonly] {
+    background-color: $button-background-color;
+    color: #ffffffc0;
+}
+
 .form-transparent {
     background-color: transparent;
     outline: 0;
@@ -152,7 +173,7 @@ input[type=range]::-webkit-slider-thumb {
     background-color: #3a3f44;
 }
 .bg-darker {
-    background-color: #16181b;
+    background-color: $background-color;
 }
 .font-title {
     font-family: 'Noto Sans KR', sans-serif;
@@ -232,9 +253,39 @@ input[type=range]::-webkit-slider-thumb {
     z-index: 8000;
 }
 
+
+.split-bottom-bar {
+    position: absolute;
+    top: 0px;
+    transform: translateY(-50%);
+    height: 1rem;
+    background-color: #868f9900;
+    cursor: col-resize;
+    z-index: 8000;
+}
+
 .split-top {
     padding-top: 0.5rem;
 }
+
+
+
+#sidebar {
+    border-right: 0.05rem $background-border-color solid;
+    background-color: $background-color !important;
+
+}
+
+#split_bottom {
+    border-top: 0.05rem $background-border-color solid;
+
+}
+
+.tab-content {
+    border-right: 0.05rem $background-border-color solid;
+
+}
+
 
 .cursor-default {
     cursor: default;

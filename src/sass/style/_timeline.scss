@@ -1,3 +1,6 @@
+@import '../var';
+
+
 $timeline-cursor-width: 1.6px;
 $timeline-cursor-color: #cbd1d79d;
 
@@ -12,9 +15,10 @@ $timeline-cursor-color: #cbd1d79d;
     margin: 0rem;
     cursor: default;
     color: #dddddd;
-    background-color: #16181b;
+    background-color: $background-color;
     z-index: 300;
 }
+
 
 element-timeline-cursor {
   position: absolute;

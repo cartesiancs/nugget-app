@@ -54,7 +54,7 @@ class ElementTimeline extends HTMLElement {
 
     render(){
         const template = this.template();
-        this.classList.add("col-12", "cursor-default", "h-100", "line")
+        this.classList.add("col-12", "cursor-default", "h-100", "line", "bg-darker")
         this.innerHTML = template;
     }
 

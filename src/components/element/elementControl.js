@@ -968,19 +968,27 @@ class ElementControlAsset extends HTMLElement {
             if (x > window.innerWidth) {
                 document.removeEventListener('mousemove', this.dragdownEventHandler);
             } else {
-                this.style.top = `${y}px`
-                this.style.left = `${x}px`
+                this.changeLocation({ x: x, y: y })
 
-                let convertLocation = this.convertRelativeToAbsoluteSize({x: x, y: y})
+                if (this.elementFiletype == 'image') {
+                    document.querySelector("option-image").updateValue()
 
-                this.timeline[this.elementId].location.x = convertLocation.x 
-                this.timeline[this.elementId].location.y = convertLocation.y
-
+                }
 
             }
 
             this.showDragAlignmentGuide()
         }
+    }
+
+    changeLocation({ x, y }) {
+        this.style.top = `${y}px`
+        this.style.left = `${x}px`
+
+        let convertLocation = this.convertRelativeToAbsoluteSize({x: x, y: y})
+
+        this.timeline[this.elementId].location.x = convertLocation.x 
+        this.timeline[this.elementId].location.y = convertLocation.y
     }
 
     dragMousedown(e) {

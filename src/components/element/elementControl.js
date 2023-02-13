@@ -451,23 +451,22 @@ class ElementControl extends HTMLElement {
         this.timeline[elementId].text = inputValue
     }
 
-    changeTextColor(event) {
-        let elementId = document.querySelector(`#optionTargetElement`).value
+    changeTextColor({ elementId, color }) {
         let elementBody = document.querySelector(`#element-${elementId}`)
         let inputTarget = elementBody.querySelector('input')
-        inputTarget.style.color = event.value
-        this.timeline[elementId].textcolor = event.value
+
+        inputTarget.style.color = color
+        this.timeline[elementId].textcolor = color
     }
 
-    changeTextSize(event) {
-        let elementId = document.querySelector(`#optionTargetElement`).value
+    changeTextSize({ elementId, size }) {
         let elementBody = document.querySelector(`#element-${elementId}`)
-        let textSize = Number(event.value) / this.previewRatio
+        let textSize = Number(size) / this.previewRatio
         elementBody.style.fontSize = `${textSize}px`
         elementBody.style.height = `${textSize}px`
 
-        this.timeline[elementId].fontsize = Number(event.value)
-        this.timeline[elementId].height = Number(event.value)
+        this.timeline[elementId].fontsize = Number(size)
+        this.timeline[elementId].height = Number(size)
 
     }
 
@@ -1216,19 +1215,22 @@ class ElementControlAsset extends HTMLElement {
 
     showSideOption() {
 
-        let optionTab = new bootstrap.Tab(document.querySelector('#sidebar button[data-bs-target="#nav-option"]'))
-        let offcanvasOptionListsId = ['option_text']
+        // let optionTab = new bootstrap.Tab(document.querySelector('#sidebar button[data-bs-target="#nav-option"]'))
+        // let offcanvasOptionListsId = ['option_text']
 
-        for (let index = 0; index < offcanvasOptionListsId.length; index++) {
-            const element = offcanvasOptionListsId[index];
-            document.querySelector(`#${element}`).classList.add("d-none")
-        }
+        // for (let index = 0; index < offcanvasOptionListsId.length; index++) {
+        //     const element = offcanvasOptionListsId[index];
+        //     document.querySelector(`#${element}`).classList.add("d-none")
+        // }
 
-        if (this.elementFiletype == 'text') {
-            document.querySelector(`#option_text`).classList.remove("d-none")
-            document.querySelector(`#optionTargetElement`).value = this.elementId
-            //optionTab.show()
-        }
+        const optionGroup = document.querySelector("option-group")
+        optionGroup.showOption({ filetype: this.elementFiletype, elementId: this.elementId })
+
+        // if (this.elementFiletype == 'text') {
+        //     document.querySelector(`#option_text`).classList.remove("d-none")
+        //     document.querySelector(`#optionTargetElement`).value = this.elementId
+        //     //optionTab.show()
+        // }
     }
 
 

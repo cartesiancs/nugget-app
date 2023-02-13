@@ -20,6 +20,10 @@ import { MenuDropdownBody, MenuDropdownItem } from './components/menu/menuDropdo
 
 import { AnimationPanel, AnimationPanelItem } from './components/animation/animationPanel.js';
 
+import { OptionGroup } from './components/option/optionGroup.js';
+import { OptionText } from './components/option/optionText.js';
+
+
 
 import "./sass/style.scss";
 
@@ -51,6 +55,10 @@ customElements.define('menu-dropdown-item', MenuDropdownItem);
 
 customElements.define('animation-panel', AnimationPanel);
 customElements.define('animation-panel-item', AnimationPanelItem);
+
+customElements.define('option-group', OptionGroup);
+customElements.define('option-text', OptionText);
+
 
 
 

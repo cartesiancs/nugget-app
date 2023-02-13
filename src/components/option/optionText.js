@@ -39,6 +39,15 @@ class OptionText extends HTMLElement {
 
     setElementId({ elementId }) {
         this.elementId = elementId
+        this.resetValue()
+    }
+
+    resetValue() {
+        const timeline = document.querySelector("element-timeline").timeline
+        this.querySelector("input[aria-event='font-color'").value = timeline[this.elementId].textcolor
+        this.querySelector("input[aria-event='font-size'").value = timeline[this.elementId].fontsize
+
+
     }
 
     handleChangeTextColor() {

@@ -103,7 +103,7 @@
 
 
                               <div class="tab-pane fade" id="nav-output" role="tabpanel" >
-                                <button class="btn btn-blue-fill" onclick="ipc.render()">render</button>
+                                <button class="btn btn-blue-fill" onclick="ipc.render()">Export</button>
                               </div>
 
                             </div>
@@ -146,7 +146,7 @@
     
             <div id="split_bottom" class="row position-relative split-top align-items-end bg-darker line-top" style="height: 20%;">
                 <div class="split-bottom-bar cursor-row-resize " onmousedown="startSplitBottom()"></div>
-                <div class="row">
+                <div class="row mb-2">
                     <div class="col-4">
                         <div class="d-flex justify-content-start">
                             <button id="playToggle" class="btn btn-xs btn-transparent" onclick="elementControlComponent.play()"><span class="material-symbols-outlined icon-white icon-md"> play_circle </span></button>
@@ -155,9 +155,14 @@
                         </div>
                     </div>
                     <div class="col-5">
+                        <div id="keyframeEditorButtonGroup" class="d-none">
+                            <button type="button" class="btn btn-dark btn-sm" data-bs-dismiss="offcanvas" onclick="document.querySelector('keyframe-editor').hideKeyframeEditorButtonGroup()" aria-label="close">키프레임 에디터 닫기</button>
+                            <div class="btn-group" role="group" id="timelineOptionLineEditor">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="col-3">
+                    <div class="col-3 d-flex align-items-center">
                         <input type="range" class="form-range" min="0" max="10" step="0.2" id="timelineRange" value="4" oninput="elementControlComponent.changeTimelineRange()" onchange="elementControlComponent.changeTimelineRange()">
                     </div>
 
@@ -189,12 +194,10 @@
         <div class="offcanvas offcanvas-bottom" data-bs-scroll="true"  data-bs-backdrop="false" tabindex="-1" id="option_bottom" aria-labelledby="offcanvasRightLabel" style="height: calc(20% - 2rem); ">
             <div class="offcanvas-header row d-flex justify-content-between">
                 <div class="col">
-                    <button type="button" class="btn btn-transparent btn-sm" data-bs-dismiss="offcanvas" aria-label="Close"><span class="material-symbols-outlined icon-white">close</span></button>
 
                 </div>
                 <div class="col text-end">
-                    <div class="btn-group" role="group" id="timelineOptionLineEditor">
-                    </div>
+
                 </div>
 
             </div>
@@ -380,7 +383,7 @@
                 bottom: function (percent) {
                     document.getElementById("split_top").style.height = `calc(${percent}% + 0.5rem)`
                     document.getElementById("split_bottom").style.height = `calc(${100-percent}% - 0.5rem)`
-                    document.getElementById(`option_bottom`).style.height = `calc(${100-percent}% - 2rem)` // 옵션 오프캔버스                    
+                    document.getElementById(`option_bottom`).style.height = `calc(${100-percent}% - 3.5rem)` // 옵션 오프캔버스                    
 
                 },
                 columns: function (percent) {

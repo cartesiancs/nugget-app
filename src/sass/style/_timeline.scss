@@ -19,6 +19,9 @@ $timeline-cursor-color: #cbd1d79d;
     z-index: 300;
 }
 
+element-timeline-ruler {
+  z-index: 2000 !important;
+}
 
 element-timeline-cursor {
   position: absolute;

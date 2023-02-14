@@ -29,6 +29,8 @@ class KeyframeEditor extends HTMLElement {
     }
 
     render(){
+        this.showKeyframeEditorButtonGroup()
+
         const template = this.template();
         this.innerHTML = template;
 
@@ -73,6 +75,7 @@ class KeyframeEditor extends HTMLElement {
         animationPanel.updateItem()   
 
 
+
     }
 
 
@@ -86,6 +89,20 @@ class KeyframeEditor extends HTMLElement {
         <keyframe-point style="left: 100px;" class="position-absolute"></keyframe-point>
 
         </div>`
+    }
+
+    showKeyframeEditorButtonGroup() {
+        let targetButton = document.querySelector("#keyframeEditorButtonGroup")
+        targetButton.classList.remove("d-none")
+    }
+
+    hideKeyframeEditorButtonGroup() {
+        let targetButton = document.querySelector("#keyframeEditorButtonGroup")
+        targetButton.classList.add("d-none")
+        let keyframeEditor = document.getElementById('option_bottom')
+        keyframeEditor.classList.remove("show")
+        keyframeEditor.classList.add("hide")
+
     }
 
     addPadding({ px, type }) {

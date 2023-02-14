@@ -465,6 +465,7 @@ class ElementControl extends HTMLElement {
         elementBody.style.fontSize = `${textSize}px`
         elementBody.style.height = `${textSize}px`
 
+
         this.timeline[elementId].fontsize = Number(size)
         this.timeline[elementId].height = Number(size)
 

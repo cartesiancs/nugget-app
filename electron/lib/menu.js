@@ -1,4 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron'
+import * as path from 'path'
+
 
 const isMac = process.platform === 'darwin'
 
@@ -87,6 +89,24 @@ const template = [
             
             
             mainWindow.loadFile('./app/page/about.html')
+        }
+      },
+
+      {
+        label: 'Setting',
+        click: async () => {
+            let mainWindow = new BrowserWindow({
+              width: 600,
+              height: 540,
+              webPreferences: {
+                preload: path.join(__dirname, '../preload.js')
+
+              },
+              backgroundColor: '#252729'
+            })
+            
+            
+            mainWindow.loadFile('./app/page/setting.html')
         }
       }
     ]

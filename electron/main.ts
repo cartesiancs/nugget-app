@@ -242,7 +242,7 @@ const downloadFfmpeg = (binType) => {
 ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {
   // ffmpeg 다운로드
 
-  downloadFfmpeg('ffprobe')
+  downloadFfmpeg('ffmpeg')
 
 });
 

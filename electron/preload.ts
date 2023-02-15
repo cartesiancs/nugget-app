@@ -34,6 +34,7 @@ const request = {
     ffmpeg: {
         getMetadata: (bloburl, mediapath) => ipcRenderer.send('GET_METADATA', bloburl, mediapath),
         combineFrame: (outputDir, elementId) => ipcRenderer.invoke('ffmpeg:combineFrame', outputDir, elementId),
+        installFFmpeg: () => ipcRenderer.send('DOWNLOAD_FFMPEG'),
 
     },
     render: {

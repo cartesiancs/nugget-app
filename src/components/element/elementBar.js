@@ -337,11 +337,17 @@ class ElementBar extends HTMLElement {
     handleMousedown(e) {
         this.selectThisElement()
         this.dragMousedown(e)
+        this.showSideOption()
     }
 
     handleMouseup(e) {
         this.rightclick(e)
         this.selectThisElement()
+    }
+
+    showSideOption() {
+        const optionGroup = document.querySelector("option-group")
+        optionGroup.showOption({ filetype: this.elementFileType, elementId: this.elementId })
     }
 
     rightclick(e) {

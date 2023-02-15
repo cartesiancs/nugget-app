@@ -9,6 +9,12 @@ const request = {
         exportVideo: () => ipcRenderer.invoke('dialog:exportVideo')
         
     },
+    store: {
+        set: (key, value) => ipcRenderer.invoke('store:set', key, value),
+        get: (key) => ipcRenderer.invoke('store:get', key),
+        delete: (key) => ipcRenderer.invoke('store:delete', key),
+
+    },
     project: {
         save: () => ipcRenderer.invoke('dialog:saveProject')        
     },
@@ -32,6 +38,9 @@ const request = {
     },
     render: {
         outputVideo: (elements, options) => ipcRenderer.send('RENDER', elements, options)
+    },
+    url: {
+        openUrl: (url) => ipcRenderer.send('OPEN_URL', url),
     }
 
 
@@ -45,6 +54,9 @@ const response = {
         getAppPath: (callback) => ipcRenderer.on('GET_PATH', callback)
 
         
+    },
+    auth: {
+        loginSuccess: (callback) => ipcRenderer.on('LOGIN_SUCCESS', callback)
     },
     filesystem: {
         getAllDirectory: (callback) => ipcRenderer.on('RES_ALL_DIR', callback)

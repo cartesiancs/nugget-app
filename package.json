@@ -1,6 +1,6 @@
 {
     "name": "nugget-app",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "Video Editor",
     "main": "main/main.js",
     "author": "DeVent",
@@ -9,8 +9,8 @@
         "compile": "tsc -w",
         "bundle": "npm run bundle:src",
         "bundle:src": "webpack --mode=production",
-        "build:osx": "electron-builder build --mac --universal",
-        "build:win": "cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
+        "build:osx": "electron-builder build --mac",
+        "build:win": "cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
         "build": "npm run build:osx && npm run build:win"
     },
     "repository": {
@@ -95,8 +95,8 @@
         "electron-is-dev": "^2.0.0",
         "electron-log": "^4.4.8",
         "electron-progressbar": "^2.0.1",
+        "electron-store": "^8.1.0",
         "electron-updater": "^5.3.0",
-        "ffmpeg-static": "^5.1.0",
         "fluent-ffmpeg": "^2.1.2",
         "fs-extra": "^11.1.0",
         "jszip": "^3.10.1",

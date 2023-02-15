@@ -31,6 +31,8 @@
 // })
 
 
+const NUGGET_WEBSITE = 'https://nugget.studio'
+
 window.electronAPI.res.filesystem.getAllDirectory((evt, dir, result) => {
     let fileLists = {}
     const assetList = document.querySelector("asset-list")
@@ -62,6 +64,41 @@ window.electronAPI.res.filesystem.getAllDirectory((evt, dir, result) => {
             //nugget.asset.loadFile(element.title, dir)
         }
     }
+})
+
+
+
+
+window.electronAPI.res.auth.loginSuccess( (evt, data) => {
+    console.log("AUTHDATA", data)
+    let token = data.split("/")[2]
+    rendererModal.notLogin.hide()
+
+    //NOTE: URL 변경필요
+    fetch(`${NUGGET_WEBSITE}/api/auth/me`, {
+    headers: {
+        'Accept': 'application/json',
+        'x-access-token': token
+    }})
+    .then(response => response.json())
+    .then(res => {
+        console.log(res)
+        if (res.status == 0) {
+            return 0
+        }
+
+        window.electronAPI.req.store.set('token', token).then((result) => {
+            if (result.status == 0) {
+                return 0
+            }
+
+            console.log("login!")
+
+        });
+    })
+
+
+    
 })
 
 
@@ -130,7 +167,10 @@ const rendererModal = {
     }),
     whenTimelineChanged: new bootstrap.Modal(document.getElementById('whenTimelineChanged'), {
         keyboard: false
-    })
+    }),
+    notLogin: new bootstrap.Modal(document.getElementById('notLogin'), {
+        keyboard: false
+    }),
 }
 
 const rendererUtil = {
@@ -208,3 +248,21 @@ const ipc = {
     }
 }
 
+const auth = {
+    openLogin: () => {
+        let loginLink = `${NUGGET_WEBSITE}/auth/login`
+        window.electronAPI.req.url.openUrl(loginLink)
+    },
+    checkLogin: () => {
+        window.electronAPI.req.store.get('token').then((result) => {
+            console.log(result)
+            if (result.status == 0) {
+                rendererModal.notLogin.show()
+                return 0
+            }
+
+            rendererModal.notLogin.hide()
+
+        });
+    }
+}

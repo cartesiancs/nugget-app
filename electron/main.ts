@@ -20,6 +20,9 @@ import * as fsp from 'fs/promises';
 import fse from 'fs-extra'
 
 import ProgressBar from 'electron-progressbar'
+import Store from "electron-store"
+
+const store = new Store();
 
 
 let resourcesPath = ''
@@ -301,6 +304,10 @@ ipcMain.on('OPEN_PATH', async (evt, path) => {
   shell.openPath(path)
 })
 
+ipcMain.on('OPEN_URL', async (evt, url) => {
+  shell.openExternal(url)
+})
+
 
 
 
@@ -464,6 +471,33 @@ ipcMain.handle('filesystem:readFile', async (event, filename) => {
   let data =  await fsp.readFile(filename)
   return data
 
+})
+
+ipcMain.handle('store:set', async (event, key, value) => {
+  store.set(key, value);
+  return { status: 1 }
+})
+
+ipcMain.handle('store:get', async (event, key) => {
+  let value = store.get(key);
+  if (value == undefined) {
+    return { status: 0 }
+  }
+  return { status: 1, value: value }
+})
+
+ipcMain.handle('store:delete', async (event, key) => {
+  store.delete(key);
+  return { status: 1 }
+})
+
+
+
+
+app.setAsDefaultProtocolClient("nuggetapp");
+
+app.on("open-url", function (event, data) {
+  mainWindow.webContents.send("LOGIN_SUCCESS", data)
 })
 
 

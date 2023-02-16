@@ -4,8 +4,10 @@ class ElementBar extends HTMLElement {
 
         //this.directory = ''
 
-        this.timeline = document.querySelector("element-timeline").timeline
+        this.elementTimeline = document.querySelector("element-timeline")
         this.elementControl = document.querySelector("element-control")
+
+        this.timeline = document.querySelector("element-timeline").timeline
 
         this.elementId = this.getAttribute('element-id')
         this.elementBarType = this.getAttribute('element-type') || 'static'
@@ -127,7 +129,44 @@ class ElementBar extends HTMLElement {
             this.style.left = `${x}px`
             this.animationPanelMove(x)
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(x)
+
+            this.dragEditGuide()
         }
+    }
+
+    dragEditGuide() {
+        let elementBarPosition = {
+            startX: Number(this.style.left.split('px')[0]),
+            endX: Number(this.style.left.split('px')[0]) + Number(this.style.width.split('px')[0])
+        }
+
+
+        for (const elementId in this.timeline) {
+            if (Object.hasOwnProperty.call(this.timeline, elementId)) {
+                if (elementId == this.elementId) {
+                    continue
+                }
+
+                const element = this.timeline[elementId];
+                let startX = this.millisecondsToPx(element.startTime)
+                let endX = this.millisecondsToPx(element.startTime + element.duration)
+                let checkRange = 10
+
+                if (elementBarPosition.startX > startX - checkRange && elementBarPosition.startX < startX + checkRange) {
+                    this.style.left = `${startX}px`
+                    this.timeline[this.elementId].startTime = this.pxToMilliseconds(startX)
+                }
+
+                if (elementBarPosition.startX > endX - checkRange && elementBarPosition.startX < endX + checkRange) {
+                    this.style.left = `${endX}px`
+                    this.timeline[this.elementId].startTime = this.pxToMilliseconds(endX)
+
+                }
+
+                
+            }
+        }
+        
     }
 
     dragMousedown(e) {
@@ -143,7 +182,6 @@ class ElementBar extends HTMLElement {
 
     dragMouseup() {
         document.removeEventListener('mousemove', this.dragEventHandler);
-
         this.isDrag = false
     }
 

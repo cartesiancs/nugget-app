@@ -19,6 +19,10 @@ class ElementTimeline extends HTMLElement {
         this.timelineHashTable = {}
         this.appendCheckpointInHashTable()
         this.copyedTimelineData = {};
+
+        // NOTE: edit guide == 정렬 가이드, 모든 엘리먼트의 시작점과 끝 점을 담은 배열입니다.
+        this.editGuideBreakPoint = []
+
     }
 
     generateHash(text) {

@@ -67,13 +67,20 @@ class KeyframeEditor extends HTMLElement {
             type: "start"
         })
 
-        this.querySelector("div").classList.add("h-100", "position-relative")
+        this.querySelector("div").classList.add("position-relative")
+        //this.querySelector("div").style.height = `${this.scrollHeight}px`
+
+
+
+        
+
         this.classList.add("h-100", "w-100", "position-absolute", "overflow-scroll")
 
 
         let animationPanel = document.querySelector(`animation-panel[element-id="${this.elementId}"]`)
         animationPanel.updateItem()   
 
+        this.fillBackground()
 
 
     }
@@ -103,6 +110,13 @@ class KeyframeEditor extends HTMLElement {
         keyframeEditor.classList.remove("show")
         keyframeEditor.classList.add("hide")
 
+    }
+
+    fillBackground() {
+        setTimeout(() => {
+            this.querySelector("div").style.height = `${this.scrollHeight}px`
+            console.log("scrollHeight", this.scrollHeight)
+        }, 100);
     }
 
     addPadding({ px, type }) {
@@ -170,6 +184,8 @@ class KeyframeEditor extends HTMLElement {
             }
 
             this.drawLine(line, true)
+            this.fillBackground()
+
         }
     }
 
@@ -243,7 +259,7 @@ class KeyframeEditor extends HTMLElement {
 
         this.querySelector("svg").insertAdjacentHTML("beforeend", `
         <polyline id="keyframePolyline${line}" />
-        <path id="keyframePath${line}" class="keyframe-path" />
+        <path id="keyframePath${line}" class="keyframe-path-${line + 1}" />
         <path id="keyframeHiddenPath${line}" class="d-none" />`)
 
         const timelineRange =  Number(document.querySelector("#timelineRange").value)

@@ -46,10 +46,19 @@ class AssetDropUploader extends HTMLElement {
     }
 
     handleDrop(e) {
+
         e.preventDefault();
-        let filePath = e.dataTransfer.files[0].path
-        NUGGET.asset.add(filePath)
-        this.classList.add("d-none")
+        try {
+            let filePath = e.dataTransfer.files[0].path
+            NUGGET.asset.add(filePath)
+            this.classList.add("d-none")
+        } catch (error) {
+            setTimeout(() => {
+                this.classList.remove("d-none")
+
+            }, 800);
+        }
+
     }
 
 

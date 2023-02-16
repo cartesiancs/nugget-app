@@ -316,7 +316,7 @@ const renderFilter = {
         textcolor: object.element.textcolor,
         fontsize: object.element.fontsize,
         fontfile: `${updateResourcesPath}/assets/fonts/notosanskr-medium.otf`,
-        x: String(object.element.location.x),
+        x: String(object.element.location.x + ((object.element.width - object.element.widthInner) / 2)),
         y: String(object.element.location.y),
         startTime: object.element.startTime/1000,
         endTime: (object.element.startTime/1000) + (object.element.duration/1000)

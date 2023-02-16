@@ -116,7 +116,9 @@ class ElementControl extends HTMLElement {
 
                     targetElement.resizeStyle({
                         x: elementLeft,
-                        y: elementTop
+                        y: elementTop,
+                        w: elementWidth,
+                        h: elementHeight
                     })
 
                     targetElement.resizeFont({
@@ -277,6 +279,9 @@ class ElementControl extends HTMLElement {
             location: {x: 0, y: 0},
             localpath: '/TEXTELEMENT',
             filetype: 'text',
+            height: 52,
+            width: 500,
+            widthInner: 200,
             animation: {
                 position: {
                     isActivate: false,
@@ -446,14 +451,23 @@ class ElementControl extends HTMLElement {
 
     changeText(elementId) {
         let elementBody = document.querySelector(`#element-${elementId}`)
-        let inputTarget = elementBody.querySelector('input')
+        let inputTarget = elementBody.querySelector('input-text')
+        let inputTargetSpan = inputTarget.querySelector("span")
+
         let inputValue = inputTarget.value
+
         this.timeline[elementId].text = inputValue
+        
+
+        elementBody.style.width = `${inputTarget.offsetWidth}px`
+
+
+
     }
 
     changeTextColor({ elementId, color }) {
         let elementBody = document.querySelector(`#element-${elementId}`)
-        let inputTarget = elementBody.querySelector('input')
+        let inputTarget = elementBody.querySelector('input-text')
 
         inputTarget.style.color = color
         this.timeline[elementId].textcolor = color
@@ -461,14 +475,22 @@ class ElementControl extends HTMLElement {
 
     changeTextSize({ elementId, size }) {
         let elementBody = document.querySelector(`#element-${elementId}`)
+        let inputTarget = elementBody.querySelector('input-text')
+
+        inputTarget.setWidthInner()
+
+
         let textSize = Number(size) / this.previewRatio
         elementBody.style.fontSize = `${textSize}px`
         elementBody.style.height = `${textSize}px`
+        inputTarget.style.top = `${textSize / 2}px`
+
 
 
         this.timeline[elementId].fontsize = Number(size)
         this.timeline[elementId].height = Number(size)
 
+        
     }
 
     changeTimelineRange() {
@@ -745,6 +767,9 @@ class ElementControlAsset extends HTMLElement {
             template = this.templateAudio()
         }
 
+        this.innerHTML = template;
+
+
         let resizeElement = this.convertAbsoluteToRelativeSize({
             x: this.timeline[this.elementId].location.x,
             y: this.timeline[this.elementId].location.y,
@@ -764,11 +789,11 @@ class ElementControlAsset extends HTMLElement {
             let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
 
             this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeText}px; font-size: ${resizeText}px;`)
+            this.querySelector(`input-text`).style.top = `${resizeText / 2}px`
         }
 
         
 
-        this.innerHTML = template;
     }
 
     convertAbsoluteToRelativeSize({x,y,w,h}) { 
@@ -808,8 +833,11 @@ class ElementControlAsset extends HTMLElement {
 
     templateText() {
         let resizeRatio = this.elementControl.previewRatio
+        let style = "color: rgb(255, 255, 255); top: 0px; position: absolute;"
 
-        return `<input type="text" class="asset-transparent element-text" draggable="false" style="color: rgb(255, 255, 255); " onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">`
+        return `<input-text element-id="${this.elementId}"></input-text>`
+
+        // <input type="text" class="asset-transparent element-text" draggable="false" style="${style}" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">
 
     }
 
@@ -1182,12 +1210,19 @@ class ElementControlAsset extends HTMLElement {
     }
 
     resizeFont({px}) {
-        if (!this.querySelector("input")) {
+        if (!this.querySelector("input-text")) {
             return 0
         }
 
+        let targetInput = this.querySelector("input-text")
+
+
         this.style.fontSize = `${px}px`
-        this.style.height = `${px}px`
+
+        this.elementControl.changeTextSize({ 
+            elementId: this.elementId,
+            size: this.timeline[this.elementId].fontsize
+        })
 
     }
 

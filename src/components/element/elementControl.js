@@ -175,6 +175,7 @@ class ElementControl extends HTMLElement {
                 startTime: 0,
                 duration: 1000,
                 location: {x: 0, y: 0},
+                rotation: 0,
                 width: width,
                 height: height,
                 localpath: path,
@@ -243,6 +244,7 @@ class ElementControl extends HTMLElement {
                     duration: duration,
                     location: {x: 0, y: 0},
                     trim: {startTime: 0, endTime: duration},
+                    rotation: 0,
                     width: width,
                     height: height,
                     localpath: path,
@@ -277,6 +279,7 @@ class ElementControl extends HTMLElement {
             textcolor: "#ffffff",
             fontsize: 52,
             location: {x: 0, y: 0},
+            rotation: 0,
             localpath: '/TEXTELEMENT',
             filetype: 'text',
             height: 52,
@@ -745,11 +748,13 @@ class ElementControlAsset extends HTMLElement {
 
         this.isDrag = false
         this.isResize = false
+        this.isRotate = false
 
 
         this.initialPosition = {x: 0, y: 0, w: 0, h: 0}
         this.resizeDirection = 'n'
         this.resizeEventHandler
+        this.rotateEventHandler
         this.dragdownEventHandler
         this.dragupEventHandler
 
@@ -758,7 +763,7 @@ class ElementControlAsset extends HTMLElement {
     render(){
         let template
         if (this.elementFiletype == 'image') {
-            template = this.templateImage() + this.templateResize()
+            template = this.templateImage() + this.templateResize() + this.templateRotate()
         } else if (this.elementFiletype == 'video') {
             template = this.templateVideo() + this.templateResize()
         } else if (this.elementFiletype == 'text') {
@@ -876,6 +881,14 @@ class ElementControlAsset extends HTMLElement {
             `
         }
 
+    }
+
+    templateRotate() {
+        return `<div class="handle-rotate text-center" onmousedown="this.parentNode.rotateMousedown()">
+        <span class="material-symbols-outlined handle-rotate-icon">
+cached
+</span>
+        </div>`
     }
 
     pxToInteger(px = '0px') {
@@ -1089,6 +1102,30 @@ class ElementControlAsset extends HTMLElement {
         return this.getGcd(b, a%b)
     }
 
+    rotate(e) {
+        this.isDrag = false
+
+        if (e.target.tagName != "CANVAS") {
+            return 0
+        }
+
+
+        let referenceRotationPoint = this.convertAbsoluteToRelativeSize({
+            x: this.timeline[this.elementId].location.x + (this.timeline[this.elementId].width / 2), 
+            y: this.timeline[this.elementId].location.y + (this.timeline[this.elementId].height / 2)
+        })
+
+        let mouseX = e.offsetX
+        let mouseY = e.offsetY
+
+        let degree = - Math.atan2( referenceRotationPoint.x - mouseX, referenceRotationPoint.y - mouseY ) / (Math.PI / 180)
+
+        console.log()
+
+
+        this.timeline[this.elementId].rotation = degree
+        this.style.transform = `rotate(${degree}deg)`;
+    }
 
     resize(e) {
         this.isDrag = false
@@ -1226,6 +1263,24 @@ class ElementControlAsset extends HTMLElement {
 
     }
 
+    rotateMousedown() {
+        this.isDrag = false
+        this.isResize = false
+
+        if (this.isRotate == false) {
+            this.isRotate = true
+            this.rotateEventHandler = this.rotate.bind(this)
+            document.querySelector("#preview").addEventListener('mousemove', this.rotateEventHandler);
+        }
+
+
+    }
+
+    rotateMouseup() {
+        document.querySelector("#preview").removeEventListener('mousemove', this.rotateEventHandler);
+        this.isRotate = false
+    }
+
     resizeMousedown(direction) {
         this.isDrag = false
 
@@ -1244,9 +1299,10 @@ class ElementControlAsset extends HTMLElement {
 
     resizeMouseup() {
         document.removeEventListener('mousemove', this.resizeEventHandler);
-
         this.isResize = false
     }
+
+
 
     activateOutline() {
         this.elementControl.deactivateAllOutline()
@@ -1300,6 +1356,7 @@ class ElementControlAsset extends HTMLElement {
         // this.addEventListener('mousedown', this.activateOutline.bind(this));
 
         document.addEventListener('mouseup', this.resizeMouseup.bind(this));
+        document.addEventListener('mouseup', this.rotateMouseup.bind(this));
         document.addEventListener('mouseup', this.dragMouseup.bind(this));
 
     }

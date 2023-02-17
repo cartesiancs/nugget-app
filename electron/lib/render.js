@@ -240,7 +240,8 @@ const renderFilter = {
           x: String(object.element.location.x),
           y: String(object.element.location.y),
           startTime: object.element.startTime/1000,
-          endTime: (object.element.startTime/1000) + (object.element.duration/1000)
+          endTime: (object.element.startTime/1000) + (object.element.duration/1000),
+          rotation: object.element.rotation
         }
 
         if (checkStaticCondition) {
@@ -282,7 +283,8 @@ const renderFilter = {
             elementCounts.audio += 1
         }
       
-      
+        object.filter.push(`rotate=${options.rotation}*PI/180:c=none:ow=rotw(iw):oh=roth(ih)[${elementCounts.video}:v]`)
+
       
         object.filter.push({
           'filter': 'scale',
@@ -293,6 +295,8 @@ const renderFilter = {
           'inputs': `[${elementCounts.video}:v]`,
           'outputs': `image${elementCounts.video}`
         })
+
+        
       
         object.filter.push({
           'filter': 'overlay',

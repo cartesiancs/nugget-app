@@ -184,3 +184,19 @@ $alignment-guide-color: #ffffff;
     background-color: $alignment-guide-color;
 }
 
+.handle-rotate {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    top: -1.3rem;
+    left: 50%;
+    background-color: #495057;
+    border-radius: 4rem;
+    transform: translateX(-50%);
+}
+
+.handle-rotate-icon {
+    color: #ffffff;
+    font-size: 1rem;
+
+}

@@ -766,7 +766,8 @@ class ElementControlAsset extends HTMLElement {
     render(){
         let template
         if (this.elementFiletype == 'image') {
-            template = this.templateImage() + this.templateResize() + this.templateRotate()
+            // NOTE: this.templateRotate() 는 사이드 잘림 문제로 추후 업데이트 필요
+            template = this.templateImage() + this.templateResize() //+ this.templateRotate()
         } else if (this.elementFiletype == 'video') {
             template = this.templateVideo() + this.templateResize()
         } else if (this.elementFiletype == 'text') {

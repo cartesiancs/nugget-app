@@ -134,6 +134,7 @@ const renderMain = {
         command.audioCodec('aac')
         command.videoCodec('libx264')
         command.fps(60)
+        command.videoBitrate(5500)
         command.format('mp4');
         command.run();
 

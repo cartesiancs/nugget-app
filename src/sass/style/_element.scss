@@ -190,13 +190,25 @@ $alignment-guide-color: #ffffff;
     height: 1rem;
     top: -1.3rem;
     left: 50%;
-    background-color: #495057;
+    background-color: #49505700;
     border-radius: 4rem;
     transform: translateX(-50%);
 }
 
 .handle-rotate-icon {
-    color: #ffffff;
+    color: #ffffff00;
     font-size: 1rem;
+
+}
+
+.element-drag.element-outline > .handle-rotate {
+    background-color: #495057;
+    color: #ffffff;
+    border-radius: 4rem;
+
+}
+
+.element-drag.element-outline .handle-rotate-icon  {
+    color: #ffffff;
 
 }

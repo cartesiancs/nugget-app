@@ -241,7 +241,8 @@ const renderFilter = {
           y: String(object.element.location.y),
           startTime: object.element.startTime/1000,
           endTime: (object.element.startTime/1000) + (object.element.duration/1000),
-          rotation: object.element.rotation
+          rotationRadian: object.element.rotation * Math.PI / 180,
+          rotationDegree: object.element.rotation
         }
 
         if (checkStaticCondition) {
@@ -283,7 +284,6 @@ const renderFilter = {
             elementCounts.audio += 1
         }
       
-        object.filter.push(`rotate=${options.rotation}*PI/180:c=none:ow=rotw(iw):oh=roth(ih)[${elementCounts.video}:v]`)
 
       
         object.filter.push({
@@ -296,14 +296,18 @@ const renderFilter = {
           'outputs': `image${elementCounts.video}`
         })
 
-        
+
+        // NOTE: 회전시 사분면 사이드 잘림
+        object.filter.push(`[image${elementCounts.video}]rotate=${options.rotationRadian}:c=none[image${elementCounts.video}]`)
+
+        //:ow=rotw(${options.rotationRadian}):oh=roth(${options.rotationRadian})
       
         object.filter.push({
           'filter': 'overlay',
           'options': {
             'enable': `between(t,${options.startTime},${options.endTime})`,
-            'x': `${Number(options.x)}`, // +((t-1)*85)
-            'y': options.y
+            'x': `${Number(options.x)}`, // +((t-1)*85) + ${Math.min(0, options.height*Math.sin(options.rotationDegree))}
+            'y': `${Number(options.y)}` //  + ${Math.min(0, options.width*Math.sin(options.rotationDegree))}
           },
           'inputs': `[tmp][image${elementCounts.video}]`,
           'outputs': `tmp`

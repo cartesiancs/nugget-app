@@ -278,6 +278,9 @@ class ElementControl extends HTMLElement {
             text: "텍스트",
             textcolor: "#ffffff",
             fontsize: 52,
+            fontname: "notosanskr",
+            fontweight: "medium",
+            fonttype: "otf",
             location: {x: 0, y: 0},
             rotation: 0,
             localpath: '/TEXTELEMENT',
@@ -788,7 +791,7 @@ class ElementControlAsset extends HTMLElement {
         this.setAttribute("id", `element-${this.elementId}`)
         
         if (this.elementFiletype !== 'text') {
-            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeElement.h}px;`)
+            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeElement.h}px; transform: rotate(${this.timeline[this.elementId].rotation}deg);`)
         } else if (this.elementFiletype == 'text') {
             let resizeRatio = this.elementControl.previewRatio
             let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
@@ -1034,7 +1037,7 @@ cached
     }
 
     dragMousedown(e) {
-        if (!this.isResize) {
+        if (!this.isResize && !this.isRotate) {
             this.isDrag = true
             this.initialPosition.x = e.pageX - this.pxToInteger(this.style.left)
             this.initialPosition.y = e.pageY - this.pxToInteger(this.style.top)
@@ -1104,6 +1107,8 @@ cached
 
     rotate(e) {
         this.isDrag = false
+        console.log("rotate", e.target.tagName)
+
 
         if (e.target.tagName != "CANVAS") {
             return 0
@@ -1122,6 +1127,9 @@ cached
 
         console.log()
 
+        if (degree < 0) {
+            degree = 360 + degree
+        }
 
         this.timeline[this.elementId].rotation = degree
         this.style.transform = `rotate(${degree}deg)`;
@@ -1268,11 +1276,13 @@ cached
         this.isResize = false
 
         if (this.isRotate == false) {
-            this.isRotate = true
+            
             this.rotateEventHandler = this.rotate.bind(this)
             document.querySelector("#preview").addEventListener('mousemove', this.rotateEventHandler);
         }
 
+
+        this.isRotate = true
 
     }
 

@@ -14,6 +14,7 @@ const project = {
         const projectFile = document.querySelector("#projectFile").value
 
 
+
         console.log(projectFile)
 
         if (projectFile != '') {
@@ -105,6 +106,10 @@ const project = {
             window.electronAPI.req.filesystem.writeFile(projectDestination, buffer, 'base64').then((isCompleted) => {
 
                 console.log('saved!')
+
+                const saveProjectToast = bootstrap.Toast.getInstance(document.getElementById('saveProject'))
+                saveProjectToast.show()
+
                 elementTimeline.appendCheckpointInHashTable()
                 project.changeProjectFileValue({ projectDestination: projectDestination })
             //fs.writeFile( projectDestination , buffer, () => {

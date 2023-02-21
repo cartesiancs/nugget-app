@@ -331,13 +331,22 @@
 
             <div class="toast fade hide" id="loadMetadataToast" role="alert" data-bs-animation="true" data-bs-autohide="true" data-bs-delay="9000" aria-live="assertive" aria-atomic="true" style="background-color: rgba(37, 38, 43, 0.73);">
                 <div class="toast-body"> 
-                    <div class="text-center text-light mb-2">메타데이터 불러오는중</div> 
-                    <div class="progress">
+                    <div class="text-center text-light">메타데이터 불러오는중</div> 
+                    <div class="progress mt-2 mb-1">
                         <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
                     </div>
                 </div>
             </div>
+    
         
+        </div>
+
+        <div class="toast-container position-fixed bottom-0 start-50 translate-middle" style="z-index: 9000;">
+            <div class="toast fade hide" id="saveProject" role="alert" data-bs-animation="true" data-bs-autohide="true" data-bs-delay="1000" aria-live="assertive" aria-atomic="true" style="background-color: rgba(37, 38, 43, 0.73);">
+                <div class="toast-body"> 
+                    <div class="text-center text-light">저장 완료</div> 
+                </div>
+            </div>
         </div>
 
         <div id="menuRightClick"></div>

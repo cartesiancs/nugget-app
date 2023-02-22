@@ -500,9 +500,14 @@ class ElementControl extends HTMLElement {
     }
 
     changeTimelineRange() {
+
         const timelineRuler = document.querySelector("element-timeline-ruler")
         const timelineRange =  Number(document.querySelector("#timelineRange").value)
         const timeMagnification = timelineRange / 4
+
+        if (timelineRange == 0) {
+            return 0
+        }
         
         timelineRuler.updateRulerSpace(timeMagnification)
         this.timelineCursor.move(this.progressTime / 5 * timeMagnification)

@@ -413,11 +413,14 @@ class ElementTimelineRuler extends HTMLElement {
         super();
         this.mousemoveEventHandler = undefined
         this.mouseTimeout = undefined
+        this.rulerType = 'sec'
     }
 
     render(){
+        this.innerHTML = ''
         const template = this.template();
-        this.classList.add("timeline-ruler", "ruler")
+        this.classList.remove("ruler-sec", "ruler-min")
+        this.classList.add("timeline-ruler", `ruler-${this.rulerType}`)
 
         this.innerHTML = template;
         this.addTickNumber(10)
@@ -425,7 +428,7 @@ class ElementTimelineRuler extends HTMLElement {
 
 
     template() {
-        return `<ul class="ruler-x">
+        return `<ul class="ruler-${this.rulerType}-x">
         <li></li><li></li><li></li><li></li><li></li> <!-- repeat -->
       </ul>`
     }
@@ -438,11 +441,29 @@ class ElementTimelineRuler extends HTMLElement {
 
 
     updateRulerSpace(timeMagnification) {
-        const spaceRuler2 = 50 * timeMagnification
-        const spaceRuler1 = 5 * timeMagnification
+        this.style.removeProperty(`--ruler2-sec-space`)
+        this.style.removeProperty(`--ruler1-sec-space`)
+        this.style.removeProperty(`--ruler2-min-space`)
+        this.style.removeProperty(`--ruler1-min-space`)
 
-        this.style.setProperty('--ruler2-space', spaceRuler2); // NOTE: 기본값 50
-        this.style.setProperty('--ruler1-space', spaceRuler1); // NOTE: 기본값 5
+        let spaceRuler2 = 50 * timeMagnification
+        let spaceRuler1 = 5 * timeMagnification
+
+        console.log(timeMagnification)
+
+        if (timeMagnification >= 0.5) {
+            this.render()
+            this.rulerType = 'sec'
+        } else {
+            this.render()
+            this.rulerType = 'min'
+            spaceRuler2 = 3000 * timeMagnification
+            spaceRuler1 = 300 * timeMagnification
+        }
+
+        this.style.setProperty(`--ruler2-${this.rulerType}-space`, spaceRuler2); // NOTE: 기본값 50
+        this.style.setProperty(`--ruler1-${this.rulerType}-space`, spaceRuler1); // NOTE: 기본값 5
+
 
         
     }

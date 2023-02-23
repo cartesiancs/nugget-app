@@ -59,7 +59,7 @@ class KeyframeEditor extends HTMLElement {
             this.loadPoint(line)
         }
 
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
         this.addPadding({
@@ -213,7 +213,7 @@ class KeyframeEditor extends HTMLElement {
     }
 
     drawPoint({ x, y, line }) {
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
         let insertY = (y-4)
@@ -262,7 +262,7 @@ class KeyframeEditor extends HTMLElement {
         <path id="keyframePath${line}" class="keyframe-path-${line + 1}" />
         <path id="keyframeHiddenPath${line}" class="d-none" />`)
 
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
         let points = []
@@ -347,7 +347,7 @@ class KeyframeEditor extends HTMLElement {
     }
 
     handleMousedown(e) {
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
         let insertX = e.offsetX / timeMagnification

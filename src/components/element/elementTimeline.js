@@ -408,6 +408,7 @@ class ElementTimelineCursor extends HTMLElement {
     }
 }
 
+
 class ElementTimelineRuler extends HTMLElement { 
     constructor() {
         super();
@@ -544,4 +545,49 @@ class ElementTimelineRuler extends HTMLElement {
 }
 
 
-export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler }
+
+class ElementTimelineRange extends HTMLElement { 
+    constructor() {
+        super();
+
+        this.value = 0.9
+    }
+
+    render(){
+        const template = this.template();
+        this.innerHTML = template;
+    }
+
+
+    template() {
+        return `<input ref="range" type="range" class="form-range" min="0" max="6" step="0.02" id="timelineRange" value="4">`
+    }
+
+
+    updateValue() {
+        let inputRange = this.querySelector("input[ref='range']")
+        let newValue = (inputRange.value * inputRange.value / 10).toFixed(3)
+        if (newValue <= 0 ) {
+            return 0
+        }
+        this.value = (inputRange.value * inputRange.value / 10).toFixed(3)
+    }
+
+    updateRange() {
+        this.updateValue()
+        const elementControlComponent = document.querySelector("element-control")
+        elementControlComponent.changeTimelineRange()
+    }
+
+
+
+    connectedCallback() {
+        this.render();
+        this.querySelector("input[ref='range']").addEventListener("input", this.updateRange.bind(this))
+        this.querySelector("input[ref='range']").addEventListener("change", this.updateRange.bind(this))
+
+    }
+}
+
+
+export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler, ElementTimelineRange }

@@ -502,7 +502,7 @@ class ElementControl extends HTMLElement {
     changeTimelineRange() {
 
         const timelineRuler = document.querySelector("element-timeline-ruler")
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
         if (timelineRange == 0) {
@@ -541,7 +541,7 @@ class ElementControl extends HTMLElement {
     }
 
     getTimeFromProgress() {
-        let timelineRange =  Number(document.querySelector("#timelineRange").value)
+        let timelineRange = Number(document.querySelector("element-timeline-range").value)
         let timeMagnification = timelineRange / 4
 
         let relativeMilliseconds = this.progress * 5
@@ -551,7 +551,7 @@ class ElementControl extends HTMLElement {
 
     getTimeFromTimelineBar() {
         let timelineCursorProgress =  Number(this.timelineCursor.style.left.split("px")[0])
-        let timelineRange =  Number(document.querySelector("#timelineRange").value)
+        let timelineRange =  Number(document.querySelector("element-timeline-range").value)
         let timeMagnification = timelineRange / 4
 
         let milliseconds = (timelineCursorProgress * 5) / timeMagnification
@@ -650,7 +650,7 @@ class ElementControl extends HTMLElement {
 
         this.scroller = setInterval(() => {
             //split_inner_bottom.scrollBy(4, 0);
-            let nowTimelineRange = Number(document.querySelector("#timelineRange").value)
+            let nowTimelineRange = Number(document.querySelector("element-timeline-range").value)
             let nowTimelineProgress = Number(this.timelineCursor.style.left.split('px')[0]) + nowTimelineRange
             this.progress = nowTimelineProgress
             this.progressTime = this.getTimeFromProgress()
@@ -1072,7 +1072,7 @@ cached
             return 0
         }
 
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
         let keyframeEditor = document.querySelector(`keyframe-editor[element-id="${this.elementId}"]`)

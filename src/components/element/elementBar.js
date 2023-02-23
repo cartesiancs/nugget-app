@@ -210,14 +210,14 @@ class ElementBar extends HTMLElement {
 
 
     millisecondsToPx(ms) {
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
         const convertPixel = ms / 5 * timeMagnification
         return convertPixel
     }
 
     pxToMilliseconds(px) {
-        const timelineRange =  Number(document.querySelector("#timelineRange").value)
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
         const convertMs = px * 5 / timeMagnification
         return convertMs
@@ -372,16 +372,7 @@ class ElementBar extends HTMLElement {
         </menu-dropdown-body>`
     }
 
-    handleMousedown(e) {
-        this.selectThisElement()
-        this.dragMousedown(e)
-        this.showSideOption()
-    }
 
-    handleMouseup(e) {
-        this.rightclick(e)
-        this.selectThisElement()
-    }
 
     showSideOption() {
         const optionGroup = document.querySelector("option-group")
@@ -402,6 +393,17 @@ class ElementBar extends HTMLElement {
         //document.querySelector('element-timeline').removeSeletedElements()
     }
 
+
+    handleMousedown(e) {
+        this.selectThisElement()
+        this.dragMousedown(e)
+        this.showSideOption()
+    }
+
+    handleMouseup(e) {
+        this.rightclick(e)
+        this.selectThisElement()
+    }
 
     connectedCallback() {
         this.render();

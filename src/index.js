@@ -11,7 +11,7 @@ import { AssetBrowser } from './components/asset/assetBrowser.js';
 import { AssetDropUploader } from './components/asset/assetUploader.js';
 
 
-import { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler } from './components/element/elementTimeline.js';
+import { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler, ElementTimelineRange } from './components/element/elementTimeline.js';
 import { ElementBar } from './components/element/elementBar.js';
 import { ElementControl, ElementControlAsset, DragAlignmentGuide } from './components/element/elementControl.js';
 
@@ -45,6 +45,9 @@ customElements.define('asset-upload-drop', AssetDropUploader);
 customElements.define('element-timeline', ElementTimeline);
 customElements.define('element-timeline-cursor', ElementTimelineCursor);
 customElements.define('element-timeline-ruler', ElementTimelineRuler);
+customElements.define('element-timeline-range', ElementTimelineRange);
+
+
 
 customElements.define('element-bar', ElementBar);
 customElements.define('element-control', ElementControl);

@@ -421,7 +421,7 @@ class ElementTimelineRuler extends HTMLElement {
         this.innerHTML = ''
         const template = this.template();
         this.classList.remove("ruler-sec", "ruler-min")
-        this.classList.add("timeline-ruler", `ruler-${this.rulerType}`)
+        this.classList.add("timeline-ruler", `ruler`)
 
         this.innerHTML = template;
         this.addTickNumber(10)
@@ -429,7 +429,7 @@ class ElementTimelineRuler extends HTMLElement {
 
 
     template() {
-        return `<ul class="ruler-${this.rulerType}-x">
+        return `<ul class="ruler-x">
         <li></li><li></li><li></li><li></li><li></li> <!-- repeat -->
       </ul>`
     }
@@ -442,29 +442,45 @@ class ElementTimelineRuler extends HTMLElement {
 
 
     updateRulerSpace(timeMagnification) {
-        this.style.removeProperty(`--ruler2-sec-space`)
-        this.style.removeProperty(`--ruler1-sec-space`)
-        this.style.removeProperty(`--ruler2-min-space`)
-        this.style.removeProperty(`--ruler1-min-space`)
+        this.style.removeProperty(`--ruler2-space`)
+        this.style.removeProperty(`--ruler1-space`)
+        // this.style.removeProperty(`--ruler2-min-space`)
+        // this.style.removeProperty(`--ruler1-min-space`)
 
         let spaceRuler2 = 50 * timeMagnification
         let spaceRuler1 = 5 * timeMagnification
+        let spaceIncrese = 1
 
-        console.log(timeMagnification)
+        console.log(timeMagnification, this.rulerType[0])
 
         if (timeMagnification >= 0.5) {
             this.render()
             this.rulerType = 'sec'
+            spaceIncrese = 1
+        } else if (timeMagnification < 0.5 && timeMagnification >= 0.1) {
+            this.render()
+            this.rulerType = 'sec6'
+            spaceRuler2 = 300 * timeMagnification
+            spaceRuler1 = 30 * timeMagnification
+            spaceIncrese = 6
+
         } else {
             this.render()
             this.rulerType = 'min'
             spaceRuler2 = 3000 * timeMagnification
             spaceRuler1 = 300 * timeMagnification
+            spaceIncrese = 1
+
         }
+        
+        this.style.setProperty(`--ruler1-space`, spaceRuler1); // NOTE: 기본값 5
+        this.style.setProperty(`--ruler2-space`, spaceRuler2); // NOTE: 기본값 50
+        this.style.setProperty(`--ruler3-space`, spaceIncrese); // NOTE: 기본값 5
+        this.style.setProperty(`--ruler3-space-minus`, -spaceIncrese); // NOTE: 기본값 5
 
-        this.style.setProperty(`--ruler2-${this.rulerType}-space`, spaceRuler2); // NOTE: 기본값 50
-        this.style.setProperty(`--ruler1-${this.rulerType}-space`, spaceRuler1); // NOTE: 기본값 5
-
+       
+        
+        this.querySelector(".ruler-x").style.setProperty(`--ruler-standard-unit`, `'${this.rulerType[0]}'`); // NOTE: 기본값 5
 
         
     }

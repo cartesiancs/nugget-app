@@ -44,135 +44,162 @@ element-timeline-cursor::after {
   height: 17px;
 }
 
-.ruler-sec {
-    --ruler-sec-num-c: #888;
-    --ruler-sec-num-fz: 10px;
-    --ruler-sec-num-pi: 0.75ch;
-    --ruler-sec-unit: 4px;
-    --ruler-sec-x: 1;
-    --ruler-sec-y: 1;
 
-    --ruler1-sec-bdw: 1px;
-    --ruler1-sec-c:  #BBB;
-    --ruler1-sec-h: 8px;
-    --ruler1-sec-space: 5;
+  // background-image:
+  //   linear-gradient(90deg, var(--ruler1-sec-c) 0 var(--ruler1-sec-bdw), transparent 0),
+  //   linear-gradient(90deg, var(--ruler2-sec-c) 0 var(--ruler2-sec-bdw), transparent 0);
+  // background-position: 0 0;
+  // background-repeat: repeat-x, repeat-x;
+  // background-size:
+  //   calc(var(--ruler-sec-unit) * var(--ruler1-sec-space) * var(--ruler-sec-x)) var(--ruler1-sec-h),
+  //   calc(var(--ruler-sec-unit) * var(--ruler2-sec-space) * var(--ruler-sec-x)) var(--ruler2-sec-h),
+  //   var(--ruler1-sec-h) calc(var(--ruler-sec-unit) * var(--ruler1-sec-space) * var(--ruler-sec-y)),
+  //   var(--ruler2-sec-h) calc(var(--ruler-sec-unit) * var(--ruler2-sec-space) * var(--ruler-sec-y));
 
-    --ruler2-sec-bdw: 1px;
-    --ruler2-sec-c:  #BBB;
-    --ruler2-sec-h: 20px;
-    --ruler2-sec-space: 50;
-    --ruler3-sec-space: 1;
 
+$ruler-num-c: #888;
+$ruler-num-fz: 10px;
+$ruler-num-pi: 0.75ch;
+$ruler-unit: 4px;
+$ruler-x: 1;
+$ruler-y: 1;
+
+$ruler1-bdw: 1px;
+$ruler1-c:  #BBB;
+$ruler1-h: 8px;
+
+$ruler2-bdw: 1px;
+$ruler2-c:  #BBB;
+$ruler2-h: 20px;
+
+@mixin ruler() {
   background-image:
-    linear-gradient(90deg, var(--ruler1-sec-c) 0 var(--ruler1-sec-bdw), transparent 0),
-    linear-gradient(90deg, var(--ruler2-sec-c) 0 var(--ruler2-sec-bdw), transparent 0);
+    linear-gradient(90deg, $ruler1-c 0 $ruler1-bdw, transparent 0),
+    linear-gradient(90deg, $ruler2-c 0 $ruler2-bdw, transparent 0);
   background-position: 0 0;
   background-repeat: repeat-x, repeat-x;
   background-size:
-    calc(var(--ruler-sec-unit) * var(--ruler1-sec-space) * var(--ruler-sec-x)) var(--ruler1-sec-h),
-    calc(var(--ruler-sec-unit) * var(--ruler2-sec-space) * var(--ruler-sec-x)) var(--ruler2-sec-h),
-    var(--ruler1-sec-h) calc(var(--ruler-sec-unit) * var(--ruler1-sec-space) * var(--ruler-sec-y)),
-    var(--ruler2-sec-h) calc(var(--ruler-sec-unit) * var(--ruler2-sec-space) * var(--ruler-sec-y));
-  }
+    calc($ruler-unit * var(--ruler1-space) * $ruler-x) $ruler1-h,
+    calc($ruler-unit * var(--ruler2-space) * $ruler-x) $ruler2-h,
+    $ruler1-h calc($ruler-unit * var(--ruler1-space) * $ruler-y),
+    $ruler2-h calc($ruler-unit * var(--ruler2-space) * $ruler-y);
+  @content;
+}
 
-  .ruler-sec-x {
-    color: var(--ruler-sec-num-c);
-    counter-reset: d -1;
-    display: flex;
-    font-size: var(--ruler-sec-num-fz);
-    height: var(--ruler2-sec-h);
-    inset-block-start: 0;
-    inset-inline-start: calc(var(--ruler-sec-unit) * var(--ruler2-sec-space));
-    line-height: 1;
-    list-style: none;
-    margin: 0;
-    opacity: var(--ruler-sec-x);
-    overflow: hidden;
-    padding: 0;
-    width: 100%;
-  }
+@mixin rulerX() {
+  color: $ruler-num-c;
+  counter-reset: d var(--ruler3-space-minus);
+  display: flex;
+  font-size: $ruler-num-fz;
+  height: $ruler2-h;
+  inset-block-start: 0;
+  inset-inline-start: calc($ruler-unit * var(--ruler2-space));
+  line-height: 1;
+  list-style: none;
+  margin: 0;
+  opacity: $ruler-x;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
 
-  .ruler-sec-x li {
+  & li {
     align-self: flex-end;
-    counter-increment: d var(--ruler3-sec-space);
-    flex: 0 0 calc(var(--ruler-sec-unit) * var(--ruler2-sec-space));
+    counter-increment: d var(--ruler3-space);
+    flex: 0 0 calc($ruler-unit * var(--ruler2-space));
   }
 
-  .ruler-sec-x li::before {
+  & li::before {
     content: counter(d);
     line-height: 1;
-    padding-inline-start: var(--ruler-sec-num-pi);
+    padding-inline-start: $ruler-num-pi;
   }
 
-  .ruler-sec-x li::after {
-    content: "s";
-
+  & li::after {
+    content: var(--ruler-standard-unit);
   }
 
+  @content;
+}
+
+.ruler {
+  --ruler1-space: 5;
+  --ruler2-space: 50;
+  --ruler3-space: 1;
+  --ruler3-space-minus: -1;
+
+  @include ruler();
+}
+
+.ruler-x {
+  --ruler-standard-unit: "s";
+
+  @include rulerX();
+}
 
 
 
-  .ruler-min {
-    --ruler-min-num-c: #888;
-    --ruler-min-num-fz: 10px;
-    --ruler-min-num-pi: 0.75ch;
-    --ruler-min-unit: 4px;
-    --ruler-min-x: 1;
-    --ruler-min-y: 1;
 
-    --ruler1-min-bdw: 1px;
-    --ruler1-min-c:  #BBB;
-    --ruler1-min-h: 8px;
-    --ruler1-min-space: 1;
+  // .ruler-min {
+  //   --ruler-min-num-c: #888;
+  //   --ruler-min-num-fz: 10px;
+  //   --ruler-min-num-pi: 0.75ch;
+  //   --ruler-min-unit: 4px;
+  //   --ruler-min-x: 1;
+  //   --ruler-min-y: 1;
 
-    --ruler2-min-bdw: 1px;
-    --ruler2-min-c:  #BBB;
-    --ruler2-min-h: 20px;
-    --ruler2-min-space: 10;
-    --ruler3-min-space: 1;
+  //   --ruler1-min-bdw: 1px;
+  //   --ruler1-min-c:  #BBB;
+  //   --ruler1-min-h: 8px;
+  //   --ruler1-min-space: 1;
 
-  background-image:
-    linear-gradient(90deg, var(--ruler1-min-c) 0 var(--ruler1-min-bdw), transparent 0),
-    linear-gradient(90deg, var(--ruler2-min-c) 0 var(--ruler2-min-bdw), transparent 0);
-  background-position: 0 0;
-  background-repeat: repeat-x, repeat-x;
-  background-size:
-    calc(var(--ruler-min-unit) * var(--ruler1-min-space) * var(--ruler-min-x)) var(--ruler1-min-h),
-    calc(var(--ruler-min-unit) * var(--ruler2-min-space) * var(--ruler-min-x)) var(--ruler2-min-h),
-    var(--ruler1-min-h) calc(var(--ruler-min-unit) * var(--ruler1-min-space) * var(--ruler-min-y)),
-    var(--ruler2-min-h) calc(var(--ruler-min-unit) * var(--ruler2-min-space) * var(--ruler-min-y));
-  }
+  //   --ruler2-min-bdw: 1px;
+  //   --ruler2-min-c:  #BBB;
+  //   --ruler2-min-h: 20px;
+  //   --ruler2-min-space: 10;
+  //   --ruler3-min-space: 1;
 
-  .ruler-min-x {
-    color: var(--ruler-min-num-c);
-    counter-reset: d -1;
-    display: flex;
-    font-size: var(--ruler-min-num-fz);
-    height: var(--ruler2-min-h);
-    inset-block-start: 0;
-    inset-inline-start: calc(var(--ruler-min-unit) * var(--ruler2-min-space));
-    line-height: 1;
-    list-style: none;
-    margin: 0;
-    opacity: var(--ruler-min-x);
-    overflow: hidden;
-    padding: 0;
-    width: 100%;
-  }
+  // background-image:
+  //   linear-gradient(90deg, var(--ruler1-min-c) 0 var(--ruler1-min-bdw), transparent 0),
+  //   linear-gradient(90deg, var(--ruler2-min-c) 0 var(--ruler2-min-bdw), transparent 0);
+  // background-position: 0 0;
+  // background-repeat: repeat-x, repeat-x;
+  // background-size:
+  //   calc(var(--ruler-min-unit) * var(--ruler1-min-space) * var(--ruler-min-x)) var(--ruler1-min-h),
+  //   calc(var(--ruler-min-unit) * var(--ruler2-min-space) * var(--ruler-min-x)) var(--ruler2-min-h),
+  //   var(--ruler1-min-h) calc(var(--ruler-min-unit) * var(--ruler1-min-space) * var(--ruler-min-y)),
+  //   var(--ruler2-min-h) calc(var(--ruler-min-unit) * var(--ruler2-min-space) * var(--ruler-min-y));
+  // }
 
-  .ruler-min-x li {
-    align-self: flex-end;
-    counter-increment: d var(--ruler3-min-space);
-    flex: 0 0 calc(var(--ruler-min-unit) * var(--ruler2-min-space));
-  }
+  // .ruler-min-x {
+  //   color: var(--ruler-min-num-c);
+  //   counter-reset: d -1;
+  //   display: flex;
+  //   font-size: var(--ruler-min-num-fz);
+  //   height: var(--ruler2-min-h);
+  //   inset-block-start: 0;
+  //   inset-inline-start: calc(var(--ruler-min-unit) * var(--ruler2-min-space));
+  //   line-height: 1;
+  //   list-style: none;
+  //   margin: 0;
+  //   opacity: var(--ruler-min-x);
+  //   overflow: hidden;
+  //   padding: 0;
+  //   width: 100%;
+  // }
 
-  .ruler-min-x li::before {
-    content: counter(d);
-    line-height: 1;
-    padding-inline-start: var(--ruler-min-num-pi);
-  }
+  // .ruler-min-x li {
+  //   align-self: flex-end;
+  //   counter-increment: d var(--ruler3-min-space);
+  //   flex: 0 0 calc(var(--ruler-min-unit) * var(--ruler2-min-space));
+  // }
 
-  .ruler-min-x li::after {
-    content: "m";
+  // .ruler-min-x li::before {
+  //   content: counter(d);
+  //   line-height: 1;
+  //   padding-inline-start: var(--ruler-min-num-pi);
+  // }
 
-  }
+  // .ruler-min-x li::after {
+  //   content: "m";
+
+  // }

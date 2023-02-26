@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, net, Menu, shell, crashReporter } from 'electron'
 import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
+import { window } from "./lib/window.js";
 import { menu } from './lib/menu.js'
 
 
@@ -58,33 +59,7 @@ const ffprobePath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].f
 
 
 
-function createWindow () {
-  mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    },
-    backgroundColor: '#252729',
-    icon: path.join(__dirname, 'assets/icons/png/512x512.png')
-  })
 
-
-  mainWindow.loadFile('app/index.html')
-
-  autoUpdater.checkForUpdatesAndNotify()
-  Menu.setApplicationMenu(menu)
-
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
-
-  //process.env['ELECTRON_DISABLE_SECURITY_WARNINGS']=true
-
-  return mainWindow
-}
 autoUpdater.on('checking-for-update', () => {
   //sendStatusToWindow('Checking for update...');
 })
@@ -365,12 +340,9 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 
 
 app.whenReady().then(() => {
-  const mainWindow = createWindow()
 
+  mainWindow = window.createMainWindow()
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
 
   checkFfmpeg()
 

@@ -334,14 +334,6 @@ class ElementTimeline extends HTMLElement {
 
         }
 
-
-        if(event.ctrlKey && event.keyCode == 83 ){  //CTL s
-            NUGGET.project.save()
-        }
-
-        if(event.ctrlKey && event.keyCode == 79 ){  //CTL o
-            NUGGET.project.load()
-        }
     }
 
     handleMousedown() {

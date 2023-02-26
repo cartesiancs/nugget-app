@@ -137,6 +137,15 @@ window.electronAPI.res.app.forceClose( (evt) => {
 })
 
 
+window.electronAPI.res.shortcut.controlS( (evt) => {
+    NUGGET.project.save()
+})
+
+window.electronAPI.res.shortcut.controlO( (evt) => {
+    NUGGET.project.load()
+})
+
+
 // NOTE: ipcRenderer.send('INIT') 명령어로 실행중인 앱의 경로를 확인할 수 있습니다
 // window.electronAPI.res.app.getAppPath((evt, path) => {
 //     console.log(path)

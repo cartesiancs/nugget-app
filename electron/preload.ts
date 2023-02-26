@@ -70,6 +70,10 @@ const response = {
     },
     ffmpeg: {
         getMetadata: (callback) => ipcRenderer.on('GET_METADATA', callback)
+    },
+    shortcut: {
+        controlS: (callback) => ipcRenderer.on('SHORTCUT_CONTROL_S', callback),
+        controlO: (callback) => ipcRenderer.on('SHORTCUT_CONTROL_O', callback),
     }
 }
 

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import * as path from 'path'
+import { mainWindow } from './window.js'
 
 
 const isMac = process.platform === 'darwin'
@@ -31,8 +32,16 @@ const template = [
         //       console.log("dd")
         //     }
         // },
-        { label: 'saveProject' },
-        { label: 'importProject' }
+        {
+          label: 'Save Project',
+          accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Control+S',
+          click: () => {  mainWindow.webContents.send('SHORTCUT_CONTROL_S')  }
+        },
+        {
+          label: 'Open Project',
+          accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Control+O',
+          click: () => {  mainWindow.webContents.send('SHORTCUT_CONTROL_O')  }
+        }
       ]
   },
   // { role: 'editMenu' }

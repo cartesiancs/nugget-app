@@ -67,6 +67,7 @@ class ElementTimeline extends HTMLElement {
         return `
         <element-timeline-ruler></element-timeline-ruler>
         <element-timeline-cursor></element-timeline-cursor>
+        <div ref="elementLayer"></div>
 
         `
     }
@@ -135,9 +136,7 @@ class ElementTimeline extends HTMLElement {
 
     addElementBar(elementId) {
         const templateBar = this.templateElementBar(elementId)
-        this.insertAdjacentHTML("beforeend", templateBar)
-
-        let height = this.getTimelineScrollHeight()
+        this.querySelector("div[ref='elementLayer']").insertAdjacentHTML("afterbegin", templateBar)
     }
 
     templateElementBar(elementId) {

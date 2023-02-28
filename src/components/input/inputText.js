@@ -22,9 +22,9 @@ class InputText extends HTMLElement {
         this.style.width = '100%'
         this.style.position = 'absolute'
         this.style.top = '0px'
+        this.style.color = '#ffffff'
 
         this.querySelector("span").style.height = `100%`
-        this.querySelector("span").style.color = '#ffffff'
         this.querySelector("span").style.outline = 'none'
 
         this.querySelector("span").setAttribute("contenteditable", true)

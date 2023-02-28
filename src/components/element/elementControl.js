@@ -907,6 +907,7 @@ cached
     showDragAlignmentGuide() {
         let dragAlignmentGuide = document.querySelector("drag-alignment-guide")
         let videoCanvas = document.querySelector("#video")
+        let allowableRange = 6
 
         let canvas = {
             width: Number(videoCanvas.style.width.split("px")[0]),
@@ -923,7 +924,7 @@ cached
 
         }
 
-        if (elementPositions.top < 6) {
+        if (elementPositions.top < allowableRange && elementPositions.top > -allowableRange) {
             dragAlignmentGuide.showGuide({ position: 'top' })
             let y = 0
             this.style.top = `${y}px`
@@ -934,7 +935,7 @@ cached
             dragAlignmentGuide.hideGuide({ position: 'top' })
         }
 
-        if (elementPositions.top + elementPositions.height > canvas.height - 6) {
+        if (elementPositions.top + elementPositions.height > canvas.height - allowableRange && elementPositions.top + elementPositions.height < canvas.height + allowableRange) {
             dragAlignmentGuide.showGuide({ position: 'bottom' })
             let y = canvas.height - elementPositions.height
             this.style.top = `${y}px`
@@ -945,7 +946,7 @@ cached
             dragAlignmentGuide.hideGuide({ position: 'bottom' })
         }
 
-        if (elementPositions.left < 6) {
+        if (elementPositions.left < allowableRange && elementPositions.left > -allowableRange) {
             dragAlignmentGuide.showGuide({ position: 'left' })
             let x = 0
             this.style.left = `${x}px`
@@ -956,7 +957,7 @@ cached
             dragAlignmentGuide.hideGuide({ position: 'left' })
         }
 
-        if (elementPositions.left + elementPositions.width > canvas.width - 6) {
+        if (elementPositions.left + elementPositions.width > canvas.width - allowableRange && elementPositions.left + elementPositions.width < canvas.width + allowableRange) {
             dragAlignmentGuide.showGuide({ position: 'right' })
             let x = canvas.width - elementPositions.width
             this.style.left = `${x}px`

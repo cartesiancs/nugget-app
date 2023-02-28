@@ -331,6 +331,7 @@ input[type=range]::-webkit-slider-thumb {
 .video {
     position:relative;
     display: flex;
+    overflow: clip;
 }
 
 .line{

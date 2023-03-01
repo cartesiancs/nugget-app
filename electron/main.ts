@@ -464,6 +464,10 @@ ipcMain.handle('store:delete', async (event, key) => {
 })
 
 
+ipcMain.handle('app:getResourcesPath', async (event) => {
+  return { status: 1, path: resourcesPath }
+})
+
 
 
 app.setAsDefaultProtocolClient("nuggetapp");

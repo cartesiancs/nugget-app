@@ -2,7 +2,9 @@ const { contextBridge, ipcRenderer, shell } = require('electron')
 
 const request = {
     app: {
-        forceClose: () => ipcRenderer.send('FORCE_CLOSE')
+        forceClose: () => ipcRenderer.send('FORCE_CLOSE'),
+        getResourcesPath: () => ipcRenderer.invoke('app:getResourcesPath')
+
     },
     dialog: {
         openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),

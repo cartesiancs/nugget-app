@@ -129,9 +129,22 @@ class ElementTimeline extends HTMLElement {
 
 
     async getBlobUrl(url) {
-        const response = await fetch(url);
-        const data = await response.blob()
-        return URL.createObjectURL(data);
+        try {
+            const response = await fetch(url);
+            const data = await response.blob()
+            return URL.createObjectURL(data);
+        } catch (error) {
+
+
+            let notfoundImage = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAAAM0lEQVQ4jWNkYGD4z4AEUDgMDAyMBASYGCgEowaMGjA4DGD8/x8j+dPXBSzka/1PHRcAAFzYCBvm7NkTAAAAAElFTkSuQmCC`
+
+            console.error(error)
+            const response = await fetch(notfoundImage);
+            const data = await response.blob()
+            return URL.createObjectURL(data);
+
+        }
+
     }
 
     addElementBar(elementId) {

@@ -31,7 +31,9 @@
 // })
 
 
+
 const NUGGET_WEBSITE = 'https://nugget.studio'
+let APP_
 
 window.electronAPI.res.filesystem.getAllDirectory((evt, dir, result) => {
     let fileLists = {}
@@ -229,6 +231,7 @@ const ipc = {
         if (projectFolder == '') {
             return 0
         }
+
 
         
         window.electronAPI.req.dialog.exportVideo().then((result) => {

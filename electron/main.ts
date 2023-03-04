@@ -10,6 +10,8 @@ import config from './config.json'
 import ffmpeg from 'fluent-ffmpeg'
 
 import { v4 as uuidv4 } from 'uuid';
+import { Deeplink } from 'electron-deeplink'
+
 
 import path from 'path'
 import isDev from 'electron-is-dev'
@@ -339,20 +341,6 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 })
 
 
-app.whenReady().then(() => {
-
-  mainWindow = window.createMainWindow()
-
-
-  checkFfmpeg()
-
-  mainWindow.on('close', function(e){
-    e.preventDefault();
-    mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
-
-  });
-})
-
 ipcMain.on('FORCE_CLOSE', async (evt) => {
   log.info("Forced shutdown of the app.")
   app.exit(0)
@@ -470,13 +458,63 @@ ipcMain.handle('app:getResourcesPath', async (event) => {
 
 
 
-app.setAsDefaultProtocolClient("nuggetapp");
 
-app.on("open-url", function (event, data) {
-  mainWindow.webContents.send("LOGIN_SUCCESS", data)
+
+
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('nuggetapp', process.execPath, [path.resolve(process.argv[1])])
+  }
+} else {
+  app.setAsDefaultProtocolClient('nuggetapp')
+}
+
+const gotTheLock = app.requestSingleInstanceLock()
+const protocol = isDev ? 'nuggetappdev' : 'nuggetapp';
+const deeplink = new Deeplink({ app, mainWindow, protocol, isDev });
+
+deeplink.on('received', (link) => {
+  // do stuff here
+  mainWindow.webContents.send("LOGIN_SUCCESS", link)
+
+});
+
+// if (!gotTheLock) {
+//   app.quit()
+// } else {
+//   app.on('second-instance', (event, commandLine, workingDirectory) => {
+//     if (mainWindow) {
+//       if (mainWindow.isMinimized()) mainWindow.restore()
+//       mainWindow.focus()
+//     }
+
+//     console.log(commandLine.pop().slice(0, -1))
+
+//     dialog.showErrorBox('Welcome Back', `You arrived from: ${commandLine}${workingDirectory}`)
+//     mainWindow.webContents.send("LOGIN_SUCCESS", commandLine.pop().slice(0, -1))
+
+//   })
+
+
+
+//   app.on("open-url", function (event, data) {
+//     mainWindow.webContents.send("LOGIN_SUCCESS", data)
+//   })
+
+// }
+
+
+app.whenReady().then(() => {
+  mainWindow = window.createMainWindow()
+
+  checkFfmpeg()
+
+  mainWindow.on('close', function(e){
+    e.preventDefault();
+    mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
+
+  });
 })
-
-
 
 
 app.on('window-all-closed', function () {

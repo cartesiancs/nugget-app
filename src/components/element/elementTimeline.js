@@ -571,16 +571,18 @@ class ElementTimelineRange extends HTMLElement {
         super();
 
         this.value = 0.9
+
     }
 
     render(){
         const template = this.template();
         this.innerHTML = template;
+        this.updateValue()
     }
 
 
     template() {
-        return `<input ref="range" type="range" class="form-range" min="0" max="6" step="0.02" id="timelineRange" value="4">`
+        return `<input ref="range" type="range" class="form-range" min="0" max="6" step="0.02" id="timelineRange" value="6">`
     }
 
 

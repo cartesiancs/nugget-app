@@ -73,7 +73,8 @@ class ElementBar extends HTMLElement {
     templateStatic() {
 
         return `
-        ${this.filepath}
+        <span ref="name">${this.filepath}</span>
+        
         <div class="element-bar-resize-left position-absolute" onmousedown="this.parentNode.resizeMousedown(this, 'left')"></div>
         <div class="element-bar-resize-right position-absolute" onmousedown="this.parentNode.resizeMousedown(this, 'right')"></div>
         `
@@ -82,7 +83,7 @@ class ElementBar extends HTMLElement {
     templateDynamic() {
 
         return `
-        ${this.filepath}
+        <span ref="name">${this.filepath}</span>
         <div class="element-bar-hiddenspace-left position-absolute">
             <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="this.parentNode.parentNode.resizeRangeMousedown(this, 'left')">
             </div>

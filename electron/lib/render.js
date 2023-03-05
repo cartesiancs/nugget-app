@@ -319,12 +319,13 @@ const renderFilter = {
 
     addFilterText: (object) => {
       let updateResourcesPath = process.platform == "win32" ? resourcesPath.substring(2) : resourcesPath
+      let fontPath = object.element.fontpath == 'default' ? `${updateResourcesPath}/assets/fonts/notosanskr-medium.otf` : object.element.fontpath
   
       let options = {
         text: object.element.text,
         textcolor: object.element.textcolor,
         fontsize: object.element.fontsize,
-        fontfile: `${updateResourcesPath}/assets/fonts/notosanskr-medium.otf`,
+        fontfile: fontPath,
         x: String(object.element.location.x + ((object.element.width - object.element.widthInner) / 2)),
         y: String(object.element.location.y),
         startTime: object.element.startTime/1000,

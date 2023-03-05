@@ -278,6 +278,7 @@ class ElementControl extends HTMLElement {
             text: "텍스트",
             textcolor: "#ffffff",
             fontsize: 52,
+            fontpath: "default",
             fontname: "notosanskr",
             fontweight: "medium",
             fonttype: "otf",
@@ -457,6 +458,8 @@ class ElementControl extends HTMLElement {
 
     changeText(elementId) {
         let elementBody = document.querySelector(`#element-${elementId}`)
+
+
         let inputTarget = elementBody.querySelector('input-text')
         let inputTargetSpan = inputTarget.querySelector("span")
 
@@ -505,6 +508,9 @@ class ElementControl extends HTMLElement {
 
         elementBody.style.fontFamily = fontName
 
+        this.timeline[elementId].fontpath = fontPath
+
+        
         
     }
 

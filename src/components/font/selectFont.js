@@ -21,7 +21,7 @@ class SelectFont extends HTMLElement {
 
     template() {
         return `<select ref='lists' class="form-select form-control bg-default text-light" aria-label="Default select example">
-        <option selected>Noto Sans KR medium</option>
+        <option selected>Select</option>
 
       </select>
       <style ref='fontStyles'>

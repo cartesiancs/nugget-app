@@ -52,6 +52,14 @@ class InputText extends HTMLElement {
         let value = event.currentTarget.textContent
         this.value = value
         this.timeline[this.elementId].text = value
+        this.updateTextInElementBar()
+
+
+    }
+
+    updateTextInElementBar() {
+        const targetElementBar = document.querySelector(`element-bar[element-id='${this.elementId}']`)
+        targetElementBar.querySelector("span[ref='name']").innerHTML = this.value
     }
 
     handleInput(event) {

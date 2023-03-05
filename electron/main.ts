@@ -10,7 +10,6 @@ import config from './config.json'
 import ffmpeg from 'fluent-ffmpeg'
 
 import { v4 as uuidv4 } from 'uuid';
-import { Deeplink } from 'electron-deeplink'
 
 
 import path from 'path'
@@ -24,6 +23,8 @@ import fse from 'fs-extra'
 
 import ProgressBar from 'electron-progressbar'
 import Store from "electron-store"
+import getSystemFonts from 'get-system-fonts';
+
 
 const store = new Store();
 
@@ -457,7 +458,11 @@ ipcMain.handle('app:getResourcesPath', async (event) => {
 })
 
 
-
+ipcMain.handle('font:getLists', async (event) => {
+  const files = await getSystemFonts();
+  console.log(files)
+  return { status: 1, fonts: files }
+})
 
 
 
@@ -470,51 +475,47 @@ if (process.defaultApp) {
 }
 
 const gotTheLock = app.requestSingleInstanceLock()
-const protocol = isDev ? 'nuggetappdev' : 'nuggetapp';
-const deeplink = new Deeplink({ app, mainWindow, protocol, isDev });
-
-deeplink.on('received', (link) => {
-  // do stuff here
-  mainWindow.webContents.send("LOGIN_SUCCESS", link)
-
-});
-
-// if (!gotTheLock) {
-//   app.quit()
-// } else {
-//   app.on('second-instance', (event, commandLine, workingDirectory) => {
-//     if (mainWindow) {
-//       if (mainWindow.isMinimized()) mainWindow.restore()
-//       mainWindow.focus()
-//     }
-
-//     console.log(commandLine.pop().slice(0, -1))
-
-//     dialog.showErrorBox('Welcome Back', `You arrived from: ${commandLine}${workingDirectory}`)
-//     mainWindow.webContents.send("LOGIN_SUCCESS", commandLine.pop().slice(0, -1))
-
-//   })
+let deeplinkingUrl
 
 
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
 
-//   app.on("open-url", function (event, data) {
-//     mainWindow.webContents.send("LOGIN_SUCCESS", data)
-//   })
-
-// }
+    if (process.platform == 'win32') {
+      deeplinkingUrl = commandLine.slice(1)[1]
+      mainWindow.webContents.send("LOGIN_SUCCESS", deeplinkingUrl)
 
 
-app.whenReady().then(() => {
-  mainWindow = window.createMainWindow()
+    }
 
-  checkFfmpeg()
+  })
 
-  mainWindow.on('close', function(e){
-    e.preventDefault();
-    mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
+  app.whenReady().then(() => {
+    mainWindow = window.createMainWindow()
+  
+    checkFfmpeg()
+  
+    mainWindow.on('close', function(e){
+      e.preventDefault();
+      mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
+  
+    });
+  })
 
-  });
-})
+  app.on("open-url", function (event, data) {
+    mainWindow.webContents.send("LOGIN_SUCCESS", data)
+  })
+
+}
+
+
+
 
 
 app.on('window-all-closed', function () {

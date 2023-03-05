@@ -5,6 +5,10 @@ class SelectFont extends HTMLElement {
 
 
         this.path = ''
+        this.type = ''
+        this.fontname = ''
+        this.onChangeSelect = new Event('onChangeSelect');
+
 
     }
 
@@ -16,10 +20,13 @@ class SelectFont extends HTMLElement {
     }
 
     template() {
-        return `<select ref='lists' class="form-select" aria-label="Default select example">
+        return `<select ref='lists' class="form-select form-control bg-default text-light" aria-label="Default select example">
         <option selected>Noto Sans KR medium</option>
 
-      </select>`;
+      </select>
+      <style ref='fontStyles'>
+      </style>
+      `;
     }
 
     insertFontLists() {
@@ -38,7 +45,27 @@ class SelectFont extends HTMLElement {
 
     handleSelect() {
         this.path = this.querySelector("select[ref='lists']").value
+        this.fontname = this.querySelector("select[ref='lists']").value.split('/')[this.querySelector("select[ref='lists']").value.split('/').length - 1].split(".")[0]
+        this.type = this.querySelector("select[ref='lists']").value.split('/')[this.querySelector("select[ref='lists']").value.split('/').length - 1].split(".")[1]
 
+        this.applyFontStyle({
+            fontName: this.fontname,
+            fontPath: this.path,
+            fontType: this.type 
+        })
+
+        this.dispatchEvent(this.onChangeSelect);
+
+    }
+
+    applyFontStyle({ fontName, fontPath, fontType }) {
+        this.querySelector("style[ref='fontStyles']").insertAdjacentHTML("beforeend", `
+        @font-face {
+            font-family: "${fontName}";
+            src: local("${fontName}"),
+              url("${fontPath}") format("${fontType}");
+        }
+        `)
     }
 
     connectedCallback() {

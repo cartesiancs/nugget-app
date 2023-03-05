@@ -25,7 +25,11 @@ class OptionText extends HTMLElement {
         <input aria-event="font-size" type="number" class="form-control bg-default text-light" value="52" >
     </div>
 
-    <select-font></select-font>
+    <div class="mb-2">
+        <label class="form-label text-light">폰트</label>
+        <select-font></select-font>
+    </div>
+
     
     
     `;
@@ -67,10 +71,26 @@ class OptionText extends HTMLElement {
         elementControl.changeTextSize({ elementId: this.elementId, size: size })
     }
 
+    handleChangeTextFont() {
+        const selectFont = this.querySelector("select-font")
+        const elementControl = document.querySelector("element-control")
+
+        elementControl.changeTextFont({
+            elementId: this.elementId,
+            fontPath: selectFont.path,
+            fontType: selectFont.type,
+            fontName: selectFont.fontname,
+
+        })
+
+
+    }
+
     connectedCallback() {
         this.render();
         this.querySelector("input[aria-event='font-color'").addEventListener("input", this.handleChangeTextColor.bind(this))
         this.querySelector("input[aria-event='font-size'").addEventListener("change", this.handleChangeTextSize.bind(this))
+        this.querySelector("select-font").addEventListener("onChangeSelect", this.handleChangeTextFont.bind(this))
 
     }
 }

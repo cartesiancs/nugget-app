@@ -499,6 +499,15 @@ class ElementControl extends HTMLElement {
         
     }
 
+    changeTextFont({ elementId, fontPath, fontType, fontName }) {
+        let elementBody = document.querySelector(`#element-${elementId}`)
+        let inputTarget = elementBody.querySelector('input-text')
+
+        elementBody.style.fontFamily = fontName
+
+        
+    }
+
     changeTimelineRange() {
 
         const timelineRuler = document.querySelector("element-timeline-ruler")

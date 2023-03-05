@@ -23,7 +23,12 @@ class OptionText extends HTMLElement {
     <div class="mb-2">
         <label class="form-label text-light">폰트 크기</label>
         <input aria-event="font-size" type="number" class="form-control bg-default text-light" value="52" >
-    </div>`;
+    </div>
+
+    <select-font></select-font>
+    
+    
+    `;
     }
 
     hide() {

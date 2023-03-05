@@ -459,9 +459,26 @@ ipcMain.handle('app:getResourcesPath', async (event) => {
 
 
 ipcMain.handle('font:getLists', async (event) => {
-  const files = await getSystemFonts();
-  console.log(files)
-  return { status: 1, fonts: files }
+  try {
+    const files = await getSystemFonts();
+    let lists = []
+    for (let index = 0; index < files.length; index++) {
+      const fontPath = files[index];
+      const fontSplitedPath = fontPath.split('/')
+      const fontType = fontSplitedPath[fontSplitedPath.length - 1].split(".")[1]
+      const fontName = fontSplitedPath[fontSplitedPath.length - 1].split(".")[0]
+      lists.push({
+        path: fontPath,
+        type: fontType,
+        name: fontName
+      })
+    }
+    console.log(files, lists)
+    return { status: 1, fonts: lists }
+  } catch (error) {
+    return { status: 0 }
+  }
+
 })
 
 

@@ -3,6 +3,7 @@ import directory from './functions/directory.js';
 import mime from './functions/mime.js';
 import project from './functions/project.js';
 import renderAnimation from './functions/renderAnimation.js';
+import fonts from './functions/fonts.js';
 
 
 
@@ -27,6 +28,8 @@ import { OptionVideo } from './components/option/optionVideo.js';
 
 
 import { InputText } from './components/input/inputText.js';
+
+import { SelectFont } from './components/font/selectFont.js';
 
 
 
@@ -72,11 +75,13 @@ customElements.define('option-video', OptionVideo);
 
 
 customElements.define('input-text', InputText);
+customElements.define('select-font', SelectFont);
 
 
 
 
 
 
-export { asset, directory, mime, project }
+
+export { asset, directory, mime, project, fonts }
 export { renderAnimation }

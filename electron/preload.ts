@@ -17,6 +17,9 @@ const request = {
         delete: (key) => ipcRenderer.invoke('store:delete', key),
 
     },
+    font: {
+        getLists: () => ipcRenderer.invoke('font:getLists'),
+    },
     project: {
         save: () => ipcRenderer.invoke('dialog:saveProject')        
     },

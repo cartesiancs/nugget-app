@@ -2,5 +2,7 @@
 /dist
 /bin/ffmpeg
 /bin/ffprobe
+/bin/ffmpeg.exe
+/bin/ffprobe.exe
 /main
 .DS_Store

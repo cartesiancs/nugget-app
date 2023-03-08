@@ -110,7 +110,7 @@
     "devDependencies": {
         "cross-env": "^7.0.3",
         "css-loader": "^6.7.1",
-        "electron": "^20.3.1",
+        "electron": "20.3.12",
         "electron-builder": "^23.6.0",
         "electron-reload": "^2.0.0-alpha.1",
         "mini-css-extract-plugin": "^2.6.1",

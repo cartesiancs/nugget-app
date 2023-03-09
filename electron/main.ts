@@ -55,9 +55,13 @@ if (isDev) {
 	log.info('Running in production');
 }
 
-const ffmpegPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`
-const ffprobePath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`
 
+const FFMPEG_BIN_PATH = path.join(`${resourcesPath}/bin/`, '../../../', 'NuggetBin')
+const FFMPEG_FILENAME = `${config.ffmpegBin[process.platform].ffmpeg.filename}`
+const FFPROBE_FILENAME = `${config.ffmpegBin[process.platform].ffprobe.filename}`
+
+const FFMPEG_PATH = path.join(FFMPEG_BIN_PATH, FFMPEG_FILENAME)
+const FFPROBE_PATH = path.join(FFMPEG_BIN_PATH, FFPROBE_FILENAME)
 
 
 
@@ -123,15 +127,23 @@ autoUpdater.on('update-downloaded', (info) => {
 let dir = app.getPath('userData')
 
 
-const checkFfmpeg = () => {
-  fs.stat(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`, function(error, stats) {
+const createFfmpegDir = async () => {
+  let mkdir = await fsp.mkdir(FFMPEG_BIN_PATH, { recursive: true })
+  let status = mkdir == null ? false : true
+  return { status: status }
+}
+
+const checkFfmpeg = async () => {
+  let isCreate = await createFfmpegDir()
+
+  fs.stat(FFMPEG_PATH, function(error, stats) {
     if (error) {
       downloadFfmpeg('ffmpeg')
       return 0
     }
 
-    fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`, 0o755); 
-    ffmpeg.setFfmpegPath(ffmpegPath);
+    fs.chmodSync(FFMPEG_PATH, 0o755); 
+    ffmpeg.setFfmpegPath(FFMPEG_PATH);
 
     log.info("FFMPEG downloaded successfully")
     log.info("FFMPEG binary size: " + stats.size)
@@ -140,15 +152,15 @@ const checkFfmpeg = () => {
   });
 }
 
-const checkffprobe = () => {
-  fs.stat(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`, function(error, stats) {
+const checkffprobe = async () => {
+  fs.stat(FFPROBE_PATH, function(error, stats) {
     if (error) {
       downloadFfmpeg('ffprobe')
       return 0
     }
 
-    fs.chmodSync(`${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`, 0o755); 
-    ffmpeg.setFfprobePath(ffprobePath);
+    fs.chmodSync(FFPROBE_PATH, 0o755); 
+    ffmpeg.setFfprobePath(FFPROBE_PATH);
 
     log.info("FFPROBE downloaded successfully.")
     log.info("FFPROBE binary size: " + stats.size)
@@ -161,7 +173,7 @@ const downloadFfmpeg = (binType) => {
   let receivedBytes = 0;
   let totalBytes = 0;
   let percentage = 0
-  let downloadPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform][type].filename}`
+  let downloadPath = type == "ffmpeg" ? FFMPEG_PATH : FFPROBE_PATH
 
   let progressBar = new ProgressBar({
     indeterminate: false,
@@ -221,6 +233,7 @@ ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {
   // ffmpeg 다운로드
 
   downloadFfmpeg('ffmpeg')
+
 
 });
 

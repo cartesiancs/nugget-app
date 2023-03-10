@@ -2,6 +2,7 @@ import ffmpeg from 'fluent-ffmpeg'
 import isDev from 'electron-is-dev'
 import log from 'electron-log'
 import fs from 'fs'
+import { ffmpegConfig } from "./ffmpeg.js";
 
 import config from '../config.json'
 
@@ -14,7 +15,6 @@ let mapAudioLists = []
 
 if (isDev) {
   resourcesPath = '.'
-  console.log('Running in development', isDev);
 
 } else {
   if (process.platform == "darwin") {
@@ -25,13 +25,12 @@ if (isDev) {
     resourcesPath = process.resourcesPath
   }
   
-  console.log('Running in production');
 }
 
 const renderMain = {
     start: (evt, elements, options) => {
-        const ffmpegPath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffmpeg.filename}`
-        const ffprobePath = `${resourcesPath}/bin/${config.ffmpegBin[process.platform].ffprobe.filename}`
+        const ffmpegPath = ffmpegConfig.FFMPEG_PATH
+        const ffprobePath = ffmpegConfig.FFPROBE_PATH
 
         ffmpeg.setFfmpegPath(ffmpegPath);
         ffmpeg.setFfprobePath(ffprobePath);

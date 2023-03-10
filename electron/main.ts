@@ -3,6 +3,7 @@ import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
 import { window } from "./lib/window.js";
 import { menu } from './lib/menu.js'
+import { ffmpegConfig } from "./lib/ffmpeg.js";
 
 
 import config from './config.json'
@@ -56,12 +57,10 @@ if (isDev) {
 }
 
 
-const FFMPEG_BIN_PATH = path.join(`${resourcesPath}/bin/`, '../../../', 'NuggetBin')
-const FFMPEG_FILENAME = `${config.ffmpegBin[process.platform].ffmpeg.filename}`
-const FFPROBE_FILENAME = `${config.ffmpegBin[process.platform].ffprobe.filename}`
+const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH
 
-const FFMPEG_PATH = path.join(FFMPEG_BIN_PATH, FFMPEG_FILENAME)
-const FFPROBE_PATH = path.join(FFMPEG_BIN_PATH, FFPROBE_FILENAME)
+const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH
+const FFPROBE_PATH = ffmpegConfig.FFPROBE_PATH
 
 
 

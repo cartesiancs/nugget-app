@@ -5,7 +5,7 @@ import { mainWindow } from './window.js'
 
 const isMac = process.platform === 'darwin'
 
-const template = [
+const template: any = [
   // { role: 'appMenu' }
   ...(isMac ? [{
     label: app.name,
@@ -25,13 +25,6 @@ const template = [
   {
     label: 'File',
     submenu: [
-        // {
-        //     label: 'Learn More',
-        //     click: () => {
-        //         NUGGET.project.save()
-        //       console.log("dd")
-        //     }
-        // },
         {
           label: 'Save Project',
           accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Control+S',
@@ -90,8 +83,7 @@ const template = [
               height: 240,
               webPreferences: {
                 nodeIntegration: true,
-                contextIsolation: false,
-                enableRemoteModule: true
+                contextIsolation: false
               },
               backgroundColor: '#252729'
             })
@@ -127,7 +119,7 @@ const template = [
         label: 'Learn More',
         click: async () => {
           const { shell } = require('electron')
-          await shell.openExternal('https://devent.kr')
+          await shell.openExternal('https://blog.nugget.studio/')
         }
       }
     ]
@@ -136,8 +128,4 @@ const template = [
 
 const menu = Menu.buildFromTemplate(template)
 
-//exports.menu = menu
-
 export { menu }
-
-// Menu.setApplicationMenu(menu)

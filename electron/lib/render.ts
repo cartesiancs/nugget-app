@@ -121,6 +121,7 @@ const renderMain = {
         command.complexFilter(filter, filterLists)
         command.outputOptions(['-map tmp?'])
         if (elementCounts.audio != 0) {
+          console.log("mapAudioLists", mapAudioLists)
 
             
 
@@ -200,16 +201,16 @@ const renderUtil = {
         })
     },
     convertMillisecondToHMS: (ms) => {
-        let milliseconds = Math.floor((ms % 1000) / 100),
-            seconds = Math.floor((ms / 1000) % 60),
-            minutes = Math.floor((ms / (1000 * 60)) % 60),
-            hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+        let milliseconds: number = Math.floor((ms % 1000) / 100),
+            seconds: number = Math.floor((ms / 1000) % 60),
+            minutes: number = Math.floor((ms / (1000 * 60)) % 60),
+            hours: number = Math.floor((ms / (1000 * 60 * 60)) % 24);
     
-        hours = (hours < 10) ? "0" + hours : hours;
-        minutes = (minutes < 10) ? "0" + minutes : minutes;
-        seconds = (seconds < 10) ? "0" + seconds : seconds;
+        let fillzeroHours = (hours < 10) ? "0" + hours : hours;
+        let fillzeroMinutes = (minutes < 10) ? "0" + minutes : minutes;
+        let fillzeroSeconds = (seconds < 10) ? "0" + seconds : seconds;
     
-        return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+        return fillzeroHours + ":" + fillzeroMinutes + ":" + fillzeroSeconds + "." + milliseconds;
     },
     calculateEstimatedTime: (totalVideoTime) => {
         return totalVideoTime/3
@@ -373,6 +374,8 @@ const renderFilter = {
           .inputOptions(`-t ${options.duration}`)
         console.log(object.element.localpath, elementCounts.video)
       
+        mapAudioLists.push(`${elementCounts.video}:a`)
+
       
       
       
@@ -386,17 +389,17 @@ const renderFilter = {
         //   'outputs': `audio`
         // })
       
-        object.filter.push({
-          'filter': 'amix',
-          'options': {
+        // object.filter.push({
+        //   'filter': 'amix',
+        //   'options': {
       
-            'inputs': elementCounts.audio == 0 ? 1 : 2,
-            'duration': 'first',
-            'dropout_transition': 0
-          },
-          'inputs': elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
-          'outputs': `audio`
-        })
+        //     'inputs': elementCounts.audio == 0 ? 1 : 2,
+        //     'duration': 'first',
+        //     'dropout_transition': 0
+        //   },
+        //   'inputs': elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
+        //   'outputs': `audio`
+        // })
         
       
         elementCounts.audio += 1

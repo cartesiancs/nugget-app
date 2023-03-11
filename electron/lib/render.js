@@ -77,14 +77,14 @@ const renderMain = {
                 projectOptions: options
               })
             } else if (isText) {
-                renderFilter.addFilterText({
+              renderFilter.addFilterText({
                 element: element,
                 command: command,
                 filter: filter,
                 projectOptions: options
-                })
+              })
             } else if (isAudio) {
-                renderFilter.addFilterAudio({
+              renderFilter.addFilterAudio({
                 element: element,
                 command: command,
                 filter: filter,

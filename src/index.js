@@ -25,6 +25,7 @@ import { OptionGroup } from './components/option/optionGroup.js';
 import { OptionText } from './components/option/optionText.js';
 import { OptionImage } from './components/option/optionImage.js';
 import { OptionVideo } from './components/option/optionVideo.js';
+import { OptionAudio } from './components/option/optionAudio.js';
 
 
 import { InputText } from './components/input/inputText.js';
@@ -71,6 +72,8 @@ customElements.define('option-group', OptionGroup);
 customElements.define('option-text', OptionText);
 customElements.define('option-image', OptionImage);
 customElements.define('option-video', OptionVideo);
+customElements.define('option-audio', OptionAudio);
+
 
 
 

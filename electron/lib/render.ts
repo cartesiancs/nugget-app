@@ -118,18 +118,36 @@ const renderMain = {
           //filterLists.push('audio')
         }
       
-        command.complexFilter(filter, filterLists)
-        command.outputOptions(['-map tmp?'])
+
         if (elementCounts.audio != 0) {
-          console.log("mapAudioLists", mapAudioLists)
+          let inputsAudio = mapAudioLists.map(element => {
+            return `[${element}]`
+          }).join("")
 
-            
+          log.info("[render] Map Audio Lists", mapAudioLists)
+          log.info("[render] Inputs Audio", inputsAudio)
 
-            mapAudioLists.forEach(element => {
-                command.outputOptions([`-map ${element}`])
-            });
+          filterLists.push('audio')
+
+          filter.push({
+            'filter': 'amix',
+            'options': {
+        
+              'inputs': mapAudioLists.length,
+              'duration': 'longest',
+              'dropout_transition': 0
+            },
+            'inputs': inputsAudio,
+            'outputs': `audio`
+          })
+
+
           //command.outputOptions(['-map [audio]'])
         }
+
+        command.complexFilter(filter, filterLists)
+        command.outputOptions(['-map tmp?'])
+
         command.output(options.videoDestination)
         command.audioCodec('aac')
         command.videoCodec('libx264')
@@ -168,12 +186,15 @@ const renderMain = {
             evt.sender.send('PROCESSING_FINISH')
             console.log('Finished processing');
             command.kill();
+            mapAudioLists = []
+
         })
       
         command.on('error', function(err, stdout, stderr) {
             log.info('Render Error', err.message);
             evt.sender.send('PROCESSING_ERROR', err.message)
             process.crash();
+            mapAudioLists = []
         });
     }
 }
@@ -281,8 +302,11 @@ const renderFilter = {
 
       
         if (isExistAudio == true) {
-            mapAudioLists.push(`${elementCounts.video}:a`)
-            elementCounts.audio += 1
+          object.filter.push(`[${elementCounts.video}:a]adelay=${options.startTime * 1000}|${options.startTime * 1000}[audio${elementCounts.video}]`)
+
+          mapAudioLists.push(`audio${elementCounts.video}`)
+          //mapAudioLists.push(`${elementCounts.video}:a`)
+          elementCounts.audio += 1
         }
       
 
@@ -366,16 +390,19 @@ const renderFilter = {
         }
       
         object.command.input(object.element.localpath)
-          .audioCodec('copy')
-          .audioChannels(2)
           .inputOptions(`-ss ${options.startTime}`)
           .inputOptions(`-itsoffset ${options.startTime}`)
-          .seekInput(options.trim.start)
-          .inputOptions(`-t ${options.duration}`)
-        console.log(object.element.localpath, elementCounts.video)
-      
-        mapAudioLists.push(`${elementCounts.video}:a`)
+          // .seekInput(options.trim.start)
+          // .inputOptions(`-t ${options.duration}`)
+        log.info("[render] addFilterAudio ", object.element.localpath, elementCounts.video)
+        log.info("[render] options.startTime ", options.startTime * 1000)
 
+        object.filter.push(`[${elementCounts.video}:a]adelay=${options.startTime * 1000}|${options.startTime * 1000}[audio${elementCounts.video}]`)
+
+        //mapAudioLists.push(`${elementCounts.video}:a`)
+        mapAudioLists.push(`audio${elementCounts.video}`)
+
+        
       
       
       
@@ -389,17 +416,7 @@ const renderFilter = {
         //   'outputs': `audio`
         // })
       
-        // object.filter.push({
-        //   'filter': 'amix',
-        //   'options': {
-      
-        //     'inputs': elementCounts.audio == 0 ? 1 : 2,
-        //     'duration': 'first',
-        //     'dropout_transition': 0
-        //   },
-        //   'inputs': elementCounts.audio == 0 ? `[${elementCounts.video}:a]` : `[audio][${elementCounts.video}:a]`,
-        //   'outputs': `audio`
-        // })
+
         
       
         elementCounts.audio += 1

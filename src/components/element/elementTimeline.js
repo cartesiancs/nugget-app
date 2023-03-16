@@ -105,6 +105,12 @@ class ElementTimeline extends HTMLElement {
             this.timeline[elementId].blob = String(blobUrl)
             this.elementControl.showVideo(elementId)
         } else if (element.filetype == 'text') {
+            document.querySelector("select-font").applyFontStyle({
+                fontName: element.fontname,
+                fontPath: element.fontpath,
+                fontType: element.fonttype
+            })
+
             this.elementControl.showText(elementId)
         } else if (element.filetype == 'audio') {
             let blobUrl = await this.getBlobUrl(`file://${element.localpath}`)

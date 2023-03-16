@@ -6,6 +6,9 @@ class InputText extends HTMLElement {
 
         this.value = ''
         this.elementId = this.getAttribute('element-id')
+        this.initValue = this.getAttribute('init-value') || ''
+        this.initColor = this.getAttribute('init-color') || '#ffffff'
+
         this.timeline = document.querySelector("element-timeline").timeline;
         this.parentInputBox = document.querySelector(`element-control-asset[element-id="${this.elementId}"]`)
 
@@ -22,7 +25,7 @@ class InputText extends HTMLElement {
         this.style.width = '100%'
         this.style.position = 'absolute'
         this.style.top = '0px'
-        this.style.color = '#ffffff'
+        this.style.color = this.initColor
 
         this.querySelector("span").style.height = `100%`
         this.querySelector("span").style.outline = 'none'
@@ -33,7 +36,7 @@ class InputText extends HTMLElement {
     }
 
     template() {
-        return `<span>텍스트</span>`;
+        return `<span>${this.initValue}</span>`;
     }
 
     setWidth() {
@@ -48,13 +51,10 @@ class InputText extends HTMLElement {
         this.timeline[this.elementId].widthInner = resizedInput.w
     }
 
-    updateText({ event }) {
-        let value = event.currentTarget.textContent
+    updateText({ value }) {
         this.value = value
         this.timeline[this.elementId].text = value
         this.updateTextInElementBar()
-
-
     }
 
     updateTextInElementBar() {
@@ -63,8 +63,9 @@ class InputText extends HTMLElement {
     }
 
     handleInput(event) {
-        this.updateText({ event: event })
+        let value = event.currentTarget.textContent
 
+        this.updateText({ value: value })
         this.setWidth()
         this.setWidthInner()
     }

@@ -509,6 +509,7 @@ class ElementControl extends HTMLElement {
         elementBody.style.fontFamily = fontName
 
         this.timeline[elementId].fontpath = fontPath
+        this.timeline[elementId].fontname = fontName
 
         
         
@@ -818,9 +819,15 @@ class ElementControlAsset extends HTMLElement {
             let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
 
             this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeText}px; font-size: ${resizeText}px;`)
+            this.elementControl.changeTextFont({
+                elementId: this.elementId,
+                fontPath: this.timeline[this.elementId].fontpath,
+                fontType: this.timeline[this.elementId].fonttype,
+                fontName: this.timeline[this.elementId].fontname
+            })
             this.querySelector(`input-text`).style.top = `${resizeText / 2}px`
         }
-
+ 
         
 
     }
@@ -846,28 +853,19 @@ class ElementControlAsset extends HTMLElement {
     }
 
     templateImage() {
-        return `
-        <img src="${this.timeline[this.elementId].blob}" alt="" class="element-image" draggable="false">`
+        return `<img src="${this.timeline[this.elementId].blob}" alt="" class="element-image" draggable="false">`
     }
 
     templateVideo() {
-        return `
-        <video src="${this.timeline[this.elementId].blob}" alt="" class="element-video" draggable="false"></video>`
+        return `<video src="${this.timeline[this.elementId].blob}" alt="" class="element-video" draggable="false"></video>`
     }
 
     templateAudio() {
-        return `
-        <audio src="${this.timeline[this.elementId].blob}" class="d-none" draggable="false"></video>`
+        return `<audio src="${this.timeline[this.elementId].blob}" class="d-none" draggable="false"></video>`
     }
 
     templateText() {
-        let resizeRatio = this.elementControl.previewRatio
-        let style = "color: rgb(255, 255, 255); top: 0px; position: absolute;"
-
-        return `<input-text element-id="${this.elementId}"></input-text>`
-
-        // <input type="text" class="asset-transparent element-text" draggable="false" style="${style}" onkeyup="document.querySelector('element-control').changeText('${this.elementId}')" value="${this.timeline[this.elementId].text}">
-
+        return `<input-text element-id="${this.elementId}" init-value="${this.timeline[this.elementId].text}" init-color="${this.timeline[this.elementId].textcolor}"></input-text>`
     }
 
     templateResize(type = 'full') {

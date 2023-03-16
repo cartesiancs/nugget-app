@@ -35,7 +35,11 @@ const renderMain = {
         ffmpeg.setFfmpegPath(ffmpegPath);
         ffmpeg.setFfprobePath(ffprobePath);
 
-        log.info('Render starting...');
+        log.info('[render] ===== Render starting... =====');
+        if (isDev) {
+          log.info("[render] ===== Render elements =====")
+          log.info("elements:", JSON.stringify(elements))
+        } 
 
         elementCounts.video = 1
         elementCounts.audio = 0
@@ -390,7 +394,7 @@ const renderFilter = {
         }
       
         object.command.input(object.element.localpath)
-          .inputOptions(`-ss ${options.startTime}`)
+          .inputOptions(`-ss ${options.trim.start}`)
           .inputOptions(`-itsoffset ${options.startTime}`)
           // .seekInput(options.trim.start)
           // .inputOptions(`-t ${options.duration}`)

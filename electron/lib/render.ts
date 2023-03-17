@@ -288,10 +288,13 @@ const renderFilter = {
                 object.command.input(object.element.localpath)
                     .inputOptions(`-ss ${object.element.trim.startTime/1000}`)
                     .inputOptions(`-itsoffset ${options.startTime + object.element.trim.startTime/1000}`)
+                    .inputOptions(`-t ${(object.element.trim.endTime/1000) - (object.element.trim.startTime/1000)}`)
+
             } else {
                 object.command.input(object.element.localpath)
                     .inputOptions(`-ss ${trimStartHMS}`)
                     .inputOptions(`-itsoffset ${options.startTime}`)
+                    .inputOptions(`-t ${object.element.trim.endTime/1000}`)
 
                 if (object.element.codec.video != "default") {
                   object.command.inputOptions(`-vcodec ${object.element.codec.video}`)
@@ -301,6 +304,7 @@ const renderFilter = {
             }
 
             options.startTime = options.startTime + (object.element.trim.startTime/1000)
+            options.endTime = (object.element.startTime/1000) + object.element.trim.endTime/1000
 
         }
 

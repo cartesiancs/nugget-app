@@ -12,6 +12,8 @@ class ElementControl extends HTMLElement {
             this.elementTimeline = document.querySelector("element-timeline");
             this.timeline = document.querySelector("element-timeline").timeline;
             this.timelineCursor = document.querySelector("element-timeline-cursor");
+            this.changeTimelineRange()
+
         });
 
         this.scroller = undefined
@@ -518,6 +520,11 @@ class ElementControl extends HTMLElement {
     changeTimelineRange() {
 
         const timelineRuler = document.querySelector("element-timeline-ruler")
+        const elementTimelineEnd = document.querySelector("element-timeline-end")
+
+        const projectDuration = document.querySelector("#projectDuration").value
+
+
         const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
 
@@ -530,6 +537,9 @@ class ElementControl extends HTMLElement {
         this.adjustAllElementBarWidth(timeMagnification)
         this.updateAllAnimationPanel()
 
+        elementTimelineEnd.setEndTimeline({
+            px: (projectDuration * 1000) / 5 * timeMagnification
+        })
     }
 
     updateAllAnimationPanel() {

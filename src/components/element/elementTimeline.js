@@ -67,6 +67,9 @@ class ElementTimeline extends HTMLElement {
         return `
         <element-timeline-ruler></element-timeline-ruler>
         <element-timeline-cursor></element-timeline-cursor>
+        <element-timeline-end></element-timeline-end>
+
+        
         <div ref="elementLayer"></div>
 
         `
@@ -500,6 +503,19 @@ class ElementTimelineRuler extends HTMLElement {
         let duration = Number(e.value) * 200
         this.changeWidth(duration)
         this.addTickNumber(Number(e.value))
+        this.updateTimelineEnd()
+    }
+
+    updateTimelineEnd() {
+        const elementTimelineEnd = document.querySelector("element-timeline-end")
+        const projectDuration = document.querySelector("#projectDuration").value
+
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
+        const timeMagnification = timelineRange / 4
+
+        elementTimelineEnd.setEndTimeline({
+            px: (projectDuration * 1000) / 5 * timeMagnification
+        })
     }
 
 
@@ -523,6 +539,8 @@ class ElementTimelineRuler extends HTMLElement {
         elementControl.stop()
         elementControl.showTime() 
         elementControl.appearAllElementInTime()
+
+
 
         elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft)
     }
@@ -604,7 +622,8 @@ class ElementTimelineRange extends HTMLElement {
     updateRange() {
         this.updateValue()
         const elementControlComponent = document.querySelector("element-control")
-        elementControlComponent.changeTimelineRange()
+
+        elementControlComponent.changeTimelineRange()        
     }
 
 
@@ -618,4 +637,34 @@ class ElementTimelineRange extends HTMLElement {
 }
 
 
-export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler, ElementTimelineRange }
+class ElementTimelineEnd extends HTMLElement { 
+    constructor() {
+        super();
+
+
+    }
+
+    render(){
+        const template = this.template();
+        this.innerHTML = template;
+    }
+
+    /* 재생 초(max time) 설정 */
+    setEndTimeline({ px }) {
+        console.log(px)
+        this.style.left = `${px}px`
+    }
+
+
+    template() {
+        return ``
+    }
+
+    connectedCallback() {
+        this.render();
+
+    }
+}
+
+
+export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler, ElementTimelineRange, ElementTimelineEnd }

@@ -45,6 +45,17 @@ element-timeline-cursor::after {
 }
 
 
+element-timeline-end {
+  position: absolute;
+  top: 9px;
+  z-index: 90;
+  width: 1.6px;
+  height: 100%;
+  background-color: rgba(245, 45, 45, 0.616);
+}
+
+
+
   // background-image:
   //   linear-gradient(90deg, var(--ruler1-sec-c) 0 var(--ruler1-sec-bdw), transparent 0),
   //   linear-gradient(90deg, var(--ruler2-sec-c) 0 var(--ruler2-sec-bdw), transparent 0);

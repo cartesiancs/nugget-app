@@ -636,10 +636,20 @@ class ElementTimelineRange extends HTMLElement {
     updateRange() {
         this.updateValue()
         const elementControlComponent = document.querySelector("element-control")
+        elementControlComponent.changeTimelineRange()  
+        
+        this.updateTimelineScrollToCenter()
 
-        elementControlComponent.changeTimelineRange()        
     }
 
+    updateTimelineScrollToCenter() {
+        const elementTimelineComponent =  document.querySelector("element-timeline")
+        const elementTimelineCursor = document.querySelector("element-timeline-cursor")
+        let cursorLeft = Number(elementTimelineCursor.style.left.split("px")[0])
+        let timelineWidth = Number(elementTimelineComponent.clientWidth)
+
+        elementTimelineComponent.scrollLeft = cursorLeft - timelineWidth / 2
+    }
 
 
     connectedCallback() {

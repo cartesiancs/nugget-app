@@ -43,7 +43,7 @@ class ElementBar extends HTMLElement {
         }
         const backgroundColor = this.getRandomColor()
 
-        this.classList.add("element-bar", 'd-block')
+        this.classList.add("element-bar", 'd-block', 'd-flex', 'align-items-center')
         this.setAttribute("style", `width: ${this.width}px; left: ${this.startTime}px; background-color: ${backgroundColor};`)
         this.setAttribute("value", this.elementId)
 
@@ -73,6 +73,7 @@ class ElementBar extends HTMLElement {
     templateStatic() {
 
         return `
+        ${this.templateTypeLogo({ type: this.timeline[this.elementId].filetype })}
         <span ref="name">${this.filepath}</span>
         
         <div class="element-bar-resize-left position-absolute" onmousedown="this.parentNode.resizeMousedown(this, 'left')"></div>
@@ -83,6 +84,7 @@ class ElementBar extends HTMLElement {
     templateDynamic() {
 
         return `
+        ${this.templateTypeLogo({ type: this.timeline[this.elementId].filetype })}
         <span ref="name">${this.filepath}</span>
         <div class="element-bar-hiddenspace-left position-absolute">
             <div class="element-bar-resize-hiddenspace-left position-absolute" onmousedown="this.parentNode.parentNode.resizeRangeMousedown(this, 'left')">
@@ -93,6 +95,17 @@ class ElementBar extends HTMLElement {
             </div>
         </div>
         `
+    }
+
+    templateTypeLogo({ type }) {
+        let logos = {
+            "image": `<span class="material-symbols-outlined">image</span>`,
+            "video": `<span class="material-symbols-outlined">movie</span>`,
+            "audio": `<span class="material-symbols-outlined">music_note</span>`,
+            "text": `<span class="material-symbols-outlined">description</span>`
+        }
+
+        return logos[type]
     }
 
     getRandomArbitrary(min, max) {

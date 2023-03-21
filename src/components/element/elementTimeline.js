@@ -472,16 +472,30 @@ class ElementTimelineRuler extends HTMLElement {
             spaceIncrese = 1
         } else if (timeMagnification < 0.5 && timeMagnification >= 0.1) {
             this.render()
-            this.rulerType = 'sec6'
-            spaceRuler2 = 300 * timeMagnification
-            spaceRuler1 = 30 * timeMagnification
-            spaceIncrese = 6
+            this.rulerType = 'sec5'
+            spaceRuler2 = 250 * timeMagnification
+            spaceRuler1 = 25 * timeMagnification
+            spaceIncrese = 5
 
-        } else {
+        } else if (timeMagnification < 0.1 && timeMagnification >= 0.01) {
             this.render()
             this.rulerType = 'min'
             spaceRuler2 = 3000 * timeMagnification
             spaceRuler1 = 300 * timeMagnification
+            spaceIncrese = 1
+
+        } else if (timeMagnification < 0.01 && timeMagnification >= 0.001)  {
+            this.render()
+            this.rulerType = 'min5'
+            spaceRuler2 = 3000 * 5 * timeMagnification
+            spaceRuler1 = 300 * 5 * timeMagnification
+            spaceIncrese = 5
+
+        } else  {
+            this.render()
+            this.rulerType = 'hour'
+            spaceRuler2 = 3000 * 60 * timeMagnification
+            spaceRuler1 = 300 * 60 * timeMagnification
             spaceIncrese = 1
 
         }

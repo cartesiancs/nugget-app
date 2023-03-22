@@ -60,7 +60,11 @@
                             <div class="tab-content overflow-y-scroll overflow-x-hidden  p-2 h-100" style="width: calc(100% - 2.5rem);">
 
 
+
                               <div class="tab-pane fade show active" id="nav-home" role="tabpanel">
+                                <p class="text-dark" ref="appVersion"></p>
+
+                                
                                 <input id="projectFile" type="text" class="d-none" name="">
 
                                 <div class="input-group mb-3">
@@ -355,7 +359,6 @@
 
 
         <div class="toast-container position-fixed bottom-50 start-50 translate-middle">
-
             <div class="toast fade hide" id="loadMetadataToast" role="alert" data-bs-animation="true" data-bs-autohide="true" data-bs-delay="9000" aria-live="assertive" aria-atomic="true" style="background-color: rgba(37, 38, 43, 0.73);">
                 <div class="toast-body"> 
                     <div class="text-center text-light">메타데이터 불러오는중</div> 
@@ -364,8 +367,6 @@
                     </div>
                 </div>
             </div>
-    
-        
         </div>
 
         <div class="toast-container position-fixed bottom-0 start-50 translate-middle" style="z-index: 9000;">
@@ -390,202 +391,6 @@
 
         <script src="dist/index.js"></script>
         <script src="renderer.js"></script>
-
-      <script>
-          //document.querySelector("a").getAttribute
-
-        const elementControlComponent = document.querySelector("element-control")
-        let preview = document.getElementById('preview');
-        let control = document.getElementById('control-inner');
-        let video = document.getElementById('video');
-        let exportVideoModal = new bootstrap.Modal(document.getElementById('exportVideoModal'), {
-            keyboard: false
-        })
-        
-
-        let valueEvent = {
-            splitBottom: false,
-            splitColumns: false,
-            splitColumnsTarget: 1,
-            moveElement: false,
-            mouse: {
-                x: 0,
-                y: 0
-            },
-            elementBar: {
-                isDrag: false,
-                isResize: false,
-                resizeLocation: 'left',
-                resizeRangeLeft: 0,
-                resizeRangeRight: 0,
-                e: undefined,
-                blob: '',
-                criteria: {x: 0, y: 0, duration: 1000},
-                criteriaResize: {x: 0, y: 0}
-            },
-            element: {
-                isDrag: false,
-                e: undefined,
-                initial: {x: 0, y: 0}
-            }
-        }
-
-
-        const page = {
-            split: {
-                bottom: function (percent) {
-                    document.getElementById("split_top").style.height = `calc(${percent}% + 0.5rem)`
-                    document.getElementById("split_bottom").style.height = `calc(${100-percent}% - 0.5rem)`
-                    document.getElementById(`option_bottom`).style.height = `calc(${100-percent}% - 3.5rem)` // 옵션 오프캔버스                    
-
-                },
-                columns: function (percent) {
-                    if (valueEvent.splitColumnsTarget == 1) {
-                        let otherCol = Number(document.getElementById(`split_col_3`).style.width.split('%')[0])
-                        document.getElementById(`split_col_1`).style.width = `${percent}%`
-                        document.getElementById(`split_col_2`).style.width = `${(100-percent) - otherCol}%`       
-                    } else if (valueEvent.splitColumnsTarget == 2) {
-                        let otherCol = Number(document.getElementById(`split_col_1`).style.width.split('%')[0])
-                        document.getElementById(`split_col_2`).style.width = `${percent - otherCol}%`
-                        document.getElementById(`split_col_3`).style.width = `${(100 - percent)}%`    
-                    }
-
-                
-                },
-            },
-            minWidth: 20,
-            minHeight: 20
-        }
-
-        
-        let toastElList = [].slice.call(document.querySelectorAll('.toast'))
-        let toastList = toastElList.map(function (toastEl) {
-            return new bootstrap.Toast(toastEl)
-        })
-
-        HTMLCanvasElement.prototype.render = function () {
-            nugget.canvas.preview.render(this)
-        };
-
-        HTMLCanvasElement.prototype.clear = function () {
-            nugget.canvas.preview.clear(this)
-        };
-
-
-        //window.addEventListener('resize', , false);
-        window.onresize = async function(event) {
-            await elementControlComponent.resizeEvent()
-        };
-
-
-        
-        window.addEventListener('load', (event) => {
-            //ipc.requestAllDir('/Users/hhj')
-            //ipcRenderer.send('CLIENT_READY')
-            auth.checkLogin()
-        });
-
-
-                
-
-
-        document.addEventListener("mousemove", (e) => {
-            valueEvent.mouse.x = e.pageX
-            valueEvent.mouse.y = e.pageY
-
-            if (valueEvent.splitBottom) {
-                let videoboxHeightPer = videobox.offsetHeight / window.innerHeight * 100
-                let per = e.pageY/document.body.offsetHeight*100  <= page.minHeight ? page.minHeight : e.pageY/document.body.offsetHeight*100
-                page.split.bottom(per)
-                elementControlComponent.resizeEvent()
-            }
-
-            if (valueEvent.splitColumns) {
-                let per = e.pageX/document.body.offsetWidth*100 <= page.minWidth ? page.minWidth : e.pageX/document.body.offsetWidth*100
-                page.split.columns(per)
-                elementControlComponent.resizeEvent()
-            }
-
-
-            /*
-
-            if (nugget.element.bar.state.isDrag) {
-                let x = e.pageX - nugget.element.bar.state.criteria.x
-                let y = e.pageY - nugget.element.bar.state.criteria.y
-
-                nugget.element.bar.drag(x, y)
-            }
-
-            if (nugget.element.bar.state.isResize) {
-                nugget.element.bar.state.isDrag = false
-                let elementId = nugget.element.bar.state.elementId
-                let filetype = nugget.element.timeline[elementId].filetype
-                let x = e.pageX - nugget.element.bar.state.criteriaResize.x
-                let y = e.pageY - nugget.element.bar.state.criteriaResize.y
-
-                if (filetype == 'video') {
-                    nugget.element.bar.resizeRangeOnElement(x, nugget.element.bar.state.resizeLocation)
-
-                } else {
-                    nugget.element.bar.resizeDurationInTimeline(x, nugget.element.bar.state.resizeLocation)
-
-                }
-
-            }
-
-
-            if (nugget.element.control.state.isDrag) {
-                let x =  e.clientX - nugget.element.control.state.criteriaDrag.x
-                let y = e.clientY - nugget.element.control.state.criteriaDrag.y
-                if (e.clientX + e.clientY != 0) nugget.element.control.drag(x, y);
-            }
-
-
-            if (nugget.element.control.state.isResize) {
-                const videoBox = document.querySelector("#video");
-                const rect = videoBox.getBoundingClientRect();
-
-                let x = e.pageX - rect.left - nugget.element.control.state.criteriaResize.x
-                let y = e.pageY - rect.top - nugget.element.control.state.criteriaResize.y
-
-                nugget.element.control.resize.action(x, y)
-            }
-            */
-        })
-
-
-
-        document.addEventListener("mouseup", (e) => {
-              valueEvent.splitBottom = false
-              valueEvent.splitColumns = false
-
-          })
-
-
-
-
-
-
-          document.getElementById("split_inner_bottom").addEventListener("mousedown", (e) => {
-                e.stopPropagation();
-          })
-
-        //   document.getElementById("split_bottom").addEventListener("mousedown", (e) => {
-        //     valueEvent.splitBottom = true
-        //   })
-
-
-          function startSplitColumns(colNumber) {
-            valueEvent.splitColumns = true
-            valueEvent.splitColumnsTarget = colNumber
-          }
-
-          function startSplitBottom() {
-            valueEvent.splitBottom = true
-          }
-
-
-      </script>
-
+        <script src="ui.js"></script>
     </body>
   </html>

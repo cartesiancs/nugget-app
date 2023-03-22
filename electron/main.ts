@@ -469,6 +469,14 @@ ipcMain.handle('app:getResourcesPath', async (event) => {
   return { status: 1, path: resourcesPath }
 })
 
+ipcMain.handle('app:getAppInfo', async (event) => {
+  let info = {
+    version: app.getVersion()
+  }
+  return { status: 1, data: info }
+})
+
+
 
 ipcMain.handle('font:getLists', async (event) => {
   try {

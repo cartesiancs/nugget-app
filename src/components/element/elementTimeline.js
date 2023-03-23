@@ -68,6 +68,7 @@ class ElementTimeline extends HTMLElement {
         <element-timeline-ruler></element-timeline-ruler>
         <element-timeline-cursor></element-timeline-cursor>
         <element-timeline-end></element-timeline-end>
+        <element-timeline-scroll></element-timeline-scroll>
 
         
         <div ref="elementLayer"></div>
@@ -365,6 +366,7 @@ class ElementTimeline extends HTMLElement {
     handleScroll() {
         this.fixRulerOnTop()
         this.scrollKeyframeEditor()
+        this.querySelector("element-timeline-scroll").setScrollThumbLeft({ px: this.scrollLeft })
     }
 
     connectedCallback() {
@@ -690,5 +692,63 @@ class ElementTimelineEnd extends HTMLElement {
     }
 }
 
+class ElementTimelineScroll extends HTMLElement { 
+    constructor() {
+        super();
 
-export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler, ElementTimelineRange, ElementTimelineEnd }
+
+    }
+
+    render(){
+        const template = this.template();
+        this.innerHTML = template;
+
+        this.classList.add("w-100", "fixed-bottom")
+    }
+
+    scrollTimeline({ per }) {
+        const elementTimeline = document.querySelector("element-timeline")
+        const timelineWidth = elementTimeline.scrollWidth
+        const timelineWidthPerStep = timelineWidth / 100
+        const nowWidth = per * timelineWidthPerStep
+        console.log(nowWidth)
+
+        elementTimeline.scrollLeft = nowWidth
+
+    }
+
+    updateValue() {
+        let inputRange = this.querySelector("input[ref='range']")
+        console.log(inputRange.value)
+        this.scrollTimeline({
+            per: inputRange.value
+        })
+    }
+
+    updateRange() {
+        this.updateValue()
+    }
+
+    setScrollThumbLeft({ px }) {
+        const elementTimeline = document.querySelector("element-timeline")
+        const timelineWidth = elementTimeline.scrollWidth
+        
+        let per = px / timelineWidth * 100
+        this.querySelector("input[ref='range']").value = per
+    }
+
+
+    template() {
+        return `<input ref="range" type="range" class="form fixed-bottom w-100" min="0" max="100" step="0.01" value="0">`
+    }
+
+    connectedCallback() {
+        this.render();
+        this.querySelector("input[ref='range']").addEventListener("input", this.updateRange.bind(this))
+        this.querySelector("input[ref='range']").addEventListener("change", this.updateRange.bind(this))
+
+    }
+}
+
+
+export { ElementTimeline, ElementTimelineCursor, ElementTimelineRuler, ElementTimelineRange, ElementTimelineEnd, ElementTimelineScroll }

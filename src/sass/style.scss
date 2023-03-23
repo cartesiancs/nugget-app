@@ -76,10 +76,11 @@ input[type=range]::-webkit-slider-runnable-track {
     border: 0px solid #000000;
 }
 
+
 input[type=range]::-webkit-slider-thumb {
     &:hover {
         background: #5a6067;
-        border: #5a6067;
+        border: none;
         outline: none;
         box-shadow: none;
     }
@@ -88,6 +89,8 @@ input[type=range]::-webkit-slider-thumb {
         box-shadow: none;
     }
     &:focus {
+        border: none;
+        outline: none;
         box-shadow: none;
     }
     outline: none;
@@ -100,6 +103,61 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 
+
+element-timeline-scroll > input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 14px;
+    cursor: pointer;
+    box-shadow: 0px 0px 0px #000000;
+    background: none;
+    border-radius: 1px;
+    border: 0px solid #000000;
+}
+
+element-timeline-scroll > input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    $timeline-scroll-thumb-bg: #2c3035;
+    &:hover {
+        background: $timeline-scroll-thumb-bg;
+        border: none;
+        outline: none;
+        box-shadow: none;
+    }
+    &:active {
+        border: $timeline-scroll-thumb-bg;
+        box-shadow: none;
+    }
+    &:focus {
+        border: none;
+        outline: none;
+        box-shadow: none;
+    }
+
+    outline: none;
+    height: .8rem;
+    width: 5.2rem;
+    border-radius: 15px;
+    //background: $timeline-scroll-thumb-bg;
+
+    background-color: $blur-background-color;
+    -webkit-backdrop-filter: $blur-backdrop-filter;
+    backdrop-filter: $blur-backdrop-filter;
+
+    cursor: pointer;
+}
+
+element-timeline-scroll {
+    appearance: none;
+
+    input {
+        appearance: none;
+        background: inherit;
+        outline: none;
+
+    }
+
+    background-color: transparent;
+}
 
 .container-footer {
     background-color: #16181b;

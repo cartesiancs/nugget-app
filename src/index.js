@@ -32,6 +32,8 @@ import { InputText } from './components/input/inputText.js';
 
 import { SelectFont } from './components/font/selectFont.js';
 
+import { Tutorial } from './components/tutorial/tutorial.js';
+import { TutorialPopover } from './components/tutorial/tutorialPopover.js';
 
 
 import "./sass/style.scss";
@@ -83,6 +85,9 @@ customElements.define('option-audio', OptionAudio);
 
 customElements.define('input-text', InputText);
 customElements.define('select-font', SelectFont);
+
+customElements.define('tutorial-group', Tutorial);
+customElements.define('tutorial-popover', TutorialPopover);
 
 
 

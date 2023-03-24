@@ -57,7 +57,14 @@
                           <button class="btn btn-secondary text-light" onclick="window.electronAPI.req.ffmpeg.installFFmpeg()">Reinstall FFmpeg</button>
           
                         </div>
-                        <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">...</div>
+                        <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+
+                            <p class="text-secondary">사용자 로그아웃. </p>
+
+                            <button class="btn btn-danger text-light" onclick="logout()">Logout</button>
+
+                            
+                        </div>
           
                     </div>
                 </div>
@@ -65,7 +72,15 @@
             </div>
 
           </div>
+          
 
+        <div class="toast-container position-fixed bottom-0 start-50 translate-middle" style="z-index: 9000;">
+            <div class="toast fade hide" id="logout" role="alert" data-bs-animation="true" data-bs-autohide="true" data-bs-delay="4000" aria-live="assertive" aria-atomic="true" style="background-color: rgba(37, 38, 43, 0.73);">
+                <div class="toast-body"> 
+                    <div class="text-center text-light">로그아웃 되었어요. 앱을 다시 실행해주세요.</div> 
+                </div>
+            </div>
+        </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
@@ -75,6 +90,24 @@
 
 
         <script src="../dist/index.js"></script>
+
+        <script>
+            const logout = () => {
+                window.electronAPI.req.store.delete('token')
+                const logoutToast = bootstrap.Toast.getInstance(document.getElementById('logout'))
+                logoutToast.show()
+
+            }
+
+            const initToast = () => {
+                var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+                var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl)
+                })
+            }
+
+            initToast()
+        </script>
 
 
 

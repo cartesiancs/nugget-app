@@ -752,7 +752,7 @@ class ElementControl extends HTMLElement {
     reset () {
         this.progress = 0
         this.progressTime = 0
-        this.isPaused = true;
+        this.stop()
 
         this.showTime()
         this.appearAllElementInTime()

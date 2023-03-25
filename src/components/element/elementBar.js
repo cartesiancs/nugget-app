@@ -301,7 +301,7 @@ class ElementBar extends HTMLElement {
         this.resizeLocation = location
         this.isDrag = false
         this.initialPosition.x = location == 'left' ? 
-            e.pageX - Number(this.style.left.split("px")[0]) : 
+            Number(this.style.left.split("px")[0]) : 
             Number(this.style.left.split("px")[0])
         this.initialPosition.y = e.pageY
         this.initialDuration = this.millisecondsToPx(this.timeline[this.elementId].duration) + Number(this.style.left.split("px")[0])

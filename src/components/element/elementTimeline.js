@@ -65,13 +65,12 @@ class ElementTimeline extends HTMLElement {
 
     template() {
         return `
-        <element-timeline-ruler></element-timeline-ruler>
         <element-timeline-cursor></element-timeline-cursor>
         <element-timeline-end></element-timeline-end>
         <element-timeline-scroll></element-timeline-scroll>
 
         
-        <div ref="elementLayer"></div>
+        <div ref="elementLayer" style="margin-top: 20px;"></div>
 
         `
     }
@@ -430,95 +429,195 @@ class ElementTimelineRuler extends HTMLElement {
         this.mousemoveEventHandler = undefined
         this.mouseTimeout = undefined
         this.rulerType = 'sec'
+        this.timeMagnification = 1
     }
 
     render(){
         this.innerHTML = ''
         const template = this.template();
-        this.classList.remove("ruler-sec", "ruler-min")
-        this.classList.add("timeline-ruler", `ruler`)
+        // this.classList.remove("ruler-sec", "ruler-min")
+        // this.classList.add("timeline-ruler", `ruler`)
+
+        this.classList.add("ps-0", "overflow-hidden", "position-absolute")
+
+        this.style.top = '40px'
 
         this.innerHTML = template;
-        this.addTickNumber(10)
+        this.drawRuler()
+        // this.addTickNumber(10)
     }
 
 
     template() {
-        return `<ul class="ruler-x">
-        <li></li><li></li><li></li><li></li><li></li> <!-- repeat -->
-      </ul>`
+    //     return `<ul class="ruler-x">
+    //     <li></li><li></li><li></li><li></li><li></li> <!-- repeat -->
+    //   </ul>`
+        const width = document.querySelector("element-timeline").clientWidth
+        const height = 30
+
+        return `<canvas ref="canvas" width="${width}" height="${height}"></canvas>`
+    }
+
+
+
+    drawRuler() {
+
+        const fullWidth = document.querySelector("element-timeline").clientWidth
+        const fullWeight = 30
+
+        const canvas = this.querySelector("canvas[ref='canvas']")
+        const ctx = canvas.getContext('2d')
+        canvas.width = fullWidth
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let range = 1
+        let unitSplit = 1
+        let unit = 's'
+
+        if (this.timeMagnification >= 0.5) {
+            range = 1
+            unitSplit = 1
+            unit = 's'
+        } else if (this.timeMagnification < 0.5 && this.timeMagnification >= 0.1) {
+            range = 5
+            unitSplit = 1
+            unit = 's'
+
+        } else if (this.timeMagnification < 0.1 && this.timeMagnification >= 0.01) {
+            range = 60
+            unitSplit = 60
+            unit = 'm'
+    
+        } else if (this.imeMagnification < 0.01 && this.timeMagnification >= 0.001)  {
+            range = 60 * 5
+            unitSplit = 60
+            unit = 'm'
+        } else {
+            range = 60 * 60
+            unitSplit = 60 * 60
+            unit = 'h'
+
+        }
+    
+        let startPoint = -document.querySelector("element-timeline").scrollLeft % (180 * this.timeMagnification * range)        //18 * 10 * 3
+        let startNumber = Math.floor(document.querySelector("element-timeline").scrollLeft / (180 * this.timeMagnification * range))
+
+        let term = 18 * this.timeMagnification
+        let maxCount = Number(fullWidth / term) + term
+
+        for (let count = 0; count < maxCount; count++) {
+            if (count % range > 0) {
+                continue
+            }
+
+            let point = (term * count) + startPoint
+
+            let startX = point
+            let startY = 15
+            let endX = point
+            let endY = 20
+
+            ctx.beginPath()
+
+            if (count % (10 * range) == 0) {
+                startY = 10
+                ctx.strokeStyle = '#e3e3e3'
+                ctx.font = "12px serif";
+                ctx.strokeText(`${(Number(count/(10)) + (startNumber*range))/unitSplit}${unit}`, startX - (term / 2), 10);
+            } else {
+                ctx.strokeStyle = '#e3e3e3'
+
+            }
+            ctx.moveTo(startX, startY)
+            ctx.lineTo(endX, endY)
+            ctx.lineWidth = 1
+            ctx.stroke()
+        }
+
+        ctx.beginPath()
+        ctx.moveTo(0, 20)
+        ctx.lineTo(fullWidth, 20)
+        ctx.strokeStyle = '#e3e3e3'
+        ctx.lineWidth = 1
+        ctx.stroke()
+
+
     }
 
     addTickNumber(licount) {
-        let addedli = '<li></li>'.repeat(licount)
-        this.querySelector("ul").innerHTML = addedli
+        // let addedli = '<li></li>'.repeat(licount)
+        // this.querySelector("ul").innerHTML = addedli
 
     }
 
 
     updateRulerSpace(timeMagnification) {
-        this.style.removeProperty(`--ruler2-space`)
-        this.style.removeProperty(`--ruler1-space`)
-        // this.style.removeProperty(`--ruler2-min-space`)
-        // this.style.removeProperty(`--ruler1-min-space`)
+        console.log("w", timeMagnification)
+        this.timeMagnification = timeMagnification * 1.1111111111
+        this.drawRuler()
+        // this.style.removeProperty(`--ruler2-space`)
+        // this.style.removeProperty(`--ruler1-space`)
+        // // this.style.removeProperty(`--ruler2-min-space`)
+        // // this.style.removeProperty(`--ruler1-min-space`)
 
-        let spaceRuler2 = 50 * timeMagnification
-        let spaceRuler1 = 5 * timeMagnification
-        let spaceIncrese = 1
+        // let spaceRuler2 = 50 * timeMagnification
+        // let spaceRuler1 = 5 * timeMagnification
+        // let spaceIncrese = 1
 
-        console.log(timeMagnification, this.rulerType[0])
+        // console.log(timeMagnification, this.rulerType[0])
 
-        if (timeMagnification >= 0.5) {
-            this.render()
-            this.rulerType = 'sec'
-            spaceIncrese = 1
-        } else if (timeMagnification < 0.5 && timeMagnification >= 0.1) {
-            this.render()
-            this.rulerType = 'sec5'
-            spaceRuler2 = 250 * timeMagnification
-            spaceRuler1 = 25 * timeMagnification
-            spaceIncrese = 5
+        // if (timeMagnification >= 0.5) {
+        //     this.render()
+        //     this.rulerType = 'sec'
+        //     spaceIncrese = 1
+        // } else if (timeMagnification < 0.5 && timeMagnification >= 0.1) {
+        //     this.render()
+        //     this.rulerType = 'sec5'
+        //     spaceRuler2 = 250 * timeMagnification
+        //     spaceRuler1 = 25 * timeMagnification
+        //     spaceIncrese = 5
 
-        } else if (timeMagnification < 0.1 && timeMagnification >= 0.01) {
-            this.render()
-            this.rulerType = 'min'
-            spaceRuler2 = 3000 * timeMagnification
-            spaceRuler1 = 300 * timeMagnification
-            spaceIncrese = 1
+        // } else if (timeMagnification < 0.1 && timeMagnification >= 0.01) {
+        //     this.render()
+        //     this.rulerType = 'min'
+        //     spaceRuler2 = 3000 * timeMagnification
+        //     spaceRuler1 = 300 * timeMagnification
+        //     spaceIncrese = 1
 
-        } else if (timeMagnification < 0.01 && timeMagnification >= 0.001)  {
-            this.render()
-            this.rulerType = 'min5'
-            spaceRuler2 = 3000 * 5 * timeMagnification
-            spaceRuler1 = 300 * 5 * timeMagnification
-            spaceIncrese = 5
+        // } else if (timeMagnification < 0.01 && timeMagnification >= 0.001)  {
+        //     this.render()
+        //     this.rulerType = 'min5'
+        //     spaceRuler2 = 3000 * 5 * timeMagnification
+        //     spaceRuler1 = 300 * 5 * timeMagnification
+        //     spaceIncrese = 5
 
-        } else  {
-            this.render()
-            this.rulerType = 'hour'
-            spaceRuler2 = 3000 * 60 * timeMagnification
-            spaceRuler1 = 300 * 60 * timeMagnification
-            spaceIncrese = 1
+        // } else  {
+        //     this.render()
+        //     this.rulerType = 'hour'
+        //     spaceRuler2 = 3000 * 60 * timeMagnification
+        //     spaceRuler1 = 300 * 60 * timeMagnification
+        //     spaceIncrese = 1
 
-        }
+        // }
         
-        this.style.setProperty(`--ruler1-space`, spaceRuler1); // NOTE: 기본값 5
-        this.style.setProperty(`--ruler2-space`, spaceRuler2); // NOTE: 기본값 50
-        this.style.setProperty(`--ruler3-space`, spaceIncrese); // NOTE: 기본값 5
-        this.style.setProperty(`--ruler3-space-minus`, -spaceIncrese); // NOTE: 기본값 5
+        // this.style.setProperty(`--ruler1-space`, spaceRuler1); // NOTE: 기본값 5
+        // this.style.setProperty(`--ruler2-space`, spaceRuler2); // NOTE: 기본값 50
+        // this.style.setProperty(`--ruler3-space`, spaceIncrese); // NOTE: 기본값 5
+        // this.style.setProperty(`--ruler3-space-minus`, -spaceIncrese); // NOTE: 기본값 5
 
        
         
-        this.querySelector(".ruler-x").style.setProperty(`--ruler-standard-unit`, `'${this.rulerType[0]}'`); // NOTE: 기본값 5
+        // this.querySelector(".ruler-x").style.setProperty(`--ruler-standard-unit`, `'${this.rulerType[0]}'`); // NOTE: 기본값 5
 
         
     }
 
 
     updateRulerLength(e) {
-        let duration = Number(e.value) * 200
-        this.changeWidth(duration)
-        this.addTickNumber(Number(e.value))
+        console.log("s")
+        // let duration = Number(e.value) * 200
+        // this.changeWidth(duration)
+        // this.addTickNumber(Number(e.value))
         this.updateTimelineEnd()
     }
 
@@ -540,7 +639,7 @@ class ElementTimelineRuler extends HTMLElement {
     }
 
     setTopPosition(px) {
-        this.style.top = `${px}px`
+        //this.style.top = `${px}px`
     }
 
     moveTime(e) {
@@ -600,6 +699,7 @@ class ElementTimelineRuler extends HTMLElement {
         this.render();
         this.addEventListener('mousedown', this.handleMousedown.bind(this));
         document.addEventListener('mouseup', this.handleMouseup.bind(this));
+        document.querySelector("element-timeline").addEventListener("scroll", this.drawRuler.bind(this))
 
     }
 }

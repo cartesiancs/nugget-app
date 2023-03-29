@@ -288,7 +288,7 @@ const renderFilter = {
                 object.command.input(object.element.localpath)
                     .inputOptions(`-ss ${object.element.trim.startTime/1000}`)
                     .inputOptions(`-itsoffset ${options.startTime + object.element.trim.startTime/1000}`)
-                    .inputOptions(`-t ${(object.element.trim.endTime/1000) - (object.element.trim.startTime/1000)}`)
+                    //.inputOptions(`-t ${(object.element.trim.endTime/1000) - (object.element.trim.startTime/1000)}`)
 
             } else {
                 object.command.input(object.element.localpath)
@@ -309,13 +309,13 @@ const renderFilter = {
         }
 
       
-        if (isExistAudio == true) {
-          object.filter.push(`[${elementCounts.video}:a]adelay=${options.startTime * 1000}|${options.startTime * 1000}[audio${elementCounts.video}]`)
+        // if (isExistAudio == true) {
+        //   object.filter.push(`[${elementCounts.video}:a]adelay=${options.startTime * 1000}|${options.startTime * 1000}[audio${elementCounts.video}]`)
 
-          mapAudioLists.push(`audio${elementCounts.video}`)
-          //mapAudioLists.push(`${elementCounts.video}:a`)
-          elementCounts.audio += 1
-        }
+        //   mapAudioLists.push(`audio${elementCounts.video}`)
+        //   //mapAudioLists.push(`${elementCounts.video}:a`)
+        //   elementCounts.audio += 1
+        // }
       
 
       
@@ -347,6 +347,11 @@ const renderFilter = {
         })
       
         elementCounts.video += 1
+
+        if (isExistAudio == true) {
+          renderFilter.addFilterAudio(object)
+        }
+      
       },
 
     addFilterText: (object) => {
@@ -399,9 +404,9 @@ const renderFilter = {
       
         object.command.input(object.element.localpath)
           .inputOptions(`-ss ${options.trim.start}`)
-          .inputOptions(`-itsoffset ${options.startTime}`)
+          //.inputOptions(`-itsoffset ${options.startTime}`)
           // .seekInput(options.trim.start)
-          // .inputOptions(`-t ${options.duration}`)
+          .inputOptions(`-t ${options.duration}`)
         log.info("[render] addFilterAudio ", object.element.localpath, elementCounts.video)
         log.info("[render] options.startTime ", options.startTime * 1000)
 

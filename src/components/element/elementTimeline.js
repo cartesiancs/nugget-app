@@ -534,12 +534,12 @@ class ElementTimelineRuler extends HTMLElement {
             ctx.stroke()
         }
 
-        ctx.beginPath()
-        ctx.moveTo(0, 20)
-        ctx.lineTo(fullWidth, 20)
-        ctx.strokeStyle = '#e3e3e3'
-        ctx.lineWidth = 1
-        ctx.stroke()
+        // ctx.beginPath()
+        // ctx.moveTo(0, 20)
+        // ctx.lineTo(fullWidth, 20)
+        // ctx.strokeStyle = '#e3e3e3'
+        // ctx.lineWidth = 1
+        // ctx.stroke()
 
 
     }

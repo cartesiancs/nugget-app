@@ -1,24 +1,24 @@
 {
-    "ffmpegBin": {
-        "darwin": {
-            "ffmpeg": {
-              "url": "https://github.com/Team-DeVent/ffmpeg4nugget/releases/download/v1/ffmpeg",
-              "filename": "ffmpeg"
-            },
-            "ffprobe": {
-              "url": "https://github.com/Team-DeVent/ffmpeg4nugget/releases/download/v1/ffprobe",
-              "filename": "ffprobe"
-            }
-          },
-          "win32": {
-            "ffmpeg": {
-              "url": "https://github.com/Team-DeVent/ffmpeg4nugget/releases/download/v1/ffmpeg.exe",
-              "filename": "ffmpeg.exe"
-            },
-            "ffprobe": {
-              "url": "https://github.com/Team-DeVent/ffmpeg4nugget/releases/download/v1/ffprobe.exe",
-              "filename": "ffprobe.exe"
-            }
-        }
+  "ffmpegBin": {
+    "darwin": {
+      "ffmpeg": {
+        "url": "https://cdn.nugget.studio/ffmpeg",
+        "filename": "ffmpeg"
+      },
+      "ffprobe": {
+        "url": "https://cdn.nugget.studio/ffprobe",
+        "filename": "ffprobe"
+      }
+    },
+    "win32": {
+      "ffmpeg": {
+        "url": "https://cdn.nugget.studio/ffmpeg.exe",
+        "filename": "ffmpeg.exe"
+      },
+      "ffprobe": {
+        "url": "https://cdn.nugget.studio/ffprobe.exe",
+        "filename": "ffprobe.exe"
+      }
     }
+  }
 }

@@ -213,11 +213,11 @@ class ElementBar extends HTMLElement {
     }
 
     setTrimEnd(px) {
-        let duration = this.millisecondsToPx(this.timeline[this.elementId].duration)
-        let startTrimWidth = this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
-        if (duration - startTrimWidth < px) {
-            return 0
-        }
+        // let duration = this.millisecondsToPx(this.timeline[this.elementId].duration)
+        // let startTrimWidth = this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
+        // if (duration - startTrimWidth < px) {
+        //     return 0
+        // }
         let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
         resizeRangeTargetRight.style.width = `${px}px`
     }
@@ -227,14 +227,14 @@ class ElementBar extends HTMLElement {
         const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
         const convertPixel = ms / 5 * timeMagnification
-        return convertPixel
+        return Number(convertPixel.toFixed(0))
     }
 
     pxToMilliseconds(px) {
         const timelineRange = Number(document.querySelector("element-timeline-range").value)
         const timeMagnification = timelineRange / 4
         const convertMs = px * 5 / timeMagnification
-        return convertMs
+        return Number(convertMs.toFixed(0))
     }
 
     resize(e) {
@@ -288,11 +288,14 @@ class ElementBar extends HTMLElement {
 
 
         if (this.resizeLocation == 'left') {
-            this.setTrimStart(this.initialPosition.x+x+scrollLeft-targetLeft)
+            this.setTrimStart(this.initialPosition.x +x+scrollLeft-targetLeft)
             this.timeline[this.elementId].trim.startTime = this.pxToMilliseconds(Number(resizeRangeTargetLeft.style.width.split('px')[0]))
         } else {
-            this.setTrimEnd((scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight)
-            this.timeline[this.elementId].trim.endTime = this.pxToMilliseconds(duration-Number(resizeRangeTargetRight.style.width.split('px')[0]))
+            let px = (scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight
+            let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
+            resizeRangeTargetRight.style.width = `${px}px`
+
+            this.timeline[this.elementId].trim.endTime = Number(this.pxToMilliseconds(duration-px).toFixed(0))
         }
     }
 
@@ -319,7 +322,7 @@ class ElementBar extends HTMLElement {
 
         this.isDrag = false
         this.initialPosition.x = Number(this.style.left.split("px")[0])
-        this.initialDuration = this.millisecondsToPx(this.timeline[this.elementId].duration + Number(this.style.left.split("px")[0]))
+        this.initialDuration = this.millisecondsToPx(this.timeline[this.elementId].duration)
 
         this.resizeEventHandler = this.resizeRange.bind(this)
         document.addEventListener('mousemove', this.resizeEventHandler);

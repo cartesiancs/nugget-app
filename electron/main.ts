@@ -3,6 +3,7 @@ import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
 import { window } from "./lib/window.js";
 import { menu } from './lib/menu.js'
+import { ipcDialog, ipcFilesystem, ipcStore } from './ipc.js'
 import { ffmpegConfig } from "./lib/ffmpeg.js";
 
 
@@ -23,11 +24,9 @@ import * as fsp from 'fs/promises';
 import fse from 'fs-extra'
 
 import ProgressBar from 'electron-progressbar'
-import Store from "electron-store"
 import getSystemFonts from 'get-system-fonts';
 
 
-const store = new Store();
 
 
 let resourcesPath = ''
@@ -360,109 +359,18 @@ ipcMain.on('FORCE_CLOSE', async (evt) => {
   app.quit();
 })
 
-ipcMain.handle('dialog:openDirectory', async () => {
-  const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openDirectory']
-  })
-  if (canceled) {
-    return
-  } else {
-    return filePaths[0]
-  }
-})
+ipcMain.handle('dialog:openDirectory', ipcDialog.openDirectory)
+ipcMain.handle('dialog:exportVideo', ipcDialog.exportVideo)
+ipcMain.handle('dialog:saveProject', ipcDialog.saveProject)
 
-ipcMain.handle('dialog:exportVideo', async () => {
-  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-    title: 'Export the File Path to save',
-    buttonLabel: 'Export',
-    filters: [
-        {
-          name: 'Export Video',
-            extensions: ['mp4']
-        }, ],
-    properties: []
-  })
-  if (!canceled) {
-    return filePath.toString()
-  }
-})
+ipcMain.handle('filesystem:mkdir', ipcFilesystem.makeDirectory)
+ipcMain.handle('filesystem:emptyDirSync', ipcFilesystem.emptyDirectorySync)
+ipcMain.handle('filesystem:writeFile', ipcFilesystem.writeFile)
+ipcMain.handle('filesystem:readFile', ipcFilesystem.readFile)
 
-ipcMain.handle('dialog:saveProject', async () => {
-  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-    title: 'Save the Project Path to save',
-    buttonLabel: 'Save',
-    filters: [
-        {
-          name: 'Save Project',
-            extensions: ['ngt']
-        }, ],
-    properties: []
-  })
-  if (!canceled) {
-    return filePath.toString()
-  }
-})
-
-
-
-
-// ipcMain.handle('filesystem:test', async () => {
-//   const data = await fsp.readFile("/Users/hhj/Desktop/Screenshot 2023-01-20 at 10.22.13 AM.png", "utf-8");
-//   return [data];
-// })
-
-
-ipcMain.handle('filesystem:mkdir', async (event, path, options) => {
-  let mkdir = await fsp.mkdir(path, options)
-
-  let status = mkdir == null ? false : true
-  return status
-
-})
-
-
-ipcMain.handle('filesystem:emptyDirSync', async (event, path) => {
-  let status = true
-  fse.emptyDirSync(path);
-  return status
-})
-
-
-ipcMain.handle('filesystem:writeFile', async (event, filename, data, options) => {
-  fs.writeFile(filename, data, options, (error) => {
-    if (error) {
-      log.error(error)
-      return false
-    }
-
-    return true
-
-  });
-})
-
-ipcMain.handle('filesystem:readFile', async (event, filename) => {
-  let data =  await fsp.readFile(filename)
-  return data
-
-})
-
-ipcMain.handle('store:set', async (event, key, value) => {
-  store.set(key, value);
-  return { status: 1 }
-})
-
-ipcMain.handle('store:get', async (event, key) => {
-  let value = store.get(key);
-  if (value == undefined) {
-    return { status: 0 }
-  }
-  return { status: 1, value: value }
-})
-
-ipcMain.handle('store:delete', async (event, key) => {
-  store.delete(key);
-  return { status: 1 }
-})
+ipcMain.handle('store:set', ipcStore.set)
+ipcMain.handle('store:get', ipcStore.get)
+ipcMain.handle('store:delete', ipcStore.delete)
 
 
 ipcMain.handle('app:getResourcesPath', async (event) => {
@@ -475,8 +383,6 @@ ipcMain.handle('app:getAppInfo', async (event) => {
   }
   return { status: 1, data: info }
 })
-
-
 
 ipcMain.handle('font:getLists', async (event) => {
   try {
@@ -513,7 +419,6 @@ if (process.defaultApp) {
 const gotTheLock = app.requestSingleInstanceLock()
 let deeplinkingUrl
 
-
 if (!gotTheLock) {
   app.quit()
 } else {
@@ -526,10 +431,7 @@ if (!gotTheLock) {
     if (process.platform == 'win32') {
       deeplinkingUrl = commandLine.slice(1)[1]
       mainWindow.webContents.send("LOGIN_SUCCESS", deeplinkingUrl)
-
-
     }
-
   })
 
   app.whenReady().then(() => {
@@ -549,10 +451,6 @@ if (!gotTheLock) {
   })
 
 }
-
-
-
-
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()

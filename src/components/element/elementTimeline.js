@@ -266,20 +266,24 @@ class ElementTimeline extends HTMLElement {
         let curserLeft = Number(convertMs.toFixed(0)) 
 
         this.elementControl.selectElementsId.forEach(elementId => {
+            let changedUUID = uuidv4()
+            let targetElementBar = document.querySelector(`element-bar[element-id='${elementId}']`)
+            selected[changedUUID] = _.cloneDeep(this.timeline[elementId]);
+
             if (this.getElementType(this.timeline[elementId].filetype) == 'dynamic') {
-                
+                let targetElementTrimStartTime = curserLeft - selected[changedUUID].trim.startTime
+                selected[changedUUID].trim.startTime += targetElementTrimStartTime
+    
+                targetElementBar.setTrimEnd(targetElementBar.millisecondsToPx(selected[changedUUID].trim.startTime))
+                this.timeline[elementId].trim.endTime = selected[changedUUID].trim.startTime
                 
             } else if (this.getElementType(this.timeline[elementId].filetype) == 'static') {
-                let changedUUID = uuidv4()
-                let targetElementBar = document.querySelector(`element-bar[element-id='${elementId}']`)
-                selected[changedUUID] = _.cloneDeep(this.timeline[elementId]);
                 let targetElementStartTime = curserLeft - selected[changedUUID].startTime
     
                 selected[changedUUID].startTime += targetElementStartTime
                 selected[changedUUID].duration = selected[changedUUID].duration - targetElementStartTime
     
                 let originElementDuration = this.timeline[elementId].duration - selected[changedUUID].duration
-                console.log(selected[changedUUID], originElementDuration)
     
                 targetElementBar.setWidth(targetElementBar.millisecondsToPx(originElementDuration))
                 this.timeline[elementId].duration = originElementDuration

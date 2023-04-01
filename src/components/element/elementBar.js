@@ -285,15 +285,12 @@ class ElementBar extends HTMLElement {
         let scrollLeft = timelineElement.scrollLeft
         let scrollRight = timelineBodyWidth-windowWidth-scrollLeft
         let marginLeftTargetToWidth = windowWidth-originDuration-targetLeft > 0 ? windowWidth-originDuration-targetLeft - 10 : 0
-        console.log(e.pageX, x, this.initialPosition.x)
-
 
         if (this.resizeLocation == 'left') {
             this.setTrimStart(this.initialPosition.x +x+scrollLeft-targetLeft)
             this.timeline[this.elementId].trim.startTime = this.pxToMilliseconds(Number(resizeRangeTargetLeft.style.width.split('px')[0]))
         } else {
-
-            let px = (scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight
+            let px = (targetLeft + targetWidth) - e.pageX - scrollLeft // (scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight
             let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
             resizeRangeTargetRight.style.width = `${px}px`
 

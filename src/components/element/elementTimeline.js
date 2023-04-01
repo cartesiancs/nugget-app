@@ -257,6 +257,39 @@ class ElementTimeline extends HTMLElement {
         this.copyedTimelineData = selected
     }
 
+    splitSeletedElement() {
+        let selected = {}
+        const timelineRange = Number(document.querySelector("element-timeline-range").value)
+        const timelineCursor = Number(document.querySelector("element-timeline-cursor").style.left.split('px')[0])
+        const timeMagnification = timelineRange / 4
+        const convertMs = timelineCursor * 5 / timeMagnification
+        let curserLeft = Number(convertMs.toFixed(0)) 
+
+        this.elementControl.selectElementsId.forEach(elementId => {
+            if (this.getElementType(this.timeline[elementId].filetype) == 'dynamic') {
+                
+                
+            } else if (this.getElementType(this.timeline[elementId].filetype) == 'static') {
+                let changedUUID = uuidv4()
+                let targetElementBar = document.querySelector(`element-bar[element-id='${elementId}']`)
+                selected[changedUUID] = _.cloneDeep(this.timeline[elementId]);
+                let targetElementStartTime = curserLeft - selected[changedUUID].startTime
+    
+                selected[changedUUID].startTime += targetElementStartTime
+                selected[changedUUID].duration = selected[changedUUID].duration - targetElementStartTime
+    
+                let originElementDuration = this.timeline[elementId].duration - selected[changedUUID].duration
+                console.log(selected[changedUUID], originElementDuration)
+    
+                targetElementBar.setWidth(targetElementBar.millisecondsToPx(originElementDuration))
+                this.timeline[elementId].duration = originElementDuration
+            }
+        
+        });
+
+        this.copyedTimelineData = selected
+    }
+
     pasteElement({ elementId, element }) {
         this.timeline[elementId] = _.cloneDeep(element);
     }
@@ -352,6 +385,26 @@ class ElementTimeline extends HTMLElement {
             this.copySeletedElement()
             this.removeSeletedElements()
 
+
+        }
+
+        if(event.ctrlKey && event.keyCode == 68 ){  //CTL d
+
+            this.splitSeletedElement()
+    
+            for (const elementId in this.copyedTimelineData) {
+                if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
+                    this.pasteElement({
+                        elementId: elementId,
+                        element: this.copyedTimelineData[elementId]
+                    })
+
+                    this.patchElementInTimeline({
+                        elementId: elementId,
+                        element: this.copyedTimelineData[elementId]
+                    })
+                }
+            }
 
         }
 

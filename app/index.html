@@ -81,7 +81,14 @@
                                 <button class="btn btn-sm btn-default text-light mt-1" onclick="NUGGET.project.save()">프로젝트 저장</button>
                                 <button class="btn btn-sm btn-default text-light mt-1" onclick="NUGGET.project.load()">프로젝트 불러오기</button>
                                 <!-- <button class="btn btn-sm bg-primary text-light mt-1" onclick="window.electronAPI.req.progressBar.test()">PROGRESSBARTEST </button> -->
+                                <br>
 
+                                <button type="button" class="btn btn-sm btn-default text-light mt-1" data-bs-toggle="modal" data-bs-target="#shortKey">
+                                    <span class="material-symbols-outlined">
+                                        keyboard
+                                        </span>
+                                  </button>
+                                  
                                 <br>
                               </div>
 
@@ -353,6 +360,54 @@
                             <p class="font-weight-md"></p>
                             <div class="mb-3">
                                 <button class="btn btn-primary" onclick="auth.openLogin()">3초만에 로그인</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="shortKey" data-bs-keyboard="false" tabindex="-1" >
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-dark">
+                        <div class="modal-body">
+                            <h5 class="modal-title text-white font-weight-lg">단축키</h5>
+                            <div class="mb-3">
+                                <table class="table table-dark ">
+                                    <tbody>
+                                      <tr>
+                                        <th scope="row">Control C</th>
+                                        <td class="text-secondary">타임라인에서 선택된 엘리먼트를 복사합니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Control V</th>
+                                        <td class="text-secondary">복사한 엘리먼트를 타임라인에 붙혀넣습니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Control X</th>
+                                        <td class="text-secondary">선택된 엘리먼트를 복사하고 삭제합니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Control D</th>
+                                        <td class="text-secondary">선택된 엘리먼트를 커서를 기준으로 분할합니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Control O</th>
+                                        <td class="text-secondary">프로젝트 파일 .ngt 를 불러옵니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Control S</th>
+                                        <td class="text-secondary">프로젝트를 저장합니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Backspace</th>
+                                        <td class="text-secondary">엘리먼트를 제거합니다</td>
+                                      </tr>
+                                      <tr>
+                                        <th scope="row">Space</th>
+                                        <td class="text-secondary">프리뷰를 재생하거나 중지합니다</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
                             </div>
                         </div>
                     </div>

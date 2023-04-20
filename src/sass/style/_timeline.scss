@@ -44,6 +44,9 @@ element-timeline-cursor::after {
   height: 17px;
 }
 
+element-timeline-ruler > canvas {
+  background-color: $background-color;
+}
 
 element-timeline-end {
   position: absolute;

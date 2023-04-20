@@ -48,6 +48,7 @@ class InputText extends HTMLElement {
 
     setWidthInner() {
         let resizedInput = this.parentInputBox.convertRelativeToAbsoluteSize({ w: this.querySelector("span").offsetWidth })
+        console.log(resizedInput)
         this.timeline[this.elementId].widthInner = resizedInput.w
     }
 

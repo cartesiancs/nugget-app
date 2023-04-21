@@ -6,7 +6,7 @@ import { menu } from './lib/menu.js'
 import { ipcDialog, ipcFilesystem, ipcStore, ipcApp } from './ipc.js'
 import { ffmpegConfig } from "./lib/ffmpeg.js";
 import { updater } from "./lib/autoUpdater.js"
-
+import { Extension } from "./lib/extension.js"
 
 import config from './config.json'
 
@@ -273,6 +273,9 @@ ipcMain.handle('font:getLists', async (event) => {
 })
 
 
+ipcMain.handle('extension:open', async (event, dir) => {
+  const extendApp = new Extension(dir)
+})
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

@@ -49,6 +49,9 @@ const request = {
     },
     url: {
         openUrl: (url) => ipcRenderer.send('OPEN_URL', url),
+    },
+    extension: {
+        open: (dir) => ipcRenderer.invoke('extension:open', dir),
     }
 
 

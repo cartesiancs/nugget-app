@@ -88,18 +88,6 @@ const template: any = [
             },
             indexFile: './app/page/about.html'
           })
-            // let mainWindow = new BrowserWindow({
-            //   width: 600,
-            //   height: 240,
-            //   webPreferences: {
-            //     nodeIntegration: true,
-            //     contextIsolation: false
-            //   },
-            //   backgroundColor: '#252729'
-            // })
-            
-            
-            //mainWindow.loadFile('./app/page/about.html')
         }
       },
 
@@ -107,15 +95,14 @@ const template: any = [
         label: 'Setting',
         click: async () => {
             
-            window.createWindow({
-              width: 600,
-              height: 540,
-              webPreferences: {
-                preload: path.join(__dirname, '../preload.js')
-
-              },
-              indexFile: './app/page/setting.html'
-            })
+          window.createWindow({
+            width: 600,
+            height: 540,
+            webPreferences: {
+              preload: path.join(__dirname, '../preload.js')
+            },
+            indexFile: './app/page/setting.html'
+          })
             
         }
       }

@@ -251,6 +251,16 @@ const ipc = {
         //shell.openPath(path)
         window.electronAPI.req.filesystem.openDirectory(path)
 
+    },
+
+    extTest: function () {
+        window.electronAPI.req.dialog.openDirectory().then((result) => {
+            projectFolder.value = result || '/'
+            const dir = String(projectFolder.value)
+
+            window.electronAPI.req.extension.open(dir)
+
+        })
     }
 }
 

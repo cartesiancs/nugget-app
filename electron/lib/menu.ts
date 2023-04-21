@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import * as path from 'path'
-import { mainWindow } from './window.js'
+import { mainWindow, window } from './window.js'
 
 
 const isMac = process.platform === 'darwin'
@@ -78,36 +78,45 @@ const template: any = [
       {
         label: 'About Nugget',
         click: async () => {
-            let mainWindow = new BrowserWindow({
-              width: 600,
-              height: 240,
-              webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false
-              },
-              backgroundColor: '#252729'
-            })
+
+          let mainWindow = window.createWindow({
+            width: 600,
+            height: 240,
+            webPreferences: {
+              nodeIntegration: true,
+              contextIsolation: false
+            },
+            indexFile: './app/page/about.html'
+          })
+            // let mainWindow = new BrowserWindow({
+            //   width: 600,
+            //   height: 240,
+            //   webPreferences: {
+            //     nodeIntegration: true,
+            //     contextIsolation: false
+            //   },
+            //   backgroundColor: '#252729'
+            // })
             
             
-            mainWindow.loadFile('./app/page/about.html')
+            //mainWindow.loadFile('./app/page/about.html')
         }
       },
 
       {
         label: 'Setting',
         click: async () => {
-            let mainWindow = new BrowserWindow({
+            
+            window.createWindow({
               width: 600,
               height: 540,
               webPreferences: {
                 preload: path.join(__dirname, '../preload.js')
 
               },
-              backgroundColor: '#252729'
+              indexFile: './app/page/setting.html'
             })
             
-            
-            mainWindow.loadFile('./app/page/setting.html')
         }
       }
     ]

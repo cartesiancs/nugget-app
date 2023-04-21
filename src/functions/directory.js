@@ -6,7 +6,37 @@ const directory = {
         const projectFolder = document.querySelector("#projectFolder")
         window.electronAPI.req.dialog.openDirectory().then((result) => {
             projectFolder.value = result || '/'
-            window.electronAPI.req.filesystem.getAllDirectory(String(projectFolder.value))
+            const dir = String(projectFolder.value)
+
+            window.electronAPI.req.filesystem.getDirectory(dir).then((result) => {
+                let fileLists = {}
+                const assetList = document.querySelector("asset-list")
+                const assetBrowser = document.querySelector("asset-browser")
+            
+                assetList.nowDirectory = dir
+                assetList.clearList()
+                assetBrowser.updateDirectoryInput(dir)
+                    
+                for (const key in result) {
+                    if (Object.hasOwnProperty.call(result, key)) {
+                        const element = result[key];
+                        if (!element.isDirectory) { 
+                            fileLists[key] = element
+                        } else {
+                            assetList.getFolder(element.title)
+                        }
+                    }
+                }
+            
+                for (const file in fileLists) {
+                    if (Object.hasOwnProperty.call(fileLists, file)) {
+                        const element = fileLists[file];
+                        assetList.getFile(element.title)
+                    }
+                }
+            })
+
+            //window.electronAPI.req.filesystem.getAllDirectory(String(projectFolder.value))
             //ipc.requestAllDir(result || '/')
         })
 

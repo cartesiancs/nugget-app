@@ -494,7 +494,6 @@ class ElementControl extends HTMLElement {
         let textSize = Number(size) / this.previewRatio
         elementBody.style.fontSize = `${textSize}px`
         elementBody.style.height = `${textSize}px`
-        inputTarget.style.top = `${textSize / 2}px`
 
 
 
@@ -828,14 +827,13 @@ class ElementControlAsset extends HTMLElement {
             let resizeRatio = this.elementControl.previewRatio
             let resizeText = this.timeline[this.elementId].fontsize / resizeRatio
 
-            this.setAttribute("style", `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${resizeElement.x}px; height: ${resizeText}px; font-size: ${resizeText}px;`)
+            this.setAttribute("style", `width: ${resizeElement.w}px; left: ${resizeElement.x}px; height: ${resizeText}px; font-size: ${resizeText}px;`)
             this.elementControl.changeTextFont({
                 elementId: this.elementId,
                 fontPath: this.timeline[this.elementId].fontpath,
                 fontType: this.timeline[this.elementId].fonttype,
                 fontName: this.timeline[this.elementId].fontname
             })
-            this.querySelector(`input-text`).style.top = `${resizeText / 2}px`
         }
  
         

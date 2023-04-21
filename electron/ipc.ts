@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog, net, Menu, shell, crashReporter } from 'electron'
 import { mainWindow } from './lib/window.js'
 
+import isDev from 'electron-is-dev'
+
 import fs from 'fs'
 import * as fsp from 'fs/promises';
 import fse from 'fs-extra'
@@ -55,6 +57,29 @@ const ipcDialog = {
 }
 
 const ipcFilesystem = {
+  getDirectory: async (event, dir) => {
+
+    const result = new Promise((resolve, reject) => {
+      fs.readdir(dir, async (err, files) => {
+        let lists = {}
+  
+        const promises = files.map(async (file) => {
+          const stat = await fsp.lstat(`${dir}/${file}`)
+          const isDirectory = stat.isDirectory() 
+  
+          lists[String(file)] = {
+            isDirectory: isDirectory,
+            title: file
+          }
+        })
+  
+        await Promise.all(promises)
+        resolve(lists)
+      });
+    })
+  
+    return result
+  },
     makeDirectory: async (event, path, options) => {
         let mkdir = await fsp.mkdir(path, options)
       
@@ -111,4 +136,28 @@ const ipcStore = {
 }
 
 
-export { ipcDialog, ipcFilesystem, ipcStore }
+const ipcApp = {
+  forceClose: async (evt) => {
+    app.exit(0)
+    app.quit();
+  },
+
+  getAppInfo: async (event) => {
+    let info = {
+      version: app.getVersion()
+    }
+    return { status: 1, data: info }
+  },
+
+  getResourcesPath: async (event) => {
+    let resourcesPath = '.'  
+    if (!isDev) {
+      resourcesPath = process.resourcesPath
+    }
+
+    return { status: 1, path: resourcesPath }
+  }
+
+}
+
+export { ipcDialog, ipcFilesystem, ipcStore, ipcApp }

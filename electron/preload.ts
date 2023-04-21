@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer, shell } = require('electron')
 
 const request = {
     app: {
-        forceClose: () => ipcRenderer.send('FORCE_CLOSE'),
+        forceClose: () => ipcRenderer.send('app:forceClose'),
         getResourcesPath: () => ipcRenderer.invoke('app:getResourcesPath'),
         getAppInfo: () => ipcRenderer.invoke('app:getAppInfo')
 
@@ -26,7 +26,7 @@ const request = {
         save: () => ipcRenderer.invoke('dialog:saveProject')        
     },
     filesystem: {
-        getAllDirectory: (dir) => ipcRenderer.send('REQ_ALL_DIR', dir),
+        getDirectory: (dir) => ipcRenderer.invoke('filesystem:getDirectory', dir),
         openDirectory: (path) => ipcRenderer.send('OPEN_PATH', path),
         test: () => ipcRenderer.invoke('filesystem:test'),
         mkdir: (path, options) => ipcRenderer.invoke('filesystem:mkdir', path, options),

@@ -8,9 +8,10 @@
         "start": "electron .",
         "compile": "tsc -w",
         "bundle": "npm run bundle:src",
-        "bundle:src": "webpack --mode=production",
+        "bundle:src": "webpack --mode=development",
+        "bundle:prod:src": "webpack --mode=production",
         "build:osx": "electron-builder build --mac",
-        "build:win": "cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
+        "build:win": "npm run bundle:prod:src && cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
         "build": "npm run build:osx && npm run build:win"
     },
     "repository": {

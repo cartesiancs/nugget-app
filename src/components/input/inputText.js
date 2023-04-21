@@ -24,11 +24,13 @@ class InputText extends HTMLElement {
         this.style.height = '100%'
         this.style.width = '100%'
         this.style.position = 'absolute'
-        this.style.top = '0px'
+        this.style.letterSpacing = '1px'
+        //this.style.top = '0px'
         this.style.color = this.initColor
 
         this.querySelector("span").style.height = `100%`
         this.querySelector("span").style.outline = 'none'
+        this.querySelector("span").style.lineHeight = 'initial'
 
         this.querySelector("span").setAttribute("contenteditable", true)
 

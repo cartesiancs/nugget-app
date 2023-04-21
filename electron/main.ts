@@ -3,8 +3,9 @@ import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
 import { window } from "./lib/window.js";
 import { menu } from './lib/menu.js'
-import { ipcDialog, ipcFilesystem, ipcStore } from './ipc.js'
+import { ipcDialog, ipcFilesystem, ipcStore, ipcApp } from './ipc.js'
 import { ffmpegConfig } from "./lib/ffmpeg.js";
+import { updater } from "./lib/autoUpdater.js"
 
 
 import config from './config.json'
@@ -40,16 +41,11 @@ crashReporter.start({
 });
 
 autoUpdater.logger = log;
-//autoUpdater.logger.transports.file.level = 'info';
+
 log.info('App starting...');
- 
 if (isDev) {
   resourcesPath = '.'
-
 	log.info('Running in development');
-  // require('electron-reload')(__dirname, {
-  //   electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-  // });
 } else {
   resourcesPath = process.resourcesPath
 	log.info('Running in production');
@@ -57,72 +53,15 @@ if (isDev) {
 
 
 const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH
-
 const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH
 const FFPROBE_PATH = ffmpegConfig.FFPROBE_PATH
 
-
-
-
-
-autoUpdater.on('checking-for-update', () => {
-  //sendStatusToWindow('Checking for update...');
-})
-
-autoUpdater.on('update-available', (info) => {
-  const dialogOpts = {
-    type: 'info',
-    buttons: ["업데이트", "닫기"],
-    defaultId: 0,
-    cancelId: 1,
-    title: 'Update Available',
-    message: '업데이트 가능',
-    detail: '새 버전으로 업데이트가 가능합니다.'
- };
-  dialog.showMessageBox(dialogOpts).then(result => {
-    if (result.response === 0) {
-        // bound to buttons array
-        console.log("Default button clicked.");
-      }
-  });
-})
-
-autoUpdater.on('update-not-available', (info) => {
-  log.info('Update not available.');
-})
-
-autoUpdater.on('error', (err) => {
-  const dialogOpts = {
-    type: 'error',
-    buttons: ['확인'],
-    title: 'Error',
-    message: '업데이트에 실패했습니다',
-    detail: '새 버전을 확인하는 도중에 접속 오류가 있었습니다.'
- };
- dialog.showMessageBox(dialogOpts);
- log.info('Error in auto-updater. ' + err);
-})
-
-autoUpdater.on('download-progress', (progressObj) => {
-  let log_message = "Download speed: " + progressObj.bytesPerSecond;
-  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-  log.info(log_message);
-})
-
-autoUpdater.on('update-downloaded', (info) => {
-  const dialogOpts = {
-    type: 'info',
-    buttons: ['확인'],
-    title: '업데이트 다운로드 완료',
-    message: '업데이트 다운로드를 완료했습니다',
-    detail: '새 버전의 업데이트 다운로드를 완료했습니다.'
- };
- dialog.showMessageBox(dialogOpts);
-  //sendStatusToWindow('Update downloaded');
-});
-
-let dir = app.getPath('userData')
+autoUpdater.on('checking-for-update', updater.checkingForUpdate)
+autoUpdater.on('update-available', updater.updateAvailable)
+autoUpdater.on('update-not-available', updater.updateNotAvailable)
+autoUpdater.on('error', updater.error)
+autoUpdater.on('download-progress', updater.downloadProgress)
+autoUpdater.on('update-downloaded', updater.updateDownloaded);
 
 
 const createFfmpegDir = async () => {
@@ -224,18 +163,9 @@ const downloadFfmpeg = (binType) => {
     });
 }
 
-
-
-// ipcRenderer.send("DOWNLOAD_FFMPEG")
 ipcMain.on('DOWNLOAD_FFMPEG', async (evt) => {
-  // ffmpeg 다운로드
-
   downloadFfmpeg('ffmpeg')
-
-
 });
-
-
 
 
 ipcMain.on('GET_METADATA', async (evt, bloburl, mediapath) => {
@@ -297,72 +227,15 @@ ipcMain.on('OPEN_URL', async (evt, url) => {
   shell.openExternal(url)
 })
 
-
-
-
-ipcMain.on('REQ_ALL_DIR', (evt, dir) => {
-  let result = {}
-
-  fs.readdir(dir, (err, files) => {
-    files.forEach(file => {
-      let isDirectory = fs.lstatSync(`${dir}/${file}`).isDirectory() 
-      result[String(file)] = {
-        isDirectory: isDirectory,
-        title: file
-      }
-    });
-
-    mainWindow.webContents.send('RES_ALL_DIR', dir, result)
-  });
-})
-
-
-ipcMain.on('PROGRESSBARTEST', (evt, dir) => {
-  let percentage = 0
-  let progressBar = new ProgressBar({
-    indeterminate: false,
-    text: '프로그래스바 테스트',
-    detail: '테스트 중...'
-  });
-  
-  setInterval(() => {
-
-    if(!progressBar.isCompleted()){
-      percentage += 0.45
-      progressBar.value = percentage;
-    }
-  }, 100)
-
-  progressBar
-  .on('completed', function() {
-    log.info("Completed the progress bar test.") 
-    progressBar.detail =  ' 설치 완료';
-  })
-  .on('aborted', function(value) {
-    log.info("Cancelled the progress bar test.") 
-  })
-  .on('progress', function(value) {
-    progressBar.detail = `100% 중 ${value}% 완료...`;
-  });
-})
-
-
-
 ipcMain.on('RENDER', (evt, elements, options) => {
   renderMain.start(evt, elements, options)
-})
-
-
-ipcMain.on('FORCE_CLOSE', async (evt) => {
-  log.info("Forced shutdown of the app.")
-  app.exit(0)
-  app.quit();
 })
 
 ipcMain.handle('dialog:openDirectory', ipcDialog.openDirectory)
 ipcMain.handle('dialog:exportVideo', ipcDialog.exportVideo)
 ipcMain.handle('dialog:saveProject', ipcDialog.saveProject)
 
+ipcMain.handle("filesystem:getDirectory", ipcFilesystem.getDirectory)
 ipcMain.handle('filesystem:mkdir', ipcFilesystem.makeDirectory)
 ipcMain.handle('filesystem:emptyDirSync', ipcFilesystem.emptyDirectorySync)
 ipcMain.handle('filesystem:writeFile', ipcFilesystem.writeFile)
@@ -373,16 +246,9 @@ ipcMain.handle('store:get', ipcStore.get)
 ipcMain.handle('store:delete', ipcStore.delete)
 
 
-ipcMain.handle('app:getResourcesPath', async (event) => {
-  return { status: 1, path: resourcesPath }
-})
-
-ipcMain.handle('app:getAppInfo', async (event) => {
-  let info = {
-    version: app.getVersion()
-  }
-  return { status: 1, data: info }
-})
+ipcMain.on('app:forceClose', ipcApp.forceClose)
+ipcMain.handle('app:getResourcesPath', ipcApp.getResourcesPath)
+ipcMain.handle('app:getAppInfo', ipcApp.getAppInfo)
 
 ipcMain.handle('font:getLists', async (event) => {
   try {
@@ -436,20 +302,17 @@ if (!gotTheLock) {
 
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow()
-  
     checkFfmpeg()
   
     mainWindow.on('close', function(e){
       e.preventDefault();
       mainWindow.webContents.send('WHEN_CLOSE_EVENT', 'message')
-  
     });
   })
 
   app.on("open-url", function (event, data) {
     mainWindow.webContents.send("LOGIN_SUCCESS", data)
   })
-
 }
 
 app.on('window-all-closed', function () {

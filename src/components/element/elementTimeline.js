@@ -271,7 +271,7 @@ class ElementTimeline extends HTMLElement {
             selected[changedUUID] = _.cloneDeep(this.timeline[elementId]);
 
             if (this.getElementType(this.timeline[elementId].filetype) == 'dynamic') {
-                let targetElementTrimStartTime = curserLeft - selected[changedUUID].trim.startTime
+                let targetElementTrimStartTime = curserLeft - (selected[changedUUID].trim.startTime + selected[changedUUID].startTime)
                 selected[changedUUID].trim.startTime += targetElementTrimStartTime
     
                 targetElementBar.setTrimEnd(targetElementBar.millisecondsToPx(selected[changedUUID].trim.startTime))

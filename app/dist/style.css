@@ -894,6 +894,11 @@ element-timeline-scroll input {
   color: #ffffff;
 }
 
+.icon-xs {
+  font-size: x-small;
+  color: #ffffff;
+}
+
 .icon-white {
   color: #ffffff;
 }

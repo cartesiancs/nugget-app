@@ -70,7 +70,7 @@ class ElementTimeline extends HTMLElement {
         <element-timeline-scroll></element-timeline-scroll>
 
         
-        <div ref="elementLayer" style="margin-top: 20px;"></div>
+        <div ref="elementLayer" style="margin-top: 24px;"></div>
 
         `
     }

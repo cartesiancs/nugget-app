@@ -11,18 +11,14 @@ class AssetBrowser extends HTMLElement {
     }
 
     template() {
-        return `<div class="row p-0 mt-2">
-        <div class="col-2">
-            <button class="btn btn-transparent btn-sm"><span class="material-symbols-outlined icon-sm"> arrow_upward </span> </button>
-        </div>
-        <div class="col-10">
-            <input type="text" class="form-control" aria-describedby="basic-addon1" value="" disabled>
-        </div>
+        return `<div class="d-flex flex-row p-0 mt-2">
+        <button ref="arrowup" class="btn btn-transparent btn-sm"><span class="material-symbols-outlined icon-sm"> arrow_upward </span> </button>
+        <input ref="text" type="text" class="form-control" aria-describedby="basic-addon1" value="" disabled>
         </div>`
     }
 
     updateDirectoryInput(path) {
-        let directoryInput = this.querySelector("div").querySelectorAll("div")[1].querySelector("input")
+        let directoryInput = this.querySelector("div").querySelector("input[ref='text']")
         directoryInput.value = path
     }
 
@@ -42,12 +38,12 @@ class AssetBrowser extends HTMLElement {
     connectedCallback() {
         this.render();
 
-        let prevDirectoryButton = this.querySelector("div").querySelectorAll("div")[0].querySelector("button")
+        let prevDirectoryButton = this.querySelector("div").querySelector("button[ref='arrowup']")
         prevDirectoryButton.addEventListener('click', this.clickPrevDirectoryButton.bind(this));
     }
 
     disconnectedCallback(){
-        let prevDirectoryButton = this.querySelector("div").querySelectorAll("div")[0].querySelector("button")
+        let prevDirectoryButton = this.querySelector("div").querySelector("button[ref='arrowup']")
         prevDirectoryButton.removeEventListener('click', this.clickPrevDirectoryButton);
     }
 

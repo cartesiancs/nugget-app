@@ -47,7 +47,10 @@ class Extension {
         window.createWindow({
             width: this.manifest.window.width,
             height: this.manifest.window.height,
-            webPreferences: {},
+            webPreferences: {
+                preload: path.join(__dirname, '..', 'preloadExtension.js')
+
+            },
             indexFile: index
         })
     }

@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer, shell } = require('electron')
+import { contextBridge, ipcRenderer } from 'electron'
 
 const request = {
     app: {

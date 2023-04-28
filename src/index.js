@@ -35,6 +35,8 @@ import { SelectFont } from './components/font/selectFont.js';
 import { Tutorial } from './components/tutorial/tutorial.js';
 import { TutorialPopover } from './components/tutorial/tutorialPopover.js';
 
+import { Toast } from './components/toast/toast.js';
+import { ToastBox } from './components/toast/toastBox.js'
 
 import "./sass/style.scss";
 
@@ -88,6 +90,9 @@ customElements.define('select-font', SelectFont);
 
 customElements.define('tutorial-group', Tutorial);
 customElements.define('tutorial-popover', TutorialPopover);
+
+customElements.define('toast-item', Toast);
+customElements.define('toast-box', ToastBox);
 
 
 

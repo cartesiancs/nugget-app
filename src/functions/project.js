@@ -106,9 +106,8 @@ const project = {
             window.electronAPI.req.filesystem.writeFile(projectDestination, buffer, 'base64').then((isCompleted) => {
 
                 console.log('saved!')
+                document.querySelector("toast-box").showToast({message:"프로젝트 저장 완료", delay:"2000"})
 
-                const saveProjectToast = bootstrap.Toast.getInstance(document.getElementById('saveProject'))
-                saveProjectToast.show()
 
                 elementTimeline.appendCheckpointInHashTable()
                 project.changeProjectFileValue({ projectDestination: projectDestination })

@@ -223,6 +223,8 @@ const ipc = {
         const projectRatio = elementControlComponent.previewRatio
 
         if (projectFolder == '') {
+            document.querySelector("toast-box").showToast({message:"프로젝트 폴더를 지정해주세요", delay:"4000"})
+
             return 0
         }
 

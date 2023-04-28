@@ -3,7 +3,7 @@ import { autoUpdater } from "electron-updater"
 import { renderMain, renderFilter } from './lib/render.js'
 import { window } from "./lib/window.js";
 import { menu } from './lib/menu.js'
-import { ipcDialog, ipcFilesystem, ipcStore, ipcApp } from './ipc.js'
+import { ipcDialog, ipcFilesystem, ipcStore, ipcApp, ipcTimeline } from './ipc.js'
 import { ffmpegConfig } from "./lib/ffmpeg.js";
 import { updater } from "./lib/autoUpdater.js"
 import { Extension } from "./lib/extension.js"
@@ -230,6 +230,9 @@ ipcMain.on('OPEN_URL', async (evt, url) => {
 ipcMain.on('RENDER', (evt, elements, options) => {
   renderMain.start(evt, elements, options)
 })
+
+ipcMain.handle('extension:timeline:get', ipcTimeline.get)
+
 
 ipcMain.handle('dialog:openDirectory', ipcDialog.openDirectory)
 ipcMain.handle('dialog:exportVideo', ipcDialog.exportVideo)

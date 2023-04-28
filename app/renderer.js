@@ -114,6 +114,13 @@ window.electronAPI.res.shortcut.controlO( (evt) => {
     NUGGET.project.load()
 })
 
+window.electronAPI.res.timeline.get( (event) => {
+    let timeline = _.cloneDeep(document.querySelector("element-timeline").timeline);
+
+    event.sender.send('return:timeline:get', timeline)
+
+})
+
 
 // NOTE: ipcRenderer.send('INIT') 명령어로 실행중인 앱의 경로를 확인할 수 있습니다
 // window.electronAPI.res.app.getAppPath((evt, path) => {

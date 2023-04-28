@@ -84,6 +84,9 @@ const response = {
     shortcut: {
         controlS: (callback) => ipcRenderer.on('SHORTCUT_CONTROL_S', callback),
         controlO: (callback) => ipcRenderer.on('SHORTCUT_CONTROL_O', callback),
+    },
+    timeline: {
+        get: (callback) => ipcRenderer.on('timeline:get', callback),
     }
 }
 

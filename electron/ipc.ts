@@ -8,6 +8,7 @@ import * as fsp from 'fs/promises';
 import fse from 'fs-extra'
 
 import Store from "electron-store"
+import { resolveFiles } from 'electron-updater/out/providers/Provider.js';
 
 const store = new Store();
 
@@ -160,4 +161,18 @@ const ipcApp = {
 
 }
 
-export { ipcDialog, ipcFilesystem, ipcStore, ipcApp }
+const ipcTimeline = {
+  get: async (evt) => {
+    mainWindow.webContents.send('timeline:get')
+
+    const result = new Promise((resolve, reject) => {
+      ipcMain.on('return:timeline:get', (_event, value) => {
+        resolve({ timeline: value })
+      })
+    })
+
+    return result
+  },
+}
+
+export { ipcDialog, ipcFilesystem, ipcStore, ipcApp, ipcTimeline }

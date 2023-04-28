@@ -5,4 +5,5 @@
 /bin/ffmpeg.exe
 /bin/ffprobe.exe
 /main
+/temp
 .DS_Store

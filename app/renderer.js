@@ -126,7 +126,7 @@ window.electronAPI.res.timeline.add( async (event, timeline) => {
         if (Object.hasOwnProperty.call(timeline, timelineId)) {
             const element = timeline[timelineId];
             const elementTimeline = document.querySelector("element-timeline")
-            
+
             Object.assign(elementTimeline.timeline, timeline);
             await elementTimeline.patchElementInTimeline({ elementId: timelineId, element: element })
         }
@@ -279,10 +279,17 @@ const ipc = {
             projectFolder.value = result || '/'
             const dir = String(projectFolder.value)
 
-            window.electronAPI.req.extension.open(dir)
+            window.electronAPI.req.extension.openDir(dir)
 
         })
-    }
+    },
+
+    ext: function () {
+        window.electronAPI.req.dialog.openFile().then((result) => {
+            window.electronAPI.req.extension.openFile(result)
+
+        })
+    },
 }
 
 const auth = {

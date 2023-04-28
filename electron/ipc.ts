@@ -24,6 +24,17 @@ const ipcDialog = {
         }
     },
 
+    openFile: async () => {
+      const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openFile']
+      })
+      if (canceled) {
+        return
+      } else {
+        return filePaths[0]
+      }
+    },
+
     exportVideo: async () => {
         const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
           title: 'Export the File Path to save',

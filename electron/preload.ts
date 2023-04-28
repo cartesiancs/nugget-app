@@ -10,6 +10,7 @@ const request = {
     },
     dialog: {
         openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+        openFile: () => ipcRenderer.invoke('dialog:openFile'),
         exportVideo: () => ipcRenderer.invoke('dialog:exportVideo')
         
     },
@@ -51,7 +52,9 @@ const request = {
         openUrl: (url) => ipcRenderer.send('OPEN_URL', url),
     },
     extension: {
-        open: (dir) => ipcRenderer.invoke('extension:open', dir),
+        openDir: (dir) => ipcRenderer.invoke('extension:open:dir', dir),
+        openFile: (file) => ipcRenderer.invoke('extension:open:file', file),
+
     }
 
 

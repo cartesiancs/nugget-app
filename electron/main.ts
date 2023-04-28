@@ -236,6 +236,7 @@ ipcMain.handle('extension:timeline:add', ipcTimeline.add)
 
 
 ipcMain.handle('dialog:openDirectory', ipcDialog.openDirectory)
+ipcMain.handle('dialog:openFile', ipcDialog.openFile)
 ipcMain.handle('dialog:exportVideo', ipcDialog.exportVideo)
 ipcMain.handle('dialog:saveProject', ipcDialog.saveProject)
 
@@ -276,9 +277,12 @@ ipcMain.handle('font:getLists', async (event) => {
 
 })
 
+ipcMain.handle('extension:open:file', async (event, file) => {
+  const extendApp = new Extension({ isDev: false, file: file })
+})
 
-ipcMain.handle('extension:open', async (event, dir) => {
-  const extendApp = new Extension(dir)
+ipcMain.handle('extension:open:dir', async (event, dir) => {
+  const extendApp = new Extension({ isDev: true, directory: dir })
 })
 
 if (process.defaultApp) {

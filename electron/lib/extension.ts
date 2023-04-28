@@ -5,8 +5,12 @@ import path from 'path'
 import fs from 'fs'
 import * as fsp from 'fs/promises';
 import fse from 'fs-extra'
+import JSZip from "jszip";
+import isDev from 'electron-is-dev'
+import DecompressZip from 'decompress-zip';
 
 const manifestFilename = "manifest.json"
+const resourcesPath = isDev == true ? './temp' : process.resourcesPath
 
 
 type manifestType = {
@@ -20,18 +24,39 @@ type manifestType = {
     }
 }
 
+type classType = {
+    isDev: boolean
+    directory?: string
+    file?: string
+}
+
 class Extension {
+    isDev: boolean
     directory: string
+    file: string
     fileList: string[]
     manifest: manifestType
 
-    constructor(directory) {
-        this.directory = directory
+    constructor({ isDev, directory, file }: classType) {
+        this.isDev = isDev || false
+
+        if (isDev == false) {
+            this.file = file
+        } else {
+            this.directory = directory
+        }
+
         this.init()
     }
 
     async init() {
         this.fileList = await this.loadFolder()
+        if (this.isDev == false) {
+            await this.unzip()
+            const filename = await this.getFilenameFromPath({ dir: this.file })
+            this.directory = path.join(`${resourcesPath}/${filename}`)
+        }
+
 
         const isExistManifest = await this.isExistManifest()
         if (isExistManifest == false) {
@@ -59,10 +84,44 @@ class Extension {
         return []
     }
 
-    async getManifest() {
+    async getFilenameFromPath({ dir }) {
+        const filename = path.basename(dir, '.zip')
+        return filename
+    }
+
+    async unzip() {
+        const unzipper = new DecompressZip(this.file)
+
+        unzipper.on('error', function (err) {
+            console.log('Caught an error');
+        });
+        
+        unzipper.on('extract', function (log) {
+            console.log('Finished extracting');
+        });
+        
+        unzipper.on('progress', function (fileIndex, fileCount) {
+            console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
+        });
+        
+        unzipper.extract({
+            path: path.join(`${resourcesPath}/`),
+            filter: function (file) {
+                return file.type !== "SymbolicLink";
+            }
+        });
+    }
+
+    async loadManifestFromDir() {
         const filepath = path.join(this.directory, manifestFilename)
         const readData = await fsp.readFile(filepath, 'utf8')
         const json = JSON.parse(readData)
+
+        return json
+    }
+
+    async getManifest() {
+        const json = await this.loadManifestFromDir()
         const indexpath = path.join(this.directory, json.index)
 
         return {

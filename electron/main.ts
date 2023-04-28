@@ -232,6 +232,7 @@ ipcMain.on('RENDER', (evt, elements, options) => {
 })
 
 ipcMain.handle('extension:timeline:get', ipcTimeline.get)
+ipcMain.handle('extension:timeline:add', ipcTimeline.add)
 
 
 ipcMain.handle('dialog:openDirectory', ipcDialog.openDirectory)

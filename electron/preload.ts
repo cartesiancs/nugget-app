@@ -87,6 +87,8 @@ const response = {
     },
     timeline: {
         get: (callback) => ipcRenderer.on('timeline:get', callback),
+        add: (callback) => ipcRenderer.on('timeline:add', callback),
+
     }
 }
 

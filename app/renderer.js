@@ -121,6 +121,18 @@ window.electronAPI.res.timeline.get( (event) => {
 
 })
 
+window.electronAPI.res.timeline.add( async (event, timeline) => {
+    for (const timelineId in timeline) {
+        if (Object.hasOwnProperty.call(timeline, timelineId)) {
+            const element = timeline[timelineId];
+            const elementTimeline = document.querySelector("element-timeline")
+            
+            Object.assign(elementTimeline.timeline, timeline);
+            await elementTimeline.patchElementInTimeline({ elementId: timelineId, element: element })
+        }
+    }
+})
+
 
 // NOTE: ipcRenderer.send('INIT') 명령어로 실행중인 앱의 경로를 확인할 수 있습니다
 // window.electronAPI.res.app.getAppPath((evt, path) => {

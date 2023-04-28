@@ -173,6 +173,12 @@ const ipcTimeline = {
 
     return result
   },
+
+  add: async (evt, timeline) => {
+    mainWindow.webContents.send('timeline:add', timeline)
+
+    return { status: 1 }
+  },
 }
 
 export { ipcDialog, ipcFilesystem, ipcStore, ipcApp, ipcTimeline }

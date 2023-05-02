@@ -10,7 +10,7 @@ import isDev from 'electron-is-dev'
 import DecompressZip from 'decompress-zip';
 
 const manifestFilename = "manifest.json"
-const resourcesPath = isDev == true ? './temp' : process.resourcesPath
+const resourcesPath = isDev == true ? '/Users/hhj/Documents/NUGGET_EXT_FOLD' : process.resourcesPath
 
 
 type manifestType = {
@@ -64,7 +64,6 @@ class Extension {
         }
 
         this.manifest = await this.getManifest()
-
         await this.loadWindow({ index: this.manifest.index })
     }
 

@@ -6,4 +6,5 @@
 /bin/ffprobe.exe
 /main
 /temp
+/app/dist
 .DS_Store

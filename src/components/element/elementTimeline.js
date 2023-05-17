@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { elementUtils } from "../../utils/element.js"
 
 
 class ElementTimeline extends HTMLElement { 
@@ -168,7 +169,7 @@ class ElementTimeline extends HTMLElement {
         let elementSplitedFilepath = this.timeline[elementId].localpath.split('/')
         let elementFilepath = elementSplitedFilepath[elementSplitedFilepath.length-1]
 
-        let elementType = this.getElementType(filetype)
+        let elementType = elementUtils.getElementType(filetype)
 
         if (elementType == 'static') {
             return `
@@ -187,29 +188,6 @@ class ElementTimeline extends HTMLElement {
         }
     }
 
-
-
-    getElementType(filetype) {
-        let elementType = 'undefined'
-        const elementFileExtensionType = {
-            "static": ['image', 'text', 'png', 'jpg', 'jpeg'],
-            "dynamic": ['video', 'audio', 'mp4', 'mp3', 'mov']
-        }
-
-        for (const type in elementFileExtensionType) {
-            if (Object.hasOwnProperty.call(elementFileExtensionType, type)) {
-                const extensionList = elementFileExtensionType[type];
-
-                if(extensionList.indexOf(filetype) >= 0)  {
-                    elementType = type
-                    break
-                }
-                
-            }
-        }
-
-        return elementType
-    }
 
     togglePlayer() {
         if (this.elementControl.isPaused == true) {
@@ -270,14 +248,14 @@ class ElementTimeline extends HTMLElement {
             let targetElementBar = document.querySelector(`element-bar[element-id='${elementId}']`)
             selected[changedUUID] = _.cloneDeep(this.timeline[elementId]);
 
-            if (this.getElementType(this.timeline[elementId].filetype) == 'dynamic') {
+            if (elementUtils.getElementType(this.timeline[elementId].filetype) == 'dynamic') {
                 let targetElementTrimStartTime = curserLeft - (selected[changedUUID].trim.startTime + selected[changedUUID].startTime)
                 selected[changedUUID].trim.startTime += targetElementTrimStartTime
     
                 targetElementBar.setTrimEnd(targetElementBar.millisecondsToPx(selected[changedUUID].trim.startTime))
                 this.timeline[elementId].trim.endTime = selected[changedUUID].trim.startTime
                 
-            } else if (this.getElementType(this.timeline[elementId].filetype) == 'static') {
+            } else if (elementUtils.getElementType(this.timeline[elementId].filetype) == 'static') {
                 let targetElementStartTime = curserLeft - selected[changedUUID].startTime
     
                 selected[changedUUID].startTime += targetElementStartTime

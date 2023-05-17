@@ -31,6 +31,7 @@ const window = {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
+        webviewTag: true,
         preload: path.join(__dirname, '..', 'preload.js')
       },
       indexFile: "app/index.html"

@@ -14,7 +14,6 @@
         "experimentalDecorators": true,
         "removeComments": false,
         "noImplicitAny": false,
-        "suppressImplicitAnyIndexErrors": true
     },
     "include": [
         "electron"

@@ -1,3 +1,5 @@
+import { elementUtils } from "../../utils/element.js"
+
 class ElementBar extends HTMLElement { 
     constructor() {
         super();
@@ -149,10 +151,14 @@ class ElementBar extends HTMLElement {
     }
 
     dragEditGuide() {
+        let startX = this.elementBarType == 'static' ? Number(this.style.left.split('px')[0]) : Number(this.style.left.split('px')[0])
+        let endX = this.elementBarType == 'static' ? Number(this.style.left.split('px')[0]) + Number(this.style.width.split('px')[0]) : Number(this.style.left.split('px')[0]) + this.millisecondsToPx(this.timeline[this.elementId].trim.endTime)
+
         let elementBarPosition = {
-            startX: Number(this.style.left.split('px')[0]),
-            endX: Number(this.style.left.split('px')[0]) + Number(this.style.width.split('px')[0])
+            startX: startX,
+            endX: endX
         }
+
 
 
         for (const elementId in this.timeline) {
@@ -162,26 +168,40 @@ class ElementBar extends HTMLElement {
                 }
 
                 const element = this.timeline[elementId];
-                let startX = this.millisecondsToPx(element.startTime)
-                let endX = this.millisecondsToPx(element.startTime + element.duration)
-                let checkRange = 10
-
-                if (elementBarPosition.startX > startX - checkRange && elementBarPosition.startX < startX + checkRange) {
-                    this.style.left = `${startX}px`
-                    this.timeline[this.elementId].startTime = this.pxToMilliseconds(startX)
-                }
-
-                if (elementBarPosition.startX > endX - checkRange && elementBarPosition.startX < endX + checkRange) {
-                    this.style.left = `${endX}px`
-                    this.timeline[this.elementId].startTime = this.pxToMilliseconds(endX)
-
-                }
-
-                
+                const elementType = elementUtils.getElementType(element.filetype)
+                this.guide({ element: element, filetype: elementType, elementBarPosition: elementBarPosition })
             }
         }
-        
     }
+
+    guide({ element, filetype, elementBarPosition }) {
+        let startX = this.millisecondsToPx(element.startTime)
+        let endX = this.millisecondsToPx(element.startTime + element.duration)
+        let checkRange = 10
+
+
+
+        // if (elementBarPosition.startX > startX - checkRange && elementBarPosition.startX < startX + checkRange) {
+        //     let px = this.elementBarType == 'static' ? startX : startX - this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
+        //     this.style.left = `${px}px`
+        //     this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
+        // }
+
+        if (elementBarPosition.startX > startX - checkRange && elementBarPosition.startX < startX + checkRange) {
+            let px = this.elementBarType == 'static' ? startX : startX
+            this.style.left = `${px}px`
+            this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
+        }
+
+        if (elementBarPosition.startX > endX - checkRange && elementBarPosition.startX < endX + checkRange) {
+            let px = this.elementBarType == 'static' ? endX : endX
+            this.style.left = `${px}px`
+            this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
+        }
+    }
+
+
+
 
     dragMousedown(e) {
         this.addEventListener('mousemove', this.drag);

@@ -29,6 +29,8 @@ type classType = {
     isDev: boolean
     directory?: string
     file?: string
+    windowType: string // window, webview
+
 }
 
 class Extension {
@@ -38,7 +40,7 @@ class Extension {
     fileList: string[]
     manifest: manifestType
 
-    constructor({ isDev, directory, file }: classType) {
+    constructor({ isDev, directory, file, windowType }: classType) {
         this.isDev = isDev || false
 
         if (isDev == false) {

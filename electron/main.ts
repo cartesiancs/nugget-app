@@ -278,11 +278,11 @@ ipcMain.handle('font:getLists', async (event) => {
 })
 
 ipcMain.handle('extension:open:file', async (event, file) => {
-  const extendApp = new Extension({ isDev: false, file: file })
+  const extendApp = new Extension({ isDev: false, file: file, windowType: "window" })
 })
 
 ipcMain.handle('extension:open:dir', async (event, dir) => {
-  const extendApp = new Extension({ isDev: true, directory: dir })
+  const extendApp = new Extension({ isDev: true, directory: dir, windowType: "window" })
 })
 
 if (process.defaultApp) {

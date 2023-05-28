@@ -151,7 +151,7 @@ class ElementBar extends HTMLElement {
     }
 
     dragEditGuide() {
-        let startX = this.elementBarType == 'static' ? Number(this.style.left.split('px')[0]) : Number(this.style.left.split('px')[0])
+        let startX = this.elementBarType == 'static' ? Number(this.style.left.split('px')[0]) : Number(this.style.left.split('px')[0]) + this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
         let endX = this.elementBarType == 'static' ? Number(this.style.left.split('px')[0]) + Number(this.style.width.split('px')[0]) : Number(this.style.left.split('px')[0]) + this.millisecondsToPx(this.timeline[this.elementId].trim.endTime)
 
         let elementBarPosition = {
@@ -174,9 +174,13 @@ class ElementBar extends HTMLElement {
         }
     }
 
+
+    // NOTE: element, filetype은 for문에서 돌아가는 기존 엘리먼트
+    // NOTE: elementBarPosition은 this bar
+
     guide({ element, filetype, elementBarPosition }) {
-        let startX = this.millisecondsToPx(element.startTime)
-        let endX = this.millisecondsToPx(element.startTime + element.duration)
+        let startX = filetype == 'static' ? this.millisecondsToPx(element.startTime) : this.millisecondsToPx(element.startTime + element.trim.startTime)
+        let endX = filetype == 'static' ? this.millisecondsToPx(element.startTime + element.duration) : this.millisecondsToPx(element.startTime + element.trim.endTime)
         let checkRange = 10
 
 
@@ -188,16 +192,29 @@ class ElementBar extends HTMLElement {
         // }
 
         if (elementBarPosition.startX > startX - checkRange && elementBarPosition.startX < startX + checkRange) {
-            let px = this.elementBarType == 'static' ? startX : startX
+            let px = this.elementBarType == 'static' ? startX : startX - this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
             this.style.left = `${px}px`
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
         }
 
         if (elementBarPosition.startX > endX - checkRange && elementBarPosition.startX < endX + checkRange) {
-            let px = this.elementBarType == 'static' ? endX : endX
+            let px = this.elementBarType == 'static' ? endX : endX - this.millisecondsToPx(this.timeline[this.elementId].trim.startTime)
             this.style.left = `${px}px`
             this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
         }
+
+        if (elementBarPosition.endX > startX - checkRange && elementBarPosition.endX < startX + checkRange) {
+            let px = this.elementBarType == 'static' ? startX - this.millisecondsToPx(this.timeline[this.elementId].duration) : startX - this.millisecondsToPx(this.timeline[this.elementId].trim.endTime)
+            this.style.left = `${px}px`
+            this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
+        }
+
+        if (elementBarPosition.endX > endX - checkRange && elementBarPosition.endX < endX + checkRange) {
+            let px = this.elementBarType == 'static' ? endX - this.millisecondsToPx(this.timeline[this.elementId].duration) : endX - this.millisecondsToPx(this.timeline[this.elementId].trim.endTime)
+            this.style.left = `${px}px`
+            this.timeline[this.elementId].startTime = this.pxToMilliseconds(px)
+        }
+
     }
 
 

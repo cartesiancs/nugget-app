@@ -161,6 +161,24 @@ class ElementControl extends HTMLElement {
         }
     }
 
+    getNowPriority() {
+        if (Object.keys(this.timeline).length == 0) {
+            return 1
+        }
+
+        let lastPriority = 1
+
+        for (const key in this.timeline) {
+            if (Object.hasOwnProperty.call(this.timeline, key)) {
+                const element = this.timeline[key];
+                lastPriority = lastPriority < element.priority ? element.priority : lastPriority
+
+            }
+        }
+
+        return lastPriority + 1
+    }
+
     addImage(blob, path) {
         const elementId = this.generateUUID()
         const img = document.createElement('img');
@@ -173,6 +191,7 @@ class ElementControl extends HTMLElement {
             let height = resize.height // /division
 
             this.timeline[elementId] = {
+                priority: this.getNowPriority(),
                 blob: blob,
                 startTime: 0,
                 duration: 1000,
@@ -241,6 +260,7 @@ class ElementControl extends HTMLElement {
 
 
                 this.timeline[elementId] = {
+                    priority: this.getNowPriority(),
                     blob: blob,
                     startTime: 0,
                     duration: duration,
@@ -275,6 +295,7 @@ class ElementControl extends HTMLElement {
         const elementId = this.generateUUID()
 
         this.timeline[elementId] = {
+            priority: this.getNowPriority(),
             startTime: 0,
             duration: 1000,
             text: "텍스트",
@@ -320,6 +341,7 @@ class ElementControl extends HTMLElement {
             let duration = audio.duration*1000
 
             this.timeline[elementId] = {
+                priority: this.getNowPriority(),
                 blob: blob,
                 startTime: 0,
                 duration: duration,
@@ -836,6 +858,8 @@ class ElementControlAsset extends HTMLElement {
             })
         }
  
+        this.setPriority()
+
         
 
     }
@@ -858,6 +882,10 @@ class ElementControlAsset extends HTMLElement {
             w: w*resizeRatio,
             h: h*resizeRatio,
         }
+    }
+
+    setPriority() {
+        this.setAttribute("style", `${this.getAttribute("style")} z-index: ${this.timeline[this.elementId].priority};`)
     }
 
     templateImage() {

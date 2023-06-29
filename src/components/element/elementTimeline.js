@@ -92,7 +92,7 @@ class ElementTimeline extends HTMLElement {
         for (const elementId in timeline) {
             if (Object.hasOwnProperty.call(timeline, elementId)) {
                 const element = timeline[elementId];
-                this.patchElementInTimeline({ elementId: elementId, element: element })
+                await this.patchElementInTimeline({ elementId: elementId, element: element })
 
                 
             }

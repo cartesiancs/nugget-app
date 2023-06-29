@@ -60,7 +60,7 @@
             "internetEnabled": true
         },
         "win": {
-            "certificateFile": "/Users/hhj/Desktop/_FILES/_Nugget/_CodeSign/devent.pfx",
+            "certificateFile": "/Users/devent.pfx",
             "certificatePassword": "C7z1tT",
             "verifyUpdateCodeSignature": true,
             "publish": {

@@ -111,9 +111,9 @@ document.addEventListener("mouseup", (e) => {
     valueEvent.splitColumns = false
 })
 
-document.getElementById("split_inner_bottom").addEventListener("mousedown", (e) => {
-    e.stopPropagation();
-})
+// document.getElementById("split_inner_bottom").addEventListener("mousedown", (e) => {
+//     e.stopPropagation();
+// })
 
 function startSplitColumns(colNumber) {
     valueEvent.splitColumns = true

@@ -1,4 +1,4 @@
-
+import { path } from '../../functions/path.js'
 
 class AssetList extends HTMLElement { 
     constructor() {
@@ -56,7 +56,7 @@ class AssetFile extends HTMLElement {
 
     async render(){
         const fileType = NUGGET.mime.lookup(this.filename).type
-        const fileUrl = `file://${this.directory}/${this.filename}`
+        const fileUrl = path.encode(`file://${this.directory}/${this.filename}`)
         const assetList = document.querySelector("asset-list")
 
         let template;

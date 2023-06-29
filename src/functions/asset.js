@@ -1,3 +1,5 @@
+import { path } from './path.js'
+
 const asset = {
     nowDirectory: '',
     // loadFile: function (filename, dir) {
@@ -29,8 +31,9 @@ const asset = {
         ipc.requestAllDir(splitPrevDirectory.join('/'))
 
     },
-    add: function (path) {
-        fetch(`file://${path}`)
+    add: function (originPath) {
+        const filepath = path.encode(originPath)
+        fetch(`file://${filepath}`)
         .then(res => {
             return res.blob()
         })
@@ -40,11 +43,11 @@ const asset = {
             let control = document.querySelector("element-control")
 
             if (blobType == 'image') {
-                control.addImage(blobUrl, path)
+                control.addImage(blobUrl, filepath)
             } else if (blobType == 'video') {
-                control.addVideo(blobUrl, path)
+                control.addVideo(blobUrl, filepath)
             } else if (blobType == 'audio') {
-                control.addAudio(blobUrl, path)
+                control.addAudio(blobUrl, filepath)
             }
         })
 

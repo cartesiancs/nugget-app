@@ -1,6 +1,6 @@
 {
     "name": "nugget-app",
-    "version": "0.3.1",
+    "version": "0.3.3",
     "description": "Video Editor",
     "main": "main/main.js",
     "author": "DeVent",
@@ -11,7 +11,7 @@
         "bundle:src": "webpack --mode=development --watch",
         "bundle:prod:src": "webpack --mode=production",
         "build:osx": "electron-builder build --mac",
-        "build:win": "npm run bundle:prod:src && cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
+        "build:win": "npm run bundle:prod:src && cross-env GH_TOKEN=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 electron-builder build --win --x64 -p always",
         "build": "npm run build:osx && npm run build:win"
     },
     "repository": {
@@ -106,11 +106,18 @@
         "get-system-fonts": "^2.0.2",
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
+        "path": "^0.12.7",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
         "request": "^2.88.2",
         "typescript": "^4.9.4",
         "uuid": "^9.0.0"
     },
     "devDependencies": {
+        "@babel/core": "^7.22.1",
+        "@babel/preset-env": "^7.22.4",
+        "@babel/preset-react": "^7.22.3",
+        "babel-loader": "^9.1.2",
         "cross-env": "^7.0.3",
         "css-loader": "^6.7.1",
         "electron": "20.3.12",

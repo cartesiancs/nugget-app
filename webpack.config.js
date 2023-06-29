@@ -9,14 +9,23 @@ module.exports = {
         new MiniCssExtractPlugin({ filename: `style.css` })
     ],
     "module": {
-        "rules": [{
-            "test": /\.s[ac]ss$/i,
-            "use": [
-                MiniCssExtractPlugin.loader,
-                "css-loader",
-                "sass-loader",
-            ],
-        }],
+        "rules": [
+            {
+                "test": /\.jsx?/,
+                "loader": 'babel-loader',
+                "options": {
+                    "presets": ['@babel/preset-env', '@babel/preset-react']
+                }
+            },
+            {
+                "test": /\.s[ac]ss$/i,
+                "use": [
+                    MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    "sass-loader",
+                ],
+            }
+        ],
     },
     "output": {
         "filename": "index.js",

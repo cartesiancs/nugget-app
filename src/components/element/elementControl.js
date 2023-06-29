@@ -763,7 +763,7 @@ class ElementControl extends HTMLElement {
     }
 
     connectedCallback() {
-        preview.addEventListener('click', this.handleClickPreview.bind(this));
+        document.querySelector("#preview").addEventListener('click', this.handleClickPreview.bind(this));
 
     }
 }
@@ -1413,19 +1413,19 @@ class DragAlignmentGuide extends HTMLElement {
     addGuide() {
         for (let index = 0; index < this.allPositions.length; index++) {
             const position = this.allPositions[index];
-            this.videoCanvas.insertAdjacentHTML("beforeend", `<alignment-guide position="${position}" class="alignment-guide alignment-guide-${position}"></alignment-guide>`)
+            document.querySelector("#video").insertAdjacentHTML("beforeend", `<alignment-guide position="${position}" class="alignment-guide alignment-guide-${position}"></alignment-guide>`)
             this.hideGuide({ position: position })
 
         }
     }
 
     hideGuide({ position }) {
-        let target = this.videoCanvas.querySelector(`alignment-guide[position='${position}']`)
+        let target = document.querySelector("#video").querySelector(`alignment-guide[position='${position}']`)
         target.classList.add("d-none")
     }
 
     showGuide({ position }) {
-        let target = this.videoCanvas.querySelector(`alignment-guide[position='${position}']`)
+        let target = document.querySelector("#video").querySelector(`alignment-guide[position='${position}']`)
         target.classList.remove("d-none")
     }
 

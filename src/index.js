@@ -40,6 +40,14 @@ import { ToastBox } from './components/toast/toastBox.js'
 
 import "./sass/style.scss";
 
+import React from 'react';
+
+// import { createRoot } from 'react-dom/client';
+// import { App } from './ui/App.js'
+
+
+// const root = createRoot(document.getElementById('app'));
+// root.render(<App />);
 
 customElements.define('asset-list', AssetList);
 customElements.define('asset-file', AssetFile);

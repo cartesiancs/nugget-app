@@ -11,5 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: npm install
-      - run: npm run build:win
+      - run: npm run bundle:prod:src && cross-env GH_TOKEN=${{ secrets.DEPLOY_GITHUB_TOKEN }} electron-builder build --win --x64 -p always
 

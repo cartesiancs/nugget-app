@@ -6,6 +6,8 @@ import renderAnimation from './functions/renderAnimation.js';
 import fonts from './functions/fonts.js';
 
 
+import { App } from './App.js';
+
 
 import { AssetList, AssetFile, AssetFolder } from './components/asset/assetList.js';
 import { AssetBrowser } from './components/asset/assetBrowser.js';
@@ -48,6 +50,11 @@ import React from 'react';
 
 // const root = createRoot(document.getElementById('app'));
 // root.render(<App />);
+
+
+
+
+customElements.define('app-root', App);
 
 customElements.define('asset-list', AssetList);
 customElements.define('asset-file', AssetFile);

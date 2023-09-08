@@ -39,6 +39,9 @@ const mime = {
         "wav": {
             type: "audio"
         },
+        "m4a": {
+            type: "audio"
+        },
     },
     lookup: function(filename) {
         const splitFilename = filename.split('.')

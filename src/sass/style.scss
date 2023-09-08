@@ -53,6 +53,8 @@ html, body {
     user-select: none;
     overflow-y: hidden;
     overscroll-behavior-x: none;
+    background-color: #181a1c;
+
 }
 
 input[type='file']::file-selector-button {

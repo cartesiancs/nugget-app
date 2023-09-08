@@ -1,20 +1,25 @@
+import {LitElement, html} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
+class App extends LitElement {
+    // constructor() {
+    //     super()
+    // }
 
-class App extends HTMLElement {
-    constructor() {
-        super()
-    }
+    // connectedCallback() {
+    //     console.log( this.render())
 
-    connectedCallback() {
-        console.log( this.render())
+    //     this.classList.add("bg-darker")
 
-        this.classList.add("bg-darker")
+    //     this.innerHTML = this.render()
+    // }
 
-        this.innerHTML = this.render()
+    createRenderRoot() {
+        return this;
     }
 
     render() {
-        return `
+        return html`
 
         <asset-upload-drop></asset-upload-drop>
         <tutorial-group>

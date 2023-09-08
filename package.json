@@ -104,10 +104,9 @@
         "fs-extra": "^11.1.0",
         "get-system-fonts": "^2.0.2",
         "jszip": "^3.10.1",
+        "lit": "^2.8.0",
         "lodash": "^4.17.21",
         "path": "^0.12.7",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
         "request": "^2.88.2",
         "typescript": "^4.9.4",
         "uuid": "^9.0.0"
@@ -115,7 +114,6 @@
     "devDependencies": {
         "@babel/core": "^7.22.1",
         "@babel/preset-env": "^7.22.4",
-        "@babel/preset-react": "^7.22.3",
         "babel-loader": "^9.1.2",
         "cross-env": "^7.0.3",
         "css-loader": "^6.7.1",

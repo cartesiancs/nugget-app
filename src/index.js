@@ -42,6 +42,13 @@ import { ToastBox } from './components/toast/toastBox.js'
 
 import "./sass/style.scss";
 
+import { Timeline } from './ui/timeline.js'
+import { Control } from './ui/Control.js'
+import { ModalList } from './ui/Modal.js'
+
+customElements.define('timeline-ui', Timeline);
+customElements.define('control-ui', Control);
+customElements.define('modal-list-ui', ModalList);
 
 
 customElements.define('app-root', App);

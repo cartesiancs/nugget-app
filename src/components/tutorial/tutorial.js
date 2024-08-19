@@ -1,26 +1,25 @@
+class Tutorial extends HTMLElement {
+  constructor() {
+    super();
+  }
 
-class Tutorial extends HTMLElement { 
-    constructor() {
-        super();
+  render() {
+    //this.hideAllOptions()
 
-    }
+    this.innerHTML = this.template();
 
-    render() {
-        //this.hideAllOptions()
+    this.tutorialModal = new bootstrap.Modal(
+      document.querySelector("div[ref='tutorial']"),
+      {
+        keyboard: false,
+      }
+    );
 
-        this.innerHTML = this.template()
+    //this.tutorialModal.show()
+  }
 
-        this.tutorialModal = new bootstrap.Modal(document.querySelector("div[ref='tutorial']"), {
-            keyboard: false
-        })
-
-        //this.tutorialModal.show()
-
-    }
-
-
-    template() {
-        return `<div class="modal fade show" ref="tutorial" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  template() {
+    return `<div class="modal fade show" ref="tutorial" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-default">
                 <div class="modal-body text-center text-light bg-default">
@@ -39,14 +38,12 @@ class Tutorial extends HTMLElement {
                 </div>
             </div>
         </div>
-    </div>`
-    }
+    </div>`;
+  }
 
-    connectedCallback() {
-        this.render();
-
-    }
+  connectedCallback() {
+    this.render();
+  }
 }
 
-  
-export { Tutorial }
+export { Tutorial };

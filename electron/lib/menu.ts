@@ -1,127 +1,128 @@
-import { app, BrowserWindow, Menu } from 'electron'
-import * as path from 'path'
-import { mainWindow, window } from './window.js'
+import { app, BrowserWindow, Menu } from "electron";
+import * as path from "path";
+import { mainWindow, window } from "./window.js";
 
-
-const isMac = process.platform === 'darwin'
+const isMac = process.platform === "darwin";
 
 const template: any = [
   // { role: 'appMenu' }
-  ...(isMac ? [{
-    label: app.name,
-    submenu: [
-      { role: 'about' },
-      { type: 'separator' },
-      { role: 'services' },
-      { type: 'separator' },
-      { role: 'hide' },
-      { role: 'hideOthers' },
-      { role: 'unhide' },
-      { type: 'separator' },
-      { role: 'quit' }
-    ]
-  }] : []),
+  ...(isMac
+    ? [
+        {
+          label: app.name,
+          submenu: [
+            { role: "about" },
+            { type: "separator" },
+            { role: "services" },
+            { type: "separator" },
+            { role: "hide" },
+            { role: "hideOthers" },
+            { role: "unhide" },
+            { type: "separator" },
+            { role: "quit" },
+          ],
+        },
+      ]
+    : []),
   // { role: 'fileMenu' }
   {
-    label: 'File',
+    label: "File",
     submenu: [
-        {
-          label: 'Save Project',
-          accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Control+S',
-          click: () => {  mainWindow.webContents.send('SHORTCUT_CONTROL_S')  }
+      {
+        label: "Save Project",
+        accelerator: process.platform === "darwin" ? "Cmd+S" : "Control+S",
+        click: () => {
+          mainWindow.webContents.send("SHORTCUT_CONTROL_S");
         },
-        {
-          label: 'Open Project',
-          accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Control+O',
-          click: () => {  mainWindow.webContents.send('SHORTCUT_CONTROL_O')  }
-        }
-      ]
+      },
+      {
+        label: "Open Project",
+        accelerator: process.platform === "darwin" ? "Cmd+O" : "Control+O",
+        click: () => {
+          mainWindow.webContents.send("SHORTCUT_CONTROL_O");
+        },
+      },
+    ],
   },
   // { role: 'editMenu' }
   {
-    label: 'Edit',
+    label: "Edit",
     submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' }
-    ]
+      { role: "undo" },
+      { role: "redo" },
+      { type: "separator" },
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+    ],
   },
   // { role: 'viewMenu' }
   {
-    label: 'View',
+    label: "View",
     submenu: [
-      { role: 'reload' },
-      { role: 'forceReload' },
-      { role: 'toggleDevTools' },
-      { type: 'separator' },
-      { role: 'resetZoom' },
-      { role: 'zoomIn' },
-      { role: 'zoomOut' },
-      { type: 'separator' },
-      { role: 'togglefullscreen' }
-    ]
+      { role: "reload" },
+      { role: "forceReload" },
+      { role: "toggleDevTools" },
+      { type: "separator" },
+      { role: "resetZoom" },
+      { role: "zoomIn" },
+      { role: "zoomOut" },
+      { type: "separator" },
+      { role: "togglefullscreen" },
+    ],
   },
   // { role: 'windowMenu' }
   {
-    label: 'Window',
-    submenu: [
-      { role: 'minimize' },
-      { role: 'zoom' }
-    ]
+    label: "Window",
+    submenu: [{ role: "minimize" }, { role: "zoom" }],
   },
   {
-    label: 'About',
+    label: "About",
     submenu: [
       {
-        label: 'About Nugget',
+        label: "About Nugget",
         click: async () => {
-
           let mainWindow = window.createWindow({
             width: 600,
             height: 240,
             webPreferences: {
               nodeIntegration: true,
-              contextIsolation: false
+              contextIsolation: false,
             },
-            indexFile: './app/page/about.html'
-          })
-        }
+            indexFile: "./app/page/about.html",
+          });
+        },
       },
 
       {
-        label: 'Setting',
+        label: "Setting",
         click: async () => {
-            
           window.createWindow({
             width: 600,
             height: 540,
             webPreferences: {
-              preload: path.join(__dirname, '../preload.js')
+              preload: path.join(__dirname, "../preload.js"),
             },
-            indexFile: './app/page/setting.html'
-          })
-            
-        }
-      }
-    ]
+            indexFile: "./app/page/setting.html",
+          });
+        },
+      },
+    ],
   },
   {
-    role: 'help',
+    role: "help",
     submenu: [
       {
-        label: 'Learn More',
+        label: "Learn More",
         click: async () => {
-          const { shell } = require('electron')
-          await shell.openExternal('https://blog.nugget.studio/')
-        }
-      }
-    ]
-  }
-]
+          const { shell } = require("electron");
+          await shell.openExternal("https://blog.nugget.studio/");
+        },
+      },
+    ],
+  },
+];
 
-const menu = Menu.buildFromTemplate(template)
+const menu = Menu.buildFromTemplate(template);
 
-export { menu }
+export { menu };

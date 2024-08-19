@@ -1,13 +1,13 @@
-import { BrowserWindow, Menu } from 'electron'
-import { menu } from './menu.js'
-import { autoUpdater } from "electron-updater"
+import { BrowserWindow, Menu } from "electron";
+import { menu } from "./menu.js";
+import { autoUpdater } from "electron-updater";
 
-import isDev from 'electron-is-dev'
-import path from 'path'
+import isDev from "electron-is-dev";
+import path from "path";
 
 let mainWindow;
-const WINDOW_BACKGROUND_COLOR = "#252729"
-const WINDOW_ICON = path.join(__dirname, '..', 'assets/icons/png/512x512.png')
+const WINDOW_BACKGROUND_COLOR = "#252729";
+const WINDOW_ICON = path.join(__dirname, "..", "assets/icons/png/512x512.png");
 
 const window = {
   createMainWindow: () => {
@@ -22,8 +22,7 @@ const window = {
     //   backgroundColor: WINDOW_BACKGROUND_COLOR,
     //   icon: WINDOW_ICON
     // })
-  
-  
+
     // mainWindow.loadFile('app/index.html')
     mainWindow = window.createWindow({
       width: 1000,
@@ -32,19 +31,19 @@ const window = {
         nodeIntegration: false,
         contextIsolation: true,
         webviewTag: true,
-        preload: path.join(__dirname, '..', 'preload.js')
+        preload: path.join(__dirname, "..", "preload.js"),
       },
-      indexFile: "app/index.html"
-    })
-  
-    autoUpdater.checkForUpdatesAndNotify()
-    Menu.setApplicationMenu(menu)
-  
+      indexFile: "app/index.html",
+    });
+
+    autoUpdater.checkForUpdatesAndNotify();
+    Menu.setApplicationMenu(menu);
+
     if (isDev) {
       mainWindow.webContents.openDevTools();
     }
-        
-    return mainWindow
+
+    return mainWindow;
   },
 
   createWindow: ({ width, height, webPreferences, indexFile }: any) => {
@@ -53,14 +52,13 @@ const window = {
       height: height,
       webPreferences: webPreferences,
       backgroundColor: WINDOW_BACKGROUND_COLOR,
-      icon: WINDOW_ICON
-    })
+      icon: WINDOW_ICON,
+    });
 
-    newWindow.loadFile(indexFile)
-  
-    return newWindow
-  }
-}
+    newWindow.loadFile(indexFile);
 
+    return newWindow;
+  },
+};
 
-export { window, mainWindow }
+export { window, mainWindow };

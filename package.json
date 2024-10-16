@@ -6,6 +6,7 @@
   "author": "DeVent",
   "scripts": {
     "start": "electron .",
+    "dev": "concurrently \"npm run compile\" \"npm run bundle:src\"",
     "compile": "tsc -w",
     "bundle": "npm run bundle:src",
     "bundle:src": "webpack --mode=development --watch",
@@ -93,6 +94,7 @@
   },
   "dependencies": {
     "axios": "^1.3.2",
+    "concurrently": "^9.0.1",
     "decompress": "4.2.1",
     "decompress-zip": "0.3.3",
     "electron-is-dev": "^2.0.0",

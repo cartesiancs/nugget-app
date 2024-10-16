@@ -93,7 +93,6 @@ window.onresize = async function (event) {
 };
 
 window.addEventListener("load", (event) => {
-  auth.checkLogin();
   window.electronAPI.req.app.getAppInfo().then((result) => {
     document.querySelector(
       "p[ref='appVersion']"

@@ -58,43 +58,45 @@ class ElementControl extends HTMLElement {
   }
 
   resizePreview() {
-    let innerWidth = document.getElementById("split_col_2").offsetWidth;
-    let splitTopHeight = document.getElementById("split_top").offsetHeight;
-    let splitBottomHeight =
-      document.getElementById("split_bottom").offsetHeight;
-    let videoBoxHeight = document.getElementById("videobox").offsetHeight;
-    let videoHeight = document.getElementById("video").offsetHeight;
+    try {
+      let innerWidth = document.getElementById("split_col_2").offsetWidth;
+      let splitTopHeight = document.getElementById("split_top").offsetHeight;
+      let splitBottomHeight =
+        document.getElementById("split_bottom").offsetHeight;
+      let videoBoxHeight = document.getElementById("videobox").offsetHeight;
+      let videoHeight = document.getElementById("video").offsetHeight;
 
-    let elementTimelineHeight =
-      document.querySelector("element-timeline").offsetHeight;
+      let elementTimelineHeight =
+        document.querySelector("element-timeline").offsetHeight;
 
-    let horizontalResizeWidth = Math.round(innerWidth * 0.95);
-    let horizontalResizeHeight = Math.round((horizontalResizeWidth * 9) / 16);
+      let horizontalResizeWidth = Math.round(innerWidth * 0.95);
+      let horizontalResizeHeight = Math.round((horizontalResizeWidth * 9) / 16);
 
-    let verticalResizeHeight =
-      (window.innerHeight -
-        (splitBottomHeight + 20) -
-        (videoBoxHeight - videoHeight)) *
-      0.92;
-    let verticalResizeWidth = verticalResizeHeight * (16 / 9);
+      let verticalResizeHeight =
+        (window.innerHeight -
+          (splitBottomHeight + 20) -
+          (videoBoxHeight - videoHeight)) *
+        0.92;
+      let verticalResizeWidth = verticalResizeHeight * (16 / 9);
 
-    let width =
-      horizontalResizeWidth > verticalResizeWidth
-        ? verticalResizeWidth
-        : horizontalResizeWidth;
-    let height =
-      horizontalResizeHeight > verticalResizeHeight
-        ? verticalResizeHeight
-        : horizontalResizeHeight;
+      let width =
+        horizontalResizeWidth > verticalResizeWidth
+          ? verticalResizeWidth
+          : horizontalResizeWidth;
+      let height =
+        horizontalResizeHeight > verticalResizeHeight
+          ? verticalResizeHeight
+          : horizontalResizeHeight;
 
-    preview.width = width;
-    preview.height = height;
-    preview.style.width = `${width}px`;
-    preview.style.height = `${height}px`;
-    video.style.width = `${width}px`;
-    video.style.height = `${height}px`;
+      preview.width = width;
+      preview.height = height;
+      preview.style.width = `${width}px`;
+      preview.style.height = `${height}px`;
+      video.style.width = `${width}px`;
+      video.style.height = `${height}px`;
 
-    this.previewRatio = 1920 / width;
+      this.previewRatio = 1920 / width;
+    } catch (error) {}
   }
 
   matchAllElementsSizeToPreview(gapFromPreviousRatio) {

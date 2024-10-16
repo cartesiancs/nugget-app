@@ -164,30 +164,6 @@ class ModalList extends LitElement {
 
       <div
         class="modal fade"
-        id="notLogin"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-body">
-              <h5 class="modal-title font-weight-lg">로그인이 필요해요.</h5>
-              <p class="font-weight-md"></p>
-              <div class="mb-3">
-                <button class="btn btn-primary" onclick="auth.openLogin()">
-                  3초만에 로그인
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="modal fade"
         id="shortKey"
         data-bs-keyboard="false"
         tabindex="-1"

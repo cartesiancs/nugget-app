@@ -152,21 +152,12 @@ const rendererModal = {
   whenClose: new bootstrap.Modal(document.getElementById("whenClose"), {
     keyboard: false,
   }),
-  downloadFfmpeg: new bootstrap.Modal(
-    document.getElementById("downloadFfmpeg"),
-    {
-      keyboard: false,
-    }
-  ),
   whenTimelineChanged: new bootstrap.Modal(
     document.getElementById("whenTimelineChanged"),
     {
       keyboard: false,
     }
   ),
-  notLogin: new bootstrap.Modal(document.getElementById("notLogin"), {
-    keyboard: false,
-  }),
 };
 
 const rendererUtil = {
@@ -307,3 +298,5 @@ const auth = {
     });
   },
 };
+
+console.log(ipc);

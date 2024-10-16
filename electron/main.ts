@@ -326,7 +326,7 @@ if (!gotTheLock) {
 
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow();
-    checkFfmpeg();
+    //checkFfmpeg();
 
     mainWindow.on("close", function (e) {
       e.preventDefault();

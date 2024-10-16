@@ -12,18 +12,14 @@ class TutorialPopover extends HTMLElement {
 
   render() {
     //this.hideAllOptions()
-    const targetElement = document.querySelector(`#${this.tutorialElementId}`);
-
-    console.log(this.tutorialElementId, targetElement);
-
-    this.classList.add("tutorial-popover", "d-none");
-
-    this.style.position = "absolute";
-    this.style.top = `${targetElement.clientHeight / 2}px`;
-    this.style.left = `${targetElement.clientWidth}px`;
-    this.style.zIndex = 7000;
-
-    this.innerHTML = this.template();
+    // const targetElement = document.querySelector(`#${this.tutorialElementId}`);
+    // console.log(this.tutorialElementId, targetElement);
+    // this.classList.add("tutorial-popover", "d-none");
+    // this.style.position = "absolute";
+    // this.style.top = `${targetElement.clientHeight / 2}px`;
+    // this.style.left = `${targetElement.clientWidth}px`;
+    // this.style.zIndex = 7000;
+    // this.innerHTML = this.template();
   }
 
   template() {

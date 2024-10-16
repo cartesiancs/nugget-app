@@ -4,11 +4,7 @@ import config from "../config.json";
 
 const resourcesPath = isDev == true ? "." : process.resourcesPath;
 
-const FFMPEG_BIN_PATH = path.join(
-  `${resourcesPath}/bin/`,
-  "../../../",
-  "NuggetBin"
-);
+const FFMPEG_BIN_PATH = path.join(`${resourcesPath}/bin/`);
 const FFMPEG_FILENAME = `${config.ffmpegBin[process.platform].ffmpeg.filename}`;
 const FFPROBE_FILENAME = `${
   config.ffmpegBin[process.platform].ffprobe.filename

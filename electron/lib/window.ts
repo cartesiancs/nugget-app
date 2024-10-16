@@ -39,9 +39,9 @@ const window = {
     autoUpdater.checkForUpdatesAndNotify();
     Menu.setApplicationMenu(menu);
 
-    if (isDev) {
-      mainWindow.webContents.openDevTools();
-    }
+    // if (isDev) {
+    //   mainWindow.webContents.openDevTools();
+    // }
 
     return mainWindow;
   },

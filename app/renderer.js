@@ -298,5 +298,3 @@ const auth = {
     });
   },
 };
-
-console.log(ipc);

@@ -39,18 +39,12 @@ const project = {
       return 0;
     }
 
-    const upload = document.createElement("input");
-    upload.setAttribute("type", "file");
-    upload.setAttribute("accept", ".ngt");
+    window.electronAPI.req.dialog.openFile().then((path) => {
+      console.log("saved!", path);
 
-    upload.click();
-
-    upload.addEventListener("change", handleFiles, false);
-
-    function handleFiles() {
       elementTimeline.resetTimelineData();
 
-      let filepath = this.files[0].path;
+      let filepath = path;
 
       //fs.readFile(filepath, function(err, data) {
       window.electronAPI.req.filesystem.readFile(filepath).then((data) => {
@@ -65,7 +59,11 @@ const project = {
             });
         });
       });
-    }
+    });
+
+    const upload = document.createElement("input");
+    upload.setAttribute("type", "file");
+    upload.setAttribute("accept", ".ngt");
   },
 
   saveProjectFile: function ({ projectDestination }) {

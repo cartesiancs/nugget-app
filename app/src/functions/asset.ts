@@ -1,4 +1,4 @@
-import { path } from "./path.js";
+import { path } from "./path";
 
 const asset = {
   nowDirectory: "",
@@ -21,7 +21,7 @@ const asset = {
       .then((blob) => {
         let blobUrl = URL.createObjectURL(blob);
         let blobType = blob.type.split("/")[0]; // image, video, audio ...
-        let control = document.querySelector("element-control");
+        let control: any = document.querySelector("element-control");
 
         if (blobType == "image") {
           control.addImage(blobUrl, filepath);

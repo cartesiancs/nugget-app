@@ -1,4 +1,8 @@
 class TutorialPopover extends HTMLElement {
+  tutorialIdx: string;
+  tutorialTitle: string;
+  tutorialMessage: string;
+  tutorialElementId: string;
   constructor() {
     super();
 

@@ -1,6 +1,8 @@
-import { path } from "../../functions/path.js";
+import { path } from "../../functions/path";
 
 class AssetList extends HTMLElement {
+  blobThumbnail: {};
+  nowDirectory: string;
   constructor() {
     super();
     this.blobThumbnail = {};
@@ -37,7 +39,7 @@ class AssetList extends HTMLElement {
     let fileType =
       splitedFoldernameLength <= 2
         ? ""
-        : splitedFilename[splitedFoldernameLength - 1];
+        : splitedFoldername[splitedFoldernameLength - 1];
 
     let listBody = this.querySelector("div");
     listBody.insertAdjacentHTML(
@@ -56,6 +58,8 @@ class AssetList extends HTMLElement {
 }
 
 class AssetFile extends HTMLElement {
+  filename: string;
+  directory: any;
   constructor() {
     super();
 
@@ -193,6 +197,8 @@ class AssetFile extends HTMLElement {
 }
 
 class AssetFolder extends HTMLElement {
+  foldername: string;
+  directory: any;
   constructor() {
     super();
 

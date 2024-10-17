@@ -1,4 +1,6 @@
 class AnimationPanel extends HTMLElement {
+  elementId: string;
+  isShow: boolean;
   constructor() {
     super();
     this.elementId = this.getAttribute("element-id");
@@ -58,6 +60,9 @@ class AnimationPanel extends HTMLElement {
 }
 
 class AnimationPanelItem extends HTMLElement {
+  animationType: string;
+  elementId: string;
+  timeline: any;
   constructor() {
     super();
 

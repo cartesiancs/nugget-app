@@ -1,4 +1,5 @@
 class ToastBox extends HTMLElement {
+  body: any;
   connectedCallback() {
     this.body = document.querySelector("#toast");
     if (this.body == null) {

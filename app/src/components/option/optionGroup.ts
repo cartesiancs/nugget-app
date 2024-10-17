@@ -9,8 +9,9 @@ class OptionGroup extends HTMLElement {
 
   showOption({ filetype, elementId }) {
     this.hideAllOptions();
-    this.querySelector(`option-${filetype}`).show();
-    this.querySelector(`option-${filetype}`).setElementId({
+    const fileTypeOption: any = this.querySelector(`option-${filetype}`);
+    fileTypeOption.show();
+    fileTypeOption.setElementId({
       elementId: elementId,
     });
   }
@@ -18,7 +19,7 @@ class OptionGroup extends HTMLElement {
   hideAllOptions() {
     for (const key in this.children) {
       if (Object.hasOwnProperty.call(this.children, key)) {
-        const element = this.children[key];
+        const element: any = this.children[key];
         console.log(element, this.children);
         element.hide();
       }

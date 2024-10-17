@@ -6,7 +6,7 @@ const updater = {
     //sendStatusToWindow('Checking for update...');
   },
   updateAvailable: (info) => {
-    const dialogOpts = {
+    const dialogOpts: any = {
       type: "info",
       buttons: ["업데이트", "닫기"],
       defaultId: 0,
@@ -26,7 +26,7 @@ const updater = {
     console.log("Update not available.");
   },
   error: (err) => {
-    const dialogOpts = {
+    const dialogOpts: any = {
       type: "error",
       buttons: ["확인"],
       title: "Error",
@@ -49,7 +49,7 @@ const updater = {
     log.info(log_message);
   },
   updateDownloaded: (info) => {
-    const dialogOpts = {
+    const dialogOpts: any = {
       type: "info",
       buttons: ["확인"],
       title: "업데이트 다운로드 완료",

@@ -1,7 +1,8 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement } from "lit/decorators.js";
 
-class App extends LitElement {
+@customElement("app-root")
+export class App extends LitElement {
   createRenderRoot() {
     return this;
   }
@@ -128,5 +129,3 @@ class App extends LitElement {
     `;
   }
 }
-
-export { App };

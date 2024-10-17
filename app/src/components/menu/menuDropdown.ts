@@ -1,4 +1,6 @@
 class MenuDropdownBody extends HTMLElement {
+  x: string;
+  y: string;
   constructor() {
     super();
     this.x = this.getAttribute("top");
@@ -39,6 +41,7 @@ class MenuDropdownBody extends HTMLElement {
 }
 
 class MenuDropdownItem extends HTMLElement {
+  name: string;
   constructor() {
     super();
 

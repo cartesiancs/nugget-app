@@ -1,22 +1,18 @@
 {
-    "compilerOptions": {
-        
-        "target": "es5",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "outDir": "./main",
-        "esModuleInterop": true,
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./main",
+    "esModuleInterop": true,
 
-        "resolveJsonModule": true,
-        "sourceMap": true,
-        "allowJs": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "removeComments": false,
-        "noImplicitAny": false,
-    },
-    "include": [
-        "electron"
-    ],
-    "exclude": ["node_modules"]
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": false,
+    "noImplicitAny": false
+  },
+  "exclude": ["node_modules"]
 }

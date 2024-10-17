@@ -1,4 +1,18 @@
 class KeyframeEditor extends HTMLElement {
+  timeline: any;
+  elementId: string;
+  animationType: string;
+  tension: number;
+  divBody: any;
+  svgBody: any;
+  poly: {};
+  path: {};
+  hiddenPath: {};
+  padding: { start: number; end: number };
+  lineCount: number;
+  points: number[][][];
+  selectLine: number;
+  keyframePointBody: any;
   constructor() {
     super();
     this.timeline = document.querySelector("element-timeline").timeline;
@@ -55,9 +69,8 @@ class KeyframeEditor extends HTMLElement {
         ].points[1][0][1];
     }
 
-    this.timeline[this.elementId].animation[
-      this.animationType
-    ].isActivate = true;
+    this.timeline[this.elementId].animation[this.animationType].isActivate =
+      true;
 
     this.clearLineEditorGroup();
 
@@ -130,7 +143,7 @@ class KeyframeEditor extends HTMLElement {
   addPadding({ px, type }) {
     let keyframePadding = this.divBody.querySelector("keyframe-padding");
     let keyframePoint = this.keyframePointBody;
-    let svgBody = this.svgBody;
+    let svgBody: any = this.svgBody;
 
     const typeFunction = {
       start: () => {
@@ -222,9 +235,8 @@ class KeyframeEditor extends HTMLElement {
       this.points[line][this.points[line].length - 1][0] - 1;
     //let allPoints = this.getInterpolatedPoints(loadPointLength, line)
 
-    this.timeline[this.elementId].animation[
-      this.animationType
-    ].isActivate = true;
+    this.timeline[this.elementId].animation[this.animationType].isActivate =
+      true;
     this.timeline[this.elementId].animation[this.animationType].points[line] =
       this.points[line];
     //this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
@@ -289,7 +301,7 @@ class KeyframeEditor extends HTMLElement {
     );
     const timeMagnification = timelineRange / 4;
 
-    let points = [];
+    let points: any = [];
 
     for (let index = 0; index < this.points[line].length; index++) {
       points.push([
@@ -364,7 +376,7 @@ class KeyframeEditor extends HTMLElement {
     };
   }
 
-  getInterpolatedPoints(loadPointLength, line) {
+  getInterpolatedPoints(loadPointLength, line, tmppoints) {
     let points = [];
     let indexDivision = 4;
     let indexAt = 0;

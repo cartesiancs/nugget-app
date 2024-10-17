@@ -1,19 +1,19 @@
-import asset from "./functions/asset.js";
-import directory from "./functions/directory.js";
-import mime from "./functions/mime.js";
-import project from "./functions/project.js";
-import renderAnimation from "./functions/renderAnimation.js";
-import fonts from "./functions/fonts.js";
+import asset from "./functions/asset";
+import directory from "./functions/directory";
+import mime from "./functions/mime";
+import project from "./functions/project";
+import renderAnimation from "./functions/renderAnimation";
+import fonts from "./functions/fonts";
 
-import { App } from "./App.js";
+import "./App";
 
 import {
   AssetList,
   AssetFile,
   AssetFolder,
-} from "./components/asset/assetList.js";
-import { AssetBrowser } from "./components/asset/assetBrowser.js";
-import { AssetDropUploader } from "./components/asset/assetUploader.js";
+} from "./components/asset/assetList";
+import { AssetBrowser } from "./components/asset/assetBrowser";
+import { AssetDropUploader } from "./components/asset/assetUploader";
 
 import {
   ElementTimeline,
@@ -22,52 +22,52 @@ import {
   ElementTimelineRange,
   ElementTimelineEnd,
   ElementTimelineScroll,
-} from "./components/element/elementTimeline.js";
-import { ElementBar } from "./components/element/elementBar.js";
+} from "./components/element/elementTimeline";
+import { ElementBar } from "./components/element/elementBar";
 import {
   ElementControl,
   ElementControlAsset,
   DragAlignmentGuide,
-} from "./components/element/elementControl.js";
+} from "./components/element/elementControl";
 
-import { KeyframeEditor } from "./components/keyframe/keyframeEditor.js";
+import { KeyframeEditor } from "./components/keyframe/keyframeEditor";
 import {
   MenuDropdownBody,
   MenuDropdownItem,
-} from "./components/menu/menuDropdown.js";
+} from "./components/menu/menuDropdown";
 
 import {
   AnimationPanel,
   AnimationPanelItem,
-} from "./components/animation/animationPanel.js";
+} from "./components/animation/animationPanel";
 
-import { OptionGroup } from "./components/option/optionGroup.js";
-import { OptionText } from "./components/option/optionText.js";
-import { OptionImage } from "./components/option/optionImage.js";
-import { OptionVideo } from "./components/option/optionVideo.js";
-import { OptionAudio } from "./components/option/optionAudio.js";
+import { OptionGroup } from "./components/option/optionGroup";
+import { OptionText } from "./components/option/optionText";
+import { OptionImage } from "./components/option/optionImage";
+import { OptionVideo } from "./components/option/optionVideo";
+import { OptionAudio } from "./components/option/optionAudio";
 
-import { InputText } from "./components/input/inputText.js";
+import { InputText } from "./components/input/inputText";
 
-import { SelectFont } from "./components/font/selectFont.js";
+import { SelectFont } from "./components/font/selectFont";
 
-import { Tutorial } from "./components/tutorial/tutorial.js";
-import { TutorialPopover } from "./components/tutorial/tutorialPopover.js";
+import { Tutorial } from "./components/tutorial/tutorial";
+import { TutorialPopover } from "./components/tutorial/tutorialPopover";
 
-import { Toast } from "./components/toast/toast.js";
-import { ToastBox } from "./components/toast/toastBox.js";
+import { Toast } from "./components/toast/toast";
+import { ToastBox } from "./components/toast/toastBox";
 
 import "./sass/style.scss";
 
-import { Timeline } from "./ui/timeline.js";
-import { Control } from "./ui/Control.js";
-import { ModalList } from "./ui/Modal.js";
+import { Timeline } from "./ui/Timeline";
+import { Control } from "./ui/Control";
+import { ModalList } from "./ui/Modal";
 
 customElements.define("timeline-ui", Timeline);
 customElements.define("control-ui", Control);
 customElements.define("modal-list-ui", ModalList);
 
-customElements.define("app-root", App);
+// customElements.define("app-root", App);
 
 customElements.define("asset-list", AssetList);
 customElements.define("asset-file", AssetFile);

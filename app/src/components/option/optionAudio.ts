@@ -1,4 +1,5 @@
 class OptionAudio extends HTMLElement {
+  elementId: any;
   constructor() {
     super();
 
@@ -34,7 +35,8 @@ class OptionAudio extends HTMLElement {
   }
 
   updateValue() {
-    const timeline = document.querySelector("element-timeline").timeline;
+    const elementTimeline: any = document.querySelector("element-timeline");
+    const timeline = elementTimeline.timeline;
   }
 
   connectedCallback() {

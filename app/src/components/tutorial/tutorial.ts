@@ -1,4 +1,5 @@
 class Tutorial extends HTMLElement {
+  tutorialModal: any;
   constructor() {
     super();
   }

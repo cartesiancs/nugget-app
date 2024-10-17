@@ -1,4 +1,5 @@
 class OptionText extends HTMLElement {
+  elementId: string;
   constructor() {
     super();
 
@@ -47,26 +48,30 @@ class OptionText extends HTMLElement {
 
   resetValue() {
     const timeline = document.querySelector("element-timeline").timeline;
-    this.querySelector("input[aria-event='font-color'").value =
-      timeline[this.elementId].textcolor;
-    this.querySelector("input[aria-event='font-size'").value =
-      timeline[this.elementId].fontsize;
+    const fontColor: any = this.querySelector("input[aria-event='font-color'");
+    const fontSize: any = this.querySelector("input[aria-event='font-size'");
+
+    fontColor.value = timeline[this.elementId].textcolor;
+    fontSize.value = timeline[this.elementId].fontsize;
   }
 
   handleChangeTextColor() {
     const elementControl = document.querySelector("element-control");
-    const color = this.querySelector("input[aria-event='font-color'").value;
+    const fontColor: any = this.querySelector("input[aria-event='font-color'");
+    const color = fontColor.value;
     elementControl.changeTextColor({ elementId: this.elementId, color: color });
   }
 
   handleChangeTextSize() {
     const elementControl = document.querySelector("element-control");
-    const size = this.querySelector("input[aria-event='font-size'").value;
+    const fontSize: any = this.querySelector("input[aria-event='font-size'");
+
+    const size = fontSize.value;
     elementControl.changeTextSize({ elementId: this.elementId, size: size });
   }
 
   handleChangeTextFont() {
-    const selectFont = this.querySelector("select-font");
+    const selectFont: any = this.querySelector("select-font");
     const elementControl = document.querySelector("element-control");
 
     elementControl.changeTextFont({

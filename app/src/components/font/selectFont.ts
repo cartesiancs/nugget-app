@@ -1,4 +1,8 @@
 class SelectFont extends HTMLElement {
+  onChangeSelect: Event;
+  fontname: string;
+  type: string;
+  path: string;
   constructor() {
     super();
 
@@ -44,17 +48,14 @@ class SelectFont extends HTMLElement {
   }
 
   handleSelect() {
-    this.path = this.querySelector("select[ref='lists']").value;
-    this.fontname = this.querySelector("select[ref='lists']")
-      .value.split("/")
-      [
-        this.querySelector("select[ref='lists']").value.split("/").length - 1
-      ].split(".")[0];
-    this.type = this.querySelector("select[ref='lists']")
-      .value.split("/")
-      [
-        this.querySelector("select[ref='lists']").value.split("/").length - 1
-      ].split(".")[1];
+    const pathListDom: any = this.querySelector("select[ref='lists']");
+    this.path = pathListDom.value;
+    this.fontname = pathListDom.value
+      .split("/")
+      [pathListDom.value.split("/").length - 1].split(".")[0];
+    this.type = pathListDom.value
+      .split("/")
+      [pathListDom.value.split("/").length - 1].split(".")[1];
 
     this.applyFontStyle({
       fontName: this.fontname,

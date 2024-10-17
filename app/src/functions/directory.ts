@@ -1,14 +1,14 @@
 const directory = {
   select: function () {
-    const projectFolder = document.querySelector("#projectFolder");
+    const projectFolder: any = document.querySelector("#projectFolder");
     window.electronAPI.req.dialog.openDirectory().then((result) => {
       projectFolder.value = result || "/";
       const dir = String(projectFolder.value);
 
       window.electronAPI.req.filesystem.getDirectory(dir).then((result) => {
         let fileLists = {};
-        const assetList = document.querySelector("asset-list");
-        const assetBrowser = document.querySelector("asset-browser");
+        const assetList: any = document.querySelector("asset-list");
+        const assetBrowser: any = document.querySelector("asset-browser");
 
         assetList.nowDirectory = dir;
         assetList.clearList();

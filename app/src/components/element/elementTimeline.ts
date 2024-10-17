@@ -2,6 +2,11 @@ import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element.js";
 
 class ElementTimeline extends HTMLElement {
+  elementControl: any;
+  timeline: {};
+  timelineHashTable: {};
+  copyedTimelineData: {};
+  editGuideBreakPoint: any[];
   constructor() {
     super();
 
@@ -83,7 +88,7 @@ class ElementTimeline extends HTMLElement {
   }
 
   replaceTimelineBarHeight(height) {
-    let timelineBar = this.querySelector(".timeline-bar");
+    let timelineBar: any = this.querySelector(".timeline-bar");
     timelineBar.style.height = `${height}px`;
   }
 
@@ -308,11 +313,18 @@ class ElementTimeline extends HTMLElement {
   }
 
   showAnimationPanel(elementId) {
-    this.querySelector(`animation-panel[element-id='${elementId}']`).show();
+    const animationPanel: any = this.querySelector(
+      `animation-panel[element-id='${elementId}']`
+    );
+    animationPanel.show();
   }
 
   hideAnimationPanel(elementId) {
-    this.querySelector(`animation-panel[element-id='${elementId}']`).hide();
+    const animationPanel: any = this.querySelector(
+      `animation-panel[element-id='${elementId}']`
+    );
+
+    animationPanel.hide();
   }
 
   showKeyframeEditor(elementId, animationType) {
@@ -437,9 +449,10 @@ class ElementTimeline extends HTMLElement {
   }
 
   handleScroll() {
+    const scrollDom: any = this.querySelector("element-timeline-scroll");
     this.fixRulerOnTop();
     this.scrollKeyframeEditor();
-    this.querySelector("element-timeline-scroll").setScrollThumbLeft({
+    scrollDom.setScrollThumbLeft({
       px: this.scrollLeft,
     });
   }
@@ -454,6 +467,7 @@ class ElementTimeline extends HTMLElement {
 }
 
 class ElementTimelineCursor extends HTMLElement {
+  elementTimelineRuler: any;
   constructor() {
     super();
 
@@ -502,6 +516,12 @@ class ElementTimelineCursor extends HTMLElement {
 }
 
 class ElementTimelineRuler extends HTMLElement {
+  mousemoveEventHandler: any;
+  mouseTimeout: any;
+  rulerType: string;
+  timeMagnification: number;
+  imeMagnification: number;
+  resizeInterval: string | number;
   constructor() {
     super();
     this.mousemoveEventHandler = undefined;
@@ -539,7 +559,9 @@ class ElementTimelineRuler extends HTMLElement {
     const fullWidth = document.querySelector("element-timeline").clientWidth;
     const fullWeight = 30;
 
-    const canvas = this.querySelector("canvas[ref='canvas']");
+    const canvas: HTMLCanvasElement = this.querySelector(
+      "canvas[ref='canvas']"
+    );
     const ctx = canvas.getContext("2d");
     canvas.width = fullWidth;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -773,6 +795,7 @@ class ElementTimelineRuler extends HTMLElement {
 }
 
 class ElementTimelineRange extends HTMLElement {
+  value: number;
   constructor() {
     super();
 
@@ -790,12 +813,19 @@ class ElementTimelineRange extends HTMLElement {
   }
 
   updateValue() {
-    let inputRange = this.querySelector("input[ref='range']");
-    let newValue = ((inputRange.value * inputRange.value) / 10).toFixed(3);
+    let inputRange: any = this.querySelector("input[ref='range']");
+    let newValue = parseFloat(
+      (
+        (parseFloat(inputRange.value) * parseFloat(inputRange.value)) /
+        10
+      ).toFixed(3)
+    );
     if (newValue <= 0) {
       return 0;
     }
-    this.value = ((inputRange.value * inputRange.value) / 10).toFixed(3);
+    this.value = parseFloat(
+      ((inputRange.value * inputRange.value) / 10).toFixed(3)
+    );
   }
 
   updateRange() {
@@ -878,7 +908,7 @@ class ElementTimelineScroll extends HTMLElement {
   }
 
   updateValue() {
-    let inputRange = this.querySelector("input[ref='range']");
+    let inputRange: any = this.querySelector("input[ref='range']");
     console.log(inputRange.value);
     this.scrollTimeline({
       per: inputRange.value,
@@ -892,9 +922,10 @@ class ElementTimelineScroll extends HTMLElement {
   setScrollThumbLeft({ px }) {
     const elementTimeline = document.querySelector("element-timeline");
     const timelineWidth = elementTimeline.scrollWidth;
+    const rangeDom: any = this.querySelector("input[ref='range']");
 
     let per = (px / timelineWidth) * 100;
-    this.querySelector("input[ref='range']").value = per;
+    rangeDom.value = per;
   }
 
   template() {

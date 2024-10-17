@@ -1,6 +1,24 @@
 import { elementUtils } from "../../utils/element.js";
 
 class ElementBar extends HTMLElement {
+  elementTimeline: any;
+  elementControl: any;
+  timeline: any;
+  elementId: string;
+  elementBarType: string;
+  elementFileType: any;
+  width: number;
+  startTime: number;
+  isDrag: boolean;
+  isResize: boolean;
+  resizeLocation: string;
+  initialDuration: number;
+  initialPosition: { x: number; y: number };
+  filepath: any;
+  resizeEventHandler: any;
+  dragEventHandler: any;
+  resizeRangeLeft: number;
+  resizeRangeRight: number;
   constructor() {
     super();
 
@@ -300,7 +318,7 @@ class ElementBar extends HTMLElement {
   }
 
   setTrimStart(px) {
-    let resizeRangeTargetLeft = this.querySelector(
+    let resizeRangeTargetLeft: any = this.querySelector(
       ".element-bar-hiddenspace-left"
     );
     resizeRangeTargetLeft.style.width = `${px}px`;
@@ -316,7 +334,7 @@ class ElementBar extends HTMLElement {
     if (duration - startTrimWidth < px) {
       return 0;
     }
-    let resizeRangeTargetRight = this.querySelector(
+    let resizeRangeTargetRight: any = this.querySelector(
       ".element-bar-hiddenspace-right"
     );
     resizeRangeTargetRight.style.width = `${px}px`;
@@ -380,10 +398,10 @@ class ElementBar extends HTMLElement {
     let duration = this.initialDuration;
     let originDuration = Number(this.style.width.split("px")[0]);
 
-    let resizeRangeTargetLeft = this.querySelector(
+    let resizeRangeTargetLeft: any = this.querySelector(
       ".element-bar-hiddenspace-left"
     );
-    let resizeRangeTargetRight = this.querySelector(
+    let resizeRangeTargetRight: any = this.querySelector(
       ".element-bar-hiddenspace-right"
     );
     let timelineElement = document.querySelector("element-timeline");
@@ -411,7 +429,7 @@ class ElementBar extends HTMLElement {
       );
     } else {
       let px = targetLeft + targetWidth - e.pageX - scrollLeft; // (scrollRight+windowWidth-x-this.initialPosition.x)-marginLeftTargetToWidth-targetRight
-      let resizeRangeTargetRight = this.querySelector(
+      let resizeRangeTargetRight: any = this.querySelector(
         ".element-bar-hiddenspace-right"
       );
       resizeRangeTargetRight.style.width = `${px}px`;
@@ -440,17 +458,20 @@ class ElementBar extends HTMLElement {
   }
 
   resizeRangeMousedown(e, location) {
+    const elementBarHideLeft: any = this.querySelector(
+      ".element-bar-hiddenspace-left"
+    );
+    const elementBarHideRight: any = this.querySelector(
+      ".element-bar-hiddenspace-right"
+    );
+
     this.isResize = true;
     this.resizeLocation = location;
     this.resizeRangeLeft = Number(
-      this.querySelector(".element-bar-hiddenspace-left").style.width.split(
-        "px"
-      )[0]
+      elementBarHideLeft.style.width.split("px")[0]
     );
     this.resizeRangeRight = Number(
-      this.querySelector(".element-bar-hiddenspace-right").style.width.split(
-        "px"
-      )[0]
+      elementBarHideRight.style.width.split("px")[0]
     );
 
     this.isDrag = false;

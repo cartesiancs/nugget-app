@@ -1,4 +1,6 @@
 class Toast extends HTMLElement {
+  message: string;
+  delay: string | number;
   connectedCallback() {
     this.message = this.getAttribute("toast-message") || "";
     this.delay = this.getAttribute("toast-delay") || 1000;

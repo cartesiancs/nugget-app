@@ -1,6 +1,23 @@
 import { v4 as uuidv4 } from "uuid";
 
 class ElementControl extends HTMLElement {
+  elementTimeline: any;
+  timeline: any;
+  timelineCursor: any;
+  scroller: any;
+  resizeTimeout: any;
+  resizeInterval: any;
+  isResizeStart: boolean;
+  previousPreviewSize: { w: number; h: number };
+  isPaused: boolean;
+  isPlay: {};
+  activeElementId: string;
+  selectElementsId: any[];
+  existActiveElement: boolean;
+  progress: number;
+  progressTime: number;
+  previewRatio: number;
+  innerWidth: number;
   constructor() {
     super();
 
@@ -88,8 +105,8 @@ class ElementControl extends HTMLElement {
           ? verticalResizeHeight
           : horizontalResizeHeight;
 
-      preview.width = width;
-      preview.height = height;
+      preview.setAttribute("width", String(width));
+      preview.setAttribute("height", String(height));
       preview.style.width = `${width}px`;
       preview.style.height = `${height}px`;
       video.style.width = `${width}px`;
@@ -99,7 +116,7 @@ class ElementControl extends HTMLElement {
     } catch (error) {}
   }
 
-  matchAllElementsSizeToPreview(gapFromPreviousRatio) {
+  matchAllElementsSizeToPreview() {
     for (const elementId in this.timeline) {
       if (Object.hasOwnProperty.call(this.timeline, elementId)) {
         let targetElement = document.querySelector(`#element-${elementId}`);
@@ -513,7 +530,7 @@ class ElementControl extends HTMLElement {
       this.timeline[elementId].animation.allpoints.length >
         document.querySelector("element-control").progress
     ) {
-      this.showAnimation(elementId);
+      this.showAnimation(elementId, "position");
     }
   }
 
@@ -643,7 +660,7 @@ class ElementControl extends HTMLElement {
 
   adjustAllElementBarWidth(ratio) {
     const allElementBar = document.querySelectorAll("element-bar");
-    allElementBar.forEach((element) => {
+    allElementBar.forEach((element: any) => {
       let elementId = element.getAttribute("element-id");
       let originalWidth = element.millisecondsToPx(
         this.timeline[elementId].duration
@@ -850,6 +867,19 @@ class ElementControl extends HTMLElement {
 }
 
 class ElementControlAsset extends HTMLElement {
+  timeline: any;
+  elementControl: any;
+  elementId: string;
+  elementFiletype: string;
+  isDrag: boolean;
+  isResize: boolean;
+  isRotate: boolean;
+  initialPosition: { x: number; y: number; w: number; h: number };
+  resizeDirection: string;
+  resizeEventHandler: any;
+  rotateEventHandler: any;
+  dragdownEventHandler: any;
+  dragupEventHandler: any;
   constructor() {
     super();
 
@@ -926,7 +956,7 @@ class ElementControlAsset extends HTMLElement {
     this.setPriority();
   }
 
-  convertAbsoluteToRelativeSize({ x, y, w, h }) {
+  convertAbsoluteToRelativeSize({ x, y, w, h }: any) {
     let resizeRatio = this.elementControl.previewRatio;
     return {
       x: x / resizeRatio,
@@ -936,7 +966,7 @@ class ElementControlAsset extends HTMLElement {
     };
   }
 
-  convertRelativeToAbsoluteSize({ x, y, w, h }) {
+  convertRelativeToAbsoluteSize({ x, y, w, h }: any) {
     let resizeRatio = this.elementControl.previewRatio;
     return {
       x: x * resizeRatio,
@@ -1421,7 +1451,7 @@ cached
     );
   }
 
-  resizeStyle({ x, y, w, h }) {
+  resizeStyle({ x, y, w, h }: any) {
     this.style.left = !x == false ? `${x}px` : this.style.left;
     this.style.top = !y == false ? `${y}px` : this.style.top;
     this.style.width = !w == false ? `${w}px` : this.style.width;
@@ -1515,7 +1545,7 @@ cached
 
   handleMousedown(e) {
     this.dragMousedown(e);
-    this.activateOutline(e);
+    this.activateOutline();
     this.showSideOption();
   }
 
@@ -1539,6 +1569,8 @@ cached
 }
 
 class DragAlignmentGuide extends HTMLElement {
+  videoCanvas: any;
+  allPositions: string[];
   constructor() {
     super();
 

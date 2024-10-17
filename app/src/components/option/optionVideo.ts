@@ -1,4 +1,5 @@
-class OptionImage extends HTMLElement {
+class OptionVideo extends HTMLElement {
+  elementId: string;
   constructor() {
     super();
 
@@ -36,20 +37,21 @@ class OptionImage extends HTMLElement {
 
   updateValue() {
     const timeline = document.querySelector("element-timeline").timeline;
-    this.querySelector("input[aria-event='location-x'").value =
-      timeline[this.elementId].location.x;
-    this.querySelector("input[aria-event='location-y'").value =
-      timeline[this.elementId].location.y;
+    const xDom: any = this.querySelector("input[aria-event='location-x'");
+    const yDom: any = this.querySelector("input[aria-event='location-y'");
+    xDom.value = timeline[this.elementId].location.x;
+    yDom.value = timeline[this.elementId].location.y;
   }
 
   handleLocation() {
-    const elementControl = document.querySelector("element-control");
     const targetElement = document.querySelector(
       `element-control-asset[element-id='${this.elementId}']`
     );
+    const xDom: any = this.querySelector("input[aria-event='location-x'");
+    const yDom: any = this.querySelector("input[aria-event='location-y'");
 
-    let x = this.querySelector("input[aria-event='location-x'").value;
-    let y = this.querySelector("input[aria-event='location-y'").value;
+    let x = xDom.value;
+    let y = yDom.value;
 
     let convertLocation = targetElement.convertAbsoluteToRelativeSize({
       x: x,
@@ -75,4 +77,4 @@ class OptionImage extends HTMLElement {
   }
 }
 
-export { OptionImage };
+export { OptionVideo };

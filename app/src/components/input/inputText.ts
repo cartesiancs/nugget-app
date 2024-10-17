@@ -1,4 +1,10 @@
 class InputText extends HTMLElement {
+  value: string;
+  elementId: string;
+  initValue: string;
+  initColor: string;
+  timeline: any;
+  parentInputBox: any;
   constructor() {
     super();
 
@@ -31,7 +37,7 @@ class InputText extends HTMLElement {
     this.querySelector("span").style.outline = "none";
     this.querySelector("span").style.lineHeight = "initial";
 
-    this.querySelector("span").setAttribute("contenteditable", true);
+    this.querySelector("span").setAttribute("contenteditable", "true");
 
     this.setWidthInner();
   }

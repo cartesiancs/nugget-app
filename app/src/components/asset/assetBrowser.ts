@@ -1,4 +1,5 @@
 class AssetBrowser extends HTMLElement {
+  directory: string;
   constructor() {
     super();
 
@@ -27,7 +28,7 @@ class AssetBrowser extends HTMLElement {
   }
 
   updateDirectoryInput(path) {
-    let directoryInput =
+    let directoryInput: any =
       this.querySelector("div").querySelector("input[ref='text']");
     directoryInput.value = path;
   }

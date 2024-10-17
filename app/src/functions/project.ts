@@ -1,3 +1,5 @@
+import JSZip from "jszip";
+
 const arrayBufferToBase64 = (buffer) => {
   var binary = "";
   var bytes = new Uint8Array(buffer);
@@ -28,7 +30,6 @@ const project = {
   },
 
   load: function () {
-    const zip = new JSZip();
     const elementTimeline = document.querySelector("element-timeline");
     const isTimelineChange = elementTimeline.isTimelineChange();
     if (isTimelineChange == true) {

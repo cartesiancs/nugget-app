@@ -1,9 +1,24 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { ITestStore, testStore } from "../states/testStore";
 
 class Control extends LitElement {
+  @property()
+  countState: ITestStore = testStore.getInitialState();
+
+  @property()
+  count = this.countState.count;
+
   createRenderRoot() {
+    testStore.subscribe((state) => {
+      this.count = state.count;
+    });
+
     return this;
+  }
+
+  handleClickButton() {
+    this.countState.updateCount();
   }
 
   render() {
@@ -254,6 +269,13 @@ class Control extends LitElement {
                     <label class="form-check-label">1080x1920 FHD</label>
                   </div>
                 </div>
+
+                <button
+                  class="btn btn-blue-fill"
+                  @click=${() => this.handleClickButton()}
+                >
+                  ${this.count}
+                </button>
 
                 <button class="btn btn-blue-fill" onclick="ipc.render()">
                   Export

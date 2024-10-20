@@ -24,10 +24,6 @@ import {
   ElementTimelineScroll,
 } from "./components/element/elementTimeline";
 import { ElementBar } from "./components/element/elementBar";
-import {
-  ElementControl,
-  DragAlignmentGuide,
-} from "./components/element/elementControl";
 import { ElementControlAsset } from "./components/element/elementControlAsset";
 
 import { KeyframeEditor } from "./components/keyframe/keyframeEditor";
@@ -59,15 +55,11 @@ import { ToastBox } from "./components/toast/toastBox";
 
 import "./sass/style.scss";
 
-import { Timeline } from "./ui/Timeline";
-import { Control } from "./ui/Control";
-import { ModalList } from "./ui/Modal";
+import "./ui/timeline/Timeline";
+import "./ui/control/Control";
+import "./ui/modal/Modal";
 
-customElements.define("timeline-ui", Timeline);
-customElements.define("control-ui", Control);
-customElements.define("modal-list-ui", ModalList);
-
-// customElements.define("app-root", App);
+import "./components/element/elementControl";
 
 customElements.define("asset-list", AssetList);
 customElements.define("asset-file", AssetFile);
@@ -83,9 +75,7 @@ customElements.define("element-timeline-end", ElementTimelineEnd);
 customElements.define("element-timeline-scroll", ElementTimelineScroll);
 
 customElements.define("element-bar", ElementBar);
-customElements.define("element-control", ElementControl);
 customElements.define("element-control-asset", ElementControlAsset);
-customElements.define("drag-alignment-guide", DragAlignmentGuide);
 
 customElements.define("keyframe-editor", KeyframeEditor);
 

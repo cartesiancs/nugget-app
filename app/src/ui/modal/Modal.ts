@@ -1,7 +1,8 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-class ModalList extends LitElement {
+@customElement("modal-list-ui")
+export class ModalList extends LitElement {
   createRenderRoot() {
     return this;
   }
@@ -229,5 +230,3 @@ class ModalList extends LitElement {
     `;
   }
 }
-
-export { ModalList };

@@ -1,7 +1,8 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-class Timeline extends LitElement {
+@customElement("timeline-ui")
+export class Timeline extends LitElement {
   createRenderRoot() {
     return this;
   }
@@ -65,5 +66,3 @@ class Timeline extends LitElement {
     `;
   }
 }
-
-export { Timeline };

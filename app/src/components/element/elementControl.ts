@@ -1,6 +1,9 @@
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
 import { v4 as uuidv4 } from "uuid";
 
-export class ElementControl extends HTMLElement {
+@customElement("element-control")
+export class ElementControl extends LitElement {
   elementTimeline: any;
   timeline: any;
   timelineCursor: any;
@@ -764,7 +767,11 @@ export class ElementControl extends HTMLElement {
   play() {
     let toggle = document.querySelector("#playToggle");
     toggle.setAttribute("onclick", `elementControlComponent.stop()`);
-    toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> stop_circle </span>`;
+    toggle.innerHTML = `<span
+      class="material-symbols-outlined icon-white icon-md"
+    >
+      stop_circle
+    </span>`;
 
     this.scroller = setInterval(() => {
       //split_inner_bottom.scrollBy(4, 0);
@@ -871,7 +878,8 @@ export class ElementControl extends HTMLElement {
   }
 }
 
-export class DragAlignmentGuide extends HTMLElement {
+@customElement("drag-alignment-guide")
+export class DragAlignmentGuide extends LitElement {
   videoCanvas: any;
   allPositions: string[];
   constructor() {

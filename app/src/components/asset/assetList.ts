@@ -133,57 +133,61 @@ class AssetFile extends HTMLElement {
   }
 
   async captureVideoThumbnail(url) {
-    const thumbnailUrl = await new Promise((resolve, reject) => {
-      fetch(`${url}`)
-        .then((res) => {
-          return res.blob();
-        })
-        .then((blob) => {
-          const blobUrl = URL.createObjectURL(blob);
-          const videoElement = document.createElement("video");
+    try {
+      const thumbnailUrl = await new Promise((resolve, reject) => {
+        fetch(`${url}`)
+          .then((res) => {
+            return res.blob();
+          })
+          .then((blob) => {
+            const blobUrl = URL.createObjectURL(blob);
+            const videoElement = document.createElement("video");
 
-          videoElement.src = blobUrl;
-          videoElement.preload = "metadata";
+            videoElement.src = blobUrl;
+            videoElement.preload = "metadata";
 
-          videoElement.onloadedmetadata = async () => {
-            const thumbnailCanvas = document.createElement("canvas");
+            videoElement.onloadedmetadata = async () => {
+              const thumbnailCanvas = document.createElement("canvas");
 
-            videoElement.addEventListener("seeked", () => {
-              let width = videoElement.videoWidth;
-              let height = videoElement.videoHeight;
-              thumbnailCanvas.width = width;
-              thumbnailCanvas.height = height;
+              videoElement.addEventListener("seeked", () => {
+                let width = videoElement.videoWidth;
+                let height = videoElement.videoHeight;
+                thumbnailCanvas.width = width;
+                thumbnailCanvas.height = height;
 
-              let ctx = thumbnailCanvas.getContext("2d");
-              ctx.drawImage(
-                videoElement,
-                0,
-                0,
-                thumbnailCanvas.width,
-                thumbnailCanvas.height
-              );
+                let ctx = thumbnailCanvas.getContext("2d");
+                ctx.drawImage(
+                  videoElement,
+                  0,
+                  0,
+                  thumbnailCanvas.width,
+                  thumbnailCanvas.height
+                );
 
-              thumbnailCanvas.toBlob((blob) => {
-                const newImg = document.createElement("img");
-                const url = URL.createObjectURL(blob);
+                thumbnailCanvas.toBlob((blob) => {
+                  try {
+                    const newImg = document.createElement("img");
+                    const url = URL.createObjectURL(blob);
 
-                newImg.onload = () => {
-                  URL.revokeObjectURL(url);
-                };
+                    newImg.onload = () => {
+                      URL.revokeObjectURL(url);
+                    };
 
-                resolve(url);
+                    resolve(url);
+                  } catch (error) {}
+                });
               });
-            });
 
-            videoElement.currentTime = 1;
+              videoElement.currentTime = 1;
 
-            // let image = thumbnailCanvas.toDataURL('image/jpeg');
-            // resolve(image)
-          };
-        });
-    });
+              // let image = thumbnailCanvas.toDataURL('image/jpeg');
+              // resolve(image)
+            };
+          });
+      });
 
-    return thumbnailUrl;
+      return thumbnailUrl;
+    } catch (error) {}
   }
 
   async connectedCallback() {

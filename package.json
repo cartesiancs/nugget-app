@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "concurrently \"npm run compile\" \"npm run bundle:src\"",
-    "compile": "tsc -w",
+    "compile": "tsc -w -p ./tsconfig",
     "bundle": "npm run bundle:src",
     "bundle:src": "webpack --mode=development --watch",
     "bundle:prod:src": "webpack --mode=production",

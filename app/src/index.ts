@@ -26,9 +26,9 @@ import {
 import { ElementBar } from "./components/element/elementBar";
 import {
   ElementControl,
-  ElementControlAsset,
   DragAlignmentGuide,
 } from "./components/element/elementControl";
+import { ElementControlAsset } from "./components/element/elementControlAsset";
 
 import { KeyframeEditor } from "./components/keyframe/keyframeEditor";
 import {

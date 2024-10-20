@@ -18,6 +18,7 @@ import fse from "fs-extra";
 
 import Store from "electron-store";
 import { resolveFiles } from "electron-updater/out/providers/Provider.js";
+import { Extension } from "./lib/extension.js";
 
 const store = new Store();
 

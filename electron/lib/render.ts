@@ -12,6 +12,7 @@ let elementCounts = {
   audio: 0,
 };
 let mapAudioLists = [];
+import { mainWindow } from "../main.js";
 
 if (isDev) {
   resourcesPath = ".";
@@ -189,6 +190,32 @@ const renderMain = {
       process.crash();
       mapAudioLists = [];
     });
+  },
+
+  combineFrame: async (event, outputDir, elementId) => {
+    let isFinish = false;
+    let command = ffmpeg();
+    let outputVideoPath = `${outputDir}/${elementId}.webm`;
+
+    command.input(`${outputDir}/frame-${elementId}-%04d.png`);
+    command.inputFPS(50);
+    command.videoCodec("libvpx-vp9");
+    command.inputOptions("-pix_fmt yuva420p");
+    command.format("webm");
+    command.output(outputVideoPath);
+    command.on("end", function () {
+      log.info("combineFrame Finish processing");
+      mainWindow.webContents.send("FINISH_COMBINE_FRAME", elementId);
+      isFinish = true;
+      return isFinish;
+    });
+
+    command.on("error", function (err, stdout, stderr) {
+      log.info("combineFrame Render Error", err.message);
+      return isFinish;
+    });
+
+    command.run();
   },
 };
 

@@ -41,8 +41,14 @@ import fse from "fs-extra";
 import ProgressBar from "electron-progressbar";
 import getSystemFonts from "get-system-fonts";
 
+import { shellLib } from "./lib/shell.js";
+import { electronInit } from "./lib/init.js";
+import { ffprobeUtil } from "./lib/ffprobe.js";
+import { fontLib } from "./lib/font.js";
+import { ipcExtension } from "./ipc/ipcExtension.js";
+
 let resourcesPath = "";
-let mainWindow;
+export let mainWindow;
 
 log.info("App starting...");
 if (isDev) {
@@ -164,66 +170,18 @@ ipcMain.on("DOWNLOAD_FFMPEG", async (evt) => {
   downloadFfmpeg("ffmpeg");
 });
 
-ipcMain.on("GET_METADATA", async (evt, bloburl, mediapath) => {
-  log.info("Request media metadata.", mediapath);
-  ffmpeg.ffprobe(mediapath, (err, metadata) => {
-    mainWindow.webContents.send("GET_METADATA", bloburl, metadata);
-  });
-});
-
-ipcMain.handle("ffmpeg:combineFrame", async (event, outputDir, elementId) => {
-  let isFinish = false;
-  let command = ffmpeg();
-  let outputVideoPath = `${outputDir}/${elementId}.webm`;
-
-  command.input(`${outputDir}/frame-${elementId}-%04d.png`);
-  command.inputFPS(50);
-  command.videoCodec("libvpx-vp9");
-  command.inputOptions("-pix_fmt yuva420p");
-  command.format("webm");
-  command.output(outputVideoPath);
-  command.on("end", function () {
-    log.info("combineFrame Finish processing");
-    mainWindow.webContents.send("FINISH_COMBINE_FRAME", elementId);
-    isFinish = true;
-    return isFinish;
-  });
-
-  command.on("error", function (err, stdout, stderr) {
-    log.info("combineFrame Render Error", err.message);
-    return isFinish;
-  });
-
-  command.run();
-});
-
 ipcMain.on("CLIENT_READY", async (evt) => {
   evt.sender.send("EXIST_FFMPEG", resourcesPath, config);
 });
 
-ipcMain.on("INIT", async (evt) => {
-  evt.sender.send("GET_PATH", app.getPath("userData"));
-  evt.sender.send("GET_PATH", app.getAppPath());
-  evt.sender.send("GET_PATH", process.resourcesPath);
-});
+ipcMain.on("GET_METADATA", ffprobeUtil.getMetadata);
+ipcMain.on("INIT", electronInit.init);
+ipcMain.on("SELECT_DIR", ipcDialog.openDirectory);
+ipcMain.on("OPEN_PATH", shellLib.openPath);
+ipcMain.on("OPEN_URL", shellLib.openUrl);
+ipcMain.on("RENDER", renderMain.start);
 
-ipcMain.on("SELECT_DIR", async (evt) => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ["openDirectory"],
-  });
-});
-
-ipcMain.on("OPEN_PATH", async (evt, path) => {
-  shell.openPath(path);
-});
-
-ipcMain.on("OPEN_URL", async (evt, url) => {
-  shell.openExternal(url);
-});
-
-ipcMain.on("RENDER", (evt, elements, options) => {
-  renderMain.start(evt, elements, options);
-});
+ipcMain.handle("ffmpeg:combineFrame", renderMain.combineFrame);
 
 ipcMain.handle("extension:timeline:get", ipcTimeline.get);
 ipcMain.handle("extension:timeline:add", ipcTimeline.add);
@@ -246,45 +204,9 @@ ipcMain.handle("store:delete", ipcStore.delete);
 ipcMain.on("app:forceClose", ipcApp.forceClose);
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);
-
-ipcMain.handle("font:getLists", async (event) => {
-  try {
-    const files = await getSystemFonts();
-    let lists = [];
-    for (let index = 0; index < files.length; index++) {
-      const fontPath = files[index];
-      const fontSplitedPath = fontPath.split(path.sep);
-      const fontType =
-        fontSplitedPath[fontSplitedPath.length - 1].split(".")[1];
-      const fontName =
-        fontSplitedPath[fontSplitedPath.length - 1].split(".")[0];
-      lists.push({
-        path: fontPath.split(path.sep).join("/"),
-        type: fontType,
-        name: fontName,
-      });
-    }
-    return { status: 1, fonts: lists };
-  } catch (error) {
-    return { status: 0 };
-  }
-});
-
-ipcMain.handle("extension:open:file", async (event, file) => {
-  const extendApp = new Extension({
-    isDev: false,
-    file: file,
-    windowType: "window",
-  });
-});
-
-ipcMain.handle("extension:open:dir", async (event, dir) => {
-  const extendApp = new Extension({
-    isDev: true,
-    directory: dir,
-    windowType: "window",
-  });
-});
+ipcMain.handle("font:getLists", fontLib.getFontList);
+ipcMain.handle("extension:open:file", ipcExtension.openFile);
+ipcMain.handle("extension:open:dir", ipcExtension.openDir);
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

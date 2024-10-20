@@ -62,7 +62,7 @@
     },
     "win": {
       "certificateFile": "/Users/devent.pfx",
-      "certificatePassword": "C7z1tT",
+      "certificatePassword": "<>",
       "verifyUpdateCodeSignature": true,
       "publish": {
         "provider": "github",

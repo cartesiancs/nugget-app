@@ -12,13 +12,6 @@ import { autoUpdater } from "electron-updater";
 import { renderMain, renderFilter } from "./lib/render.js";
 import { window } from "./lib/window.js";
 import { menu } from "./lib/menu.js";
-import {
-  ipcDialog,
-  ipcFilesystem,
-  ipcStore,
-  ipcApp,
-  ipcTimeline,
-} from "./ipc.js";
 import { ffmpegConfig } from "./lib/ffmpeg.js";
 import { updater } from "./lib/autoUpdater.js";
 import { Extension } from "./lib/extension.js";
@@ -46,6 +39,11 @@ import { electronInit } from "./lib/init.js";
 import { ffprobeUtil } from "./lib/ffprobe.js";
 import { fontLib } from "./lib/font.js";
 import { ipcExtension } from "./ipc/ipcExtension.js";
+import { ipcStore } from "./ipc/ipcStore.js";
+import { ipcApp } from "./ipc/ipcApp.js";
+import { ipcTimeline } from "./ipc/ipcTimeline.js";
+import { ipcDialog } from "./ipc/ipcDialog.js";
+import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
 
 let resourcesPath = "";
 export let mainWindow;

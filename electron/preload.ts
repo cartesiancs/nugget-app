@@ -87,7 +87,13 @@ const response = {
   },
 };
 
-contextBridge.exposeInMainWorld("electronAPI", {
-  req: request,
-  res: response,
-});
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld("electronAPI", {
+      req: request,
+      res: response,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}

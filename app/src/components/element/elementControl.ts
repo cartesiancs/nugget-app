@@ -256,6 +256,8 @@ export class ElementControl extends HTMLElement {
     video.src = blob;
     video.preload = "metadata";
 
+    console.log("CBLOCK", blob);
+
     video.onloadedmetadata = () => {
       let width = video.videoWidth;
       let height = video.videoHeight;
@@ -264,9 +266,12 @@ export class ElementControl extends HTMLElement {
       window.electronAPI.req.ffmpeg.getMetadata(blob, path);
 
       window.electronAPI.res.ffmpeg.getMetadata((evt, blobdata, metadata) => {
+        console.log(blobdata, metadata);
+
         if (blobdata != blob) {
           return 0;
         }
+
         let isExist = false;
 
         setTimeout(() => {

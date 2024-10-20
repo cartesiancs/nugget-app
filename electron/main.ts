@@ -77,13 +77,13 @@ const createFfmpegDir = async () => {
 };
 
 const checkFfmpeg = async () => {
-  let isCreate = await createFfmpegDir();
+  // let isCreate = await createFfmpegDir();
 
   fs.stat(FFMPEG_PATH, function (error, stats) {
-    if (error) {
-      downloadFfmpeg("ffmpeg");
-      return 0;
-    }
+    // if (error) {
+    //   downloadFfmpeg("ffmpeg");
+    //   return 0;
+    // }
 
     fs.chmodSync(FFMPEG_PATH, 0o755);
     ffmpeg.setFfmpegPath(FFMPEG_PATH);
@@ -97,10 +97,10 @@ const checkFfmpeg = async () => {
 
 const checkffprobe = async () => {
   fs.stat(FFPROBE_PATH, function (error, stats) {
-    if (error) {
-      downloadFfmpeg("ffprobe");
-      return 0;
-    }
+    // if (error) {
+    //   downloadFfmpeg("ffprobe");
+    //   return 0;
+    // }
 
     fs.chmodSync(FFPROBE_PATH, 0o755);
     ffmpeg.setFfprobePath(FFPROBE_PATH);
@@ -174,7 +174,12 @@ ipcMain.on("CLIENT_READY", async (evt) => {
   evt.sender.send("EXIST_FFMPEG", resourcesPath, config);
 });
 
-ipcMain.on("GET_METADATA", ffprobeUtil.getMetadata);
+ipcMain.on("GET_METADATA", async (evt, bloburl, mediapath) => {
+  ffmpeg.ffprobe(mediapath, (err, metadata) => {
+    console.log(mediapath, metadata, bloburl);
+    mainWindow.webContents.send("GET_METADATA", bloburl, metadata);
+  });
+});
 ipcMain.on("INIT", electronInit.init);
 ipcMain.on("SELECT_DIR", ipcDialog.openDirectory);
 ipcMain.on("OPEN_PATH", shellLib.openPath);
@@ -238,7 +243,7 @@ if (!gotTheLock) {
 
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow();
-    //checkFfmpeg();
+    checkFfmpeg();
 
     mainWindow.on("close", function (e) {
       e.preventDefault();

@@ -1,5 +1,5 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["../electron/main.ts"],
+  "include": ["../electron"],
   "exclude": ["../node_modules"]
 }

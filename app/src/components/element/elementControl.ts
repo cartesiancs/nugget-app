@@ -60,6 +60,10 @@ export class ElementControl extends LitElement {
     this.resizeEvent();
   }
 
+  createRenderRoot() {
+    return this;
+  }
+
   async resizeEvent() {
     this.resizePreview();
     clearTimeout(this.resizeTimeout);

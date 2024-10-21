@@ -1,4 +1,8 @@
-class AssetDropUploader extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("asset-upload-drop")
+export class AssetDropUploader extends LitElement {
   constructor() {
     super();
   }
@@ -65,5 +69,3 @@ class AssetDropUploader extends HTMLElement {
 
   disconnectedCallback() {}
 }
-
-export { AssetDropUploader };

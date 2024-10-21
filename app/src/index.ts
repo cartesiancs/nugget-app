@@ -7,45 +7,26 @@ import fonts from "./functions/fonts";
 
 import "./App";
 
-import {
-  AssetList,
-  AssetFile,
-  AssetFolder,
-} from "./components/asset/assetList";
-import { AssetBrowser } from "./components/asset/assetBrowser";
-import { AssetDropUploader } from "./components/asset/assetUploader";
+import "./components/asset/assetList";
+import "./components/asset/assetBrowser";
+import "./components/asset/assetUploader";
 
-import {
-  ElementTimeline,
-  ElementTimelineCursor,
-  ElementTimelineRuler,
-  ElementTimelineRange,
-  ElementTimelineEnd,
-  ElementTimelineScroll,
-} from "./components/element/elementTimeline";
-import { ElementBar } from "./components/element/elementBar";
-import { ElementControlAsset } from "./components/element/elementControlAsset";
+import "./components/element/elementTimeline";
+import "./components/element/elementBar";
+import "./components/element/elementControlAsset";
 
-import { KeyframeEditor } from "./components/keyframe/keyframeEditor";
-import {
-  MenuDropdownBody,
-  MenuDropdownItem,
-} from "./components/menu/menuDropdown";
+import "./components/keyframe/keyframeEditor";
+import "./components/menu/menuDropdown";
 
-import {
-  AnimationPanel,
-  AnimationPanelItem,
-} from "./components/animation/animationPanel";
+import "./components/animation/animationPanel";
 
-import { OptionGroup } from "./components/option/optionGroup";
-import { OptionText } from "./components/option/optionText";
-import { OptionImage } from "./components/option/optionImage";
-import { OptionVideo } from "./components/option/optionVideo";
-import { OptionAudio } from "./components/option/optionAudio";
+import "./components/option/optionGroup";
+import "./components/option/optionText";
+import "./components/option/optionImage";
+import "./components/option/optionVideo";
+import "./components/option/optionAudio";
 
-import { InputText } from "./components/input/inputText";
-
-import { SelectFont } from "./components/font/selectFont";
+import "./components/input/inputText";
 
 import { Tutorial } from "./components/tutorial/tutorial";
 import { TutorialPopover } from "./components/tutorial/tutorialPopover";
@@ -60,39 +41,8 @@ import "./ui/control/Control";
 import "./ui/modal/Modal";
 
 import "./components/element/elementControl";
-
-customElements.define("asset-list", AssetList);
-customElements.define("asset-file", AssetFile);
-customElements.define("asset-folder", AssetFolder);
-customElements.define("asset-browser", AssetBrowser);
-customElements.define("asset-upload-drop", AssetDropUploader);
-
-customElements.define("element-timeline", ElementTimeline);
-customElements.define("element-timeline-cursor", ElementTimelineCursor);
-customElements.define("element-timeline-ruler", ElementTimelineRuler);
-customElements.define("element-timeline-range", ElementTimelineRange);
-customElements.define("element-timeline-end", ElementTimelineEnd);
-customElements.define("element-timeline-scroll", ElementTimelineScroll);
-
-customElements.define("element-bar", ElementBar);
-customElements.define("element-control-asset", ElementControlAsset);
-
-customElements.define("keyframe-editor", KeyframeEditor);
-
-customElements.define("menu-dropdown-body", MenuDropdownBody);
-customElements.define("menu-dropdown-item", MenuDropdownItem);
-
-customElements.define("animation-panel", AnimationPanel);
-customElements.define("animation-panel-item", AnimationPanelItem);
-
-customElements.define("option-group", OptionGroup);
-customElements.define("option-text", OptionText);
-customElements.define("option-image", OptionImage);
-customElements.define("option-video", OptionVideo);
-customElements.define("option-audio", OptionAudio);
-
-customElements.define("input-text", InputText);
-customElements.define("select-font", SelectFont);
+import "./components/preview/previewCanvas";
+import "./components/font/selectFont";
 
 customElements.define("tutorial-group", Tutorial);
 customElements.define("tutorial-popover", TutorialPopover);

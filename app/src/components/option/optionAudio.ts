@@ -1,4 +1,8 @@
-class OptionAudio extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("option-audio")
+export class OptionAudio extends LitElement {
   elementId: any;
   constructor() {
     super();
@@ -43,5 +47,3 @@ class OptionAudio extends HTMLElement {
     this.render();
   }
 }
-
-export { OptionAudio };

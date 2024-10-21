@@ -1,4 +1,8 @@
-class KeyframeEditor extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("keyframe-editor")
+export class KeyframeEditor extends LitElement {
   timeline: any;
   elementId: string;
   animationType: string;
@@ -432,5 +436,3 @@ class KeyframeEditor extends HTMLElement {
     this.addEventListener("scroll", this.handleScroll.bind(this));
   }
 }
-
-export { KeyframeEditor };

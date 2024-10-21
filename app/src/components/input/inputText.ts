@@ -1,4 +1,8 @@
-class InputText extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("input-text")
+export class InputText extends LitElement {
   value: string;
   elementId: string;
   initValue: string;
@@ -88,5 +92,3 @@ class InputText extends HTMLElement {
     );
   }
 }
-
-export { InputText };

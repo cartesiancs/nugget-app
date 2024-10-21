@@ -1,4 +1,8 @@
-class OptionVideo extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("option-video")
+export class OptionVideo extends LitElement {
   elementId: string;
   constructor() {
     super();
@@ -76,5 +80,3 @@ class OptionVideo extends HTMLElement {
     );
   }
 }
-
-export { OptionVideo };

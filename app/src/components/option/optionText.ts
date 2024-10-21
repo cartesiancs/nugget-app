@@ -1,4 +1,8 @@
-class OptionText extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("option-text")
+export class OptionText extends LitElement {
   elementId: string;
   constructor() {
     super();
@@ -98,5 +102,3 @@ class OptionText extends HTMLElement {
     );
   }
 }
-
-export { OptionText };

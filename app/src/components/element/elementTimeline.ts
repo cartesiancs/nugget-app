@@ -1,7 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element.js";
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-class ElementTimeline extends HTMLElement {
+@customElement("element-timeline")
+export class ElementTimeline extends LitElement {
   elementControl: any;
   timeline: {};
   timelineHashTable: {};
@@ -466,7 +469,8 @@ class ElementTimeline extends HTMLElement {
   }
 }
 
-class ElementTimelineCursor extends HTMLElement {
+@customElement("element-timeline-cursor")
+export class ElementTimelineCursor extends LitElement {
   elementTimelineRuler: any;
   constructor() {
     super();
@@ -515,7 +519,8 @@ class ElementTimelineCursor extends HTMLElement {
   }
 }
 
-class ElementTimelineRuler extends HTMLElement {
+@customElement("element-timeline-ruler")
+export class ElementTimelineRuler extends LitElement {
   mousemoveEventHandler: any;
   mouseTimeout: any;
   rulerType: string;
@@ -794,7 +799,8 @@ class ElementTimelineRuler extends HTMLElement {
   }
 }
 
-class ElementTimelineRange extends HTMLElement {
+@customElement("element-timeline-range")
+export class ElementTimelineRange extends LitElement {
   value: number;
   constructor() {
     super();
@@ -860,7 +866,8 @@ class ElementTimelineRange extends HTMLElement {
   }
 }
 
-class ElementTimelineEnd extends HTMLElement {
+@customElement("element-timeline-end")
+export class ElementTimelineEnd extends LitElement {
   constructor() {
     super();
   }
@@ -885,7 +892,8 @@ class ElementTimelineEnd extends HTMLElement {
   }
 }
 
-class ElementTimelineScroll extends HTMLElement {
+@customElement("element-timeline-scroll")
+export class ElementTimelineScroll extends LitElement {
   constructor() {
     super();
   }
@@ -944,12 +952,3 @@ class ElementTimelineScroll extends HTMLElement {
     );
   }
 }
-
-export {
-  ElementTimeline,
-  ElementTimelineCursor,
-  ElementTimelineRuler,
-  ElementTimelineRange,
-  ElementTimelineEnd,
-  ElementTimelineScroll,
-};

@@ -1,4 +1,8 @@
-class AnimationPanel extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("animation-panel")
+export class AnimationPanel extends LitElement {
   elementId: string;
   isShow: boolean;
   constructor() {
@@ -59,7 +63,8 @@ class AnimationPanel extends HTMLElement {
   disconnectedCallback() {}
 }
 
-class AnimationPanelItem extends HTMLElement {
+@customElement("animation-panel-item")
+export class AnimationPanelItem extends HTMLElement {
   animationType: string;
   elementId: string;
   timeline: any;
@@ -157,5 +162,3 @@ class AnimationPanelItem extends HTMLElement {
     this.removeEventListener("mouseup", this.handleMouseup);
   }
 }
-
-export { AnimationPanel, AnimationPanelItem };

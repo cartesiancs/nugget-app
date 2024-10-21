@@ -1,4 +1,8 @@
-class MenuDropdownBody extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("menu-dropdown-body")
+export class MenuDropdownBody extends LitElement {
   x: string;
   y: string;
   constructor() {
@@ -40,7 +44,8 @@ class MenuDropdownBody extends HTMLElement {
   }
 }
 
-class MenuDropdownItem extends HTMLElement {
+@customElement("menu-dropdown-item")
+export class MenuDropdownItem extends LitElement {
   name: string;
   constructor() {
     super();
@@ -61,5 +66,3 @@ class MenuDropdownItem extends HTMLElement {
     this.render();
   }
 }
-
-export { MenuDropdownBody, MenuDropdownItem };

@@ -1,4 +1,8 @@
-class OptionGroup extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("option-group")
+export class OptionGroup extends LitElement {
   constructor() {
     super();
   }
@@ -30,5 +34,3 @@ class OptionGroup extends HTMLElement {
     this.render();
   }
 }
-
-export { OptionGroup };

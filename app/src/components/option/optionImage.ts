@@ -1,4 +1,8 @@
-class OptionImage extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("option-image")
+export class OptionImage extends LitElement {
   elementId: string;
   constructor() {
     super();
@@ -77,5 +81,3 @@ class OptionImage extends HTMLElement {
     );
   }
 }
-
-export { OptionImage };

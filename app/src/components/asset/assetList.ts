@@ -1,6 +1,9 @@
 import { path } from "../../functions/path";
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-class AssetList extends HTMLElement {
+@customElement("asset-list")
+export class AssetList extends LitElement {
   blobThumbnail: {};
   nowDirectory: string;
   constructor() {
@@ -57,7 +60,8 @@ class AssetList extends HTMLElement {
   }
 }
 
-class AssetFile extends HTMLElement {
+@customElement("asset-file")
+export class AssetFile extends LitElement {
   filename: string;
   directory: any;
   constructor() {
@@ -200,7 +204,8 @@ class AssetFile extends HTMLElement {
   }
 }
 
-class AssetFolder extends HTMLElement {
+@customElement("asset-folder")
+export class AssetFolder extends LitElement {
   foldername: string;
   directory: any;
   constructor() {
@@ -242,5 +247,3 @@ class AssetFolder extends HTMLElement {
     this.removeEventListener("click", this.handleClick);
   }
 }
-
-export { AssetList, AssetFile, AssetFolder };

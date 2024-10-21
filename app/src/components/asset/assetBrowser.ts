@@ -1,4 +1,8 @@
-class AssetBrowser extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("asset-browser")
+export class AssetBrowser extends LitElement {
   directory: string;
   constructor() {
     super();
@@ -70,5 +74,3 @@ class AssetBrowser extends HTMLElement {
     );
   }
 }
-
-export { AssetBrowser };

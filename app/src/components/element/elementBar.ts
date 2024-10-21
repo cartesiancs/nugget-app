@@ -1,6 +1,9 @@
 import { elementUtils } from "../../utils/element.js";
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-class ElementBar extends HTMLElement {
+@customElement("element-bar")
+export class ElementBar extends LitElement {
   elementTimeline: any;
   elementControl: any;
   timeline: any;
@@ -21,8 +24,6 @@ class ElementBar extends HTMLElement {
   resizeRangeRight: number;
   constructor() {
     super();
-
-    //this.directory = ''
 
     this.elementTimeline = document.querySelector("element-timeline");
     this.elementControl = document.querySelector("element-control");
@@ -86,12 +87,6 @@ class ElementBar extends HTMLElement {
       let trimEnd = this.millisecondsToPx(
         this.timeline[this.elementId].trim.endTime
       );
-
-      // let resizeRangeTargetLeft = this.querySelector(".element-bar-hiddenspace-left")
-      // let resizeRangeTargetRight = this.querySelector(".element-bar-hiddenspace-right")
-
-      // resizeRangeTargetLeft.style.width = `${trimStart}px`
-      // resizeRangeTargetRight.style.width = `${trimEnd}px`
 
       this.setTrimStart(trimStart);
       this.setTrimEnd(trimEnd);
@@ -606,5 +601,3 @@ class ElementBar extends HTMLElement {
     document.removeEventListener("mouseup", this.resizeMouseup);
   }
 }
-
-export { ElementBar };

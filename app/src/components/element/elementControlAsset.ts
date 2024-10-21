@@ -1,4 +1,8 @@
-export class ElementControlAsset extends HTMLElement {
+import { LitElement } from "lit";
+import { customElement } from "lit/decorators.js";
+
+@customElement("element-control-asset")
+export class ElementControlAsset extends LitElement {
   timeline: any;
   elementControl: any;
   elementId: string;
@@ -31,6 +35,10 @@ export class ElementControlAsset extends HTMLElement {
     this.rotateEventHandler;
     this.dragdownEventHandler;
     this.dragupEventHandler;
+  }
+
+  createRenderRoot() {
+    return this;
   }
 
   render() {

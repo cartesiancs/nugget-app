@@ -1,4 +1,8 @@
-class SelectFont extends HTMLElement {
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
+@customElement("select-font")
+export class SelectFont extends LitElement {
   onChangeSelect: Event;
   fontname: string;
   type: string;
@@ -87,5 +91,3 @@ class SelectFont extends HTMLElement {
     );
   }
 }
-
-export { SelectFont };

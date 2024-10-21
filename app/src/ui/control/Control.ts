@@ -8,6 +8,10 @@ import "./ControlRender";
 
 @customElement("control-ui")
 export class Control extends LitElement {
+  createRenderRoot() {
+    return this;
+  }
+
   render() {
     return html`
       <div

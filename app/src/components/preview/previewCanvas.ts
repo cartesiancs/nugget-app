@@ -10,7 +10,7 @@ export class PreviewCanvss extends LitElement {
     return html` <canvas
       id="preview"
       class="preview"
-      @click="${this.handleClickCanvas()}"
+      onclick="${this.handleClickCanvas()}"
     ></canvas>`;
   }
 }

@@ -527,6 +527,8 @@ export class ElementTimelineRuler extends LitElement {
   timeMagnification: number;
   imeMagnification: number;
   resizeInterval: string | number;
+  width: any;
+  height: number;
   constructor() {
     super();
     this.mousemoveEventHandler = undefined;
@@ -538,8 +540,6 @@ export class ElementTimelineRuler extends LitElement {
   render() {
     this.innerHTML = "";
     const template = this.template();
-    // this.classList.remove("ruler-sec", "ruler-min")
-    // this.classList.add("timeline-ruler", `ruler`)
 
     this.classList.add("ps-0", "overflow-hidden", "position-absolute");
 
@@ -547,29 +547,31 @@ export class ElementTimelineRuler extends LitElement {
 
     this.innerHTML = template;
     this.drawRuler();
-    // this.addTickNumber(10)
   }
 
   template() {
-    //     return `<ul class="ruler-x">
-    //     <li></li><li></li><li></li><li></li><li></li> <!-- repeat -->
-    //   </ul>`
-    const width = document.querySelector("element-timeline").clientWidth;
-    const height = 30;
+    this.width = document.querySelector("element-timeline").clientWidth;
+    this.height = 30;
 
-    return `<canvas ref="canvas" width="${width}" height="${height}"></canvas>`;
+    return `<canvas ref="canvas" width="${this.width}" height="${this.height}" style="width: ${this.width}px; height: ${this.height}px;"></canvas>`;
   }
 
   drawRuler() {
-    const fullWidth = document.querySelector("element-timeline").clientWidth;
-    const fullWeight = 30;
+    this.width = document.querySelector("element-timeline").clientWidth;
 
     const canvas: HTMLCanvasElement = this.querySelector(
       "canvas[ref='canvas']"
     );
     const ctx = canvas.getContext("2d");
-    canvas.width = fullWidth;
+
+    const dpr = window.devicePixelRatio;
+    canvas.style.width = `${this.width}px`;
+
+    canvas.width = this.width * dpr;
+    canvas.height = this.height * dpr;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(dpr, dpr);
 
     let range = 1;
     let unitSplit = 1;
@@ -609,7 +611,7 @@ export class ElementTimelineRuler extends LitElement {
     );
 
     let term = 18 * this.timeMagnification;
-    let maxCount = Number(fullWidth / term) + term;
+    let maxCount = Number(this.width / term) + term;
 
     for (let count = 0; count < maxCount; count++) {
       if (count % range > 0) {
@@ -642,13 +644,6 @@ export class ElementTimelineRuler extends LitElement {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-
-    // ctx.beginPath()
-    // ctx.moveTo(0, 20)
-    // ctx.lineTo(fullWidth, 20)
-    // ctx.strokeStyle = '#e3e3e3'
-    // ctx.lineWidth = 1
-    // ctx.stroke()
   }
 
   addTickNumber(licount) {
@@ -657,67 +652,11 @@ export class ElementTimelineRuler extends LitElement {
   }
 
   updateRulerSpace(timeMagnification) {
-    console.log("w", timeMagnification);
     this.timeMagnification = timeMagnification * 1.1111111111;
     this.drawRuler();
-    // this.style.removeProperty(`--ruler2-space`)
-    // this.style.removeProperty(`--ruler1-space`)
-    // // this.style.removeProperty(`--ruler2-min-space`)
-    // // this.style.removeProperty(`--ruler1-min-space`)
-
-    // let spaceRuler2 = 50 * timeMagnification
-    // let spaceRuler1 = 5 * timeMagnification
-    // let spaceIncrese = 1
-
-    // console.log(timeMagnification, this.rulerType[0])
-
-    // if (timeMagnification >= 0.5) {
-    //     this.render()
-    //     this.rulerType = 'sec'
-    //     spaceIncrese = 1
-    // } else if (timeMagnification < 0.5 && timeMagnification >= 0.1) {
-    //     this.render()
-    //     this.rulerType = 'sec5'
-    //     spaceRuler2 = 250 * timeMagnification
-    //     spaceRuler1 = 25 * timeMagnification
-    //     spaceIncrese = 5
-
-    // } else if (timeMagnification < 0.1 && timeMagnification >= 0.01) {
-    //     this.render()
-    //     this.rulerType = 'min'
-    //     spaceRuler2 = 3000 * timeMagnification
-    //     spaceRuler1 = 300 * timeMagnification
-    //     spaceIncrese = 1
-
-    // } else if (timeMagnification < 0.01 && timeMagnification >= 0.001)  {
-    //     this.render()
-    //     this.rulerType = 'min5'
-    //     spaceRuler2 = 3000 * 5 * timeMagnification
-    //     spaceRuler1 = 300 * 5 * timeMagnification
-    //     spaceIncrese = 5
-
-    // } else  {
-    //     this.render()
-    //     this.rulerType = 'hour'
-    //     spaceRuler2 = 3000 * 60 * timeMagnification
-    //     spaceRuler1 = 300 * 60 * timeMagnification
-    //     spaceIncrese = 1
-
-    // }
-
-    // this.style.setProperty(`--ruler1-space`, spaceRuler1); // NOTE: 기본값 5
-    // this.style.setProperty(`--ruler2-space`, spaceRuler2); // NOTE: 기본값 50
-    // this.style.setProperty(`--ruler3-space`, spaceIncrese); // NOTE: 기본값 5
-    // this.style.setProperty(`--ruler3-space-minus`, -spaceIncrese); // NOTE: 기본값 5
-
-    // this.querySelector(".ruler-x").style.setProperty(`--ruler-standard-unit`, `'${this.rulerType[0]}'`); // NOTE: 기본값 5
   }
 
   updateRulerLength(e) {
-    console.log("s");
-    // let duration = Number(e.value) * 200
-    // this.changeWidth(duration)
-    // this.addTickNumber(Number(e.value))
     this.updateTimelineEnd();
   }
 

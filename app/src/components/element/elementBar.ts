@@ -4,7 +4,6 @@ import { customElement, property } from "lit/decorators.js";
 
 @customElement("element-bar")
 export class ElementBar extends LitElement {
-  elementTimeline: any;
   elementControl: any;
   timeline: any;
   elementId: string;
@@ -25,7 +24,6 @@ export class ElementBar extends LitElement {
   constructor() {
     super();
 
-    this.elementTimeline = document.querySelector("element-timeline");
     this.elementControl = document.querySelector("element-control");
 
     this.timeline = document.querySelector("element-timeline").timeline;

@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITestStore, testStore } from "../../states/testStore";
+import { IProjectStore, projectStore } from "../../states/projectStore";
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
@@ -8,11 +9,21 @@ export class ControlRender extends LitElement {
   countState: ITestStore = testStore.getInitialState();
 
   @property()
+  projectState: IProjectStore = projectStore.getInitialState();
+
+  @property()
   count = this.countState.count;
+
+  @property()
+  nowDirectory = this.projectState.nowDirectory;
 
   createRenderRoot() {
     testStore.subscribe((state) => {
       this.count = state.count;
+    });
+
+    projectStore.subscribe((state) => {
+      this.nowDirectory = state.nowDirectory;
     });
 
     return this;
@@ -20,6 +31,10 @@ export class ControlRender extends LitElement {
 
   handleClickButton() {
     this.countState.updateCount();
+  }
+
+  handleClickActionButton() {
+    console.log(this.nowDirectory);
   }
 
   render() {
@@ -82,6 +97,13 @@ export class ControlRender extends LitElement {
         @click=${() => this.handleClickButton()}
       >
         ${this.count}
+      </button>
+
+      <button
+        class="btn btn-blue-fill"
+        @click=${() => this.handleClickActionButton()}
+      >
+        Ac
       </button>
 
       <button class="btn btn-blue-fill" onclick="ipc.render()">Export</button>`;

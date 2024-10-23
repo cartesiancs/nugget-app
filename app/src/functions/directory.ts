@@ -1,3 +1,5 @@
+import { IProjectStore, projectStore } from "../states/projectStore";
+
 const directory = {
   select: function () {
     const projectFolder: any = document.querySelector("#projectFolder");
@@ -13,6 +15,9 @@ const directory = {
         assetList.nowDirectory = dir;
         assetList.clearList();
         assetBrowser.updateDirectoryInput(dir);
+
+        const projectState: IProjectStore = projectStore.getInitialState();
+        projectState.updateDirectory(dir);
 
         for (const key in result) {
           if (Object.hasOwnProperty.call(result, key)) {

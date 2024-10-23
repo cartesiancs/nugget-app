@@ -23,7 +23,14 @@ export class OptionImage extends LitElement {
         <input aria-event="location-x" type="number" class="form-control bg-default text-light me-1" value="0" >
         <input aria-event="location-y" type="number" class="form-control bg-default text-light" value="0" >
 
-        </div>`;
+        </div>
+        
+        <label class="form-label text-light">불투명도</label>
+        <div class="d-flex flex-row bd-highlight mb-2">
+        <input aria-event="opacity" type="number" class="form-control bg-default text-light me-1" value="100" >
+
+        </div>
+        `;
   }
 
   hide() {
@@ -69,6 +76,11 @@ export class OptionImage extends LitElement {
     });
   }
 
+  // handleOpacity() {
+  //   const opacity: any = this.querySelector("input[aria-event='opacity'");
+
+  // }
+
   connectedCallback() {
     this.render();
     this.querySelector("input[aria-event='location-x'").addEventListener(
@@ -76,6 +88,10 @@ export class OptionImage extends LitElement {
       this.handleLocation.bind(this)
     );
     this.querySelector("input[aria-event='location-y'").addEventListener(
+      "change",
+      this.handleLocation.bind(this)
+    );
+    this.querySelector("input[aria-event='opacity'").addEventListener(
       "change",
       this.handleLocation.bind(this)
     );

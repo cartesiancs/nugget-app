@@ -199,6 +199,7 @@ ipcMain.handle("filesystem:mkdir", ipcFilesystem.makeDirectory);
 ipcMain.handle("filesystem:emptyDirSync", ipcFilesystem.emptyDirectorySync);
 ipcMain.handle("filesystem:writeFile", ipcFilesystem.writeFile);
 ipcMain.handle("filesystem:readFile", ipcFilesystem.readFile);
+ipcMain.handle("filesystem:removeDirectory", ipcFilesystem.removeDirectory);
 
 ipcMain.handle("store:set", ipcStore.set);
 ipcMain.handle("store:get", ipcStore.get);

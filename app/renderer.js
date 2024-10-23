@@ -71,6 +71,15 @@ window.electronAPI.res.render.finish((evt) => {
 
   document.querySelector("#progress").style.width = `100%`;
   document.querySelector("#progress").innerHTML = `100%`;
+
+  const projectFolder = document.querySelector("#projectFolder").value;
+
+  window.electronAPI.req.filesystem.emptyDirSync(
+    `${projectFolder}/renderAnimation`
+  );
+  window.electronAPI.req.filesystem.removeDirectory(
+    `${projectFolder}/renderAnimation`
+  );
 });
 
 window.electronAPI.res.render.error((evt, errormsg) => {

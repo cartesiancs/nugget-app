@@ -38,6 +38,12 @@ export const ipcFilesystem = {
     return status;
   },
 
+  removeDirectory: async (event, path) => {
+    fs.rmSync(path, { recursive: true, force: true });
+
+    return status;
+  },
+
   writeFile: async (event, filename, data, options) => {
     fs.writeFile(filename, data, options, (error) => {
       if (error) {

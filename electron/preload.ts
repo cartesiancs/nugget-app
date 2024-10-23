@@ -29,6 +29,9 @@ const request = {
     mkdir: (path, options) =>
       ipcRenderer.invoke("filesystem:mkdir", path, options),
     emptyDirSync: (path) => ipcRenderer.invoke("filesystem:emptyDirSync", path),
+    removeDirectory: (path) =>
+      ipcRenderer.invoke("filesystem:removeDirectory", path),
+
     writeFile: (filename, data, options) =>
       ipcRenderer.invoke("filesystem:writeFile", filename, data, options),
     readFile: (filename) => ipcRenderer.invoke("filesystem:readFile", filename),

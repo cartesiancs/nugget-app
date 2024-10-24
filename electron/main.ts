@@ -44,6 +44,7 @@ import { ipcApp } from "./ipc/ipcApp.js";
 import { ipcTimeline } from "./ipc/ipcTimeline.js";
 import { ipcDialog } from "./ipc/ipcDialog.js";
 import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
+import { downloadFfmpeg, validateFFmpeg } from "./validate.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -72,96 +73,6 @@ const createFfmpegDir = async () => {
   let mkdir = await fsp.mkdir(FFMPEG_BIN_PATH, { recursive: true });
   let status = mkdir == null ? false : true;
   return { status: status };
-};
-
-const checkFfmpeg = async () => {
-  // let isCreate = await createFfmpegDir();
-
-  fs.stat(FFMPEG_PATH, function (error, stats) {
-    // if (error) {
-    //   downloadFfmpeg("ffmpeg");
-    //   return 0;
-    // }
-
-    fs.chmodSync(FFMPEG_PATH, 0o755);
-    ffmpeg.setFfmpegPath(FFMPEG_PATH);
-
-    log.info("FFMPEG downloaded successfully");
-    log.info("FFMPEG binary size: " + stats.size);
-
-    checkffprobe();
-  });
-};
-
-const checkffprobe = async () => {
-  fs.stat(FFPROBE_PATH, function (error, stats) {
-    // if (error) {
-    //   downloadFfmpeg("ffprobe");
-    //   return 0;
-    // }
-
-    fs.chmodSync(FFPROBE_PATH, 0o755);
-    ffmpeg.setFfprobePath(FFPROBE_PATH);
-
-    log.info("FFPROBE downloaded successfully.");
-    log.info("FFPROBE binary size: " + stats.size);
-  });
-};
-
-const downloadFfmpeg = (binType) => {
-  let type = binType || "ffmpeg"; // ffmpeg, ffprobe
-  let receivedBytes = 0;
-  let totalBytes = 0;
-  let percentage = 0;
-  let downloadPath = type == "ffmpeg" ? FFMPEG_PATH : FFPROBE_PATH;
-
-  let progressBar = new ProgressBar({
-    indeterminate: false,
-    text: type + " 다운로드",
-    detail: type + " 설치중...",
-  });
-
-  const request = net.request(config.ffmpegBin[process.platform][type].url);
-  request.on("response", (response: any) => {
-    totalBytes = parseInt(response.headers["content-length"]);
-    response.pipe(fs.createWriteStream(downloadPath));
-
-    response.on("data", (chunk) => {
-      receivedBytes += chunk.length;
-      percentage = Math.round((receivedBytes * 100) / totalBytes);
-
-      if (!progressBar.isCompleted()) {
-        progressBar.value = percentage;
-      }
-      log.info("ffmpeg download...", percentage);
-    });
-    response.on("end", () => {
-      log.info(binType + " No more data in response.");
-      fs.chmodSync(downloadPath, 0o755);
-
-      if (type == "ffmpeg") {
-        ffmpeg.setFfmpegPath(downloadPath);
-      } else if (type == "ffprobe") {
-        ffmpeg.setFfprobePath(downloadPath);
-      }
-    });
-  });
-  request.end();
-
-  progressBar
-    .on("completed", function () {
-      if (binType == "ffmpeg") {
-        checkffprobe();
-      }
-
-      progressBar.detail = type + " 설치 완료";
-    })
-    .on("aborted", function (value) {
-      log.info("Cancel ffmpeg installation.");
-    })
-    .on("progress", function (value) {
-      progressBar.detail = `100% 중 ${value}% 완료...`;
-    });
 };
 
 ipcMain.on("DOWNLOAD_FFMPEG", async (evt) => {
@@ -242,7 +153,7 @@ if (!gotTheLock) {
 
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow();
-    checkFfmpeg();
+    validateFFmpeg();
 
     mainWindow.on("close", function (e) {
       e.preventDefault();

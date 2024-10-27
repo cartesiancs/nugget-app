@@ -1,11 +1,11 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { v4 as uuidv4 } from "uuid";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
   elementTimeline: any;
-  timeline: any;
   timelineCursor: any;
   scroller: any;
   resizeTimeout: any;
@@ -21,16 +21,29 @@ export class ElementControl extends LitElement {
   progressTime: number;
   previewRatio: number;
   innerWidth: number;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+    });
+
+    return this;
+  }
+
   constructor() {
     super();
 
     this.elementTimeline;
-    this.timeline;
     this.timelineCursor;
 
     window.addEventListener("DOMContentLoaded", () => {
       this.elementTimeline = document.querySelector("element-timeline");
-      this.timeline = document.querySelector("element-timeline").timeline;
       this.timelineCursor = document.querySelector("element-timeline-cursor");
       this.changeTimelineRange();
     });
@@ -58,10 +71,6 @@ export class ElementControl extends LitElement {
     this.previewRatio = 1920 / 1920;
 
     this.resizeEvent();
-  }
-
-  createRenderRoot() {
-    return this;
   }
 
   async resizeEvent() {

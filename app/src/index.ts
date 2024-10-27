@@ -12,6 +12,9 @@ import "./components/asset/assetBrowser";
 import "./components/asset/assetUploader";
 
 import "./components/element/elementTimeline";
+import "./components/element/elementTimelineRuler";
+import "./components/element/elementTimelineCursor";
+
 import "./components/element/elementBar";
 import "./components/element/elementControlAsset";
 

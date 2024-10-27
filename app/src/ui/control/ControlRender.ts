@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITestStore, testStore } from "../../states/testStore";
 import { IProjectStore, projectStore } from "../../states/projectStore";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
@@ -10,6 +11,12 @@ export class ControlRender extends LitElement {
 
   @property()
   projectState: IProjectStore = projectStore.getInitialState();
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
 
   @property()
   count = this.countState.count;
@@ -26,6 +33,11 @@ export class ControlRender extends LitElement {
       this.nowDirectory = state.nowDirectory;
     });
 
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+      console.log(this.timeline);
+    });
+
     return this;
   }
 
@@ -35,6 +47,7 @@ export class ControlRender extends LitElement {
 
   handleClickActionButton() {
     console.log(this.nowDirectory);
+    console.log(this.timeline);
   }
 
   render() {

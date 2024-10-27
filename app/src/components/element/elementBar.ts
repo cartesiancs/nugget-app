@@ -1,11 +1,11 @@
 import { elementUtils } from "../../utils/element.js";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("element-bar")
 export class ElementBar extends LitElement {
   elementControl: any;
-  timeline: any;
   elementId: string;
   elementBarType: string;
   elementFileType: any;
@@ -21,12 +21,25 @@ export class ElementBar extends LitElement {
   dragEventHandler: any;
   resizeRangeLeft: number;
   resizeRangeRight: number;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+    });
+
+    return this;
+  }
+
   constructor() {
     super();
 
     this.elementControl = document.querySelector("element-control");
-
-    this.timeline = document.querySelector("element-timeline").timeline;
 
     this.elementId = this.getAttribute("element-id");
     this.elementBarType = this.getAttribute("element-type") || "static";

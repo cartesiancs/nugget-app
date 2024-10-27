@@ -1,9 +1,9 @@
 import { LitElement } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("element-control-asset")
 export class ElementControlAsset extends LitElement {
-  timeline: any;
   elementControl: any;
   elementId: string;
   elementFiletype: string;
@@ -16,10 +16,24 @@ export class ElementControlAsset extends LitElement {
   rotateEventHandler: any;
   dragdownEventHandler: any;
   dragupEventHandler: any;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+    });
+
+    return this;
+  }
+
   constructor() {
     super();
 
-    this.timeline = document.querySelector("element-timeline").timeline;
     this.elementControl = document.querySelector("element-control");
 
     this.elementId = this.getAttribute("element-id");
@@ -35,10 +49,6 @@ export class ElementControlAsset extends LitElement {
     this.rotateEventHandler;
     this.dragdownEventHandler;
     this.dragupEventHandler;
-  }
-
-  createRenderRoot() {
-    return this;
   }
 
   render() {

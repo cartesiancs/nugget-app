@@ -48,6 +48,10 @@ export class ElementControl extends LitElement {
       this.changeTimelineRange();
     });
 
+    window.addEventListener("resize", () => {
+      this.changeTimelineRange();
+    });
+
     this.scroller = undefined;
     this.resizeTimeout = undefined;
     this.resizeInterval = undefined;

@@ -32,6 +32,11 @@ export class ElementTimeline extends LitElement {
     //this.directory = ''
     this.elementControl;
 
+    this.addEventListener("mousedown", this.handleMousedown.bind(this));
+    this.addEventListener("scroll", this.handleScroll.bind(this));
+
+    document.addEventListener("keydown", this.handleKeydown.bind(this));
+
     window.addEventListener("DOMContentLoaded", () => {
       this.elementControl = document.querySelector("element-control");
     });
@@ -78,30 +83,6 @@ export class ElementTimeline extends LitElement {
     ];
     let prevTimelineHash = this.timelineHashTable[firstKeyInTimelineHashTable];
     return nowTimelineHash != prevTimelineHash;
-  }
-
-  render() {
-    const template = this.template();
-    this.classList.add(
-      "col-12",
-      "cursor-default",
-      "h-100",
-      "line",
-      "bg-darker"
-    );
-    this.innerHTML = template;
-  }
-
-  template() {
-    return `
-        <element-timeline-cursor></element-timeline-cursor>
-        <element-timeline-end></element-timeline-end>
-        <element-timeline-scroll></element-timeline-scroll>
-
-        
-        <div ref="elementLayer" style="margin-top: 24px;"></div>
-
-        `;
   }
 
   replaceTimelineBarHeight(height) {
@@ -474,12 +455,26 @@ export class ElementTimeline extends LitElement {
     });
   }
 
-  connectedCallback() {
-    this.render();
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
-    this.addEventListener("scroll", this.handleScroll.bind(this));
+  render() {
+    const template = this.template();
+    this.classList.add(
+      "col-12",
+      "cursor-default",
+      "h-100",
+      "line",
+      "bg-darker"
+    );
+    return html`${template}`;
+  }
 
-    document.addEventListener("keydown", this.handleKeydown.bind(this));
+  template() {
+    return html`
+      <element-timeline-cursor></element-timeline-cursor>
+      <element-timeline-end></element-timeline-end>
+      <element-timeline-scroll></element-timeline-scroll>
+
+      <div ref="elementLayer" style="margin-top: 24px;"></div>
+    `;
   }
 }
 
@@ -492,14 +487,23 @@ export class ElementTimelineRange extends LitElement {
     this.value = 0.9;
   }
 
-  render() {
-    const template = this.template();
-    this.innerHTML = template;
-    this.updateValue();
+  createRenderRoot() {
+    return this;
   }
 
-  template() {
-    return `<input ref="range" type="range" class="form-range" min="0" max="6" step="0.02" id="timelineRange" value="6">`;
+  render() {
+    return html`<input
+      ref="range"
+      type="range"
+      class="form-range"
+      min="0"
+      max="6"
+      step="0.02"
+      id="timelineRange"
+      value="6"
+      @change=${this.updateRange}
+      @input=${this.updateRange}
+    />`;
   }
 
   updateValue() {
@@ -535,18 +539,6 @@ export class ElementTimelineRange extends LitElement {
     let timelineWidth = Number(elementTimelineComponent.clientWidth);
 
     elementTimelineComponent.scrollLeft = cursorLeft - timelineWidth / 2;
-  }
-
-  connectedCallback() {
-    this.render();
-    this.querySelector("input[ref='range']").addEventListener(
-      "input",
-      this.updateRange.bind(this)
-    );
-    this.querySelector("input[ref='range']").addEventListener(
-      "change",
-      this.updateRange.bind(this)
-    );
   }
 }
 

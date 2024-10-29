@@ -18,7 +18,7 @@ CDN과 인증 서버를 내리면서 몇 가지 기능이 deprecated 되었습�
 - [x] ipc, lib 폴더 분리
 - [x] ce를 lit으로 전환
 - [ ] 폰트 및 텍스트 랜더링시 폰트의 padding 문제 해결
-- [ ] zustand 적용 및 timeline 컴포넌트 간 상태공유 최적화
+- [x] zustand 적용 및 timeline 컴포넌트 간 상태공유 최적화
 - [ ] element timeline을 canvas로 전환
 - [ ] elementcontrolpreview를 canvas로 전환
 - [ ] 랜더링 프로세스 개선

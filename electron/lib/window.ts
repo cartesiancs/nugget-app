@@ -25,8 +25,8 @@ const window = {
 
     // mainWindow.loadFile('app/index.html')
     mainWindow = window.createWindow({
-      width: 1000,
-      height: 600,
+      width: 1400,
+      height: 800,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -39,9 +39,9 @@ const window = {
     autoUpdater.checkForUpdatesAndNotify();
     Menu.setApplicationMenu(menu);
 
-    // if (isDev) {
-    //   mainWindow.webContents.openDevTools();
-    // }
+    if (isDev) {
+      mainWindow.webContents.openDevTools();
+    }
 
     return mainWindow;
   },

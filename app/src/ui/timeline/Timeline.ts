@@ -56,7 +56,7 @@ export class Timeline extends LitElement {
           </div>
         </div>
 
-        <div class="col-3 row d-flex align-items-center">
+        <div class="col-3 row d-flex align-items-center m-0 p-0">
           <element-timeline-range></element-timeline-range>
         </div>
       </div>

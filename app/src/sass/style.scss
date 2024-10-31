@@ -1,507 +1,459 @@
+@import "style/element";
+@import "style/resizeControl";
+@import "style/asset";
+@import "style/timeline";
+@import "style/keyframe";
+@import "style/dropdown";
+@import "style/animation";
+@import "var";
 
-@import 'style/element';
-@import 'style/resizeControl';
-@import 'style/asset';
-@import 'style/timeline';
-@import 'style/keyframe';
-@import 'style/dropdown';
-@import 'style/animation';
-@import 'var';
-
-
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
-
-
-
-
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap");
 
 ::-webkit-scrollbar {
-    width: 5px;
-    height: 10px;
-
-  }
-  
-  /* Track */
-  ::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 10px;
-
-  }
-  
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    background: rgba(136, 136, 136, 0.296);
-    border-radius: 10px;
-
-  }
-  
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(85, 85, 85, 0.456);
-  }
-
-  ::-webkit-scrollbar-corner {
-    background: transparent;
-
-  }
-
-html, body {
-    -ms-user-select: none; 
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-    overflow-y: hidden;
-    overscroll-behavior-x: none;
-    background-color: #181a1c;
-
+  width: 5px;
+  height: 10px;
 }
 
-input[type='file']::file-selector-button {
-    background-color: #16181b;
-    color: #ffffff;
+/* Track */
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(136, 136, 136, 0.296);
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(85, 85, 85, 0.456);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+html,
+body {
+  -ms-user-select: none;
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow-y: hidden;
+  overscroll-behavior-x: none;
+  background-color: #181a1c;
+}
+
+input[type="file"]::file-selector-button {
+  background-color: #16181b;
+  color: #ffffff;
 }
 
 element-control-asset > input[type="text" i] {
-    padding: 0px;
+  padding: 0px;
 }
 
-
-
-input[type=range]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 5px;
-    cursor: pointer;
-    box-shadow: 0px 0px 0px #000000;
-    background: #212529;
-    border-radius: 1px;
-    border: 0px solid #000000;
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000;
+  background: #212529;
+  border-radius: 1px;
+  border: 0px solid #000000;
 }
 
-
-input[type=range]::-webkit-slider-thumb {
-    &:hover {
-        background: #5a6067;
-        border: none;
-        outline: none;
-        box-shadow: none;
-    }
-    &:active {
-        border: #5a6067;
-        box-shadow: none;
-    }
-    &:focus {
-        border: none;
-        outline: none;
-        box-shadow: none;
-    }
-    outline: none;
-
-    height: .8rem;
-    width: 2.2rem;
-    border-radius: 15px;
+input[type="range"]::-webkit-slider-thumb {
+  &:hover {
     background: #5a6067;
-    cursor: pointer;
-}
-
-
-
-element-timeline-scroll > input[type=range]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 14px;
-    cursor: pointer;
-    box-shadow: 0px 0px 0px #000000;
-    background: none;
-    border-radius: 1px;
-    border: 0px solid #000000;
-}
-
-element-timeline-scroll > input[type=range]::-webkit-slider-thumb {
-    appearance: none;
-    $timeline-scroll-thumb-bg: #2c3035;
-    &:hover {
-        background: $timeline-scroll-thumb-bg;
-        border: none;
-        outline: none;
-        box-shadow: none;
-    }
-    &:active {
-        border: $timeline-scroll-thumb-bg;
-        box-shadow: none;
-    }
-    &:focus {
-        border: none;
-        outline: none;
-        box-shadow: none;
-    }
-
+    border: none;
     outline: none;
-    height: .8rem;
-    width: 5.2rem;
-    border-radius: 15px;
-    //background: $timeline-scroll-thumb-bg;
+    box-shadow: none;
+  }
+  &:active {
+    border: #5a6067;
+    box-shadow: none;
+  }
+  &:focus {
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+  outline: none;
 
-    background-color: $blur-background-color;
-    -webkit-backdrop-filter: $blur-backdrop-filter;
-    backdrop-filter: $blur-backdrop-filter;
+  height: 0.8rem;
+  width: 2.2rem;
+  border-radius: 15px;
+  background: #5a6067;
+  cursor: pointer;
+}
 
-    cursor: pointer;
+element-timeline-scroll > input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 14px;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000;
+  background: none;
+  border-radius: 1px;
+  border: 0px solid #000000;
+}
+
+element-timeline-scroll > input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  $timeline-scroll-thumb-bg: #2c3035;
+  &:hover {
+    background: $timeline-scroll-thumb-bg;
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+  &:active {
+    border: $timeline-scroll-thumb-bg;
+    box-shadow: none;
+  }
+  &:focus {
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+
+  outline: none;
+  height: 0.8rem;
+  width: 5.2rem;
+  border-radius: 15px;
+  //background: $timeline-scroll-thumb-bg;
+
+  background-color: $blur-background-color;
+  -webkit-backdrop-filter: $blur-backdrop-filter;
+  backdrop-filter: $blur-backdrop-filter;
+
+  cursor: pointer;
 }
 
 element-timeline-scroll {
+  appearance: none;
+
+  input {
     appearance: none;
+    background: inherit;
+    outline: none;
+  }
 
-    input {
-        appearance: none;
-        background: inherit;
-        outline: none;
-
-    }
-
-    background-color: transparent;
+  background-color: transparent;
 }
 
-
 .toast-container {
-    z-index: 9000;
+  z-index: 9000;
 }
 
 .tutorial-popover {
-    color: #eeeef1;
-    border-radius: 8px;
-    border: 0.3px solid rgba(0,0,0,.059);
-    box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 10%);
-    padding: 1rem 1.2rem !important;
-    background-color: #25262bba;
-    -webkit-backdrop-filter: saturate(120%) blur(8px);
-    backdrop-filter: saturate(120%) blur(8px);
+  color: #eeeef1;
+  border-radius: 8px;
+  border: 0.3px solid rgba(0, 0, 0, 0.059);
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 10%);
+  padding: 1rem 1.2rem !important;
+  background-color: #25262bba;
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  backdrop-filter: saturate(120%) blur(8px);
 }
 
 .container-footer {
-    background-color: #16181b;
+  background-color: #16181b;
 }
 
 .border-inner-light {
-    box-shadow: 0 0 0 3px #ffffff70 inset; 
+  box-shadow: 0 0 0 3px #ffffff70 inset;
 }
 
 .material-symbols-outlined {
-  font-variation-settings:
-  'FILL' 1,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 48
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 48;
 }
 
 .btn-sm {
-    padding: 0.4rem 0.8rem 0.4rem 0.8rem !important;
+  padding: 0.4rem 0.8rem 0.4rem 0.8rem !important;
 }
 
 .btn-xs {
-    padding: 0rem !important;
+  padding: 0rem !important;
 }
 
 .btn-default {
-    background-color: $button-background-color;
+  background-color: $button-background-color;
 }
 
 .bg-default {
-    background-color: $button-background-color;
+  background-color: $button-background-color;
 }
 
-.form-control:disabled, .form-control[readonly] {
-    background-color: $button-background-color;
-    color: #ffffffc0;
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: $button-background-color;
+  color: #ffffffc0;
 }
-
 
 .form-control:focus {
-    background-color: $button-background-color;
+  background-color: $button-background-color;
 }
 
 .form-transparent {
-    background-color: transparent;
-    outline: 0;
-    border: none;
-    color: #ffffff;
-    font-size: 20px;
-    margin: 0px;
+  background-color: transparent;
+  outline: 0;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  margin: 0px;
 }
 
-
 .form-transparent:focus {
-    background-color: transparent;
+  background-color: transparent;
 
-    outline: 0;
-    border-color: #d5d5d5 !important;
-    box-shadow: 0 0 5px #d5d5d5 !important;
-
+  outline: 0;
+  border-color: #d5d5d5 !important;
+  box-shadow: 0 0 5px #d5d5d5 !important;
 }
 
 .btn-nav {
-    background-color: transparent;
-    outline: none;
-    border: none;
-    padding: .4rem .4rem;
-    color: #eeeef1;
+  background-color: transparent;
+  outline: none;
+  border: none;
+  padding: 0.4rem 0.4rem;
+  color: #eeeef1;
 }
 
 .btn-nav.active {
-    color: #0d6efd;
+  color: #0d6efd;
 }
 
 .bg-darklight {
-    background-color: #3a3f44;
+  background-color: #3a3f44;
 }
 .bg-darker {
-    background-color: $background-color;
+  background-color: $background-color;
 }
 .font-title {
-    font-family: 'Noto Sans KR', sans-serif;
-    word-break: keep-all;
+  font-family: "Noto Sans KR", sans-serif;
+  word-break: keep-all;
 }
 
 .font-weight-lg {
-    font-family: 'Noto Sans KR', sans-serif;
-    word-break: keep-all;
-    font-weight: 700 !important;
+  font-family: "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+  font-weight: 700 !important;
 }
 .font-weight-md {
-    font-family: 'Noto Sans KR', sans-serif;
-    word-break: keep-all;
-    font-weight: 500 !important;
+  font-family: "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+  font-weight: 500 !important;
 }
 
 .text-title {
-    font-family: 'Noto Sans KR', sans-serif;
-    word-break: keep-all;
-    font-weight: 700 !important;
+  font-family: "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+  font-weight: 700 !important;
 }
 
-
 .text-ellipsis {
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0.1rem 0.5rem 0.1rem 0.5rem;
-    text-overflow: ellipsis;
-    overflow: hidden; 
-    white-space: nowrap;
-
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.1rem 0.5rem 0.1rem 0.5rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .text-ellipsis-scroll {
-    width: 95%;
-    margin-top: 0.5rem;
-    padding: 0.1rem 0.5rem 0.1rem 0.5rem;
-    text-overflow: ellipsis;
-    overflow: hidden; 
-    white-space: nowrap;
-    animation-play-state: paused;
-
+  width: 95%;
+  margin-top: 0.5rem;
+  padding: 0.1rem 0.5rem 0.1rem 0.5rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  animation-play-state: paused;
 }
 
+.form-range {
+  margin: 0;
+}
 
 .offcanvas-header {
-    padding: .2rem .2rem;
+  padding: 0.2rem 0.2rem;
 }
 
 @keyframes scrollText {
-    to {
-        transform: translateX(-100%);
-    }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
-.card-title{
-    font-family: 'Noto Sans KR', sans-serif;
-
+.card-title {
+  font-family: "Noto Sans KR", sans-serif;
 }
 
 .offcanvas {
-    background-color: #3d40464d;
-    -webkit-backdrop-filter: saturate(100%) blur(36px);
-    backdrop-filter: saturate(100%) blur(36px);
+  background-color: #3d40464d;
+  -webkit-backdrop-filter: saturate(100%) blur(36px);
+  backdrop-filter: saturate(100%) blur(36px);
 }
 
 .split-col-bar {
-    position: absolute;
-    top: 50%;
-    right: -.2rem; 
-    transform: translateY(-50%);
-    width: .5rem;
-    height: 80%;
-    background-color: #868f9900;
-    cursor: col-resize;
-    z-index: 8000;
+  position: absolute;
+  top: 50%;
+  right: -0.2rem;
+  transform: translateY(-50%);
+  width: 0.5rem;
+  height: 80%;
+  background-color: #868f9900;
+  cursor: col-resize;
+  z-index: 8000;
 }
 
-
 .split-bottom-bar {
-    position: absolute;
-    top: 0px;
-    transform: translateY(-50%);
-    height: 1rem;
-    background-color: #868f9900;
-    cursor: col-resize;
-    z-index: 8000;
+  position: absolute;
+  top: 0px;
+  transform: translateY(-50%);
+  height: 1rem;
+  background-color: #868f9900;
+  cursor: col-resize;
+  z-index: 8000;
 }
 
 .split-top {
-    padding-top: 0.5rem;
+  padding-top: 0.5rem;
 }
 
-
-
 #sidebar {
-    border-right: 0.05rem $background-border-color solid;
-    background-color: $background-color !important;
-
+  border-right: 0.05rem $background-border-color solid;
+  background-color: $background-color !important;
 }
 
 #split_bottom {
-    border-top: 0.05rem $background-border-color solid;
-
+  border-top: 0.05rem $background-border-color solid;
 }
 
 .tab-content {
-    border-right: 0.05rem $background-border-color solid;
-
+  border-right: 0.05rem $background-border-color solid;
 }
 
-
 .cursor-default {
-    cursor: default;
+  cursor: default;
 }
 
 .cursor-row-resize {
-    cursor: row-resize;
+  cursor: row-resize;
 }
 
-.form-textarea{
-    border: none !important;
+.form-textarea {
+  border: none !important;
 }
-
-
-
 
 .preview {
-    background-color: #000000;
-    display: block;
+  background-color: #000000;
+  display: block;
 }
 
 .control {
-    position: absolute;
-    display: block;
-    cursor: pointer;
+  position: absolute;
+  display: block;
+  cursor: pointer;
 
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .control-inner {
-    position: relative;
-    cursor: pointer ;
-    width: 100%;
-    height: 100%;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
 }
 
 .video {
-    position:relative;
-    display: flex;
-    overflow: clip;
+  position: relative;
+  display: flex;
+  overflow: clip;
 }
 
-.line{
-    position:relative;
-    overflow-x: scroll !important;
-    padding: 0px;
+.line {
+  position: relative;
+  overflow-x: scroll !important;
+  padding: 0px;
 }
-
-
-
-
 
 .accordion-body {
-    color: #ffffff;
-    padding: 0.6rem .4rem;
-    min-height: 80vh;
+  color: #ffffff;
+  padding: 0.6rem 0.4rem;
+  min-height: 80vh;
 }
 
 .accordion-button {
-    background-color: #212529 !important;
-    color: #ffffff !important;
-    padding: .7rem .5rem .7rem .5rem;
-    border-color: transparent;
-
+  background-color: #212529 !important;
+  color: #ffffff !important;
+  padding: 0.7rem 0.5rem 0.7rem 0.5rem;
+  border-color: transparent;
 }
 
 .accordion-button:not(.collapsed)::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-    box-shadow: none;
-    border-color: transparent;
-
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  box-shadow: none;
+  border-color: transparent;
 }
 
 .accordion-button::after {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
 }
 
 .accordion-button:focus {
-    background-color: #212529;
-    border-color: transparent !important;
-    box-shadow: none;
-
+  background-color: #212529;
+  border-color: transparent !important;
+  box-shadow: none;
 }
 
 .accordion-item {
-    background-color: transparent;
+  background-color: transparent;
 }
-
-
-
-
 
 .overflow-y-scroll {
-    overflow-y: scroll;
+  overflow-y: scroll;
 }
 .overflow-y-hidden {
-    overflow-y: hidden;
+  overflow-y: hidden;
 }
 
 .overflow-x-hidden {
-    overflow-x: hidden;
+  overflow-x: hidden;
 }
 
 .overflow-x-scroll {
-    overflow-x: scroll;
+  overflow-x: scroll;
 }
 
-
-
 .icon-lg {
-    font-size: 3rem;
-    color: #ffffff;
+  font-size: 3rem;
+  color: #ffffff;
 }
 
 .icon-md {
-    font-size: 1.7rem;
-    color: #ffffff;
+  font-size: 1.7rem;
+  color: #ffffff;
 }
 
 .icon-sm {
-    font-size: 1.3rem;
-    color: #ffffff;
+  font-size: 1.3rem;
+  color: #ffffff;
 }
 
 .icon-xs {
-    font-size: x-small;
-    color: #ffffff;
+  font-size: x-small;
+  color: #ffffff;
 }
 
 .icon-white {
-    color: #ffffff;
+  color: #ffffff;
 }
 
-
 .modal {
-    z-index: 8000;
+  z-index: 8000;
 }

@@ -20,7 +20,6 @@ export class ElementTimeline extends LitElement {
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
-      console.log(this.timeline);
     });
 
     return this;
@@ -164,10 +163,10 @@ export class ElementTimeline extends LitElement {
 
   addElementBar(elementId) {
     const templateBar = this.templateElementBar(elementId);
-    this.querySelector("div[ref='elementLayer']").insertAdjacentHTML(
-      "afterbegin",
-      templateBar
-    );
+    // this.querySelector("div[ref='elementLayer']").insertAdjacentHTML(
+    //   "afterbegin",
+    //   templateBar
+    // );
   }
 
   templateElementBar(elementId) {
@@ -181,18 +180,26 @@ export class ElementTimeline extends LitElement {
     let elementType = elementUtils.getElementType(filetype);
 
     if (elementType == "static") {
-      return `
-            <element-bar element-id="${elementId}" element-type="static"></element-bar> 
+      return html`
+        <element-bar
+          element-id="${elementId}"
+          element-type="static"
+        ></element-bar>
 
-            <animation-panel element-id="${elementId}"> 
-                <animation-panel-item animation-type="position" element-id="${elementId}"></animation-panel-item> 
-
-            </animation-panel> 
-            `;
+        <animation-panel element-id="${elementId}">
+          <animation-panel-item
+            animation-type="position"
+            element-id="${elementId}"
+          ></animation-panel-item>
+        </animation-panel>
+      `;
     } else if (elementType == "dynamic") {
-      return `<element-bar element-id="${elementId}" element-type="dynamic"></element-bar>`;
+      return html`<element-bar
+        element-id="${elementId}"
+        element-type="dynamic"
+      ></element-bar>`;
     } else {
-      return `none`;
+      return html`<div></div>`;
     }
   }
 
@@ -456,7 +463,6 @@ export class ElementTimeline extends LitElement {
   }
 
   render() {
-    const template = this.template();
     this.classList.add(
       "col-12",
       "cursor-default",
@@ -464,16 +470,12 @@ export class ElementTimeline extends LitElement {
       "line",
       "bg-darker"
     );
-    return html`${template}`;
-  }
 
-  template() {
     return html`
       <element-timeline-cursor></element-timeline-cursor>
-      <element-timeline-end></element-timeline-end>
       <element-timeline-scroll></element-timeline-scroll>
 
-      <div ref="elementLayer" style="margin-top: 24px;"></div>
+      <element-timeline-canvas></element-timeline-canvas>
     `;
   }
 }
@@ -481,6 +483,10 @@ export class ElementTimeline extends LitElement {
 @customElement("element-timeline-range")
 export class ElementTimelineRange extends LitElement {
   value: number;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
   constructor() {
     super();
 
@@ -492,6 +498,7 @@ export class ElementTimelineRange extends LitElement {
   }
 
   render() {
+    this.style.padding = "0px";
     return html`<input
       ref="range"
       type="range"
@@ -520,6 +527,8 @@ export class ElementTimelineRange extends LitElement {
     this.value = parseFloat(
       ((inputRange.value * inputRange.value) / 10).toFixed(3)
     );
+
+    this.timelineState.setRange(this.value);
   }
 
   updateRange() {

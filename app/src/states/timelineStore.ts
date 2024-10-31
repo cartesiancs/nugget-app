@@ -99,12 +99,23 @@ type TimelineArrayType =
 
 export interface ITimelineStore {
   timeline: Object;
+  range: number;
+  scroll: number;
+  cursor: number;
+
   addTimeline: (key: string, timeline: never) => void;
   clearTimeline: () => void;
+  patchTimeline: (timeline: any) => void;
+  setRange: (range: number) => void;
+  setScroll: (scroll: number) => void;
+  setCursor: (cursor: number) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   timeline: {},
+  range: 0.9,
+  scroll: 0,
+  cursor: 0,
 
   addTimeline: (key: string, timeline: never) =>
     set((state) => ({ timeline: { ...state.timeline, [key]: timeline } })),
@@ -113,4 +124,11 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     set((state) => ({
       timeline: {},
     })),
+
+  patchTimeline: (timeline: any) =>
+    set((state) => ({ timeline: { ...timeline } })),
+
+  setRange: (range: number) => set((state) => ({ range: range })),
+  setScroll: (scroll: number) => set((state) => ({ scroll: scroll })),
+  setCursor: (cursor: number) => set((state) => ({ cursor: cursor })),
 }));

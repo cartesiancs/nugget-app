@@ -12,6 +12,8 @@ import "./components/asset/assetBrowser";
 import "./components/asset/assetUploader";
 
 import "./components/element/elementTimeline";
+import "./components/element/elementTimelineCanvas";
+
 import "./components/element/elementTimelineRuler";
 import "./components/element/elementTimelineCursor";
 

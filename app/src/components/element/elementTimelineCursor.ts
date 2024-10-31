@@ -17,6 +17,23 @@ export class ElementTimelineCursor extends LitElement {
         "element-timeline-ruler"
       );
     });
+
+    this.addEventListener("mousedown", this.handleMousedown.bind(this));
+    document.addEventListener("mouseup", this.handleMouseup.bind(this));
+  }
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timelineScroll = this.timelineState.scroll;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timelineScroll = state.scroll;
+    });
+
+    return this;
   }
 
   render() {
@@ -45,11 +62,5 @@ export class ElementTimelineCursor extends LitElement {
       "mousemove",
       this.elementTimelineRuler.mousemoveEventHandler
     );
-  }
-
-  connectedCallback() {
-    this.render();
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
-    document.addEventListener("mouseup", this.handleMouseup.bind(this));
   }
 }

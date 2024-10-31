@@ -27,6 +27,7 @@ export class ControlRender extends LitElement {
   createRenderRoot() {
     testStore.subscribe((state) => {
       this.count = state.count;
+      console.log(this.count);
     });
 
     projectStore.subscribe((state) => {

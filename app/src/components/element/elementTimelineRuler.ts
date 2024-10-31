@@ -20,6 +20,24 @@ export class ElementTimelineRuler extends LitElement {
     this.mouseTimeout = undefined;
     this.rulerType = "sec";
     this.timeMagnification = 1;
+    this.addEventListener("mousedown", this.handleMousedown.bind(this));
+    document.addEventListener("mouseup", this.handleMouseup.bind(this));
+  }
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timelineScroll = this.timelineState.scroll;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timelineScroll = state.scroll;
+
+      this.drawRuler();
+    });
+
+    return this;
   }
 
   render() {
@@ -88,11 +106,9 @@ export class ElementTimelineRuler extends LitElement {
     }
 
     let startPoint =
-      -document.querySelector("element-timeline").scrollLeft %
-      (180 * this.timeMagnification * range); //18 * 10 * 3
+      -this.timelineScroll % (180 * this.timeMagnification * range); //18 * 10 * 3
     let startNumber = Math.floor(
-      document.querySelector("element-timeline").scrollLeft /
-        (180 * this.timeMagnification * range)
+      this.timelineScroll / (180 * this.timeMagnification * range)
     );
 
     let term = 18 * this.timeMagnification;
@@ -211,14 +227,5 @@ export class ElementTimelineRuler extends LitElement {
 
   handleMouseup(e) {
     document.removeEventListener("mousemove", this.mousemoveEventHandler);
-  }
-
-  connectedCallback() {
-    this.render();
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
-    document.addEventListener("mouseup", this.handleMouseup.bind(this));
-    document
-      .querySelector("element-timeline")
-      .addEventListener("scroll", this.drawRuler.bind(this));
   }
 }

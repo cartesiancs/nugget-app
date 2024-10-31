@@ -260,6 +260,7 @@ export class ElementControl extends LitElement {
         },
       };
 
+      this.timelineState.patchTimeline(this.timeline);
       this.showImage(elementId);
       this.elementTimeline.addElementBar(elementId);
     };
@@ -320,6 +321,7 @@ export class ElementControl extends LitElement {
           codec: { video: "default", audio: "default" },
         };
 
+        this.timelineState.patchTimeline(this.timeline);
         this.showVideo(elementId);
         this.elementTimeline.addElementBar(elementId);
       });

@@ -244,6 +244,7 @@ export class ElementControl extends LitElement {
         blob: blob,
         startTime: 0,
         duration: 1000,
+        opacity: 100,
         location: { x: 0, y: 0 },
         rotation: 0,
         width: width,

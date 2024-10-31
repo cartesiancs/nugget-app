@@ -6,6 +6,7 @@ type ImageElementType = {
   blob?: string;
   startTime?: number;
   duration?: number;
+  opacity?: number;
   location?: { x: number; y: number };
   rotation?: 0;
   width?: number;

@@ -1,11 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element.js";
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("element-timeline-ruler")
 export class ElementTimelineRuler extends LitElement {
+  @query("#elementTimelineRulerCanvasRef") canvas!: HTMLCanvasElement;
+
   mousemoveEventHandler: any;
   mouseTimeout: any;
   rulerType: string;
@@ -30,9 +32,13 @@ export class ElementTimelineRuler extends LitElement {
   @property()
   timelineScroll = this.timelineState.scroll;
 
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineScroll = state.scroll;
+      this.timelineCursor = state.cursor;
 
       this.drawRuler();
     });
@@ -41,39 +47,36 @@ export class ElementTimelineRuler extends LitElement {
   }
 
   render() {
-    this.innerHTML = "";
-    const template = this.template();
-
     this.classList.add("ps-0", "overflow-hidden", "position-absolute");
-
     this.style.top = "40px";
 
-    this.innerHTML = template;
-    this.drawRuler();
-  }
-
-  template() {
     this.width = document.querySelector("element-timeline").clientWidth;
     this.height = 30;
 
-    return `<canvas ref="canvas" width="${this.width}" height="${this.height}" style="width: ${this.width}px; height: ${this.height}px;"></canvas>`;
+    return html`<canvas
+      id="elementTimelineRulerCanvasRef"
+      width="${this.width}"
+      height="${this.height}"
+      style="width: ${this.width}px; height: ${this.height}px;"
+    ></canvas>`;
+  }
+
+  updated() {
+    this.drawRuler();
   }
 
   drawRuler() {
     this.width = document.querySelector("element-timeline").clientWidth;
 
-    const canvas: HTMLCanvasElement = this.querySelector(
-      "canvas[ref='canvas']"
-    );
-    const ctx = canvas.getContext("2d");
+    const ctx = this.canvas.getContext("2d");
 
     const dpr = window.devicePixelRatio;
-    canvas.style.width = `${this.width}px`;
+    this.canvas.style.width = `${this.width}px`;
 
-    canvas.width = this.width * dpr;
-    canvas.height = this.height * dpr;
+    this.canvas.width = this.width * dpr;
+    this.canvas.height = this.height * dpr;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.scale(dpr, dpr);
 
     let range = 1;
@@ -184,11 +187,9 @@ export class ElementTimelineRuler extends LitElement {
   }
 
   moveTime(e) {
-    const elementTimelineBar = document.querySelector(
-      "element-timeline-cursor"
-    );
     const elementTimeline = document.querySelector("element-timeline");
     const elementControl = document.querySelector("element-control");
+    const cursorDom = document.querySelector("element-timeline-cursor");
 
     elementControl.progress = e.pageX + elementTimeline.scrollLeft;
     elementControl.progressTime = elementControl.getTimeFromProgress();
@@ -197,17 +198,18 @@ export class ElementTimelineRuler extends LitElement {
     elementControl.showTime();
     elementControl.appearAllElementInTime();
 
-    elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft);
+    this.timelineState.setCursor(e.pageX + this.timelineScroll);
+    cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
   }
 
   handleMousemove(e) {
-    const elementTimelineBar = document.querySelector(
-      "element-timeline-cursor"
-    );
     const elementTimeline = document.querySelector("element-timeline");
     const elementControl = document.querySelector("element-control");
+    const cursorDom = document.querySelector("element-timeline-cursor");
 
-    elementTimelineBar.move(e.pageX + elementTimeline.scrollLeft);
+    this.timelineState.setCursor(e.pageX + this.timelineScroll);
+    cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
+
     elementControl.showTime();
 
     clearTimeout(this.mouseTimeout);

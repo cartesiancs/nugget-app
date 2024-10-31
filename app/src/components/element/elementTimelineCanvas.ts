@@ -69,11 +69,10 @@ export class elementTimelineCanvas extends LitElement {
 
   drawCanvas() {
     const timelineElements = [];
-    let index = 0;
+    let index = 1;
 
     const ctx = this.canvas.getContext("2d");
     if (ctx) {
-      ctx.save();
       this.canvas.height =
         document.querySelector("element-timeline").offsetHeight;
       this.canvas.width = window.innerWidth;
@@ -89,8 +88,8 @@ export class elementTimelineCanvas extends LitElement {
           const width = this.millisecondsToPx(
             this.timeline[elementId].duration
           );
-          const height = 50;
-          const top = index * height + 5;
+          const height = 30;
+          const top = index * height * 1.2;
           const left =
             this.millisecondsToPx(this.timeline[elementId].startTime) -
             this.timelineScroll;
@@ -106,8 +105,18 @@ export class elementTimelineCanvas extends LitElement {
     }
   }
 
+  repositionCursor() {
+    const cursorDom = document.querySelector("element-timeline-cursor");
+    const controlDom = document.querySelector("element-control");
+
+    const progress = controlDom.progress;
+
+    cursorDom.style.left = `${progress - this.timelineScroll}px`;
+  }
+
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
+    this.repositionCursor();
 
     if (newScroll >= 0) {
       this.timelineState.setScroll(newScroll);

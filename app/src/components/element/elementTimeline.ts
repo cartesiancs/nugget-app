@@ -487,6 +487,9 @@ export class ElementTimelineRange extends LitElement {
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
+  @property()
+  timelineRange = this.timelineState.range;
+
   constructor() {
     super();
 
@@ -507,7 +510,7 @@ export class ElementTimelineRange extends LitElement {
       max="6"
       step="0.02"
       id="timelineRange"
-      value="6"
+      value="0.5"
       @change=${this.updateRange}
       @input=${this.updateRange}
     />`;

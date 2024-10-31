@@ -28,9 +28,13 @@ export class ElementTimelineCursor extends LitElement {
   @property()
   timelineScroll = this.timelineState.scroll;
 
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineScroll = state.scroll;
+      this.timelineCursor = state.cursor;
     });
 
     return this;
@@ -39,7 +43,8 @@ export class ElementTimelineCursor extends LitElement {
   render() {
     this.classList.add("timeline-bar");
     this.setAttribute("id", "timeline_bar");
-    this.style.left = `0px`;
+    const left = parseInt(this.style.left.split("px")[0]);
+    this.style.left = `${left}px`;
     this.style.top = `0px`;
   }
 

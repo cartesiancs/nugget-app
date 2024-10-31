@@ -28,9 +28,13 @@ export class ElementControl extends LitElement {
   @property()
   timeline = this.timelineState.timeline;
 
+  // @property()
+  // cursor = this.timelineState.cursor;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
+      // this.timelineCursor = state.cursor;
     });
 
     return this;
@@ -262,7 +266,6 @@ export class ElementControl extends LitElement {
 
       this.timelineState.patchTimeline(this.timeline);
       this.showImage(elementId);
-      this.elementTimeline.addElementBar(elementId);
     };
   }
 
@@ -323,7 +326,6 @@ export class ElementControl extends LitElement {
 
         this.timelineState.patchTimeline(this.timeline);
         this.showVideo(elementId);
-        this.elementTimeline.addElementBar(elementId);
       });
 
       // ffmpeg.ffprobe(path, (err, metadata) => {
@@ -607,6 +609,8 @@ export class ElementControl extends LitElement {
   }
 
   changeTimelineRange() {
+    const cursorDom = document.querySelector("element-timeline-cursor");
+
     const timelineRuler = document.querySelector("element-timeline-ruler");
     const elementTimelineEnd = document.querySelector("element-timeline-end");
 
@@ -622,7 +626,7 @@ export class ElementControl extends LitElement {
     }
 
     timelineRuler.updateRulerSpace(timeMagnification);
-    this.timelineCursor.move((this.progressTime / 5) * timeMagnification);
+    cursorDom.style.left = `${(this.progressTime / 5) * timeMagnification}px`;
     this.adjustAllElementBarWidth(timeMagnification);
     this.updateAllAnimationPanel();
 
@@ -793,7 +797,6 @@ export class ElementControl extends LitElement {
     </span>`;
 
     this.scroller = setInterval(() => {
-      //split_inner_bottom.scrollBy(4, 0);
       let nowTimelineRange = Number(
         document.querySelector("element-timeline-range").value
       );

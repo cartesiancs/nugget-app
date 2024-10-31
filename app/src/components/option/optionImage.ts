@@ -1,36 +1,64 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("option-image")
 export class OptionImage extends LitElement {
   elementId: string;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+      console.log(this.timeline);
+    });
+
+    return this;
+  }
+
   constructor() {
     super();
 
     this.elementId = "";
-  }
-
-  render() {
-    let template = this.template();
-    this.innerHTML = template;
     this.hide();
   }
 
-  template() {
-    return `
-        <label class="form-label text-light">위치</label>
-        <div class="d-flex flex-row bd-highlight mb-2">
-        <input aria-event="location-x" type="number" class="form-control bg-default text-light me-1" value="0" >
-        <input aria-event="location-y" type="number" class="form-control bg-default text-light" value="0" >
+  render() {
+    return html`
+      <label class="form-label text-light">위치</label>
+      <div class="d-flex flex-row bd-highlight mb-2">
+        <input
+          aria-event="location-x"
+          type="number"
+          class="form-control bg-default text-light me-1"
+          value="0"
+          @change=${this.handleLocation}
+        />
+        <input
+          aria-event="location-y"
+          type="number"
+          class="form-control bg-default text-light"
+          value="0"
+          @change=${this.handleLocation}
+        />
+      </div>
 
-        </div>
-        
-        <label class="form-label text-light">불투명도</label>
-        <div class="d-flex flex-row bd-highlight mb-2">
-        <input aria-event="opacity" type="number" class="form-control bg-default text-light me-1" value="100" >
-
-        </div>
-        `;
+      <label class="form-label text-light">불투명도</label>
+      <div class="d-flex flex-row bd-highlight mb-2">
+        <input
+          aria-event="opacity"
+          type="number"
+          class="form-control bg-default text-light me-1"
+          value="100"
+          @change=${this.handleOpacity}
+        />
+      </div>
+    `;
   }
 
   hide() {
@@ -76,24 +104,11 @@ export class OptionImage extends LitElement {
     });
   }
 
-  // handleOpacity() {
-  //   const opacity: any = this.querySelector("input[aria-event='opacity'");
+  handleOpacity() {
+    const opacity: any = this.querySelector("input[aria-event='opacity'");
 
-  // }
+    console.log(opacity.value);
 
-  connectedCallback() {
-    this.render();
-    this.querySelector("input[aria-event='location-x'").addEventListener(
-      "change",
-      this.handleLocation.bind(this)
-    );
-    this.querySelector("input[aria-event='location-y'").addEventListener(
-      "change",
-      this.handleLocation.bind(this)
-    );
-    this.querySelector("input[aria-event='opacity'").addEventListener(
-      "change",
-      this.handleLocation.bind(this)
-    );
+    this.timeline[this.elementId].opacity = parseInt(opacity.value);
   }
 }

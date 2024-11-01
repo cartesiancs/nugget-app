@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { elementUtils } from "../../utils/element.js";
+import { elementUtils } from "../../utils/element";
 import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
@@ -8,7 +8,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 캔버스 타임라인 그리기 (완료)
 이미지(static) 타임라인 조정 (완료)
-영상(dynamic) 타임라인 조정
+영상(dynamic) 타임라인 조정 (완료)
 타임라인 호버시 마우스커서 변환 (완료)
 마그넷
 애니메이션 패널 (하단 키프레임 표시)
@@ -29,6 +29,7 @@ export class elementTimelineCanvas extends LitElement {
   targetDuration: number;
   targetMediaType: "static" | "dynamic";
   cursorType: "none" | "move" | "stretchStart" | "stretchEnd";
+  targetTrim: { startTime: number; endTime: number };
 
   constructor() {
     super();
@@ -36,6 +37,11 @@ export class elementTimelineCanvas extends LitElement {
     this.targetId = "";
     this.targetStartTime = 0;
     this.targetDuration = 1000;
+    this.targetTrim = {
+      startTime: 0,
+      endTime: 1000,
+    };
+
     this.isDrag = false;
     this.firstClickPosition = { x: 0, y: 0 };
     this.cursorType = "none";
@@ -110,10 +116,41 @@ export class elementTimelineCanvas extends LitElement {
             this.millisecondsToPx(this.timeline[elementId].startTime) -
             this.timelineScroll;
 
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.rect(left, top, width, height);
-          ctx.fill();
+          const filetype = this.timeline[elementId].filetype;
+
+          let elementType = elementUtils.getElementType(filetype);
+
+          if (elementType == "static") {
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.rect(left, top, width, height);
+            ctx.fill();
+          } else if (elementType == "dynamic") {
+            const startTime = this.millisecondsToPx(
+              this.timeline[elementId].trim.startTime
+            );
+            const endTime = this.millisecondsToPx(
+              this.timeline[elementId].trim.endTime
+            );
+            const duration = this.millisecondsToPx(
+              this.timeline[elementId].duration
+            );
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.rect(left, top, width, height);
+            ctx.fill();
+
+            ctx.fillStyle = "#7c7c82";
+            ctx.beginPath();
+            ctx.rect(left, top, startTime, height);
+            ctx.fill();
+
+            ctx.fillStyle = "#7c7c82";
+            ctx.beginPath();
+            ctx.rect(left + endTime, top, duration - endTime, height);
+            ctx.fill();
+          }
 
           index += 1;
         }
@@ -137,17 +174,46 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   updateTargetStartStretch({ targetId, dx }: { targetId: string; dx: number }) {
-    this.timeline[targetId].startTime =
-      this.targetStartTime + this.pxToMilliseconds(dx);
-    this.timeline[targetId].duration =
-      this.targetDuration - this.pxToMilliseconds(dx);
+    let elementType = elementUtils.getElementType(
+      this.timeline[targetId].filetype
+    );
+
+    if (elementType == "static") {
+      this.timeline[targetId].startTime =
+        this.targetStartTime + this.pxToMilliseconds(dx);
+      this.timeline[targetId].duration =
+        this.targetDuration - this.pxToMilliseconds(dx);
+    }
+
+    if (elementType == "dynamic") {
+      if (this.targetTrim.startTime + this.pxToMilliseconds(dx) > 0) {
+        this.timeline[targetId].trim.startTime =
+          this.targetTrim.startTime + this.pxToMilliseconds(dx);
+      }
+    }
 
     this.timelineState.patchTimeline(this.timeline);
   }
 
   updateTargetEndStretch({ targetId, dx }: { targetId: string; dx: number }) {
-    this.timeline[targetId].duration =
-      this.targetDuration + this.pxToMilliseconds(dx);
+    let elementType = elementUtils.getElementType(
+      this.timeline[targetId].filetype
+    );
+
+    if (elementType == "static") {
+      this.timeline[targetId].duration =
+        this.targetDuration + this.pxToMilliseconds(dx);
+    }
+
+    if (elementType == "dynamic") {
+      if (
+        this.targetTrim.endTime + this.pxToMilliseconds(dx) <
+        this.targetDuration
+      ) {
+        this.timeline[targetId].trim.endTime =
+          this.targetTrim.endTime + this.pxToMilliseconds(dx);
+      }
+    }
 
     this.timelineState.patchTimeline(this.timeline);
   }
@@ -175,8 +241,6 @@ export class elementTimelineCanvas extends LitElement {
         const endY = startY + defaultHeight;
         const stretchArea = 10;
 
-        console.log(elementId, startY);
-
         if (
           x > startX - stretchArea &&
           x < endX + stretchArea &&
@@ -184,12 +248,38 @@ export class elementTimelineCanvas extends LitElement {
           y < endY
         ) {
           targetId = elementId;
-          if (x > startX - stretchArea && x < startX + stretchArea) {
-            return { targetId: targetId, cursorType: "stretchStart" };
-          } else if (x > endX - stretchArea && x < endX + stretchArea) {
-            return { targetId: targetId, cursorType: "stretchEnd" };
-          } else {
-            return { targetId: targetId, cursorType: "move" };
+          let elementType = elementUtils.getElementType(
+            this.timeline[elementId].filetype
+          );
+
+          if (elementType == "static") {
+            if (x > startX - stretchArea && x < startX + stretchArea) {
+              return { targetId: targetId, cursorType: "stretchStart" };
+            } else if (x > endX - stretchArea && x < endX + stretchArea) {
+              return { targetId: targetId, cursorType: "stretchEnd" };
+            } else {
+              return { targetId: targetId, cursorType: "move" };
+            }
+          } else if (elementType == "dynamic") {
+            const trimStartTime = this.millisecondsToPx(
+              this.timeline[elementId].trim.startTime
+            );
+            const trimEndTime = this.millisecondsToPx(
+              this.timeline[elementId].trim.endTime
+            );
+            if (
+              x > startX + trimStartTime - stretchArea &&
+              x < startX + trimStartTime + stretchArea
+            ) {
+              return { targetId: targetId, cursorType: "stretchStart" };
+            } else if (
+              x > trimEndTime + startX - stretchArea &&
+              x < trimEndTime + startX + stretchArea
+            ) {
+              return { targetId: targetId, cursorType: "stretchEnd" };
+            } else {
+              return { targetId: targetId, cursorType: "move" };
+            }
           }
         }
 
@@ -251,6 +341,15 @@ export class elementTimelineCanvas extends LitElement {
 
     this.targetStartTime = this.timeline[this.targetId].startTime;
     this.targetDuration = this.timeline[this.targetId].duration;
+
+    let elementType = elementUtils.getElementType(
+      this.timeline[this.targetId].filetype
+    );
+
+    if (elementType == "dynamic") {
+      this.targetTrim.startTime = this.timeline[this.targetId].trim.startTime;
+      this.targetTrim.endTime = this.timeline[this.targetId].trim.endTime;
+    }
 
     this.isDrag = true;
   }

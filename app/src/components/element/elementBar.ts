@@ -1,4 +1,4 @@
-import { elementUtils } from "../../utils/element.js";
+import { elementUtils } from "../../utils/element";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";

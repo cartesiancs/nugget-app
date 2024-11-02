@@ -22,7 +22,7 @@ export class ElementTimelineRuler extends LitElement {
     this.mouseTimeout = undefined;
     this.rulerType = "sec";
     this.timeMagnification = 1;
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
+    this.addEventListener("mousedown", this.handleMousedown);
     document.addEventListener("mouseup", this.handleMouseup.bind(this));
   }
 
@@ -198,8 +198,17 @@ export class ElementTimelineRuler extends LitElement {
     elementControl.showTime();
     elementControl.appearAllElementInTime();
 
-    this.timelineState.setCursor(e.pageX + this.timelineScroll);
-    cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
+    const timelineRange = Number(
+      document.querySelector("element-timeline-range").value
+    );
+    const timelineCursor = Number(
+      document
+        .querySelector("element-timeline-cursor")
+        .style.left.split("px")[0]
+    );
+    const timeMagnification = timelineRange / 4;
+
+    cursorDom.style.left = `${e.pageX}px`;
   }
 
   handleMousemove(e) {
@@ -211,6 +220,7 @@ export class ElementTimelineRuler extends LitElement {
     cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
 
     elementControl.showTime();
+    this.moveTime(e);
 
     clearTimeout(this.mouseTimeout);
 
@@ -222,7 +232,6 @@ export class ElementTimelineRuler extends LitElement {
 
   handleMousedown(e) {
     e.stopPropagation();
-    this.moveTime(e);
     this.mousemoveEventHandler = this.handleMousemove.bind(this);
     document.addEventListener("mousemove", this.mousemoveEventHandler);
   }

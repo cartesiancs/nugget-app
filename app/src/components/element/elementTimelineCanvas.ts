@@ -89,6 +89,25 @@ export class elementTimelineCanvas extends LitElement {
     return Number(convertMs.toFixed(0));
   }
 
+  drawEndTimeline() {
+    const projectDuration = document.querySelector("#projectDuration").value;
+    const timelineRange = Number(
+      document.querySelector("element-timeline-range").value
+    );
+    const timeMagnification = timelineRange / 4;
+
+    const ctx = this.canvas.getContext("2d");
+    const height = document.querySelector("element-timeline").offsetHeight;
+
+    const end =
+      ((projectDuration * 1000) / 5) * timeMagnification - this.timelineScroll;
+
+    ctx.fillStyle = "#ff173e";
+    ctx.beginPath();
+    ctx.rect(end, 0, 2, height);
+    ctx.fill();
+  }
+
   drawCanvas() {
     const timelineElements = [];
     let index = 1;
@@ -155,6 +174,8 @@ export class elementTimelineCanvas extends LitElement {
           index += 1;
         }
       }
+
+      this.drawEndTimeline();
     }
   }
 

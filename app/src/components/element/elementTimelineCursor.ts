@@ -18,7 +18,7 @@ export class ElementTimelineCursor extends LitElement {
       );
     });
 
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
+    this.addEventListener("mousedown", this.handleMousedown);
     document.addEventListener("mouseup", this.handleMouseup.bind(this));
   }
 

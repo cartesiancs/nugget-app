@@ -1,9 +1,32 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("timeline-ui")
 export class Timeline extends LitElement {
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  @property()
+  timelineRange = this.timelineState.range;
+
+  @property()
+  timelineScroll = this.timelineState.scroll;
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
   createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+      this.timelineRange = state.range;
+      this.timelineScroll = state.scroll;
+      this.timelineCursor = state.cursor;
+    });
+
     return this;
   }
 
@@ -34,7 +57,9 @@ export class Timeline extends LitElement {
                 replay_circle_filled
               </span>
             </button>
-            <b id="time" class="text-light ms-2">00:00:00.00</b>
+            <b class="text-light ms-2"
+              >${new Date(this.timelineCursor).toISOString().slice(11, 22)}</b
+            >
           </div>
         </div>
         <div class="col-5">

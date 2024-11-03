@@ -15,8 +15,8 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 아이템 삭제
 아이템 복제
 아이템 클릭시 선택됨
-타임라인 커서
-타임라인 종료 표시
+타임라인 커서 (완료)
+타임라인 종료 표시 (완료)
 
 */
 @customElement("element-timeline-canvas")
@@ -29,6 +29,7 @@ export class elementTimelineCanvas extends LitElement {
   targetDuration: number;
   targetMediaType: "static" | "dynamic";
   cursorType: "none" | "move" | "stretchStart" | "stretchEnd";
+  cursorNow: number;
   targetTrim: { startTime: number; endTime: number };
 
   constructor() {
@@ -45,6 +46,7 @@ export class elementTimelineCanvas extends LitElement {
     this.isDrag = false;
     this.firstClickPosition = { x: 0, y: 0 };
     this.cursorType = "none";
+    this.cursorNow = 0;
 
     window.addEventListener("resize", this.drawCanvas);
   }
@@ -63,11 +65,15 @@ export class elementTimelineCanvas extends LitElement {
   @property()
   timelineScroll = this.timelineState.scroll;
 
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
       this.timelineRange = state.range;
       this.timelineScroll = state.scroll;
+      this.timelineCursor = state.cursor;
 
       this.drawCanvas();
     });
@@ -87,6 +93,20 @@ export class elementTimelineCanvas extends LitElement {
     const timeMagnification = timelineRange / 4;
     const convertMs = (px * 5) / timeMagnification;
     return Number(convertMs.toFixed(0));
+  }
+
+  drawCursor() {
+    const ctx = this.canvas.getContext("2d");
+    const height = document.querySelector("element-timeline").offsetHeight;
+
+    const now =
+      (this.timelineCursor / 5) * (this.timelineRange / 4) -
+      this.timelineScroll;
+
+    ctx.fillStyle = "#dbdaf0";
+    ctx.beginPath();
+    ctx.rect(now, 0, 2, height);
+    ctx.fill();
   }
 
   drawEndTimeline() {
@@ -176,6 +196,7 @@ export class elementTimelineCanvas extends LitElement {
       }
 
       this.drawEndTimeline();
+      this.drawCursor();
     }
   }
 

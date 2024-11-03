@@ -30,6 +30,9 @@ export class ElementTimelineRuler extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
+  timelineRange = this.timelineState.range;
+
+  @property()
   timelineScroll = this.timelineState.scroll;
 
   @property()
@@ -39,6 +42,7 @@ export class ElementTimelineRuler extends LitElement {
     useTimelineStore.subscribe((state) => {
       this.timelineScroll = state.scroll;
       this.timelineCursor = state.cursor;
+      this.timelineRange = state.range;
 
       this.drawRuler();
     });
@@ -195,7 +199,6 @@ export class ElementTimelineRuler extends LitElement {
     elementControl.progressTime = elementControl.getTimeFromProgress();
 
     elementControl.stop();
-    elementControl.showTime();
     elementControl.appearAllElementInTime();
 
     const timelineRange = Number(
@@ -211,15 +214,23 @@ export class ElementTimelineRuler extends LitElement {
     cursorDom.style.left = `${e.pageX}px`;
   }
 
+  pxToMilliseconds(px) {
+    const timelineRange = this.timelineRange;
+    const timeMagnification = timelineRange / 4;
+    const convertMs = (px * 5) / timeMagnification;
+    return Number(convertMs.toFixed(0));
+  }
+
   handleMousemove(e) {
     const elementTimeline = document.querySelector("element-timeline");
     const elementControl = document.querySelector("element-control");
     const cursorDom = document.querySelector("element-timeline-cursor");
 
-    this.timelineState.setCursor(e.pageX + this.timelineScroll);
+    this.timelineState.setCursor(
+      this.pxToMilliseconds(e.pageX + this.timelineScroll)
+    );
     cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
 
-    elementControl.showTime();
     this.moveTime(e);
 
     clearTimeout(this.mouseTimeout);

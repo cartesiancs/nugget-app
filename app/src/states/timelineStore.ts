@@ -110,6 +110,7 @@ export interface ITimelineStore {
   setRange: (range: number) => void;
   setScroll: (scroll: number) => void;
   setCursor: (cursor: number) => void;
+  increaseCursor: (dt: number) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
@@ -132,4 +133,6 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   setRange: (range: number) => set((state) => ({ range: range })),
   setScroll: (scroll: number) => set((state) => ({ scroll: scroll })),
   setCursor: (cursor: number) => set((state) => ({ cursor: cursor })),
+  increaseCursor: (dt: number) =>
+    set((state) => ({ cursor: state.cursor + dt })),
 }));

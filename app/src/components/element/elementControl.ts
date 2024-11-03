@@ -28,13 +28,13 @@ export class ElementControl extends LitElement {
   @property()
   timeline = this.timelineState.timeline;
 
-  // @property()
-  // cursor = this.timelineState.cursor;
+  @property()
+  cursor = this.timelineState.cursor;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
-      // this.timelineCursor = state.cursor;
+      this.cursor = state.cursor;
     });
 
     return this;
@@ -737,14 +737,6 @@ export class ElementControl extends LitElement {
     return uuid;
   }
 
-  showTime() {
-    const showTime = document.querySelector("#time");
-    const milliseconds = this.getTimeFromTimelineBar();
-    const ISOTime = this.getMillisecondsToISOTime(milliseconds);
-
-    showTime.innerHTML = ISOTime;
-  }
-
   hideElement(elementId) {
     if (this.timeline[elementId].filetype == "video") {
       this.pauseVideo(elementId);
@@ -808,7 +800,7 @@ export class ElementControl extends LitElement {
       this.progressTime = this.getTimeFromProgress();
 
       this.timelineCursor.move(nowTimelineProgress);
-      this.showTime();
+      this.timelineState.increaseCursor(20);
 
       if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
         this.stop();
@@ -833,7 +825,6 @@ export class ElementControl extends LitElement {
     toggle.setAttribute("onclick", `elementControlComponent.play()`);
     toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`;
 
-    this.showTime();
     this.pauseAllDynamicElements();
   }
 
@@ -885,9 +876,9 @@ export class ElementControl extends LitElement {
     this.progressTime = 0;
     this.stop();
 
-    this.showTime();
     this.appearAllElementInTime();
     this.timelineCursor.move(0);
+    this.timelineState.setCursor(0);
   }
 
   handleClickPreview() {

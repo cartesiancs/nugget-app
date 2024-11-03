@@ -41,6 +41,7 @@ export class ElementTimelineCursor extends LitElement {
   }
 
   render() {
+    this.style.display = "none";
     this.classList.add("timeline-bar");
     this.setAttribute("id", "timeline_bar");
     const left = parseInt(this.style.left.split("px")[0]);

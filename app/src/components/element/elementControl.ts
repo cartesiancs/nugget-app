@@ -797,7 +797,7 @@ export class ElementControl extends LitElement {
         Number(this.timelineCursor.style.left.split("px")[0]) +
         nowTimelineRange;
       this.progress = nowTimelineProgress;
-      this.progressTime = this.getTimeFromProgress();
+      this.progressTime += 20;
 
       this.timelineCursor.move(nowTimelineProgress);
       this.timelineState.increaseCursor(20);

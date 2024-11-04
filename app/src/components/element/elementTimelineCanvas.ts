@@ -10,7 +10,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 이미지(static) 타임라인 조정 (완료)
 영상(dynamic) 타임라인 조정 (완료)
 타임라인 호버시 마우스커서 변환 (완료)
-타임라인 y축 스크롤
+타임라인 y축 스크롤 (완료)
 마그넷
 애니메이션 패널 (하단 키프레임 표시)
 아이템 삭제
@@ -32,6 +32,8 @@ export class elementTimelineCanvas extends LitElement {
   cursorType: "none" | "move" | "stretchStart" | "stretchEnd";
   cursorNow: number;
   targetTrim: { startTime: number; endTime: number };
+  timelineColor: {};
+  canvasVerticalScroll: number;
 
   constructor() {
     super();
@@ -48,6 +50,8 @@ export class elementTimelineCanvas extends LitElement {
     this.firstClickPosition = { x: 0, y: 0 };
     this.cursorType = "none";
     this.cursorNow = 0;
+    this.timelineColor = {};
+    this.canvasVerticalScroll = 0;
 
     window.addEventListener("resize", this.drawCanvas);
   }
@@ -76,10 +80,40 @@ export class elementTimelineCanvas extends LitElement {
       this.timelineScroll = state.scroll;
       this.timelineCursor = state.cursor;
 
+      this.setTimelineColor();
       this.drawCanvas();
     });
 
     return this;
+  }
+
+  setTimelineColor() {
+    for (const key in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
+        const element = this.timeline[key];
+        if (!this.timelineColor.hasOwnProperty(key)) {
+          this.timelineColor[key] = this.getRandomColor();
+        }
+      }
+    }
+  }
+
+  getRandomArbitrary(min, max) {
+    return Math.round(Math.random() * (max - min) + min);
+  }
+
+  getRandomColor() {
+    let rgbMinColor = { r: 45, g: 23, b: 56 };
+    let rgbMaxColor = { r: 167, g: 139, b: 180 };
+
+    let rgb = {
+      r: this.getRandomArbitrary(rgbMinColor.r, rgbMaxColor.r),
+      g: this.getRandomArbitrary(rgbMinColor.g, rgbMaxColor.g),
+      b: this.getRandomArbitrary(rgbMinColor.b, rgbMaxColor.b),
+    };
+
+    let rgbColor = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
+    return rgbColor;
   }
 
   millisecondsToPx(ms) {
@@ -100,9 +134,7 @@ export class elementTimelineCanvas extends LitElement {
     const ctx = this.canvas.getContext("2d");
     const height = document.querySelector("element-timeline").offsetHeight;
 
-    const now =
-      (this.timelineCursor / 5) * (this.timelineRange / 4) -
-      this.timelineScroll;
+    const now = this.millisecondsToPx(this.timelineCursor);
 
     ctx.fillStyle = "#dbdaf0";
     ctx.beginPath();
@@ -151,7 +183,7 @@ export class elementTimelineCanvas extends LitElement {
             this.timeline[elementId].duration
           );
           const height = 30;
-          const top = index * height * 1.2;
+          const top = index * height * 1.2 - this.canvasVerticalScroll;
           const left =
             this.millisecondsToPx(this.timeline[elementId].startTime) -
             this.timelineScroll;
@@ -160,16 +192,23 @@ export class elementTimelineCanvas extends LitElement {
 
           let elementType = elementUtils.getElementType(filetype);
 
+          ctx.lineWidth = 0;
+
           if (elementType == "static") {
             if (this.targetId == elementId) {
-              ctx.fillStyle = "#1f50f0";
+              ctx.fillStyle = this.timelineColor[elementId];
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 3;
             } else {
-              ctx.fillStyle = "#ffffff";
+              ctx.fillStyle = this.timelineColor[elementId];
+              ctx.strokeStyle = this.timelineColor[elementId];
+              ctx.lineWidth = 0;
             }
 
             ctx.beginPath();
             ctx.rect(left, top, width, height);
             ctx.fill();
+            ctx.stroke();
           } else if (elementType == "dynamic") {
             const startTime = this.millisecondsToPx(
               this.timeline[elementId].trim.startTime
@@ -182,15 +221,22 @@ export class elementTimelineCanvas extends LitElement {
             );
 
             if (this.targetId == elementId) {
-              ctx.fillStyle = "#1f50f0";
+              ctx.fillStyle = this.timelineColor[elementId];
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 3;
             } else {
-              ctx.fillStyle = "#ffffff";
+              ctx.fillStyle = this.timelineColor[elementId];
+              ctx.strokeStyle = this.timelineColor[elementId];
+
+              ctx.lineWidth = 0;
             }
 
             ctx.beginPath();
             ctx.rect(left, top, width, height);
             ctx.fill();
+            ctx.stroke();
 
+            ctx.lineWidth = 0;
             ctx.fillStyle = "#7c7c82";
             ctx.beginPath();
             ctx.rect(left, top, startTime, height);
@@ -202,14 +248,13 @@ export class elementTimelineCanvas extends LitElement {
             ctx.fill();
           }
 
+          let splitedFilepath = this.timeline[elementId].localpath.split("/");
+          let text = splitedFilepath[splitedFilepath.length - 1];
           const fontSize = 14;
-          ctx.fillStyle = "#000000";
+          ctx.fillStyle = "#ffffff";
+          ctx.lineWidth = 0;
           ctx.font = `${fontSize}px "Noto Sans"`;
-          ctx.fillText(
-            this.timeline[elementId].localpath,
-            left + 4,
-            top + fontSize + 4
-          );
+          ctx.fillText(text, left + 4, top + fontSize + 4, width);
 
           index += 1;
         }
@@ -294,7 +339,7 @@ export class elementTimelineCanvas extends LitElement {
           this.timeline[elementId].duration
         );
         const defaultHeight = 30;
-        const startY = index * defaultHeight * 1.2;
+        const startY = index * defaultHeight * 1.2 - this.canvasVerticalScroll;
         const startX =
           this.millisecondsToPx(this.timeline[elementId].startTime) -
           this.timelineScroll;
@@ -355,6 +400,11 @@ export class elementTimelineCanvas extends LitElement {
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
     this.repositionCursor();
+
+    if (this.canvasVerticalScroll + e.deltaY > 0) {
+      this.canvasVerticalScroll += e.deltaY;
+      this.drawCanvas();
+    }
 
     if (newScroll >= 0) {
       this.timelineState.setScroll(newScroll);

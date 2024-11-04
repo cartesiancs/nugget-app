@@ -10,11 +10,12 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 이미지(static) 타임라인 조정 (완료)
 영상(dynamic) 타임라인 조정 (완료)
 타임라인 호버시 마우스커서 변환 (완료)
+타임라인 y축 스크롤
 마그넷
 애니메이션 패널 (하단 키프레임 표시)
 아이템 삭제
 아이템 복제
-아이템 클릭시 선택됨
+아이템 클릭시 선택됨 (완료)
 타임라인 커서 (완료)
 타임라인 종료 표시 (완료)
 
@@ -160,7 +161,12 @@ export class elementTimelineCanvas extends LitElement {
           let elementType = elementUtils.getElementType(filetype);
 
           if (elementType == "static") {
-            ctx.fillStyle = "#ffffff";
+            if (this.targetId == elementId) {
+              ctx.fillStyle = "#1f50f0";
+            } else {
+              ctx.fillStyle = "#ffffff";
+            }
+
             ctx.beginPath();
             ctx.rect(left, top, width, height);
             ctx.fill();
@@ -175,7 +181,12 @@ export class elementTimelineCanvas extends LitElement {
               this.timeline[elementId].duration
             );
 
-            ctx.fillStyle = "#ffffff";
+            if (this.targetId == elementId) {
+              ctx.fillStyle = "#1f50f0";
+            } else {
+              ctx.fillStyle = "#ffffff";
+            }
+
             ctx.beginPath();
             ctx.rect(left, top, width, height);
             ctx.fill();
@@ -190,6 +201,15 @@ export class elementTimelineCanvas extends LitElement {
             ctx.rect(left + endTime, top, duration - endTime, height);
             ctx.fill();
           }
+
+          const fontSize = 14;
+          ctx.fillStyle = "#000000";
+          ctx.font = `${fontSize}px "Noto Sans"`;
+          ctx.fillText(
+            this.timeline[elementId].localpath,
+            left + 4,
+            top + fontSize + 4
+          );
 
           index += 1;
         }
@@ -376,7 +396,6 @@ export class elementTimelineCanvas extends LitElement {
     const target = this.findTarget({ x: x, y: y });
     this.targetId = target.targetId;
     this.cursorType = target.cursorType;
-    console.log(this.targetId, this.cursorType);
 
     this.firstClickPosition.x = e.offsetX;
     this.firstClickPosition.y = e.offsetY;
@@ -392,6 +411,8 @@ export class elementTimelineCanvas extends LitElement {
       this.targetTrim.startTime = this.timeline[this.targetId].trim.startTime;
       this.targetTrim.endTime = this.timeline[this.targetId].trim.endTime;
     }
+
+    this.drawCanvas();
 
     this.isDrag = true;
   }

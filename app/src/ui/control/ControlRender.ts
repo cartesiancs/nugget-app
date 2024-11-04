@@ -27,7 +27,6 @@ export class ControlRender extends LitElement {
   createRenderRoot() {
     testStore.subscribe((state) => {
       this.count = state.count;
-      console.log(this.count);
     });
 
     projectStore.subscribe((state) => {
@@ -36,7 +35,6 @@ export class ControlRender extends LitElement {
 
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
-      console.log(this.timeline);
     });
 
     return this;

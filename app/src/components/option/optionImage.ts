@@ -15,7 +15,6 @@ export class OptionImage extends LitElement {
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
-      console.log(this.timeline);
     });
 
     return this;

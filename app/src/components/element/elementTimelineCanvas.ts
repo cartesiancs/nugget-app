@@ -54,6 +54,7 @@ export class elementTimelineCanvas extends LitElement {
     this.canvasVerticalScroll = 0;
 
     window.addEventListener("resize", this.drawCanvas);
+    // window.addEventListener("keydown", this._handleKeydown.bind(this));
   }
 
   @query("#elementTimelineCanvasRef") canvas!: HTMLCanvasElement;
@@ -130,11 +131,30 @@ export class elementTimelineCanvas extends LitElement {
     return Number(convertMs.toFixed(0));
   }
 
+  wrapText(ctx, text, x, y, maxWidth) {
+    let ellipsis = "...";
+    let truncatedText = text;
+
+    if (ctx.measureText(text).width > maxWidth) {
+      while (ctx.measureText(truncatedText + ellipsis).width > maxWidth) {
+        truncatedText = truncatedText.slice(0, -1);
+      }
+      truncatedText += ellipsis;
+    }
+
+    const fontSize = 14;
+    ctx.fillStyle = "#ffffff";
+    ctx.lineWidth = 0;
+    ctx.font = `${fontSize}px "Noto Sans"`;
+    ctx.fillText(truncatedText, x, y);
+  }
+
   drawCursor() {
     const ctx = this.canvas.getContext("2d");
     const height = document.querySelector("element-timeline").offsetHeight;
 
-    const now = this.millisecondsToPx(this.timelineCursor);
+    const now =
+      this.millisecondsToPx(this.timelineCursor) - this.timelineScroll;
 
     ctx.fillStyle = "#dbdaf0";
     ctx.beginPath();
@@ -250,11 +270,12 @@ export class elementTimelineCanvas extends LitElement {
 
           let splitedFilepath = this.timeline[elementId].localpath.split("/");
           let text = splitedFilepath[splitedFilepath.length - 1];
+
           const fontSize = 14;
           ctx.fillStyle = "#ffffff";
           ctx.lineWidth = 0;
           ctx.font = `${fontSize}px "Noto Sans"`;
-          ctx.fillText(text, left + 4, top + fontSize + 4, width);
+          this.wrapText(ctx, text, left + 4, top + fontSize + 4, width);
 
           index += 1;
         }
@@ -469,6 +490,65 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleMouseUp(e) {
     this.isDrag = false;
+  }
+
+  _handleKeydown(event) {
+    if (event.keyCode == 8) {
+      // backspace
+      event.preventDefault();
+      this.timelineState.removeTimeline(this.targetId);
+
+      console.log(this.targetId, this.timeline);
+    }
+
+    // if (event.ctrlKey && event.keyCode == 86) {
+    //   //CTL v
+    //   for (const elementId in this.copyedTimelineData) {
+    //     if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
+    //       this.pasteElement({
+    //         elementId: elementId,
+    //         element: this.copyedTimelineData[elementId],
+    //       });
+
+    //       this.patchElementInTimeline({
+    //         elementId: elementId,
+    //         element: this.copyedTimelineData[elementId],
+    //       });
+    //     }
+    //   }
+    // }
+
+    // if (event.ctrlKey && event.keyCode == 67) {
+    //   //CTL c
+    //   this.copySeletedElement();
+    // }
+
+    // if (event.ctrlKey && event.keyCode == 88) {
+    //   //CTL x
+
+    //   this.copySeletedElement();
+    //   this.removeSeletedElements();
+    // }
+
+    // if (event.ctrlKey && event.keyCode == 68) {
+    //   //CTL d
+
+    //   this.splitSeletedElement();
+
+    //   for (const elementId in this.copyedTimelineData) {
+    //     if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
+    //       this.pasteElement({
+    //         elementId: elementId,
+    //         element: this.copyedTimelineData[elementId],
+    //       });
+
+    //       this.patchElementInTimeline({
+    //         elementId: elementId,
+    //         element: this.copyedTimelineData[elementId],
+    //       });
+    //     }
+    //   }
+    // }
   }
 
   renderCanvas() {

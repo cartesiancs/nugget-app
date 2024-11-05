@@ -195,8 +195,7 @@ export class ElementTimelineRuler extends LitElement {
     const elementControl = document.querySelector("element-control");
     const cursorDom = document.querySelector("element-timeline-cursor");
 
-    elementControl.progress = e.pageX + elementTimeline.scrollLeft;
-    elementControl.progressTime = elementControl.getTimeFromProgress();
+    elementControl.progress = e.pageX + this.timelineScroll;
 
     elementControl.stop();
     elementControl.appearAllElementInTime();

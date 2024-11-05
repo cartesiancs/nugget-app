@@ -394,7 +394,6 @@ export class ElementTimeline extends LitElement {
 
     if (event.keyCode == 8) {
       // backspace
-      event.preventDefault();
       this.removeSeletedElements();
     }
 

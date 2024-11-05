@@ -99,13 +99,14 @@ type TimelineArrayType =
   | AudioElementType;
 
 export interface ITimelineStore {
-  timeline: Object;
+  timeline: any;
   range: number;
   scroll: number;
   cursor: number;
 
-  addTimeline: (key: string, timeline: never) => void;
+  addTimeline: (key: string, timeline: any) => void;
   clearTimeline: () => void;
+  removeTimeline: (targetId: string) => void;
   patchTimeline: (timeline: any) => void;
   setRange: (range: number) => void;
   setScroll: (scroll: number) => void;
@@ -119,13 +120,19 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   scroll: 0,
   cursor: 0,
 
-  addTimeline: (key: string, timeline: never) =>
+  addTimeline: (key: string, timeline: any) =>
     set((state) => ({ timeline: { ...state.timeline, [key]: timeline } })),
 
   clearTimeline: () =>
     set((state) => ({
       timeline: {},
     })),
+
+  removeTimeline: (targetId: string) =>
+    set((state) => {
+      delete state.timeline[targetId];
+      return { timeline: { ...state.timeline } };
+    }),
 
   patchTimeline: (timeline: any) =>
     set((state) => ({ timeline: { ...timeline } })),

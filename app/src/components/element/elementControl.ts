@@ -35,6 +35,7 @@ export class ElementControl extends LitElement {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
       this.cursor = state.cursor;
+      this.progressTime = state.cursor;
     });
 
     return this;
@@ -264,6 +265,32 @@ export class ElementControl extends LitElement {
           },
         },
       };
+
+      // this.timelineState.addTimeline(elementId, {
+      //   priority: this.getNowPriority(),
+      //   blob: blob,
+      //   startTime: 0,
+      //   duration: 1000,
+      //   opacity: 100,
+      //   location: { x: 0, y: 0 },
+      //   rotation: 0,
+      //   width: width,
+      //   height: height,
+      //   localpath: path,
+      //   filetype: "image",
+      //   animation: {
+      //     position: {
+      //       isActivate: false,
+      //       points: [[], []],
+      //       allpoints: [[], []],
+      //     },
+      //     opacity: {
+      //       isActivate: false,
+      //       points: [[]],
+      //       allpoints: [[]],
+      //     },
+      //   },
+      // });
 
       this.timelineState.patchTimeline(this.timeline);
       this.showImage(elementId);

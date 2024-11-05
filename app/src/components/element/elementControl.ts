@@ -57,6 +57,10 @@ export class ElementControl extends LitElement {
       this.changeTimelineRange();
     });
 
+    // document
+    //   .querySelector("#preview")
+    //   .addEventListener("click", this.handleClickPreview.bind(this));
+
     this.scroller = undefined;
     this.resizeTimeout = undefined;
     this.resizeInterval = undefined;
@@ -80,6 +84,23 @@ export class ElementControl extends LitElement {
     this.previewRatio = 1920 / 1920;
 
     this.resizeEvent();
+  }
+
+  render() {
+    const template = [];
+    for (const elementId in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+        const element = this.timeline[elementId];
+        template.push(
+          html`<element-control-asset
+            elementId="${elementId}"
+            elementFiletype="${element.filetype}"
+          ></element-control-asset>`
+        );
+      }
+    }
+
+    return html` ${template} `;
   }
 
   async resizeEvent() {
@@ -293,7 +314,7 @@ export class ElementControl extends LitElement {
       // });
 
       this.timelineState.patchTimeline(this.timeline);
-      this.showImage(elementId);
+      // this.showImage(elementId);
     };
   }
 
@@ -353,7 +374,7 @@ export class ElementControl extends LitElement {
         };
 
         this.timelineState.patchTimeline(this.timeline);
-        this.showVideo(elementId);
+        // this.showVideo(elementId);
       });
 
       // ffmpeg.ffprobe(path, (err, metadata) => {
@@ -397,8 +418,10 @@ export class ElementControl extends LitElement {
       },
     };
 
-    this.showText(elementId);
-    this.elementTimeline.addElementBar(elementId);
+    this.timelineState.patchTimeline(this.timeline);
+
+    // this.showText(elementId);
+    // this.elementTimeline.addElementBar(elementId);
   }
 
   addAudio(blob, path) {
@@ -421,8 +444,10 @@ export class ElementControl extends LitElement {
         filetype: "audio",
       };
 
-      this.showAudio(elementId);
-      this.elementTimeline.addElementBar(elementId);
+      this.timelineState.patchTimeline(this.timeline);
+
+      // this.showAudio(elementId);
+      // this.elementTimeline.addElementBar(elementId);
     };
   }
 
@@ -910,12 +935,6 @@ export class ElementControl extends LitElement {
 
   handleClickPreview() {
     this.deactivateAllOutline();
-  }
-
-  connectedCallback() {
-    document
-      .querySelector("#preview")
-      .addEventListener("click", this.handleClickPreview.bind(this));
   }
 }
 

@@ -1,12 +1,10 @@
-import { LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("element-control-asset")
 export class ElementControlAsset extends LitElement {
   elementControl: any;
-  elementId: string;
-  elementFiletype: string;
   isDrag: boolean;
   isResize: boolean;
   isRotate: boolean;
@@ -31,13 +29,19 @@ export class ElementControlAsset extends LitElement {
     return this;
   }
 
+  @property()
+  elementId;
+
+  @property()
+  elementFiletype = "image";
+
   constructor() {
     super();
 
     this.elementControl = document.querySelector("element-control");
 
-    this.elementId = this.getAttribute("element-id");
-    this.elementFiletype = this.getAttribute("element-filetype") || "image";
+    // this.elementId = this.getAttribute("element-id");
+    // this.elementFiletype = this.getAttribute("element-filetype") || "image";
 
     this.isDrag = false;
     this.isResize = false;
@@ -49,22 +53,32 @@ export class ElementControlAsset extends LitElement {
     this.rotateEventHandler;
     this.dragdownEventHandler;
     this.dragupEventHandler;
+
+    this.addEventListener("mousedown", this.handleMousedown.bind(this));
+    this.addEventListener("dblclick", this.handleDoubleClick.bind(this));
+
+    // this.addEventListener('mousedown', this.dragMousedown.bind(this));
+    // this.addEventListener('mousedown', this.activateOutline.bind(this));
+
+    document.addEventListener("mouseup", this.resizeMouseup.bind(this));
+    document.addEventListener("mouseup", this.rotateMouseup.bind(this));
+    document.addEventListener("mouseup", this.dragMouseup.bind(this));
   }
 
   render() {
+    console.log(this.timeline[this.elementId], this.elementId, this.timeline);
+
     let template;
     if (this.elementFiletype == "image") {
       // NOTE: this.templateRotate() 는 사이드 잘림 문제로 추후 업데이트 필요
-      template = this.templateImage() + this.templateResize(); //+ this.templateRotate()
+      template = html`${this.templateImage()} ${this.templateResize()}`; //+ this.templateRotate()
     } else if (this.elementFiletype == "video") {
-      template = this.templateVideo() + this.templateResize();
+      template = html`${this.templateVideo()} ${this.templateResize()}`;
     } else if (this.elementFiletype == "text") {
-      template = this.templateText() + this.templateResize("horizon");
+      template = html`${this.templateText()} ${this.templateResize("horizon")}`;
     } else if (this.elementFiletype == "audio") {
-      template = this.templateAudio();
+      template = html`${this.templateAudio()}`;
     }
-
-    this.innerHTML = template;
 
     let resizeElement = this.convertAbsoluteToRelativeSize({
       x: this.timeline[this.elementId].location.x,
@@ -104,6 +118,8 @@ export class ElementControlAsset extends LitElement {
     }
 
     this.setPriority();
+
+    return html`${template}`;
   }
 
   convertAbsoluteToRelativeSize({ x, y, w, h }: any) {
@@ -136,62 +152,86 @@ export class ElementControlAsset extends LitElement {
   }
 
   templateImage() {
-    return `<img src="${
-      this.timeline[this.elementId].blob
-    }" alt="" class="element-image" draggable="false">`;
+    console.log(
+      this.timeline[this.elementId].blob,
+      this.timeline[this.elementId]
+    );
+    return html`<img
+      src="${this.timeline[this.elementId].blob}"
+      alt=""
+      class="element-image"
+      draggable="false"
+    />`;
   }
 
   templateVideo() {
-    return `<video src="${
-      this.timeline[this.elementId].blob
-    }" alt="" class="element-video" draggable="false"></video>`;
+    return html`<video
+      src="${this.timeline[this.elementId].blob}"
+      alt=""
+      class="element-video"
+      draggable="false"
+    ></video>`;
   }
 
   templateAudio() {
-    return `<audio src="${
+    return html`<audio src="${
       this.timeline[this.elementId].blob
     }" class="d-none" draggable="false"></video>`;
   }
 
   templateText() {
-    return `<input-text element-id="${this.elementId}" init-value="${
-      this.timeline[this.elementId].text
-    }" init-color="${this.timeline[this.elementId].textcolor}"></input-text>`;
+    return html`<input-text
+      element-id="${this.elementId}"
+      init-value="${this.timeline[this.elementId].text}"
+      init-color="${this.timeline[this.elementId].textcolor}"
+    ></input-text>`;
   }
 
   templateResize(type = "full") {
     // full horizon vertical
     let resize = {
-      n: `<div class="resize-n" onmousedown="this.parentNode.resizeMousedown('n')"></div>`,
-      s: `<div class="resize-s" onmousedown="this.parentNode.resizeMousedown('s')"></div>`,
-      w: `<div class="resize-w" onmousedown="this.parentNode.resizeMousedown('w')"></div>`,
-      e: `<div class="resize-e" onmousedown="this.parentNode.resizeMousedown('e')"></div>`,
-      ne: `<div class="resize-ne" onmousedown="this.parentNode.resizeMousedown('ne')"></div>`,
-      nw: `<div class="resize-nw" onmousedown="this.parentNode.resizeMousedown('nw')"></div>`,
-      se: `<div class="resize-se" onmousedown="this.parentNode.resizeMousedown('se')"></div>`,
-      sw: `<div class="resize-sw" onmousedown="this.parentNode.resizeMousedown('sw')"></div>`,
+      n: html`<div
+        class="resize-n"
+        onmousedown="this.parentNode.resizeMousedown('n')"
+      ></div>`,
+      s: html`<div
+        class="resize-s"
+        onmousedown="this.parentNode.resizeMousedown('s')"
+      ></div>`,
+      w: html`<div
+        class="resize-w"
+        onmousedown="this.parentNode.resizeMousedown('w')"
+      ></div>`,
+      e: html`<div
+        class="resize-e"
+        onmousedown="this.parentNode.resizeMousedown('e')"
+      ></div>`,
+      ne: html`<div
+        class="resize-ne"
+        onmousedown="this.parentNode.resizeMousedown('ne')"
+      ></div>`,
+      nw: html`<div
+        class="resize-nw"
+        onmousedown="this.parentNode.resizeMousedown('nw')"
+      ></div>`,
+      se: html`<div
+        class="resize-se"
+        onmousedown="this.parentNode.resizeMousedown('se')"
+      ></div>`,
+      sw: html`<div
+        class="resize-sw"
+        onmousedown="this.parentNode.resizeMousedown('sw')"
+      ></div>`,
     };
     if (type == "full") {
-      return `
-              ${resize.n}
-              ${resize.s}
-              ${resize.w}
-              ${resize.e}
-              ${resize.ne}
-              ${resize.nw}
-              ${resize.se}
-              ${resize.sw}
-              `;
+      return html`
+        ${resize.n} ${resize.s} ${resize.w} ${resize.e} ${resize.ne}
+        ${resize.nw} ${resize.se} ${resize.sw}
+      `;
     } else if (type == "vertical") {
-      return `
-              ${resize.n}
-              ${resize.s}
-              `;
+      return html` ${resize.n} ${resize.s} `;
     } else if (type == "horizon") {
-      return `
-              ${resize.w}
-              ${resize.e}
-              `;
+      return html` ${resize.w} ${resize.e} `;
     }
   }
 
@@ -701,19 +741,5 @@ export class ElementControlAsset extends LitElement {
 
   handleDoubleClick(e) {
     //this.showSideOption()
-  }
-
-  connectedCallback() {
-    this.render();
-
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
-    this.addEventListener("dblclick", this.handleDoubleClick.bind(this));
-
-    // this.addEventListener('mousedown', this.dragMousedown.bind(this));
-    // this.addEventListener('mousedown', this.activateOutline.bind(this));
-
-    document.addEventListener("mouseup", this.resizeMouseup.bind(this));
-    document.addEventListener("mouseup", this.rotateMouseup.bind(this));
-    document.addEventListener("mouseup", this.dragMouseup.bind(this));
   }
 }

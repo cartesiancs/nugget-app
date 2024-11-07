@@ -682,10 +682,6 @@ export class ElementControl extends LitElement {
     cursorDom.style.left = `${(this.progressTime / 5) * timeMagnification}px`;
     this.adjustAllElementBarWidth(timeMagnification);
     this.updateAllAnimationPanel();
-
-    elementTimelineEnd.setEndTimeline({
-      px: ((projectDuration * 1000) / 5) * timeMagnification,
-    });
   }
 
   updateAllAnimationPanel() {

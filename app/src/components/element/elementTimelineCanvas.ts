@@ -13,8 +13,8 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 타임라인 y축 스크롤 (완료)
 마그넷
 애니메이션 패널 (하단 키프레임 표시)
-아이템 삭제
-아이템 복제
+아이템 삭제 (완료)
+아이템 복제 (완료)
 아이템 클릭시 선택됨 (완료)
 타임라인 커서 (완료)
 타임라인 종료 표시 (완료)
@@ -34,6 +34,7 @@ export class elementTimelineCanvas extends LitElement {
   targetTrim: { startTime: number; endTime: number };
   timelineColor: {};
   canvasVerticalScroll: number;
+  copyedTimelineData: {};
 
   constructor() {
     super();
@@ -52,9 +53,10 @@ export class elementTimelineCanvas extends LitElement {
     this.cursorNow = 0;
     this.timelineColor = {};
     this.canvasVerticalScroll = 0;
+    this.copyedTimelineData = {};
 
     window.addEventListener("resize", this.drawCanvas);
-    // window.addEventListener("keydown", this._handleKeydown.bind(this));
+    window.addEventListener("keydown", this._handleKeydown.bind(this));
   }
 
   @query("#elementTimelineCanvasRef") canvas!: HTMLCanvasElement;
@@ -117,21 +119,21 @@ export class elementTimelineCanvas extends LitElement {
     return rgbColor;
   }
 
-  millisecondsToPx(ms) {
+  private millisecondsToPx(ms) {
     const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
     const convertPixel = (ms / 5) * timeMagnification;
     return Number(convertPixel.toFixed(0));
   }
 
-  pxToMilliseconds(px) {
+  private pxToMilliseconds(px) {
     const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
     const convertMs = (px * 5) / timeMagnification;
     return Number(convertMs.toFixed(0));
   }
 
-  wrapText(ctx, text, x, y, maxWidth) {
+  private wrapText(ctx, text, x, y, maxWidth) {
     let ellipsis = "...";
     let truncatedText = text;
 
@@ -147,6 +149,84 @@ export class elementTimelineCanvas extends LitElement {
     ctx.lineWidth = 0;
     ctx.font = `${fontSize}px "Noto Sans"`;
     ctx.fillText(truncatedText, x, y);
+  }
+
+  private deepCopy(obj) {
+    if (obj === null || typeof obj !== "object") {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      const copy = [];
+      obj.forEach((element, index) => {
+        copy[index] = this.deepCopy(element);
+      });
+      return copy;
+    } else {
+      const copy = {};
+      Object.keys(obj).forEach((key) => {
+        copy[key] = this.deepCopy(obj[key]);
+      });
+      return copy;
+    }
+  }
+
+  private copySeletedElement() {
+    if (this.targetId != "") {
+      let selected = {};
+
+      let changedUUID = uuidv4();
+
+      selected[changedUUID] = this.deepCopy(this.timeline[this.targetId]);
+
+      this.copyedTimelineData = selected;
+    }
+  }
+
+  private splitSeletedElement() {
+    if (this.targetId == "") {
+      return false;
+    }
+
+    let selected = {};
+    const timelineRange = this.timelineRange;
+    const timelineCursor = this.timelineCursor;
+    const timeMagnification = timelineRange / 4;
+    const convertMs = (timelineCursor * 5) / timeMagnification;
+    let curserLeft = Number(convertMs.toFixed(0));
+
+    let changedUUID = uuidv4();
+    selected[changedUUID] = this.deepCopy(this.timeline[this.targetId]);
+
+    if (
+      elementUtils.getElementType(this.timeline[this.targetId].filetype) ==
+      "dynamic"
+    ) {
+      let targetElementTrimStartTime =
+        curserLeft -
+        (selected[changedUUID].trim.startTime +
+          selected[changedUUID].startTime);
+      selected[changedUUID].trim.startTime += targetElementTrimStartTime;
+
+      this.timeline[this.targetId].trim.endTime =
+        selected[changedUUID].trim.startTime;
+    } else if (
+      elementUtils.getElementType(this.timeline[this.targetId].filetype) ==
+      "static"
+    ) {
+      let targetElementStartTime = curserLeft - selected[changedUUID].startTime;
+
+      selected[changedUUID].startTime += targetElementStartTime;
+      selected[changedUUID].duration =
+        selected[changedUUID].duration - targetElementStartTime;
+
+      let originElementDuration =
+        this.timeline[this.targetId].duration - selected[changedUUID].duration;
+
+      this.timeline[this.targetId].duration = originElementDuration;
+    }
+
+    this.copyedTimelineData = selected;
   }
 
   drawCursor() {
@@ -497,58 +577,42 @@ export class elementTimelineCanvas extends LitElement {
       // backspace
       event.preventDefault();
       this.timelineState.removeTimeline(this.targetId);
-
-      console.log(this.targetId, this.timeline);
     }
 
-    // if (event.ctrlKey && event.keyCode == 86) {
-    //   //CTL v
-    //   for (const elementId in this.copyedTimelineData) {
-    //     if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
-    //       this.pasteElement({
-    //         elementId: elementId,
-    //         element: this.copyedTimelineData[elementId],
-    //       });
+    if (event.ctrlKey && event.keyCode == 86) {
+      //CTL v
+      for (const elementId in this.copyedTimelineData) {
+        if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
+          this.timeline[elementId] = { ...this.copyedTimelineData[elementId] };
+          this.timelineState.patchTimeline(this.timeline);
+        }
+      }
+    }
 
-    //       this.patchElementInTimeline({
-    //         elementId: elementId,
-    //         element: this.copyedTimelineData[elementId],
-    //       });
-    //     }
-    //   }
-    // }
+    if (event.ctrlKey && event.keyCode == 67) {
+      //CTL c
+      this.copySeletedElement();
+    }
 
-    // if (event.ctrlKey && event.keyCode == 67) {
-    //   //CTL c
-    //   this.copySeletedElement();
-    // }
+    if (event.ctrlKey && event.keyCode == 88) {
+      //CTL x
 
-    // if (event.ctrlKey && event.keyCode == 88) {
-    //   //CTL x
+      this.copySeletedElement();
+      this.timelineState.removeTimeline(this.targetId);
+    }
 
-    //   this.copySeletedElement();
-    //   this.removeSeletedElements();
-    // }
+    if (event.ctrlKey && event.keyCode == 68) {
+      //CTL d
 
-    // if (event.ctrlKey && event.keyCode == 68) {
-    //   //CTL d
+      this.splitSeletedElement();
 
-    //   this.splitSeletedElement();
-
-    //   for (const elementId in this.copyedTimelineData) {
-    //     if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
-    //       this.pasteElement({
-    //         elementId: elementId,
-    //         element: this.copyedTimelineData[elementId],
-    //       });
-
-    //       this.patchElementInTimeline({
-    //         elementId: elementId,
-    //         element: this.copyedTimelineData[elementId],
-    //       });
-    //     }
-    //   }
-    // }
+      for (const elementId in this.copyedTimelineData) {
+        if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
+          this.timeline[elementId] = { ...this.copyedTimelineData[elementId] };
+          this.timelineState.patchTimeline(this.timeline);
+        }
+      }
+    }
   }
 
   renderCanvas() {

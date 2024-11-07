@@ -32,10 +32,10 @@ export class ElementTimelineCursor extends LitElement {
   timelineCursor = this.timelineState.cursor;
 
   createRenderRoot() {
-    useTimelineStore.subscribe((state) => {
-      this.timelineScroll = state.scroll;
-      this.timelineCursor = state.cursor;
-    });
+    // useTimelineStore.subscribe((state) => {
+    //   this.timelineScroll = state.scroll;
+    //   this.timelineCursor = state.cursor;
+    // });
 
     return this;
   }

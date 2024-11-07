@@ -5,7 +5,6 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
-  elementTimeline: any;
   timelineCursor: any;
   scroller: any;
   resizeTimeout: any;
@@ -44,11 +43,9 @@ export class ElementControl extends LitElement {
   constructor() {
     super();
 
-    this.elementTimeline;
     this.timelineCursor;
 
     window.addEventListener("DOMContentLoaded", () => {
-      this.elementTimeline = document.querySelector("element-timeline");
       this.timelineCursor = document.querySelector("element-timeline-cursor");
       this.changeTimelineRange();
     });
@@ -847,7 +844,6 @@ export class ElementControl extends LitElement {
       this.progress = nowTimelineProgress;
       this.progressTime += 20;
 
-      this.timelineCursor.move(nowTimelineProgress);
       this.timelineState.increaseCursor(20);
 
       if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
@@ -925,7 +921,6 @@ export class ElementControl extends LitElement {
     this.stop();
 
     this.appearAllElementInTime();
-    this.timelineCursor.move(0);
     this.timelineState.setCursor(0);
   }
 

@@ -30,7 +30,7 @@ export class ElementBar extends LitElement {
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
-      this.timeline = state.timeline;
+      //this.timeline = state.timeline;
     });
 
     return this;

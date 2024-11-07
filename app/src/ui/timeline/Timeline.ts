@@ -8,22 +8,10 @@ export class Timeline extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline = this.timelineState.timeline;
-
-  @property()
-  timelineRange = this.timelineState.range;
-
-  @property()
-  timelineScroll = this.timelineState.scroll;
-
-  @property()
   timelineCursor = this.timelineState.cursor;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
-      this.timeline = state.timeline;
-      this.timelineRange = state.range;
-      this.timelineScroll = state.scroll;
       this.timelineCursor = state.cursor;
     });
 

@@ -4,22 +4,6 @@ import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
-/* NOTE:
-
-캔버스 타임라인 그리기 (완료)
-이미지(static) 타임라인 조정 (완료)
-영상(dynamic) 타임라인 조정 (완료)
-타임라인 호버시 마우스커서 변환 (완료)
-타임라인 y축 스크롤 (완료)
-마그넷
-애니메이션 패널 (하단 키프레임 표시)
-아이템 삭제 (완료)
-아이템 복제 (완료)
-아이템 클릭시 선택됨 (완료)
-타임라인 커서 (완료)
-타임라인 종료 표시 (완료)
-
-*/
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
   targetId: string;

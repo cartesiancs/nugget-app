@@ -391,60 +391,6 @@ export class ElementTimeline extends LitElement {
       event.preventDefault();
       this.togglePlayer();
     }
-
-    if (event.keyCode == 8) {
-      // backspace
-      this.removeSeletedElements();
-    }
-
-    if (event.ctrlKey && event.keyCode == 86) {
-      //CTL v
-      for (const elementId in this.copyedTimelineData) {
-        if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
-          this.pasteElement({
-            elementId: elementId,
-            element: this.copyedTimelineData[elementId],
-          });
-
-          this.patchElementInTimeline({
-            elementId: elementId,
-            element: this.copyedTimelineData[elementId],
-          });
-        }
-      }
-    }
-
-    if (event.ctrlKey && event.keyCode == 67) {
-      //CTL c
-      this.copySeletedElement();
-    }
-
-    if (event.ctrlKey && event.keyCode == 88) {
-      //CTL x
-
-      this.copySeletedElement();
-      this.removeSeletedElements();
-    }
-
-    if (event.ctrlKey && event.keyCode == 68) {
-      //CTL d
-
-      this.splitSeletedElement();
-
-      for (const elementId in this.copyedTimelineData) {
-        if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
-          this.pasteElement({
-            elementId: elementId,
-            element: this.copyedTimelineData[elementId],
-          });
-
-          this.patchElementInTimeline({
-            elementId: elementId,
-            element: this.copyedTimelineData[elementId],
-          });
-        }
-      }
-    }
   }
 
   handleMousedown() {
@@ -481,22 +427,22 @@ export class ElementTimeline extends LitElement {
 
 @customElement("element-timeline-range")
 export class ElementTimelineRange extends LitElement {
-  value: number;
-
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
   timelineRange = this.timelineState.range;
 
-  constructor() {
-    super();
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timelineRange = state.range;
+    });
 
-    this.value = 0.9;
+    return this;
   }
 
-  createRenderRoot() {
-    return this;
+  constructor() {
+    super();
   }
 
   render() {
@@ -526,30 +472,19 @@ export class ElementTimelineRange extends LitElement {
     if (newValue <= 0) {
       return 0;
     }
-    this.value = parseFloat(
-      ((inputRange.value * inputRange.value) / 10).toFixed(3)
-    );
+    // this.value = parseFloat(
+    //   ((inputRange.value * inputRange.value) / 10).toFixed(3)
+    // );
 
-    this.timelineState.setRange(this.value);
+    // this.timelineState.setRange(this.value);
   }
 
-  updateRange() {
+  updateRange(e) {
     this.updateValue();
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.changeTimelineRange();
 
-    this.updateTimelineScrollToCenter();
-  }
-
-  updateTimelineScrollToCenter() {
-    const elementTimelineComponent = document.querySelector("element-timeline");
-    const elementTimelineCursor = document.querySelector(
-      "element-timeline-cursor"
-    );
-    let cursorLeft = Number(elementTimelineCursor.style.left.split("px")[0]);
-    let timelineWidth = Number(elementTimelineComponent.clientWidth);
-
-    elementTimelineComponent.scrollLeft = cursorLeft - timelineWidth / 2;
+    this.timelineState.setRange(parseFloat(e.target.value));
   }
 }
 

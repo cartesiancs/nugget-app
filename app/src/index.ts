@@ -38,6 +38,7 @@ import { TutorialPopover } from "./components/tutorial/tutorialPopover";
 
 import { Toast } from "./components/toast/toast";
 import { ToastBox } from "./components/toast/toastBox";
+import "./context/timelineContext";
 
 import "./sass/style.scss";
 

@@ -2,6 +2,11 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { v4 as uuidv4 } from "uuid";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import {
+  TimelineContentObject,
+  timelinerContext,
+} from "../../context/timelineContext";
+import { consume } from "@lit/context";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -29,6 +34,10 @@ export class ElementControl extends LitElement {
 
   @property()
   cursor = this.timelineState.cursor;
+
+  @consume({ context: timelinerContext })
+  @property({ attribute: false })
+  public timelineOptions?: TimelineContentObject;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
@@ -661,11 +670,6 @@ export class ElementControl extends LitElement {
   changeTimelineRange() {
     const cursorDom = document.querySelector("element-timeline-cursor");
 
-    const timelineRuler = document.querySelector("element-timeline-ruler");
-    const elementTimelineEnd = document.querySelector("element-timeline-end");
-
-    const projectDuration = document.querySelector("#projectDuration").value;
-
     const timelineRange = Number(
       document.querySelector("element-timeline-range").value
     );
@@ -675,7 +679,6 @@ export class ElementControl extends LitElement {
       return 0;
     }
 
-    timelineRuler.updateRulerSpace(timeMagnification);
     cursorDom.style.left = `${(this.progressTime / 5) * timeMagnification}px`;
     this.adjustAllElementBarWidth(timeMagnification);
     this.updateAllAnimationPanel();

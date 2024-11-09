@@ -21,19 +21,20 @@ export class App extends LitElement {
       <body class="h-100 bg-dark">
         <div id="app"></div>
 
-        <div class="container-fluid" style="height: 97vh;">
-          <control-ui
-            id="split_top"
-            class="row align-items-start"
-            style="height: 80%;"
-          ></control-ui>
-          <timeline-ui
-            id="split_bottom"
-            class="row position-relative split-top align-items-end bg-darker line-top"
-            style="height: 20%;"
-          ></timeline-ui>
-        </div>
-
+        <timeline-context>
+          <div class="container-fluid" style="height: 97vh;">
+            <control-ui
+              id="split_top"
+              class="row align-items-start"
+              style="height: 80%;"
+            ></control-ui>
+            <timeline-ui
+              id="split_bottom"
+              class="row position-relative split-top align-items-end bg-darker line-top"
+              style="height: 20%;"
+            ></timeline-ui>
+          </div>
+        </timeline-context>
         <!-- 
                     OPTION
                 -->

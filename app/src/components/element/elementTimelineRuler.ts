@@ -44,6 +44,10 @@ export class ElementTimelineRuler extends LitElement {
       this.timelineCursor = state.cursor;
       this.timelineRange = state.range;
 
+      console.log(this.timelineRange);
+      const timeMagnification = this.timelineRange / 4;
+      this.timeMagnification = timeMagnification * 1.1111111111;
+
       this.drawRuler();
     });
 
@@ -160,8 +164,9 @@ export class ElementTimelineRuler extends LitElement {
   }
 
   updateRulerSpace(timeMagnification) {
-    this.timeMagnification = timeMagnification * 1.1111111111;
-    this.drawRuler();
+    // const timeMagnification = timelineRange / 4;
+    // this.timeMagnification = timeMagnification * 1.1111111111;
+    // this.drawRuler();
   }
 
   updateRulerLength(e) {
@@ -172,9 +177,7 @@ export class ElementTimelineRuler extends LitElement {
     const elementTimelineEnd = document.querySelector("element-timeline-end");
     const projectDuration = document.querySelector("#projectDuration").value;
 
-    const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
-    );
+    const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
 
     elementTimelineEnd.setEndTimeline({
@@ -199,16 +202,6 @@ export class ElementTimelineRuler extends LitElement {
 
     elementControl.stop();
     elementControl.appearAllElementInTime();
-
-    const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
-    );
-    const timelineCursor = Number(
-      document
-        .querySelector("element-timeline-cursor")
-        .style.left.split("px")[0]
-    );
-    const timeMagnification = timelineRange / 4;
 
     cursorDom.style.left = `${e.pageX}px`;
   }

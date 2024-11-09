@@ -3,6 +3,11 @@ import { elementUtils } from "../../utils/element";
 import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { consume } from "@lit/context";
+import {
+  TimelineContentObject,
+  timelinerContext,
+} from "../../context/timelineContext";
 
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
@@ -59,6 +64,10 @@ export class elementTimelineCanvas extends LitElement {
 
   @property()
   timelineCursor = this.timelineState.cursor;
+
+  @consume({ context: timelinerContext })
+  @property({ attribute: false })
+  public timelineOptions?: TimelineContentObject;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
@@ -228,9 +237,7 @@ export class elementTimelineCanvas extends LitElement {
 
   drawEndTimeline() {
     const projectDuration = document.querySelector("#projectDuration").value;
-    const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
-    );
+    const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
 
     const ctx = this.canvas.getContext("2d");
@@ -528,6 +535,9 @@ export class elementTimelineCanvas extends LitElement {
     const x = e.offsetX;
     const y = e.offsetY;
 
+    this.timelineOptions.range = this.timelineOptions.range + 0.3;
+    console.log(this.timelineOptions.range);
+
     const target = this.findTarget({ x: x, y: y });
     this.targetId = target.targetId;
     this.cursorType = target.cursorType;
@@ -600,14 +610,16 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   renderCanvas() {
-    return html`<canvas
-      id="elementTimelineCanvasRef"
-      style="width: 100%;"
-      @mousewheel=${this._handleMouseWheel}
-      @mousemove=${this._handleMouseMove}
-      @mousedown=${this._handleMouseDown}
-      @mouseup=${this._handleMouseUp}
-    ></canvas>`;
+    return html`
+      <canvas
+        id="elementTimelineCanvasRef"
+        style="width: 100%;"
+        @mousewheel=${this._handleMouseWheel}
+        @mousemove=${this._handleMouseMove}
+        @mousedown=${this._handleMouseDown}
+        @mouseup=${this._handleMouseUp}
+      ></canvas>
+    `;
   }
 
   protected render(): unknown {

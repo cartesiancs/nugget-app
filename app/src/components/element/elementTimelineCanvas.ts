@@ -186,7 +186,7 @@ export class elementTimelineCanvas extends LitElement {
     const timelineCursor = this.timelineCursor;
     const timeMagnification = timelineRange / 4;
     const convertMs = (timelineCursor * 5) / timeMagnification;
-    let curserLeft = Number(convertMs.toFixed(0));
+    let curserLeft = this.timelineCursor;
 
     let changedUUID = uuidv4();
     selected[changedUUID] = this.deepCopy(this.timeline[this.targetId]);
@@ -208,6 +208,13 @@ export class elementTimelineCanvas extends LitElement {
       "static"
     ) {
       let targetElementStartTime = curserLeft - selected[changedUUID].startTime;
+      console.log(
+        curserLeft,
+        selected[changedUUID].startTime,
+        selected[changedUUID].duration,
+        timelineRange,
+        timelineCursor
+      );
 
       selected[changedUUID].startTime += targetElementStartTime;
       selected[changedUUID].duration =
@@ -597,7 +604,6 @@ export class elementTimelineCanvas extends LitElement {
 
     if (event.ctrlKey && event.keyCode == 68) {
       //CTL d
-
       this.splitSeletedElement();
 
       for (const elementId in this.copyedTimelineData) {

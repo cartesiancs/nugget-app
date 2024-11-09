@@ -219,6 +219,7 @@ export const renderFilter = {
       endTime: object.element.startTime / 1000 + object.element.duration / 1000,
       rotationRadian: (object.element.rotation * Math.PI) / 180,
       rotationDegree: object.element.rotation,
+      opacity: object.element.opacity,
     };
 
     if (checkStaticCondition) {
@@ -277,6 +278,14 @@ export const renderFilter = {
     object.filter.push(
       `[image${elementCounts.video}]rotate=${options.rotationRadian}:c=none[image${elementCounts.video}]`
     );
+
+    if (checkStaticCondition) {
+      object.filter.push(
+        `[image${elementCounts.video}]format=argb,geq=r='r(X,Y)':a='${
+          options.opacity / 100
+        }*alpha(X,Y)'[image${elementCounts.video}]`
+      );
+    }
 
     //:ow=rotw(${options.rotationRadian}):oh=roth(${options.rotationRadian})
 

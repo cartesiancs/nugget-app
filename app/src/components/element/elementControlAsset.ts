@@ -159,6 +159,7 @@ export class ElementControlAsset extends LitElement {
     return html`<img
       src="${this.timeline[this.elementId].blob}"
       alt=""
+      style="opacity: ${this.timeline[this.elementId].opacity}%;"
       class="element-image"
       draggable="false"
     />`;

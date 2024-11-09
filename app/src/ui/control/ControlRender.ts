@@ -100,13 +100,6 @@ export class ControlRender extends LitElement {
         ${this.count}
       </button>
 
-      <button
-        class="btn btn-blue-fill"
-        @click=${() => this.handleClickActionButton()}
-      >
-        Ac
-      </button>
-
       <button class="btn btn-blue-fill" onclick="ipc.render()">Export</button>`;
   }
 }

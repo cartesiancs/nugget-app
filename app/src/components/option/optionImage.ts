@@ -109,5 +109,7 @@ export class OptionImage extends LitElement {
     console.log(opacity.value);
 
     this.timeline[this.elementId].opacity = parseInt(opacity.value);
+
+    this.timelineState.patchTimeline(this.timeline);
   }
 }

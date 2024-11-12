@@ -8,7 +8,7 @@ const request = {
   },
   dialog: {
     openDirectory: () => ipcRenderer.invoke("dialog:openDirectory"),
-    openFile: () => ipcRenderer.invoke("dialog:openFile"),
+    openFile: (extension) => ipcRenderer.invoke("dialog:openFile", extension),
     exportVideo: () => ipcRenderer.invoke("dialog:exportVideo"),
   },
   store: {

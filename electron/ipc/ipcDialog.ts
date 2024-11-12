@@ -13,9 +13,15 @@ export const ipcDialog = {
     }
   },
 
-  openFile: async () => {
+  openFile: async (event, allowExtensions: string[] = ["*"]) => {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
       properties: ["openFile"],
+      filters: [
+        {
+          name: "File",
+          extensions: allowExtensions,
+        },
+      ],
     });
     if (canceled) {
       return;

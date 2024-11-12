@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { useTimelineStore } from "../states/timelineStore";
 
 const arrayBufferToBase64 = (buffer) => {
   var binary = "";
@@ -9,6 +10,8 @@ const arrayBufferToBase64 = (buffer) => {
   }
   return window.btoa(binary);
 };
+
+const timelineStore = useTimelineStore.getState();
 
 const project = {
   save: function () {
@@ -40,7 +43,7 @@ const project = {
       return 0;
     }
 
-    window.electronAPI.req.dialog.openFile().then((path) => {
+    window.electronAPI.req.dialog.openFile([".ngt"]).then((path) => {
       console.log("saved!", path);
 
       elementTimeline.resetTimelineData();
@@ -55,7 +58,9 @@ const project = {
             .async("string")
             .then(async (result) => {
               let timeline = JSON.parse(result);
-              await elementTimeline.patchTimeline(timeline);
+
+              timelineStore.patchTimeline(timeline);
+
               project.changeProjectFileValue({ projectDestination: filepath });
             });
         });

@@ -1,32 +1,45 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("input-text")
 export class InputText extends LitElement {
   value: string;
-  elementId: string;
-  initValue: string;
-  initColor: string;
-  timeline: any;
   parentInputBox: any;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  @property()
+  elementId;
+
+  @property()
+  initValue = "";
+
+  @property()
+  initColor = "#ffffff";
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+    });
+
+    return this;
+  }
+
   constructor() {
     super();
 
-    this.value = "";
-    this.elementId = this.getAttribute("element-id");
-    this.initValue = this.getAttribute("init-value") || "";
-    this.initColor = this.getAttribute("init-color") || "#ffffff";
-
-    this.timeline = document.querySelector("element-timeline").timeline;
+    this.value = this.initValue;
     this.parentInputBox = document.querySelector(
       `element-control-asset[element-id="${this.elementId}"]`
     );
   }
 
   render() {
-    let template = this.template();
-    this.innerHTML = template;
-
     this.style.textAlign = "center";
     this.style.display = "flex";
     this.style.justifyContent = "center";
@@ -34,20 +47,15 @@ export class InputText extends LitElement {
     this.style.width = "100%";
     this.style.position = "absolute";
     this.style.letterSpacing = "1px";
-    //this.style.top = '0px'
     this.style.color = this.initColor;
+    // this.setWidthInner();
 
-    this.querySelector("span").style.height = `100%`;
-    this.querySelector("span").style.outline = "none";
-    this.querySelector("span").style.lineHeight = "initial";
-
-    this.querySelector("span").setAttribute("contenteditable", "true");
-
-    this.setWidthInner();
-  }
-
-  template() {
-    return `<span>${this.initValue}</span>`;
+    return html`<span
+      contenteditable="true"
+      style="height: 100%; outline: none; line-height: initial; width: 100%;"
+      @input=${this._handleInput}
+      >${this.initValue}</span
+    >`;
   }
 
   setWidth() {
@@ -59,36 +67,22 @@ export class InputText extends LitElement {
     let resizedInput = this.parentInputBox.convertRelativeToAbsoluteSize({
       w: this.querySelector("span").offsetWidth,
     });
-    console.log(resizedInput);
     this.timeline[this.elementId].widthInner = resizedInput.w;
+    this.timelineState.patchTimeline(this.timeline);
   }
 
-  updateText({ value }) {
+  updateText({ value }: { value: string }) {
     this.value = value;
+    console.log(this.timeline[this.elementId], this.timeline, this.elementId);
     this.timeline[this.elementId].text = value;
-    this.updateTextInElementBar();
   }
 
-  updateTextInElementBar() {
-    const targetElementBar = document.querySelector(
-      `element-bar[element-id='${this.elementId}']`
-    );
-    targetElementBar.querySelector("span[ref='name']").innerHTML = this.value;
-  }
-
-  handleInput(event) {
-    let value = event.currentTarget.textContent;
+  _handleInput(event) {
+    let value = event.target.outerText;
+    console.log(event, value);
 
     this.updateText({ value: value });
     this.setWidth();
     this.setWidthInner();
-  }
-
-  connectedCallback() {
-    this.render();
-    this.querySelector("span").addEventListener(
-      "input",
-      this.handleInput.bind(this)
-    );
   }
 }

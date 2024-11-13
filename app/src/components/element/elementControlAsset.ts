@@ -152,10 +152,6 @@ export class ElementControlAsset extends LitElement {
   }
 
   templateImage() {
-    console.log(
-      this.timeline[this.elementId].blob,
-      this.timeline[this.elementId]
-    );
     return html`<img
       src="${this.timeline[this.elementId].blob}"
       alt=""
@@ -182,9 +178,9 @@ export class ElementControlAsset extends LitElement {
 
   templateText() {
     return html`<input-text
-      element-id="${this.elementId}"
-      init-value="${this.timeline[this.elementId].text}"
-      init-color="${this.timeline[this.elementId].textcolor}"
+      elementId="${this.elementId}"
+      initValue="${this.timeline[this.elementId].text}"
+      initColor="${this.timeline[this.elementId].textcolor}"
     ></input-text>`;
   }
 

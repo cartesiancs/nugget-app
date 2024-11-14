@@ -8,6 +8,7 @@ import {
   TimelineContentObject,
   timelinerContext,
 } from "../../context/timelineContext";
+import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
@@ -65,6 +66,12 @@ export class elementTimelineCanvas extends LitElement {
   @property()
   timelineCursor = this.timelineState.cursor;
 
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  resize = this.uiState.resize;
+
   @consume({ context: timelinerContext })
   @property({ attribute: false })
   public timelineOptions?: TimelineContentObject;
@@ -77,6 +84,11 @@ export class elementTimelineCanvas extends LitElement {
       this.timelineCursor = state.cursor;
 
       this.setTimelineColor();
+      this.drawCanvas();
+    });
+
+    uiStore.subscribe((state) => {
+      this.resize = state.resize;
       this.drawCanvas();
     });
 

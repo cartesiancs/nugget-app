@@ -131,6 +131,42 @@ window.electronAPI.res.timeline.add(async (event, timeline) => {
   }
 });
 
+window.addEventListener("load", (event) => {
+  window.electronAPI.req.app.getAppInfo().then((result) => {
+    document.querySelector(
+      "p[ref='appVersion']"
+    ).innerHTML = `Nugget v${result.data.version}`;
+  });
+});
+
+window.onresize = async function (event) {
+  await elementControlComponent.resizeEvent();
+};
+
+let toastElList = [].slice.call(document.querySelectorAll(".toast"));
+let toastList = toastElList.map(function (toastEl) {
+  return new bootstrap.Toast(toastEl);
+});
+
+HTMLCanvasElement.prototype.render = function () {
+  nugget.canvas.preview.render(this);
+};
+
+HTMLCanvasElement.prototype.clear = function () {
+  nugget.canvas.preview.clear(this);
+};
+
+const elementControlComponent = document.querySelector("element-control");
+let preview = document.getElementById("preview");
+let control = document.getElementById("control-inner");
+let video = document.getElementById("video");
+let exportVideoModal = new bootstrap.Modal(
+  document.getElementById("exportVideoModal"),
+  {
+    keyboard: false,
+  }
+);
+
 // NOTE: ipcRenderer.send('INIT') 명령어로 실행중인 앱의 경로를 확인할 수 있습니다
 // window.electronAPI.res.app.getAppPath((evt, path) => {
 //     console.log(path)

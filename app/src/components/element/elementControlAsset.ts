@@ -107,7 +107,7 @@ export class ElementControlAsset extends LitElement {
 
       this.setAttribute(
         "style",
-        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; height: ${resizeText}px; font-size: ${resizeText}px;`
+        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`
       );
       this.elementControl.changeTextFont({
         elementId: this.elementId,

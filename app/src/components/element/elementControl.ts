@@ -157,6 +157,8 @@ export class ElementControl extends LitElement {
           ? verticalResizeHeight
           : horizontalResizeHeight;
 
+      let preview = document.getElementById("preview");
+      let video = document.getElementById("video");
       preview.setAttribute("width", String(width));
       preview.setAttribute("height", String(height));
       preview.style.width = `${width}px`;
@@ -642,6 +644,7 @@ export class ElementControl extends LitElement {
 
     inputTarget.style.color = color;
     this.timeline[elementId].textcolor = color;
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   changeTextSize({ elementId, size }) {
@@ -656,6 +659,7 @@ export class ElementControl extends LitElement {
 
     this.timeline[elementId].fontsize = Number(size);
     this.timeline[elementId].height = Number(size);
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   changeTextFont({ elementId, fontPath, fontType, fontName }) {

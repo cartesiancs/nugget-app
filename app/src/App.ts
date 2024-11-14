@@ -1,10 +1,25 @@
 import { LitElement, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
+import { IUIStore, uiStore } from "./states/uiStore";
 
 @customElement("app-root")
 export class App extends LitElement {
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  resize = this.uiState.resize;
+
   createRenderRoot() {
+    uiStore.subscribe((state) => {
+      this.resize = state.resize;
+    });
+
     return this;
+  }
+
+  _handleClick() {
+    this.uiState.updateVertical(this.resize.vertical.bottom + 2);
   }
 
   render() {
@@ -26,12 +41,12 @@ export class App extends LitElement {
             <control-ui
               id="split_top"
               class="row align-items-start"
-              style="height: 80%;"
+              style="height: ${this.resize.vertical.top}%;"
             ></control-ui>
             <timeline-ui
               id="split_bottom"
               class="row position-relative split-top align-items-end bg-darker line-top"
-              style="height: 20%;"
+              style="height: ${this.resize.vertical.bottom}%;"
             ></timeline-ui>
           </div>
         </timeline-context>

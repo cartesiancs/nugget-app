@@ -576,7 +576,7 @@ export class elementTimelineCanvas extends LitElement {
   _handleKeydown(event) {
     if (event.keyCode == 8) {
       // backspace
-      event.preventDefault();
+      // event.preventDefault();
       this.timelineState.removeTimeline(this.targetId);
     }
 

@@ -5,11 +5,64 @@ import "./ControlSetting";
 import "./ControlText";
 import "./ControlExtension";
 import "./ControlRender";
+import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("control-ui")
 export class Control extends LitElement {
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  resize = this.uiState.resize;
+
+  @property()
+  isAbleResize: boolean = false;
+
+  @property()
+  targetResize: "panel" | "preview" = "panel";
+
   createRenderRoot() {
+    uiStore.subscribe((state) => {
+      this.resize = state.resize;
+    });
+
+    window.addEventListener("mouseup", this._handleMouseUp.bind(this));
+    window.addEventListener("mousemove", this._handleMouseMove.bind(this));
+
     return this;
+  }
+
+  _handleMouseMove(e) {
+    const elementControlComponent = document.querySelector("element-control");
+
+    if (this.isAbleResize) {
+      const windowWidth = window.innerWidth;
+      const nowX = e.clientX;
+      const resizeX = (nowX / windowWidth) * 100;
+
+      if (this.targetResize == "panel" && resizeX <= 20) {
+        this.uiState.updateHorizontal(20, this.targetResize);
+        elementControlComponent.resizeEvent();
+        return false;
+      }
+
+      this.uiState.updateHorizontal(resizeX, this.targetResize);
+      elementControlComponent.resizeEvent();
+    }
+  }
+
+  _handleMouseUp() {
+    this.isAbleResize = false;
+  }
+
+  _handleClickResizePanel() {
+    this.targetResize = "panel";
+    this.isAbleResize = true;
+  }
+
+  _handleClickResizePreview() {
+    this.targetResize = "preview";
+    this.isAbleResize = true;
   }
 
   render() {
@@ -17,9 +70,12 @@ export class Control extends LitElement {
       <div
         id="split_col_1"
         class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
-        style="width: 30%;"
+        style="width: ${this.resize.horizontal.panel}%;"
       >
-        <div class="split-col-bar" onmousedown="startSplitColumns(1)"></div>
+        <div
+          class="split-col-bar"
+          @mousedown=${this._handleClickResizePanel}
+        ></div>
 
         <div
           class=" h-100 w-100 overflow-y-hidden overflow-x-hidden position-absolute "
@@ -124,9 +180,12 @@ export class Control extends LitElement {
       <div
         id="split_col_2"
         class="h-100 position-relative d-flex align-items-center justify-content-center"
-        style="width: 50%;"
+        style="width: ${this.resize.horizontal.preview}%;"
       >
-        <div class="split-col-bar" onmousedown="startSplitColumns(2)"></div>
+        <div
+          class="split-col-bar"
+          @mousedown=${this._handleClickResizePreview}
+        ></div>
 
         <div id="videobox">
           <div class="d-flex justify-content-center">
@@ -142,8 +201,8 @@ export class Control extends LitElement {
       <!-- OPTION-->
       <div
         id="split_col_3"
-        class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative p-2"
-        style="width: 20%;"
+        class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative option-window p-2"
+        style="width: ${this.resize.horizontal.option}%;"
       >
         <input
           type="hidden"

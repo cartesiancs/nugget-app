@@ -72,17 +72,15 @@ export class InputText extends LitElement {
   }
 
   updateText({ value }: { value: string }) {
-    this.value = value;
     console.log(this.timeline[this.elementId], this.timeline, this.elementId);
     this.timeline[this.elementId].text = value;
   }
 
   _handleInput(event) {
     let value = event.target.outerText;
-    console.log(event, value);
 
     this.updateText({ value: value });
-    this.setWidth();
-    this.setWidthInner();
+    // this.setWidth();
+    // this.setWidthInner();
   }
 }

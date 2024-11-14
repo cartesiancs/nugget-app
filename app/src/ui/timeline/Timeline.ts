@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("timeline-ui")
 export class Timeline extends LitElement {
@@ -10,19 +11,61 @@ export class Timeline extends LitElement {
   @property()
   timelineCursor = this.timelineState.cursor;
 
+  @property()
+  isAbleResize: boolean = false;
+
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  resize = this.uiState.resize;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineCursor = state.cursor;
     });
 
+    uiStore.subscribe((state) => {
+      this.resize = state.resize;
+    });
+
+    window.addEventListener("mouseup", this._handleMouseUp.bind(this));
+    window.addEventListener("mousemove", this._handleMouseMove.bind(this));
+
     return this;
+  }
+
+  _handleMouseMove(e) {
+    const elementControlComponent = document.querySelector("element-control");
+
+    if (this.isAbleResize) {
+      const windowHeight = window.innerHeight;
+      const nowY = e.clientY;
+      const resizeY = 100 - (nowY / windowHeight) * 103; // 103인 이유는 Vertical 전체가 windowHeight의 97%이기 떄문.
+      if (resizeY <= 20) {
+        this.uiState.updateVertical(20);
+        elementControlComponent.resizeEvent();
+        return false;
+      }
+
+      this.uiState.updateVertical(resizeY);
+      elementControlComponent.resizeEvent();
+    }
+  }
+
+  _handleMouseUp() {
+    this.isAbleResize = false;
+  }
+
+  _handleClickResizeBar() {
+    this.isAbleResize = true;
   }
 
   render() {
     return html`
       <div
         class="split-bottom-bar cursor-row-resize "
-        onmousedown="startSplitBottom()"
+        @mousedown=${this._handleClickResizeBar}
       ></div>
 
       <div class="row mb-2">
@@ -48,6 +91,7 @@ export class Timeline extends LitElement {
             <b class="text-light ms-2"
               >${new Date(this.timelineCursor).toISOString().slice(11, 22)}</b
             >
+            ${String(this.isAbleResize)}
           </div>
         </div>
         <div class="col-5">

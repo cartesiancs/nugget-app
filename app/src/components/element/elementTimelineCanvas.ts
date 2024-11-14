@@ -128,7 +128,12 @@ export class elementTimelineCanvas extends LitElement {
     const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
     const convertPixel = (ms / 5) * timeMagnification;
-    return Number(convertPixel.toFixed(0));
+    const result = Number(convertPixel.toFixed(0));
+    if (result <= 0) {
+      return 0;
+    }
+
+    return result;
   }
 
   private pxToMilliseconds(px) {

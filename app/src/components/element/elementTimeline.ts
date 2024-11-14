@@ -451,7 +451,7 @@ export class ElementTimelineRange extends LitElement {
       ref="range"
       type="range"
       class="form-range"
-      min="0"
+      min="0.2"
       max="6"
       step="0.02"
       id="timelineRange"

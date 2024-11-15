@@ -282,15 +282,22 @@ export class elementTimelineCanvas extends LitElement {
 
     const ctx = this.canvas.getContext("2d");
     if (ctx) {
+      const dpr = window.devicePixelRatio;
+      this.canvas.style.width = `${window.innerWidth}px`;
+
+      this.canvas.width = window.innerWidth * dpr;
       this.canvas.height =
-        document.querySelector("element-timeline").offsetHeight;
-      this.canvas.width = window.innerWidth;
-      ctx.clearRect(
-        0,
-        0,
-        window.innerWidth,
-        document.querySelector("element-timeline").offsetHeight
-      );
+        document.querySelector("element-timeline").offsetHeight * dpr;
+
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.scale(dpr, dpr);
+
+      // ctx.clearRect(
+      //   0,
+      //   0,
+      //   window.innerWidth,
+      //   document.querySelector("element-timeline").offsetHeight
+      // );
 
       for (const elementId in this.timeline) {
         if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {

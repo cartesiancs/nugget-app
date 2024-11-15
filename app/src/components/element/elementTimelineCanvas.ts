@@ -390,10 +390,126 @@ export class elementTimelineCanvas extends LitElement {
     cursorDom.style.left = `${progress - this.timelineScroll}px`;
   }
 
+  private guide({
+    element,
+    filetype,
+    elementBarPosition,
+    targetId,
+    targetElementType,
+  }) {
+    let startX =
+      filetype == "static"
+        ? this.millisecondsToPx(element.startTime)
+        : this.millisecondsToPx(element.startTime + element.trim.startTime);
+    let endX =
+      filetype == "static"
+        ? this.millisecondsToPx(element.startTime + element.duration)
+        : this.millisecondsToPx(element.startTime + element.trim.endTime);
+    let checkRange = 10;
+
+    if (
+      elementBarPosition.startX > startX - checkRange &&
+      elementBarPosition.startX < startX + checkRange
+    ) {
+      let px =
+        targetElementType == "static"
+          ? startX
+          : startX -
+            this.millisecondsToPx(this.timeline[targetId].trim.startTime);
+      this.style.left = `${px}px`;
+      this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+    }
+
+    if (
+      elementBarPosition.startX > endX - checkRange &&
+      elementBarPosition.startX < endX + checkRange
+    ) {
+      let px =
+        targetElementType == "static"
+          ? endX
+          : endX -
+            this.millisecondsToPx(this.timeline[targetId].trim.startTime);
+      this.style.left = `${px}px`;
+      this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+    }
+
+    if (
+      elementBarPosition.endX > startX - checkRange &&
+      elementBarPosition.endX < startX + checkRange
+    ) {
+      let px =
+        targetElementType == "static"
+          ? startX - this.millisecondsToPx(this.timeline[targetId].duration)
+          : startX -
+            this.millisecondsToPx(this.timeline[targetId].trim.endTime);
+      this.style.left = `${px}px`;
+      this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+    }
+
+    if (
+      elementBarPosition.endX > endX - checkRange &&
+      elementBarPosition.endX < endX + checkRange
+    ) {
+      let px =
+        targetElementType == "static"
+          ? endX - this.millisecondsToPx(this.timeline[targetId].duration)
+          : endX - this.millisecondsToPx(this.timeline[targetId].trim.endTime);
+      this.style.left = `${px}px`;
+      this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+    }
+  }
+
+  private magnet({ targetId, px }: { targetId: string; px: number }) {
+    let targetElementType = elementUtils.getElementType(
+      this.timeline[targetId].filetype
+    );
+
+    let startX =
+      targetElementType == "static"
+        ? this.millisecondsToPx(this.timeline[targetId].startTime)
+        : this.millisecondsToPx(
+            this.timeline[targetId].startTime +
+              this.timeline[targetId].trim.startTime
+          );
+    let endX =
+      targetElementType == "static"
+        ? this.millisecondsToPx(
+            this.timeline[targetId].startTime + this.timeline[targetId].duration
+          )
+        : this.millisecondsToPx(
+            this.timeline[targetId].startTime +
+              this.timeline[targetId].trim.endTime
+          );
+
+    let elementBarPosition = {
+      startX: startX,
+      endX: endX,
+    };
+
+    for (const timelineKey in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, timelineKey)) {
+        if (timelineKey == targetId) {
+          continue;
+        }
+
+        const element = this.timeline[timelineKey];
+        const elementType = elementUtils.getElementType(element.filetype);
+        this.guide({
+          element: element,
+          filetype: elementType,
+          elementBarPosition: elementBarPosition,
+          targetElementType: targetElementType,
+          targetId: targetId,
+        });
+      }
+    }
+
+    this.timelineState.patchTimeline(this.timeline);
+  }
+
   updateTargetPosition({ targetId, dx }: { targetId: string; dx: number }) {
     this.timeline[targetId].startTime =
       this.targetStartTime + this.pxToMilliseconds(dx);
-    this.timelineState.patchTimeline(this.timeline);
   }
 
   updateTargetStartStretch({ targetId, dx }: { targetId: string; dx: number }) {
@@ -414,8 +530,6 @@ export class elementTimelineCanvas extends LitElement {
           this.targetTrim.startTime + this.pxToMilliseconds(dx);
       }
     }
-
-    this.timelineState.patchTimeline(this.timeline);
   }
 
   updateTargetEndStretch({ targetId, dx }: { targetId: string; dx: number }) {
@@ -437,8 +551,6 @@ export class elementTimelineCanvas extends LitElement {
           this.targetTrim.endTime + this.pxToMilliseconds(dx);
       }
     }
-
-    this.timelineState.patchTimeline(this.timeline);
   }
 
   findTarget({ x, y }: { x: number; y: number }): {
@@ -552,15 +664,14 @@ export class elementTimelineCanvas extends LitElement {
       } else if (this.cursorType == "stretchEnd") {
         this.updateTargetEndStretch({ targetId: this.targetId, dx: dx });
       }
+
+      this.magnet({ targetId: this.targetId, px: dx });
     }
   }
 
   _handleMouseDown(e) {
     const x = e.offsetX;
     const y = e.offsetY;
-
-    this.timelineOptions.range = this.timelineOptions.range + 0.3;
-    console.log(this.timelineOptions.range);
 
     const target = this.findTarget({ x: x, y: y });
     this.targetId = target.targetId;

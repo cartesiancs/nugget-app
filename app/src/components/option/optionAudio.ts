@@ -7,22 +7,13 @@ export class OptionAudio extends LitElement {
   constructor() {
     super();
 
+    this.hide();
     this.elementId = "";
   }
 
   render() {
-    let template = this.template();
-    this.innerHTML = template;
-    this.hide();
-  }
-
-  template() {
-    return `
-        <label class="form-label text-light">오디오</label>
-        <div class="d-flex flex-row bd-highlight mb-2">
-
-
-        </div>`;
+    return html` <label class="form-label text-light">오디오</label>
+      <div class="d-flex flex-row bd-highlight mb-2"></div>`;
   }
 
   hide() {
@@ -41,9 +32,5 @@ export class OptionAudio extends LitElement {
   updateValue() {
     const elementTimeline: any = document.querySelector("element-timeline");
     const timeline = elementTimeline.timeline;
-  }
-
-  connectedCallback() {
-    this.render();
   }
 }

@@ -68,21 +68,22 @@ export class OptionImage extends LitElement {
     this.classList.remove("d-none");
   }
 
-  setElementId({ elementId }) {
+  public setElementId({ elementId }) {
     this.elementId = elementId;
     this.updateValue();
   }
 
   updateValue() {
-    const timeline = document.querySelector("element-timeline").timeline;
     const xDom: any = this.querySelector("input[aria-event='location-x'");
     const yDom: any = this.querySelector("input[aria-event='location-y'");
-    xDom.value = timeline[this.elementId].location.x;
-    yDom.value = timeline[this.elementId].location.y;
+    const opacity: any = this.querySelector("input[aria-event='opacity'");
+
+    xDom.value = this.timeline[this.elementId].location.x;
+    yDom.value = this.timeline[this.elementId].location.y;
+    opacity.value = this.timeline[this.elementId].opacity;
   }
 
   handleLocation() {
-    const elementControl = document.querySelector("element-control");
     const targetElement = document.querySelector(
       `element-control-asset[element-id='${this.elementId}']`
     );
@@ -105,8 +106,6 @@ export class OptionImage extends LitElement {
 
   handleOpacity() {
     const opacity: any = this.querySelector("input[aria-event='opacity'");
-
-    console.log(opacity.value);
 
     this.timeline[this.elementId].opacity = parseInt(opacity.value);
 

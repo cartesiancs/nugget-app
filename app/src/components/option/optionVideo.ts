@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("option-video")
 export class OptionVideo extends LitElement {
@@ -8,22 +9,41 @@ export class OptionVideo extends LitElement {
     super();
 
     this.elementId = "";
-  }
-
-  render() {
-    let template = this.template();
-    this.innerHTML = template;
     this.hide();
   }
 
-  template() {
-    return `
-        <label class="form-label text-light">위치</label>
-        <div class="d-flex flex-row bd-highlight mb-2">
-        <input aria-event="location-x" type="number" class="form-control bg-default text-light me-1" value="0" >
-        <input aria-event="location-y" type="number" class="form-control bg-default text-light" value="0" >
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
-        </div>`;
+  @property()
+  timeline = this.timelineState.timeline;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+    });
+
+    return this;
+  }
+
+  render() {
+    return html` <label class="form-label text-light">위치</label>
+      <div class="d-flex flex-row bd-highlight mb-2">
+        <input
+          aria-event="location-x"
+          type="number"
+          class="form-control bg-default text-light me-1"
+          value="0"
+          @change=${this.handleLocation}
+        />
+        <input
+          aria-event="location-y"
+          type="number"
+          class="form-control bg-default text-light"
+          value="0"
+          @change=${this.handleLocation}
+        />
+      </div>`;
   }
 
   hide() {
@@ -40,11 +60,10 @@ export class OptionVideo extends LitElement {
   }
 
   updateValue() {
-    const timeline = document.querySelector("element-timeline").timeline;
     const xDom: any = this.querySelector("input[aria-event='location-x'");
     const yDom: any = this.querySelector("input[aria-event='location-y'");
-    xDom.value = timeline[this.elementId].location.x;
-    yDom.value = timeline[this.elementId].location.y;
+    xDom.value = this.timeline[this.elementId].location.x;
+    yDom.value = this.timeline[this.elementId].location.y;
   }
 
   handleLocation() {
@@ -66,17 +85,5 @@ export class OptionVideo extends LitElement {
       x: convertLocation.x,
       y: convertLocation.y,
     });
-  }
-
-  connectedCallback() {
-    this.render();
-    this.querySelector("input[aria-event='location-x'").addEventListener(
-      "change",
-      this.handleLocation.bind(this)
-    );
-    this.querySelector("input[aria-event='location-y'").addEventListener(
-      "change",
-      this.handleLocation.bind(this)
-    );
   }
 }

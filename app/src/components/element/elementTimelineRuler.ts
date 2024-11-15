@@ -44,7 +44,6 @@ export class ElementTimelineRuler extends LitElement {
       this.timelineCursor = state.cursor;
       this.timelineRange = state.range;
 
-      console.log(this.timelineRange);
       const timeMagnification = this.timelineRange / 4;
       this.timeMagnification = timeMagnification * 1.1111111111;
 

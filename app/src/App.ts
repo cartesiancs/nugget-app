@@ -1,6 +1,8 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IUIStore, uiStore } from "./states/uiStore";
+import { timelinerContext } from "./context/timelineContext";
+import { provide } from "@lit/context";
 
 @customElement("app-root")
 export class App extends LitElement {
@@ -9,6 +11,12 @@ export class App extends LitElement {
 
   @property()
   resize = this.uiState.resize;
+
+  @provide({ context: timelinerContext })
+  @property()
+  public timelineOptions = {
+    range: 0.9,
+  };
 
   createRenderRoot() {
     uiStore.subscribe((state) => {
@@ -36,20 +44,18 @@ export class App extends LitElement {
       <body class="h-100 bg-dark">
         <div id="app"></div>
 
-        <timeline-context>
-          <div class="container-fluid" style="height: 97vh;">
-            <control-ui
-              id="split_top"
-              class="row align-items-start"
-              style="height: ${this.resize.vertical.top}%;"
-            ></control-ui>
-            <timeline-ui
-              id="split_bottom"
-              class="row position-relative split-top align-items-end bg-darker line-top"
-              style="height: ${this.resize.vertical.bottom}%;"
-            ></timeline-ui>
-          </div>
-        </timeline-context>
+        <div class="container-fluid" style="height: 97vh;">
+          <control-ui
+            id="split_top"
+            class="row align-items-start"
+            style="height: ${this.resize.vertical.top}%;"
+          ></control-ui>
+          <timeline-ui
+            id="split_bottom"
+            class="row position-relative split-top align-items-end bg-darker line-top"
+            style="height: ${this.resize.vertical.bottom}%;"
+          ></timeline-ui>
+        </div>
         <!-- 
                     OPTION
                 -->

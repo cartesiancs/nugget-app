@@ -66,8 +66,6 @@ export class ElementControlAsset extends LitElement {
   }
 
   render() {
-    console.log(this.timeline[this.elementId], this.elementId, this.timeline);
-
     let template;
     if (this.elementFiletype == "image") {
       // NOTE: this.templateRotate() 는 사이드 잘림 문제로 추후 업데이트 필요

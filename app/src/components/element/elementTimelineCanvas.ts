@@ -72,8 +72,7 @@ export class elementTimelineCanvas extends LitElement {
   @property()
   resize = this.uiState.resize;
 
-  @consume({ context: timelinerContext })
-  @property({ attribute: false })
+  @consume({ context: timelinerContext, subscribe: true })
   public timelineOptions?: TimelineContentObject;
 
   createRenderRoot() {
@@ -291,13 +290,6 @@ export class elementTimelineCanvas extends LitElement {
 
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       ctx.scale(dpr, dpr);
-
-      // ctx.clearRect(
-      //   0,
-      //   0,
-      //   window.innerWidth,
-      //   document.querySelector("element-timeline").offsetHeight
-      // );
 
       for (const elementId in this.timeline) {
         if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
@@ -764,6 +756,7 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   protected render(): unknown {
-    return html` ${this.renderCanvas()}`;
+    return html` <p style="color: #fff;">${this.timelineOptions.range}</p>
+      ${this.renderCanvas()}`;
   }
 }

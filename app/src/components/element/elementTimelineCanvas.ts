@@ -756,7 +756,6 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   protected render(): unknown {
-    return html` <p style="color: #fff;">${this.timelineOptions.range}</p>
-      ${this.renderCanvas()}`;
+    return html` ${this.renderCanvas()}`;
   }
 }

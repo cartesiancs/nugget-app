@@ -91,7 +91,6 @@ export class Timeline extends LitElement {
             <b class="text-light ms-2"
               >${new Date(this.timelineCursor).toISOString().slice(11, 22)}</b
             >
-            ${String(this.isAbleResize)}
           </div>
         </div>
         <div class="col-5">

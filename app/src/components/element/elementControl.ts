@@ -38,6 +38,7 @@ export class ElementControl extends LitElement {
   @consume({ context: timelinerContext })
   @property({ attribute: false })
   public timelineOptions?: TimelineContentObject;
+  fps: number;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
@@ -79,6 +80,7 @@ export class ElementControl extends LitElement {
 
     this.isPaused = true;
     this.isPlay = {};
+    this.fps = 60;
 
     this.activeElementId = "";
     this.selectElementsId = [];
@@ -833,6 +835,26 @@ export class ElementControl extends LitElement {
     }
   }
 
+  step() {
+    let nowTimelineRange = Number(
+      document.querySelector("element-timeline-range").value
+    );
+    let nowTimelineProgress =
+      Number(this.timelineCursor.style.left.split("px")[0]) + nowTimelineRange;
+    this.progress = nowTimelineProgress;
+    this.progressTime += 1000 / this.fps;
+
+    this.timelineState.increaseCursor(1000 / this.fps);
+
+    if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
+      this.stop();
+    }
+
+    this.appearAllElementInTime();
+
+    this.scroller = window.requestAnimationFrame(this.step.bind(this));
+  }
+
   play() {
     let toggle = document.querySelector("#playToggle");
     toggle.setAttribute("onclick", `elementControlComponent.stop()`);
@@ -842,29 +864,16 @@ export class ElementControl extends LitElement {
       stop_circle
     </span>`;
 
-    this.scroller = setInterval(() => {
-      let nowTimelineRange = Number(
-        document.querySelector("element-timeline-range").value
-      );
-      let nowTimelineProgress =
-        Number(this.timelineCursor.style.left.split("px")[0]) +
-        nowTimelineRange;
-      this.progress = nowTimelineProgress;
-      this.progressTime += 20;
+    this.scroller = window.requestAnimationFrame(this.step.bind(this));
 
-      this.timelineState.increaseCursor(20);
+    // this.scroller = setInterval(() => {
 
-      if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
-        this.stop();
-      }
-
-      this.appearAllElementInTime();
-    }, 20);
+    // }, 20);
     this.isPaused = false;
   }
 
   stop() {
-    clearInterval(this.scroller);
+    cancelAnimationFrame(this.scroller);
     const toggle = document.querySelector("#playToggle");
 
     this.isPaused = true;

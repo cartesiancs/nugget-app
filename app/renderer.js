@@ -275,6 +275,8 @@ const ipc = {
     );
     const projectFolder = document.querySelector("#projectFolder").value;
     const projectRatio = elementControlComponent.previewRatio;
+    const previewSizeH = document.querySelector("#previewSizeH").value;
+    const previewSizeW = document.querySelector("#previewSizeW").value;
 
     if (projectFolder == "") {
       document
@@ -299,6 +301,10 @@ const ipc = {
         videoDestination: result || `${projectFolder}/result.mp4`,
         videoDestinationFolder: projectFolder,
         previewRatio: projectRatio,
+        previewSize: {
+          w: previewSizeW,
+          h: previewSizeH,
+        },
       };
 
       NUGGET.renderAnimation.render(timeline, options);

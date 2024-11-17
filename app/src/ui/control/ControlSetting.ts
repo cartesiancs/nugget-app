@@ -1,11 +1,35 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITestStore, testStore } from "../../states/testStore";
+import {
+  IRenderOptionStore,
+  renderOptionStore,
+} from "../../states/renderOptionStore";
 
 @customElement("control-ui-setting")
 export class ControlSetting extends LitElement {
+  @property()
+  renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
+
+  @property()
+  renderOption = this.renderOptionStore.options;
+
   createRenderRoot() {
+    renderOptionStore.subscribe((state) => {
+      this.renderOption = state.options;
+    });
+
     return this;
+  }
+
+  _handleUpdatePreviewSizeW(e) {
+    this.renderOption.previewSize.w = e.target.value;
+    this.renderOptionStore.updateOptions(this.renderOption);
+  }
+
+  _handleUpdatePreviewSizeH(e) {
+    this.renderOption.previewSize.h = e.target.value;
+    this.renderOptionStore.updateOptions(this.renderOption);
   }
 
   render() {
@@ -62,18 +86,18 @@ export class ControlSetting extends LitElement {
       <label class="form-label text-light">해상도</label>
       <div class="d-flex flex-row bd-highlight mb-2">
         <input
-          aria-event="location-x"
+          id="previewSizeH"
           type="number"
           class="form-control bg-default text-light me-1"
-          value="1080"
-          disabled
+          value=${this.renderOption.previewSize.h}
+          @change=${this._handleUpdatePreviewSizeH}
         />
         <input
-          aria-event="location-y"
+          id="previewSizeW"
           type="number"
           class="form-control bg-default text-light"
-          value="1920"
-          disabled
+          value=${this.renderOption.previewSize.w}
+          @change=${this._handleUpdatePreviewSizeW}
         />
       </div>
 

@@ -7,6 +7,10 @@ import {
   timelinerContext,
 } from "../../context/timelineContext";
 import { consume } from "@lit/context";
+import {
+  IRenderOptionStore,
+  renderOptionStore,
+} from "../../states/renderOptionStore";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -25,6 +29,7 @@ export class ElementControl extends LitElement {
   progressTime: number;
   previewRatio: number;
   innerWidth: number;
+  fps: number;
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
@@ -33,18 +38,29 @@ export class ElementControl extends LitElement {
   timeline = this.timelineState.timeline;
 
   @property()
+  renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
+
+  @property()
+  renderOption = this.renderOptionStore.options;
+
+  @property()
   cursor = this.timelineState.cursor;
 
   @consume({ context: timelinerContext })
   @property({ attribute: false })
   public timelineOptions?: TimelineContentObject;
-  fps: number;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
       this.cursor = state.cursor;
       this.progressTime = state.cursor;
+    });
+
+    renderOptionStore.subscribe((state) => {
+      this.renderOption = state.options;
+
+      this.resizePreview();
     });
 
     return this;
@@ -145,14 +161,19 @@ export class ElementControl extends LitElement {
       let horizontalPadding = 0.95;
       let verticalPadding = 0.92;
       let horizontalResizeWidth = Math.round(innerWidth * horizontalPadding);
-      let horizontalResizeHeight = Math.round((horizontalResizeWidth * 9) / 16);
+      let horizontalResizeHeight = Math.round(
+        (horizontalResizeWidth * this.renderOption.previewSize.h) /
+          this.renderOption.previewSize.w
+      );
 
       let verticalResizeHeight =
         (window.innerHeight -
           (splitBottomHeight + 20) -
           (videoBoxHeight - videoHeight)) *
         verticalPadding;
-      let verticalResizeWidth = verticalResizeHeight * (16 / 9);
+      let verticalResizeWidth =
+        verticalResizeHeight *
+        (this.renderOption.previewSize.w / this.renderOption.previewSize.h);
 
       let width =
         horizontalResizeWidth > verticalResizeWidth
@@ -172,7 +193,7 @@ export class ElementControl extends LitElement {
       video.style.width = `${width}px`;
       video.style.height = `${height}px`;
 
-      this.previewRatio = 1920 / width;
+      this.previewRatio = this.renderOption.previewSize.w / width;
     } catch (error) {}
   }
 

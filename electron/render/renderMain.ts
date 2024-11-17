@@ -27,8 +27,19 @@ if (isDev) {
   }
 }
 
+type OptionType = {
+  videoDuration: number;
+  videoDestination: string;
+  videoDestinationFolder: string;
+  previewRatio: string;
+  previewSize: {
+    w: string;
+    h: string;
+  };
+};
+
 export const renderMain = {
-  start: (evt, elements, options) => {
+  start: (evt, elements, options: OptionType) => {
     const ffmpegPath = ffmpegConfig.FFMPEG_PATH;
     const ffprobePath = ffmpegConfig.FFPROBE_PATH;
 
@@ -58,8 +69,8 @@ export const renderMain = {
     filter.push({
       filter: "scale",
       options: {
-        w: 1920,
-        h: 1080,
+        w: parseInt(options.previewSize.w),
+        h: parseInt(options.previewSize.h),
       },
       inputs: "[0:v]",
       outputs: "tmp",

@@ -29,6 +29,7 @@ export class ControlSetting extends LitElement {
         </button>
       </div>
 
+      <label class="form-label text-light">영상 시간</label>
       <div class="input-group mb-3">
         <input
           id="projectDuration"
@@ -42,6 +43,40 @@ export class ControlSetting extends LitElement {
           >초</span
         >
       </div>
+
+      <label class="form-label text-light">프레임</label>
+      <div class="input-group mb-3">
+        <input
+          id="projectDuration"
+          type="number"
+          class="form-control bg-default text-light"
+          placeholder=""
+          value="60"
+          disabled
+        />
+        <span class="input-group-text bg-default text-light" id="basic-addon2"
+          >fps</span
+        >
+      </div>
+
+      <label class="form-label text-light">해상도</label>
+      <div class="d-flex flex-row bd-highlight mb-2">
+        <input
+          aria-event="location-x"
+          type="number"
+          class="form-control bg-default text-light me-1"
+          value="1080"
+          disabled
+        />
+        <input
+          aria-event="location-y"
+          type="number"
+          class="form-control bg-default text-light"
+          value="1920"
+          disabled
+        />
+      </div>
+
       <button
         class="btn btn-sm btn-default text-light mt-1"
         onclick="NUGGET.project.save()"

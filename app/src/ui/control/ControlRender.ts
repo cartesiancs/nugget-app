@@ -66,40 +66,6 @@ export class ControlRender extends LitElement {
         </div>
       </div>
 
-      <label class="form-label text-light">해상도</label>
-      <br />
-      <div class="text-light mb-2">
-        <div class="form-check form-check-inline">
-          <input
-            class="form-check-input"
-            type="radio"
-            name="inputCheckQuality"
-            id="quality_hd"
-            value="1280x720"
-            disabled
-          />
-          <label class="form-check-label">1280x720 HD</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input
-            class="form-check-input"
-            type="radio"
-            name="inputCheckQuality"
-            id="quality_fhd"
-            value="1920x1080"
-            checked
-          />
-          <label class="form-check-label">1080x1920 FHD</label>
-        </div>
-      </div>
-
-      <button
-        class="btn btn-blue-fill"
-        @click=${() => this.handleClickButton()}
-      >
-        ${this.count}
-      </button>
-
       <button class="btn btn-blue-fill" onclick="ipc.render()">Export</button>`;
   }
 }

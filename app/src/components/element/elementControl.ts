@@ -108,6 +108,8 @@ export class ElementControl extends LitElement {
       }
     }
 
+    this.resizePreview();
+
     return html` ${template} `;
   }
 
@@ -140,14 +142,16 @@ export class ElementControl extends LitElement {
       let elementTimelineHeight =
         document.querySelector("element-timeline").offsetHeight;
 
-      let horizontalResizeWidth = Math.round(innerWidth * 0.95);
+      let horizontalPadding = 0.95;
+      let verticalPadding = 0.92;
+      let horizontalResizeWidth = Math.round(innerWidth * horizontalPadding);
       let horizontalResizeHeight = Math.round((horizontalResizeWidth * 9) / 16);
 
       let verticalResizeHeight =
         (window.innerHeight -
           (splitBottomHeight + 20) -
           (videoBoxHeight - videoHeight)) *
-        0.92;
+        verticalPadding;
       let verticalResizeWidth = verticalResizeHeight * (16 / 9);
 
       let width =

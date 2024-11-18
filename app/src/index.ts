@@ -16,8 +16,6 @@ import "./components/element/elementTimelineCanvas";
 
 import "./components/element/elementTimelineRuler";
 import "./components/element/elementTimelineCursor";
-
-import "./components/element/elementBar";
 import "./components/element/elementControlAsset";
 
 import "./components/keyframe/keyframeEditor";

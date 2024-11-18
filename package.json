@@ -1,6 +1,6 @@
 {
   "name": "nugget-app",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Video Editor",
   "main": "main/main.js",
   "author": "DeVent",
@@ -108,7 +108,7 @@
     "fs-extra": "^11.1.0",
     "get-system-fonts": "^2.0.2",
     "jszip": "^3.10.1",
-    "lit": "^2.8.0",
+    "lit": "^3.2.1",
     "lodash": "^4.17.21",
     "path": "^0.12.7",
     "request": "^2.88.2",

@@ -67,6 +67,9 @@ export class elementTimelineCanvas extends LitElement {
   timelineCursor = this.timelineState.cursor;
 
   @property()
+  isOpenAnimationPanelId = [];
+
+  @property()
   uiState: IUIStore = uiStore.getInitialState();
 
   @property()
@@ -105,11 +108,11 @@ export class elementTimelineCanvas extends LitElement {
     }
   }
 
-  getRandomArbitrary(min, max) {
+  private getRandomArbitrary(min, max) {
     return Math.round(Math.random() * (max - min) + min);
   }
 
-  getRandomColor() {
+  private getRandomColor() {
     let rgbMinColor = { r: 45, g: 23, b: 56 };
     let rgbMaxColor = { r: 167, g: 139, b: 180 };
 
@@ -276,7 +279,6 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   drawCanvas() {
-    const timelineElements = [];
     let index = 1;
 
     const ctx = this.canvas.getContext("2d");
@@ -624,6 +626,71 @@ export class elementTimelineCanvas extends LitElement {
     return { targetId: "", cursorType: "none" };
   }
 
+  public openAnimationPanel(targetId: string) {
+    this.isOpenAnimationPanelId.push(targetId);
+  }
+
+  public closeAnimationPanel(targetId: string) {
+    this.isOpenAnimationPanelId = this.isOpenAnimationPanelId.filter(
+      (item) => !item.includes(targetId)
+    );
+  }
+
+  animationPanelDropdownTemplate() {
+    // NOTE: 영상 애니메이션은 아직 지원 안함
+
+    if (
+      this.targetMediaType == "dynamic" ||
+      this.timeline[this.targetId].filetype == "text"
+    ) {
+      return "";
+    }
+    let isShowPanel = this.isShowAnimationPanel();
+    let itemName =
+      isShowPanel == true ? "애니메이션 패널 닫기" : "애니메이션 패널 열기";
+    let itemOnclickEvent =
+      isShowPanel == true
+        ? `document.querySelector('element-timeline-canvas').closeAnimationPanel('${this.targetId}')`
+        : `document.querySelector('element-timeline-canvas').openAnimationPanel('${this.targetId}')`;
+
+    let template = `<menu-dropdown-item onclick=${itemOnclickEvent} item-name="${itemName}"></menu-dropdown-item>`;
+    return template;
+  }
+
+  isShowAnimationPanel() {
+    const index = this.isOpenAnimationPanelId.findIndex((item) => {
+      return item == this.targetId;
+    });
+
+    return index != -1;
+  }
+
+  showMenuDropdown({ x, y }) {
+    document.querySelector("#menuRightClick").innerHTML = `
+        <menu-dropdown-body top="${y}" left="${x}">
+          ${this.animationPanelDropdownTemplate()}
+          <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
+        </menu-dropdown-body>`;
+  }
+
+  whenRightClick(e) {
+    const isRightClick = e.which == 3 || e.button == 2;
+
+    if (!isRightClick) {
+      return 0;
+    }
+
+    this.showMenuDropdown({
+      x: e.clientX,
+      y: e.clientY,
+    });
+    //document.querySelector('element-timeline').removeSeletedElements()
+  }
+
+  public removeSeletedElements() {
+    this.timelineState.removeTimeline(this.targetId);
+  }
+
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
     this.repositionCursor();
@@ -669,35 +736,42 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   _handleMouseDown(e) {
-    const x = e.offsetX;
-    const y = e.offsetY;
+    try {
+      const x = e.offsetX;
+      const y = e.offsetY;
 
-    const target = this.findTarget({ x: x, y: y });
-    this.targetId = target.targetId;
-    this.cursorType = target.cursorType;
+      const target = this.findTarget({ x: x, y: y });
+      this.targetId = target.targetId;
+      this.cursorType = target.cursorType;
 
-    this.firstClickPosition.x = e.offsetX;
-    this.firstClickPosition.y = e.offsetY;
+      this.firstClickPosition.x = e.offsetX;
+      this.firstClickPosition.y = e.offsetY;
 
-    this.targetStartTime = this.timeline[this.targetId].startTime;
-    this.targetDuration = this.timeline[this.targetId].duration;
+      this.targetStartTime = this.timeline[this.targetId].startTime;
+      this.targetDuration = this.timeline[this.targetId].duration;
 
-    let elementType = elementUtils.getElementType(
-      this.timeline[this.targetId].filetype
-    );
+      let elementType = elementUtils.getElementType(
+        this.timeline[this.targetId].filetype
+      );
 
-    if (elementType == "dynamic") {
-      this.targetTrim.startTime = this.timeline[this.targetId].trim.startTime;
-      this.targetTrim.endTime = this.timeline[this.targetId].trim.endTime;
+      if (elementType == "dynamic") {
+        this.targetTrim.startTime = this.timeline[this.targetId].trim.startTime;
+        this.targetTrim.endTime = this.timeline[this.targetId].trim.endTime;
+      }
+
+      this.drawCanvas();
+
+      this.isDrag = true;
+    } catch (error) {
+      this.drawCanvas();
+
+      this.isDrag = true;
     }
-
-    this.drawCanvas();
-
-    this.isDrag = true;
   }
 
   _handleMouseUp(e) {
     this.isDrag = false;
+    this.whenRightClick(e);
   }
 
   _handleKeydown(event) {

@@ -59,6 +59,19 @@ const window = {
 
     return newWindow;
   },
+
+  createCreditWindow: () => {
+    const indexFile = "app/page/credit.html";
+    const newWindow = new BrowserWindow({
+      width: 600,
+      height: 500,
+      backgroundColor: WINDOW_BACKGROUND_COLOR,
+    });
+
+    newWindow.loadFile(indexFile);
+
+    return newWindow;
+  },
 };
 
 export { window, mainWindow };

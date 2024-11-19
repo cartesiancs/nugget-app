@@ -79,21 +79,42 @@ const template: any = [
   {
     label: "About",
     submenu: [
+      // {
+      //   label: "About Nugget",
+      //   click: async () => {
+      //     let mainWindow = window.createWindow({
+      //       width: 600,
+      //       height: 240,
+      //       webPreferences: {
+      //         nodeIntegration: true,
+      //         contextIsolation: false,
+      //       },
+      //       indexFile: "./app/page/about.html",
+      //     });
+      //   },
+      // },
       {
-        label: "About Nugget",
+        label: "Credit",
         click: async () => {
-          let mainWindow = window.createWindow({
+          const indexFile = "app/page/credit.html";
+
+          let mainWindow = new BrowserWindow({
             width: 600,
-            height: 240,
+            height: 400,
+            frame: false,
+            titleBarStyle: "customButtonsOnHover",
+
             webPreferences: {
               nodeIntegration: true,
-              contextIsolation: false,
             },
-            indexFile: "./app/page/about.html",
           });
+
+          mainWindow.loadFile(indexFile);
+          mainWindow.setAlwaysOnTop(true, "screen-saver");
+          mainWindow.setVisibleOnAllWorkspaces(true);
+          mainWindow.show();
         },
       },
-
       {
         label: "Setting",
         click: async () => {

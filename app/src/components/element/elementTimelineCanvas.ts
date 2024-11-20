@@ -816,6 +816,11 @@ export class elementTimelineCanvas extends LitElement {
     }
   }
 
+  renderAnimationPanel() {
+    //this.isOpenAnimationPanelId
+    return html``;
+  }
+
   renderCanvas() {
     return html`
       <canvas

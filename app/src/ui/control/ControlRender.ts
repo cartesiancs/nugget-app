@@ -3,9 +3,12 @@ import { customElement, property } from "lit/decorators.js";
 import { ITestStore, testStore } from "../../states/testStore";
 import { IProjectStore, projectStore } from "../../states/projectStore";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { RenderController } from "../../controllers/render";
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
+  private renderControll = new RenderController();
+
   @property()
   countState: ITestStore = testStore.getInitialState();
 
@@ -35,7 +38,7 @@ export class ControlRender extends LitElement {
   }
 
   handleClickActionButton() {
-    console.log(this.nowDirectory);
+    this.renderControll.requestRender();
   }
 
   render() {
@@ -66,6 +69,9 @@ export class ControlRender extends LitElement {
         </div>
       </div>
 
+      <button class="btn btn-blue-fill" @click=${this.handleClickActionButton}>
+        Active
+      </button>
       <button class="btn btn-blue-fill" onclick="ipc.render()">Export</button>`;
   }
 }

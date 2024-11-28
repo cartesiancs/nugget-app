@@ -2,7 +2,6 @@ import asset from "./functions/asset";
 import directory from "./functions/directory";
 import mime from "./functions/mime";
 import project from "./functions/project";
-import renderAnimation from "./functions/renderAnimation";
 import fonts from "./functions/fonts";
 
 import "./App";
@@ -55,4 +54,3 @@ customElements.define("toast-item", Toast);
 customElements.define("toast-box", ToastBox);
 
 export { asset, directory, mime, project, fonts };
-export { renderAnimation };

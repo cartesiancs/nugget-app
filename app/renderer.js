@@ -269,48 +269,6 @@ const ipc = {
       }
     });
   },
-  render: function () {
-    const projectDuration = Number(
-      document.querySelector("#projectDuration").value
-    );
-    const projectFolder = document.querySelector("#projectFolder").value;
-    const projectRatio = elementControlComponent.previewRatio;
-    const previewSizeH = document.querySelector("#previewSizeH").value;
-    const previewSizeW = document.querySelector("#previewSizeW").value;
-
-    if (projectFolder == "") {
-      document
-        .querySelector("toast-box")
-        .showToast({ message: "프로젝트 폴더를 지정해주세요", delay: "4000" });
-
-      return 0;
-    }
-
-    window.electronAPI.req.dialog.exportVideo().then((result) => {
-      let videoDestination = result || `nonefile`;
-      if (videoDestination == `nonefile`) {
-        return 0;
-      }
-
-      let timeline = _.cloneDeep(
-        document.querySelector("element-timeline").timeline
-      );
-
-      let options = {
-        videoDuration: projectDuration,
-        videoDestination: result || `${projectFolder}/result.mp4`,
-        videoDestinationFolder: projectFolder,
-        previewRatio: projectRatio,
-        previewSize: {
-          w: previewSizeW,
-          h: previewSizeH,
-        },
-      };
-
-      NUGGET.renderAnimation.render(timeline, options);
-      //ipcRenderer.send('RENDER', timeline, options)
-    });
-  },
   showFileInFolder: function (path) {
     //shell.openPath(path)
     window.electronAPI.req.filesystem.openDirectory(path);

@@ -645,6 +645,7 @@ export class elementTimelineCanvas extends LitElement {
     ) {
       return "";
     }
+
     let isShowPanel = this.isShowAnimationPanel();
     let itemName =
       isShowPanel == true ? "애니메이션 패널 닫기" : "애니메이션 패널 열기";

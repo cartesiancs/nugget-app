@@ -38,6 +38,10 @@ export class ControlRender extends LitElement {
   }
 
   handleClickActionButton() {
+    //this.renderControll.requestRender();
+  }
+
+  handleClickRenderButton() {
     this.renderControll.requestRender();
   }
 
@@ -72,6 +76,8 @@ export class ControlRender extends LitElement {
       <button class="btn btn-blue-fill" @click=${this.handleClickActionButton}>
         Active
       </button>
-      <button class="btn btn-blue-fill" onclick="ipc.render()">Export</button>`;
+      <button class="btn btn-blue-fill" @click=${this.handleClickRenderButton}>
+        Export
+      </button>`;
   }
 }

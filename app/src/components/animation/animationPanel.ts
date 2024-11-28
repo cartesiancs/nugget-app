@@ -55,12 +55,6 @@ export class AnimationPanel extends LitElement {
   template() {
     return `<div class="bg-dark">  </div>`;
   }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  disconnectedCallback() {}
 }
 
 @customElement("animation-panel-item")

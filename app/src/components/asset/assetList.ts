@@ -1,6 +1,7 @@
 import { path } from "../../functions/path";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import asset from "../../functions/asset";
 
 @customElement("asset-list")
 export class AssetList extends LitElement {
@@ -235,7 +236,7 @@ export class AssetFolder extends LitElement {
   }
 
   handleClick() {
-    ipc.requestAllDir(`${this.directory}/${this.foldername}`);
+    asset.requestAllDir(`${this.directory}/${this.foldername}`);
   }
 
   connectedCallback() {

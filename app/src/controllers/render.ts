@@ -1,9 +1,12 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
+import { rendererModal } from "../utils/modal";
 
 export class RenderController implements ReactiveController {
   private host: ReactiveControllerHost;
 
   public requestRender() {
+    const elementControlComponent = document.querySelector("element-control");
+
     const projectDuration = Number(
       document.querySelector("#projectDuration").value
     );
@@ -48,6 +51,26 @@ export class RenderController implements ReactiveController {
   hostConnected() {}
   hostDisconnected() {}
 }
+
+const rendererUtil = {
+  hmsToSeconds(hms) {
+    let splitHMS = hms.split(":");
+    let seconds = +splitHMS[0] * 60 * 60 + +splitHMS[1] * 60 + +splitHMS[2];
+
+    return seconds;
+  },
+
+  secondsToProgress(seconds) {
+    const projectDuration = Number(
+      document.querySelector("#projectDuration").value
+    );
+    return (seconds / projectDuration) * 100;
+  },
+
+  showProgressModal() {
+    rendererModal.progressModal.show();
+  },
+};
 
 //NOTE: 성능 최적화 개판입니다.
 

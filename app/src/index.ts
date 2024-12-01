@@ -47,6 +47,8 @@ import "./components/element/elementControl";
 import "./components/preview/previewCanvas";
 import "./components/font/selectFont";
 
+import "./event";
+
 customElements.define("tutorial-group", Tutorial);
 customElements.define("tutorial-popover", TutorialPopover);
 

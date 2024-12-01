@@ -7,6 +7,16 @@ export class ModalList extends LitElement {
     return this;
   }
 
+  openRenderedVideoFolder() {
+    const projectFolder = document.querySelector("#projectFolder").value;
+    window.electronAPI.req.filesystem.openDirectory(projectFolder);
+  }
+
+  forceClose() {
+    //ipcRenderer.send('FORCE_CLOSE')
+    window.electronAPI.req.app.forceClose();
+  }
+
   render() {
     return html`
       <dds-modal
@@ -96,7 +106,7 @@ export class ModalList extends LitElement {
         <dds-modal-button
           button-color="btn-blue-fill"
           is-dismiss="false"
-          onclick="rendererUtil.openRenderedVideoFolder()"
+          @click=${this.openRenderedVideoFolder}
           >저장폴더 열기</dds-modal-button
         >
         <dds-modal-button
@@ -135,7 +145,7 @@ export class ModalList extends LitElement {
         <dds-modal-button
           button-color="btn-red-fill"
           is-dismiss="false"
-          onclick="rendererUtil.forceClose()"
+          @click=${this.forceClose}
           >네, 종료할게요</dds-modal-button
         >
         <dds-modal-button

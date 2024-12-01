@@ -8,19 +8,33 @@ export class ControlExtension extends LitElement {
     return this;
   }
 
+  extTest() {
+    window.electronAPI.req.dialog.openDirectory().then((result) => {
+      const projectFolder = document.querySelector("#projectFolder").value;
+
+      projectFolder.value = result || "/";
+      const dir = String(projectFolder.value);
+
+      window.electronAPI.req.extension.openDir(dir);
+    });
+  }
+
+  ext() {
+    window.electronAPI.req.dialog.openFile().then((result) => {
+      window.electronAPI.req.extension.openFile(result);
+    });
+  }
+
   render() {
     return html` <button
         class="btn btn-sm btn-default text-light mt-1"
-        onclick="ipc.extTest()"
+        @click=${this.extTest}
       >
         익스텐션 폴더 불러오기
         <span class="material-symbols-outlined icon-xs"> developer_mode </span>
       </button>
 
-      <button
-        class="btn btn-sm btn-default text-light mt-1"
-        onclick="ipc.ext()"
-      >
+      <button class="btn btn-sm btn-default text-light mt-1" @click=${this.ext}>
         익스텐션 파일 불러오기
       </button>
       <br />

@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import asset from "../../functions/asset";
 
 @customElement("asset-browser")
 export class AssetBrowser extends LitElement {
@@ -49,7 +50,7 @@ export class AssetBrowser extends LitElement {
       -1
     );
 
-    ipc.requestAllDir(splitPrevDirectory.join("/"));
+    asset.requestAllDir(splitPrevDirectory.join("/"));
   }
 
   connectedCallback() {

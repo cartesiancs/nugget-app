@@ -49,6 +49,7 @@ export class ElementControl extends LitElement {
   @consume({ context: timelinerContext })
   @property({ attribute: false })
   public timelineOptions?: TimelineContentObject;
+  startTime: any;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
@@ -713,7 +714,7 @@ export class ElementControl extends LitElement {
 
     cursorDom.style.left = `${(this.progressTime / 5) * timeMagnification}px`;
     this.adjustAllElementBarWidth(timeMagnification);
-    this.updateAllAnimationPanel();
+    //this.updateAllAnimationPanel();
   }
 
   updateAllAnimationPanel() {
@@ -861,15 +862,18 @@ export class ElementControl extends LitElement {
   }
 
   step() {
+    const elapsed = Date.now() - this.startTime;
+
     let nowTimelineRange = Number(
       document.querySelector("element-timeline-range").value
     );
     let nowTimelineProgress =
       Number(this.timelineCursor.style.left.split("px")[0]) + nowTimelineRange;
-    this.progress = nowTimelineProgress;
-    this.progressTime += 1000 / this.fps;
 
-    this.timelineState.increaseCursor(1000 / this.fps);
+    this.progress = nowTimelineProgress;
+    this.progressTime = elapsed;
+
+    this.timelineState.setCursor(elapsed);
 
     if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
       this.stop();
@@ -881,25 +885,13 @@ export class ElementControl extends LitElement {
   }
 
   play() {
-    let toggle = document.querySelector("#playToggle");
-    toggle.setAttribute("onclick", `elementControlComponent.stop()`);
-    toggle.innerHTML = `<span
-      class="material-symbols-outlined icon-white icon-md"
-    >
-      stop_circle
-    </span>`;
-
     this.scroller = window.requestAnimationFrame(this.step.bind(this));
-
-    // this.scroller = setInterval(() => {
-
-    // }, 20);
+    this.startTime = Date.now() - this.progressTime;
     this.isPaused = false;
   }
 
   stop() {
     cancelAnimationFrame(this.scroller);
-    const toggle = document.querySelector("#playToggle");
 
     this.isPaused = true;
     for (const elementId in this.timeline) {
@@ -907,9 +899,6 @@ export class ElementControl extends LitElement {
         this.isPlay[elementId] = false;
       }
     }
-
-    toggle.setAttribute("onclick", `elementControlComponent.play()`);
-    toggle.innerHTML = `<span class="material-symbols-outlined icon-white icon-md"> play_circle </span>`;
 
     this.pauseAllDynamicElements();
   }

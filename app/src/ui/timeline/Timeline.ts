@@ -20,6 +20,9 @@ export class Timeline extends LitElement {
   @property()
   resize = this.uiState.resize;
 
+  @property()
+  isPlay: boolean = false;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineCursor = state.cursor;
@@ -61,6 +64,47 @@ export class Timeline extends LitElement {
     this.isAbleResize = true;
   }
 
+  _handleClickPlay() {
+    const elementControlComponent = document.querySelector("element-control");
+    elementControlComponent.play();
+    this.isPlay = true;
+  }
+
+  _handleClickStop() {
+    const elementControlComponent = document.querySelector("element-control");
+    elementControlComponent.stop();
+    this.isPlay = false;
+  }
+
+  _handleClickReset() {
+    const elementControlComponent = document.querySelector("element-control");
+    elementControlComponent.reset();
+  }
+
+  togglePlayButton() {
+    if (this.isPlay) {
+      return html`<button
+        id="playToggle"
+        class="btn btn-xs btn-transparent"
+        @click=${this._handleClickStop}
+      >
+        <span class="material-symbols-outlined icon-white icon-md">
+          stop_circle
+        </span>
+      </button>`;
+    } else {
+      return html`<button
+        id="playToggle"
+        class="btn btn-xs btn-transparent"
+        @click=${this._handleClickPlay}
+      >
+        <span class="material-symbols-outlined icon-white icon-md">
+          play_circle
+        </span>
+      </button>`;
+    }
+  }
+
   render() {
     return html`
       <div
@@ -71,18 +115,11 @@ export class Timeline extends LitElement {
       <div class="row mb-2">
         <div class="col-4">
           <div class="d-flex justify-content-start">
-            <button
-              id="playToggle"
-              class="btn btn-xs btn-transparent"
-              onclick="elementControlComponent.play()"
-            >
-              <span class="material-symbols-outlined icon-white icon-md">
-                play_circle
-              </span>
-            </button>
+            ${this.togglePlayButton()}
+
             <button
               class="btn btn-xs btn-transparent ms-2"
-              onclick="elementControlComponent.reset()"
+              @click=${this._handleClickReset}
             >
               <span class="material-symbols-outlined icon-white icon-md">
                 replay_circle_filled

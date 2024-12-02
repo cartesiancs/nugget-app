@@ -135,6 +135,9 @@ export class KeyframeEditor extends LitElement {
     let keyframeEditor = document.getElementById("option_bottom");
     keyframeEditor.classList.remove("show");
     keyframeEditor.classList.add("hide");
+    document
+      .querySelector("element-timeline-canvas")
+      .closeAnimationPanel(this.elementId);
   }
 
   fillBackground() {

@@ -8,11 +8,16 @@ export class ControlText extends LitElement {
     return this;
   }
 
+  _handleClickAddText() {
+    const elementControlComponent = document.querySelector("element-control");
+    elementControlComponent.addText();
+  }
+
   render() {
     return html` <div class="row px-2">
       <div
         class="col-4 d-flex flex-column bd-highlight overflow-hidden mt-1 asset"
-        onclick="elementControlComponent.addText()"
+        @click=${this._handleClickAddText}
       >
         <span class="material-symbols-outlined icon-lg align-self-center">
           text_fields

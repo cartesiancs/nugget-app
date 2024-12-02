@@ -628,12 +628,31 @@ export class elementTimelineCanvas extends LitElement {
 
   public openAnimationPanel(targetId: string) {
     this.isOpenAnimationPanelId.push(targetId);
+
+    let timelineOptionOffcanvas = new bootstrap.Offcanvas(
+      document.getElementById("option_bottom")
+    );
+    let timelineOption = document.querySelector("#timelineOptionBody");
+    let targetElementId = document.querySelector(
+      "#timelineOptionTargetElement"
+    );
+
+    timelineOption.innerHTML = `<keyframe-editor element-id="${targetId}" animation-type="${"position"}"></keyframe-editor>`;
+    timelineOption.classList.remove("d-none");
+    targetElementId.value = targetId;
+    timelineOptionOffcanvas.show();
   }
 
   public closeAnimationPanel(targetId: string) {
     this.isOpenAnimationPanelId = this.isOpenAnimationPanelId.filter(
       (item) => !item.includes(targetId)
     );
+
+    const animationPanel: any = this.querySelector(
+      `animation-panel[element-id='${targetId}']`
+    );
+
+    animationPanel.hide();
   }
 
   animationPanelDropdownTemplate() {

@@ -106,6 +106,11 @@ window.addEventListener("load", (event) => {
       "p[ref='appVersion']"
     ).innerHTML = `Nugget v${result.data.version}`;
   });
+
+  let toastElList = [].slice.call(document.querySelectorAll(".toast"));
+  let toastList = toastElList.map(function (toastEl) {
+    return new bootstrap.Toast(toastEl);
+  });
 });
 
 window.onresize = async function (event) {

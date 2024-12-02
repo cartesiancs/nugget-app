@@ -92,7 +92,8 @@ export class App extends LitElement {
           tabindex="-1"
           id="option_bottom"
           aria-labelledby="offcanvasRightLabel"
-          style="height: calc(20% - 2rem); "
+          style="height: calc(${this.resize.vertical
+            .bottom}% - 2rem); visibility: visible;"
         >
           <div class="offcanvas-header row d-flex justify-content-between">
             <div class="col"></div>

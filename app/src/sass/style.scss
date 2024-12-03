@@ -145,6 +145,19 @@ element-timeline-scroll {
   background-color: transparent;
 }
 
+.top-bar {
+  height: 34px;
+  background-color: #0f1012;
+  border-bottom: 0.05rem #3a3f44 solid;
+  -webkit-app-region: drag;
+  display: flex;
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 700;
+  justify-content: center;
+  align-items: center;
+}
+
 .toast-container {
   z-index: 9000;
 }

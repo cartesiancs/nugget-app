@@ -11,19 +11,6 @@ const WINDOW_ICON = path.join(__dirname, "..", "assets/icons/png/512x512.png");
 
 const window = {
   createMainWindow: () => {
-    // mainWindow = new BrowserWindow({
-    //   width: 1000,
-    //   height: 600,
-    //   webPreferences: {
-    //     nodeIntegration: false,
-    //     contextIsolation: true,
-    //     preload: path.join(__dirname, '..', 'preload.js')
-    //   },
-    //   backgroundColor: WINDOW_BACKGROUND_COLOR,
-    //   icon: WINDOW_ICON
-    // })
-
-    // mainWindow.loadFile('app/index.html')
     mainWindow = window.createWindow({
       width: 1400,
       height: 800,
@@ -53,6 +40,10 @@ const window = {
       webPreferences: webPreferences,
       backgroundColor: WINDOW_BACKGROUND_COLOR,
       icon: WINDOW_ICON,
+      titleBarStyle: "hidden",
+      frame: false,
+
+      trafficLightPosition: { x: 10, y: 10 },
     });
 
     newWindow.loadFile(indexFile);

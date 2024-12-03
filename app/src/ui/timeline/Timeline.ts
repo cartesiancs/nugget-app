@@ -42,7 +42,9 @@ export class Timeline extends LitElement {
     const elementControlComponent = document.querySelector("element-control");
 
     if (this.isAbleResize) {
-      const windowHeight = window.innerHeight;
+      const topBarHeight = 60;
+
+      const windowHeight = window.innerHeight + topBarHeight;
       const nowY = e.clientY;
       const resizeY = 100 - (nowY / windowHeight) * 103; // 103인 이유는 Vertical 전체가 windowHeight의 97%이기 떄문.
       if (resizeY <= 20) {

@@ -19,8 +19,8 @@ export interface IUIStore {
 export const uiStore = createStore<IUIStore>((set) => ({
   resize: {
     vertical: {
-      top: 80,
-      bottom: 20,
+      top: 60,
+      bottom: 40,
     },
     horizontal: {
       panel: 30,

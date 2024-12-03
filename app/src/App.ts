@@ -41,6 +41,9 @@ export class App extends LitElement {
           target-element-id="split_col_1"
         ></tutorial-popover>
       </tutorial-group>
+      <div class="top-bar">
+        <b>Nugget</b>
+      </div>
       <body class="h-100 bg-dark">
         <div id="app"></div>
 

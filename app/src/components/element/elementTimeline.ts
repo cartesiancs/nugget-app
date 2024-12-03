@@ -4,6 +4,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
+// NOTE: 조만간 deprecated
 @customElement("element-timeline")
 export class ElementTimeline extends LitElement {
   elementControl: any;

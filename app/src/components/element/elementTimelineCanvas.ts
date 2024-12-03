@@ -9,6 +9,7 @@ import {
   timelinerContext,
 } from "../../context/timelineContext";
 import { IUIStore, uiStore } from "../../states/uiStore";
+import { darkenColor } from "../../utils/rgbColor";
 
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
@@ -232,7 +233,7 @@ export class elementTimelineCanvas extends LitElement {
         selected[changedUUID].startTime,
         selected[changedUUID].duration,
         timelineRange,
-        timelineCursor
+        timelineCursor,
       );
 
       selected[changedUUID].startTime += targetElementStartTime;
@@ -296,7 +297,7 @@ export class elementTimelineCanvas extends LitElement {
       for (const elementId in this.timeline) {
         if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
           const width = this.millisecondsToPx(
-            this.timeline[elementId].duration
+            this.timeline[elementId].duration,
           );
           const height = 30;
           const top = index * height * 1.2 - this.canvasVerticalScroll;
@@ -327,13 +328,13 @@ export class elementTimelineCanvas extends LitElement {
             ctx.stroke();
           } else if (elementType == "dynamic") {
             const startTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.startTime
+              this.timeline[elementId].trim.startTime,
             );
             const endTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.endTime
+              this.timeline[elementId].trim.endTime,
             );
             const duration = this.millisecondsToPx(
-              this.timeline[elementId].duration
+              this.timeline[elementId].duration,
             );
 
             if (this.targetId == elementId) {
@@ -352,13 +353,21 @@ export class elementTimelineCanvas extends LitElement {
             ctx.fill();
             ctx.stroke();
 
+            const darkenRate = 0.8;
+
             ctx.lineWidth = 0;
-            ctx.fillStyle = "#7c7c82";
+            ctx.fillStyle = darkenColor(
+              this.timelineColor[elementId],
+              darkenRate,
+            );
             ctx.beginPath();
             ctx.rect(left, top, startTime, height);
             ctx.fill();
 
-            ctx.fillStyle = "#7c7c82";
+            ctx.fillStyle = darkenColor(
+              this.timelineColor[elementId],
+              darkenRate,
+            );
             ctx.beginPath();
             ctx.rect(left + endTime, top, duration - endTime, height);
             ctx.fill();
@@ -462,7 +471,7 @@ export class elementTimelineCanvas extends LitElement {
 
   private magnet({ targetId, px }: { targetId: string; px: number }) {
     let targetElementType = elementUtils.getElementType(
-      this.timeline[targetId].filetype
+      this.timeline[targetId].filetype,
     );
 
     let startX =
@@ -470,16 +479,17 @@ export class elementTimelineCanvas extends LitElement {
         ? this.millisecondsToPx(this.timeline[targetId].startTime)
         : this.millisecondsToPx(
             this.timeline[targetId].startTime +
-              this.timeline[targetId].trim.startTime
+              this.timeline[targetId].trim.startTime,
           );
     let endX =
       targetElementType == "static"
         ? this.millisecondsToPx(
-            this.timeline[targetId].startTime + this.timeline[targetId].duration
+            this.timeline[targetId].startTime +
+              this.timeline[targetId].duration,
           )
         : this.millisecondsToPx(
             this.timeline[targetId].startTime +
-              this.timeline[targetId].trim.endTime
+              this.timeline[targetId].trim.endTime,
           );
 
     let elementBarPosition = {
@@ -515,7 +525,7 @@ export class elementTimelineCanvas extends LitElement {
 
   updateTargetStartStretch({ targetId, dx }: { targetId: string; dx: number }) {
     let elementType = elementUtils.getElementType(
-      this.timeline[targetId].filetype
+      this.timeline[targetId].filetype,
     );
 
     if (elementType == "static") {
@@ -535,7 +545,7 @@ export class elementTimelineCanvas extends LitElement {
 
   updateTargetEndStretch({ targetId, dx }: { targetId: string; dx: number }) {
     let elementType = elementUtils.getElementType(
-      this.timeline[targetId].filetype
+      this.timeline[targetId].filetype,
     );
 
     if (elementType == "static") {
@@ -565,7 +575,7 @@ export class elementTimelineCanvas extends LitElement {
     for (const elementId in this.timeline) {
       if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
         const defaultWidth = this.millisecondsToPx(
-          this.timeline[elementId].duration
+          this.timeline[elementId].duration,
         );
         const defaultHeight = 30;
         const startY = index * defaultHeight * 1.2 - this.canvasVerticalScroll;
@@ -585,7 +595,7 @@ export class elementTimelineCanvas extends LitElement {
         ) {
           targetId = elementId;
           let elementType = elementUtils.getElementType(
-            this.timeline[elementId].filetype
+            this.timeline[elementId].filetype,
           );
 
           if (elementType == "static") {
@@ -598,10 +608,10 @@ export class elementTimelineCanvas extends LitElement {
             }
           } else if (elementType == "dynamic") {
             const trimStartTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.startTime
+              this.timeline[elementId].trim.startTime,
             );
             const trimEndTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.endTime
+              this.timeline[elementId].trim.endTime,
             );
             if (
               x > startX + trimStartTime - stretchArea &&
@@ -630,11 +640,11 @@ export class elementTimelineCanvas extends LitElement {
     this.isOpenAnimationPanelId.push(targetId);
 
     let timelineOptionOffcanvas = new bootstrap.Offcanvas(
-      document.getElementById("option_bottom")
+      document.getElementById("option_bottom"),
     );
     let timelineOption = document.querySelector("#timelineOptionBody");
     let targetElementId = document.querySelector(
-      "#timelineOptionTargetElement"
+      "#timelineOptionTargetElement",
     );
 
     timelineOption.innerHTML = `<keyframe-editor element-id="${targetId}" animation-type="${"position"}"></keyframe-editor>`;
@@ -645,11 +655,11 @@ export class elementTimelineCanvas extends LitElement {
 
   public closeAnimationPanel(targetId: string) {
     this.isOpenAnimationPanelId = this.isOpenAnimationPanelId.filter(
-      (item) => !item.includes(targetId)
+      (item) => !item.includes(targetId),
     );
 
     const animationPanel: any = this.querySelector(
-      `animation-panel[element-id='${targetId}']`
+      `animation-panel[element-id='${targetId}']`,
     );
 
     animationPanel.hide();
@@ -771,7 +781,7 @@ export class elementTimelineCanvas extends LitElement {
       this.targetDuration = this.timeline[this.targetId].duration;
 
       let elementType = elementUtils.getElementType(
-        this.timeline[this.targetId].filetype
+        this.timeline[this.targetId].filetype,
       );
 
       if (elementType == "dynamic") {

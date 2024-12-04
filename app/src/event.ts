@@ -1,33 +1,5 @@
 import { rendererModal } from "./utils/modal";
 
-// window.electronAPI.res.auth.loginSuccess((evt, data) => {
-//   console.log("AUTHDATA", data);
-//   let token = data.split("/")[2];
-
-//   //NOTE: URL 변경필요
-//   fetch(`${NUGGET_WEBSITE}/api/auth/me`, {
-//     headers: {
-//       Accept: "application/json",
-//       "x-access-token": token,
-//     },
-//   })
-//     .then((response) => response.json())
-//     .then((res) => {
-//       console.log(res);
-//       if (res.status == 0) {
-//         return 0;
-//       }
-
-//       window.electronAPI.req.store.set("token", token).then((result) => {
-//         if (result.status == 0) {
-//           return 0;
-//         }
-
-//         console.log("login!");
-//       });
-//     });
-// });
-
 window.electronAPI.res.render.progressing((evt, prog) => {
   rendererModal.progressModal.show();
   document.querySelector("#progress").style.width = `${prog}%`;
@@ -44,10 +16,10 @@ window.electronAPI.res.render.finish((evt) => {
   const projectFolder = document.querySelector("#projectFolder").value;
 
   window.electronAPI.req.filesystem.emptyDirSync(
-    `${projectFolder}/renderAnimation`
+    `${projectFolder}/renderAnimation`,
   );
   window.electronAPI.req.filesystem.removeDirectory(
-    `${projectFolder}/renderAnimation`
+    `${projectFolder}/renderAnimation`,
   );
 });
 
@@ -79,7 +51,7 @@ window.electronAPI.res.shortcut.controlO((evt) => {
 
 window.electronAPI.res.timeline.get((event) => {
   let timeline = _.cloneDeep(
-    document.querySelector("element-timeline").timeline
+    document.querySelector("element-timeline").timeline,
   );
 
   event.sender.send("return:timeline:get", timeline);
@@ -101,12 +73,6 @@ window.electronAPI.res.timeline.add(async (event, timeline) => {
 });
 
 window.addEventListener("load", (event) => {
-  window.electronAPI.req.app.getAppInfo().then((result) => {
-    document.querySelector(
-      "p[ref='appVersion']"
-    ).innerHTML = `Nugget v${result.data.version}`;
-  });
-
   let toastElList = [].slice.call(document.querySelectorAll(".toast"));
   let toastList = toastElList.map(function (toastEl) {
     return new bootstrap.Toast(toastEl);

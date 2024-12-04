@@ -528,7 +528,13 @@ export class elementTimelineCanvas extends LitElement {
       this.timeline[targetId].filetype,
     );
 
+    const minDuration = 100;
+
     if (elementType == "static") {
+      if (this.targetDuration - this.pxToMilliseconds(dx) <= minDuration) {
+        return false;
+      }
+
       this.timeline[targetId].startTime =
         this.targetStartTime + this.pxToMilliseconds(dx);
       this.timeline[targetId].duration =
@@ -548,7 +554,13 @@ export class elementTimelineCanvas extends LitElement {
       this.timeline[targetId].filetype,
     );
 
+    const minDuration = 100;
+
     if (elementType == "static") {
+      if (this.targetDuration + this.pxToMilliseconds(dx) <= minDuration) {
+        return false;
+      }
+
       this.timeline[targetId].duration =
         this.targetDuration + this.pxToMilliseconds(dx);
     }

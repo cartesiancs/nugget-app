@@ -14,9 +14,16 @@ export class ControlSetting extends LitElement {
   @property()
   renderOption = this.renderOptionStore.options;
 
+  @property()
+  appVersion = "";
+
   createRenderRoot() {
     renderOptionStore.subscribe((state) => {
       this.renderOption = state.options;
+    });
+
+    window.electronAPI.req.app.getAppInfo().then((result) => {
+      this.appVersion = `Nugget v${result.data.version}`;
     });
 
     return this;
@@ -33,7 +40,9 @@ export class ControlSetting extends LitElement {
   }
 
   render() {
-    return html` <p class="text-secondary" ref="appVersion"></p>
+    return html` <p class="text-secondary" ref="appVersion">
+        ${this.appVersion}
+      </p>
 
       <input id="projectFile" type="text" class="d-none" name="" />
 

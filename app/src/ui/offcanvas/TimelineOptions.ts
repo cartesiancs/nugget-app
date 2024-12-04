@@ -58,7 +58,7 @@ export class OffcanvasList extends LitElement {
         id="option_bottom"
         aria-labelledby="offcanvasRightLabel"
         style="height: calc(${this.resize.vertical
-          .bottom}% - 2rem); visibility: visible;"
+          .bottom}% - 92px); visibility: visible;"
       >
         <div class="offcanvas-header row d-flex justify-content-between">
           <div class="col"></div>

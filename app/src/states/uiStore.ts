@@ -12,8 +12,10 @@ export interface IUIStore {
       option: number;
     };
   };
+  topBarTitle: string;
   updateVertical: (criteria: number) => void;
   updateHorizontal: (criteria: number, panel: "panel" | "preview") => void;
+  setTopBarTitle: (topBarTitle: string) => void;
 }
 
 export const uiStore = createStore<IUIStore>((set) => ({
@@ -28,6 +30,12 @@ export const uiStore = createStore<IUIStore>((set) => ({
       option: 20,
     },
   },
+  topBarTitle: "Nugget",
+
+  setTopBarTitle: (topBarTitle) =>
+    set((state) => ({
+      topBarTitle: topBarTitle,
+    })),
 
   updateVertical: (criteria) =>
     set((state) => ({

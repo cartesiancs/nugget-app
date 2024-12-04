@@ -214,7 +214,7 @@ export class ElementTimeline extends LitElement {
 
   removeAnimationPanelById(elementId) {
     let target = this.querySelector(
-      `animation-panel[element-id="${elementId}"]`
+      `animation-panel[element-id="${elementId}"]`,
     );
     if (!target) {
       return 0;
@@ -255,12 +255,12 @@ export class ElementTimeline extends LitElement {
   splitSeletedElement() {
     let selected = {};
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timelineCursor = Number(
       document
         .querySelector("element-timeline-cursor")
-        .style.left.split("px")[0]
+        .style.left.split("px")[0],
     );
     const timeMagnification = timelineRange / 4;
     const convertMs = (timelineCursor * 5) / timeMagnification;
@@ -269,7 +269,7 @@ export class ElementTimeline extends LitElement {
     this.elementControl.selectElementsId.forEach((elementId) => {
       let changedUUID = uuidv4();
       let targetElementBar = document.querySelector(
-        `element-bar[element-id='${elementId}']`
+        `element-bar[element-id='${elementId}']`,
       );
       selected[changedUUID] = _.cloneDeep(this.timeline[elementId]);
 
@@ -285,8 +285,8 @@ export class ElementTimeline extends LitElement {
 
         targetElementBar.setTrimEnd(
           targetElementBar.millisecondsToPx(
-            selected[changedUUID].trim.startTime
-          )
+            selected[changedUUID].trim.startTime,
+          ),
         );
         this.timeline[elementId].trim.endTime =
           selected[changedUUID].trim.startTime;
@@ -305,7 +305,7 @@ export class ElementTimeline extends LitElement {
           this.timeline[elementId].duration - selected[changedUUID].duration;
 
         targetElementBar.setWidth(
-          targetElementBar.millisecondsToPx(originElementDuration)
+          targetElementBar.millisecondsToPx(originElementDuration),
         );
         this.timeline[elementId].duration = originElementDuration;
       }
@@ -320,14 +320,14 @@ export class ElementTimeline extends LitElement {
 
   showAnimationPanel(elementId) {
     const animationPanel: any = this.querySelector(
-      `animation-panel[element-id='${elementId}']`
+      `animation-panel[element-id='${elementId}']`,
     );
     animationPanel.show();
   }
 
   hideAnimationPanel(elementId) {
     const animationPanel: any = this.querySelector(
-      `animation-panel[element-id='${elementId}']`
+      `animation-panel[element-id='${elementId}']`,
     );
 
     animationPanel.hide();
@@ -335,11 +335,11 @@ export class ElementTimeline extends LitElement {
 
   showKeyframeEditor(elementId, animationType) {
     let timelineOptionOffcanvas = new bootstrap.Offcanvas(
-      document.getElementById("option_bottom")
+      document.getElementById("option_bottom"),
     );
     let timelineOption = document.querySelector("#timelineOptionBody");
     let targetElementId = document.querySelector(
-      "#timelineOptionTargetElement"
+      "#timelineOptionTargetElement",
     );
 
     timelineOption.innerHTML = `<keyframe-editor element-id="${elementId}" animation-type="${animationType}"></keyframe-editor>`;
@@ -351,7 +351,7 @@ export class ElementTimeline extends LitElement {
   deactivateSeletedBar() {
     this.elementControl.selectElementsId.forEach((elementId) => {
       let targetElement = document.querySelector(
-        `element-bar[element-id='${elementId}']`
+        `element-bar[element-id='${elementId}']`,
       );
       targetElement.unselectThisElement();
     });
@@ -360,10 +360,10 @@ export class ElementTimeline extends LitElement {
   fixRulerOnTop() {
     const scrollTop = this.scrollTop;
     const elementTimelineRuler = document.querySelector(
-      "element-timeline-ruler"
+      "element-timeline-ruler",
     );
     const elementTimelineCursor = document.querySelector(
-      "element-timeline-cursor"
+      "element-timeline-cursor",
     );
 
     elementTimelineRuler.setTopPosition(scrollTop);
@@ -414,7 +414,7 @@ export class ElementTimeline extends LitElement {
       "cursor-default",
       "h-100",
       "line",
-      "bg-darker"
+      "bg-darker",
     );
 
     return html`
@@ -452,11 +452,11 @@ export class ElementTimelineRange extends LitElement {
       ref="range"
       type="range"
       class="form-range"
-      min="0.2"
+      min="0.001"
       max="6"
-      step="0.02"
+      step="0.01"
       id="timelineRange"
-      value="0.5"
+      value="1"
       @change=${this.updateRange}
       @input=${this.updateRange}
     />`;
@@ -468,7 +468,7 @@ export class ElementTimelineRange extends LitElement {
       (
         (parseFloat(inputRange.value) * parseFloat(inputRange.value)) /
         10
-      ).toFixed(3)
+      ).toFixed(3),
     );
     if (newValue <= 0) {
       return 0;
@@ -567,11 +567,11 @@ export class ElementTimelineScroll extends LitElement {
     this.render();
     this.querySelector("input[ref='range']").addEventListener(
       "input",
-      this.updateRange.bind(this)
+      this.updateRange.bind(this),
     );
     this.querySelector("input[ref='range']").addEventListener(
       "change",
-      this.updateRange.bind(this)
+      this.updateRange.bind(this),
     );
   }
 }

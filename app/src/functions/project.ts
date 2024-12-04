@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import { useTimelineStore } from "../states/timelineStore";
 import { rendererModal } from "../utils/modal";
+import { uiStore } from "../states/uiStore";
 
 const arrayBufferToBase64 = (buffer) => {
   var binary = "";
@@ -13,6 +14,7 @@ const arrayBufferToBase64 = (buffer) => {
 };
 
 const timelineStore = useTimelineStore.getState();
+const uiState = uiStore.getState();
 
 const project = {
   save: function () {
@@ -39,7 +41,7 @@ const project = {
     if (isTimelineChange == true) {
       rendererModal.whenTimelineChanged.show();
       document.querySelector(
-        "#whenTimelineChangedMsg"
+        "#whenTimelineChangedMsg",
       ).innerHTML = `새 프로젝트 파일을 볼러오려면 에디터를 닫고 재실행해 주세요.`;
       return 0;
     }
@@ -51,7 +53,6 @@ const project = {
 
       let filepath = path;
 
-      //fs.readFile(filepath, function(err, data) {
       window.electronAPI.req.filesystem.readFile(filepath).then((data) => {
         JSZip.loadAsync(data).then(function (zip) {
           let aa = zip
@@ -77,7 +78,7 @@ const project = {
     const elementTimeline = document.querySelector("element-timeline");
     const timeline = document.querySelector("element-timeline").timeline;
     const projectDuration = Number(
-      document.querySelector("#projectDuration").value
+      document.querySelector("#projectDuration").value,
     );
     const projectRatio = document.querySelector("element-control").previewRatio;
 
@@ -115,9 +116,7 @@ const project = {
 
   changeProjectFileValue: function ({ projectDestination }) {
     document.querySelector("#projectFile").value = projectDestination;
-    document.querySelector(
-      "title"
-    ).innerHTML = `Nugget - ${projectDestination}`;
+    uiState.setTopBarTitle(`Nugget - ${projectDestination}`);
   },
 };
 

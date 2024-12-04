@@ -72,6 +72,37 @@ export class ElementTimelineRuler extends LitElement {
     this.drawRuler();
   }
 
+  private millisecondsToPx(ms) {
+    const timelineRange = this.timelineRange;
+    const timeMagnification = timelineRange / 4;
+    const convertPixel = (ms / 5) * timeMagnification;
+    const result = Number(convertPixel.toFixed(0));
+    if (result <= 0) {
+      return 0;
+    }
+
+    return result;
+  }
+
+  drawCursorHead() {
+    const ctx = this.canvas.getContext("2d");
+
+    const now =
+      this.millisecondsToPx(this.timelineCursor) - this.timelineScroll + 1;
+
+    const size = 6;
+    const top = 16;
+
+    ctx.fillStyle = "#dbdaf0";
+
+    ctx.beginPath();
+    ctx.moveTo(now - size, top);
+    ctx.lineTo(now, this.canvas.height);
+    ctx.lineTo(now + size, top);
+    ctx.lineWidth = 2;
+    ctx.fill();
+  }
+
   drawRuler() {
     this.width = document.querySelector("element-timeline").clientWidth;
 
@@ -118,7 +149,7 @@ export class ElementTimelineRuler extends LitElement {
     let startPoint =
       -this.timelineScroll % (180 * this.timeMagnification * range); //18 * 10 * 3
     let startNumber = Math.floor(
-      this.timelineScroll / (180 * this.timeMagnification * range)
+      this.timelineScroll / (180 * this.timeMagnification * range),
     );
 
     let term = 18 * this.timeMagnification;
@@ -145,7 +176,7 @@ export class ElementTimelineRuler extends LitElement {
         ctx.strokeText(
           `${(Number(count / 10) + startNumber * range) / unitSplit}${unit}`,
           startX - term / 2,
-          10
+          10,
         );
       } else {
         ctx.strokeStyle = "#e3e3e3";
@@ -155,6 +186,8 @@ export class ElementTimelineRuler extends LitElement {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+
+    this.drawCursorHead();
   }
 
   addTickNumber(licount) {
@@ -218,7 +251,7 @@ export class ElementTimelineRuler extends LitElement {
     const cursorDom = document.querySelector("element-timeline-cursor");
 
     this.timelineState.setCursor(
-      this.pxToMilliseconds(e.pageX + this.timelineScroll)
+      this.pxToMilliseconds(e.pageX + this.timelineScroll),
     );
     cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
 

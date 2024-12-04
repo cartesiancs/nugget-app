@@ -97,7 +97,7 @@ export class ElementControlAsset extends LitElement {
           resizeElement.x
         }px; height: ${resizeElement.h}px; transform: rotate(${
           this.timeline[this.elementId].rotation
-        }deg);`
+        }deg);`,
       );
     } else if (this.elementFiletype == "text") {
       let resizeRatio = this.elementControl.previewRatio;
@@ -105,7 +105,7 @@ export class ElementControlAsset extends LitElement {
 
       this.setAttribute(
         "style",
-        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`
+        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
       );
       this.elementControl.changeTextFont({
         elementId: this.elementId,
@@ -145,13 +145,13 @@ export class ElementControlAsset extends LitElement {
       "style",
       `${this.getAttribute("style")} z-index: ${
         this.timeline[this.elementId].priority
-      };`
+      };`,
     );
   }
 
   templateImage() {
     return html`<img
-      src="${this.timeline[this.elementId].blob}"
+      src="${this.timeline[this.elementId].localpath}"
       alt=""
       style="opacity: ${this.timeline[this.elementId].opacity}%;"
       class="element-image"
@@ -161,7 +161,7 @@ export class ElementControlAsset extends LitElement {
 
   templateVideo() {
     return html`<video
-      src="${this.timeline[this.elementId].blob}"
+      src="${this.timeline[this.elementId].localpath}"
       alt=""
       class="element-video"
       draggable="false"
@@ -170,7 +170,7 @@ export class ElementControlAsset extends LitElement {
 
   templateAudio() {
     return html`<audio src="${
-      this.timeline[this.elementId].blob
+      this.timeline[this.elementId].localpath
     }" class="d-none" draggable="false"></video>`;
   }
 
@@ -433,12 +433,12 @@ export class ElementControlAsset extends LitElement {
     }
 
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timeMagnification = timelineRange / 4;
 
     let keyframeEditor = document.querySelector(
-      `keyframe-editor[element-id="${this.elementId}"]`
+      `keyframe-editor[element-id="${this.elementId}"]`,
     );
     let progress =
       (this.elementControl.progressTime -
@@ -467,7 +467,7 @@ export class ElementControlAsset extends LitElement {
     addPoint[animationType]();
 
     let animationPanel = document.querySelector(
-      `animation-panel[element-id="${this.elementId}"]`
+      `animation-panel[element-id="${this.elementId}"]`,
     );
     animationPanel.updateItem();
   }
@@ -502,7 +502,7 @@ export class ElementControlAsset extends LitElement {
     let degree =
       -Math.atan2(
         referenceRotationPoint.x - mouseX,
-        referenceRotationPoint.y - mouseY
+        referenceRotationPoint.y - mouseY,
       ) /
       (Math.PI / 180);
 
@@ -623,16 +623,16 @@ export class ElementControlAsset extends LitElement {
     let resizeRatio = this.elementControl.previewRatio;
 
     this.timeline[this.elementId].location.y = Math.round(
-      Number(this.style.top.split("px")[0]) * resizeRatio
+      Number(this.style.top.split("px")[0]) * resizeRatio,
     );
     this.timeline[this.elementId].location.x = Math.round(
-      Number(this.style.left.split("px")[0]) * resizeRatio
+      Number(this.style.left.split("px")[0]) * resizeRatio,
     );
     this.timeline[this.elementId].width = Math.round(
-      Number(this.style.width.split("px")[0]) * resizeRatio
+      Number(this.style.width.split("px")[0]) * resizeRatio,
     );
     this.timeline[this.elementId].height = Math.round(
-      Number(this.style.height.split("px")[0]) * resizeRatio
+      Number(this.style.height.split("px")[0]) * resizeRatio,
     );
   }
 

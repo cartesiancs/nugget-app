@@ -12,6 +12,9 @@ export class App extends LitElement {
   @property()
   resize = this.uiState.resize;
 
+  @property()
+  topBarTitle = this.uiState.topBarTitle;
+
   @provide({ context: timelinerContext })
   @property()
   public timelineOptions = {
@@ -21,6 +24,7 @@ export class App extends LitElement {
   createRenderRoot() {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
+      this.topBarTitle = state.topBarTitle;
     });
 
     return this;
@@ -43,7 +47,7 @@ export class App extends LitElement {
       </tutorial-group>
 
       <div class="top-bar">
-        <b>Nugget</b>
+        <b>${this.topBarTitle}</b>
       </div>
 
       <body class="h-100 bg-dark">

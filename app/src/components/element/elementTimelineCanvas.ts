@@ -376,11 +376,13 @@ export class elementTimelineCanvas extends LitElement {
           let splitedFilepath = this.timeline[elementId].localpath.split("/");
           let text = splitedFilepath[splitedFilepath.length - 1];
 
-          const fontSize = 14;
-          ctx.fillStyle = "#ffffff";
-          ctx.lineWidth = 0;
-          ctx.font = `${fontSize}px "Noto Sans"`;
-          this.wrapText(ctx, text, left + 4, top + fontSize + 4, width);
+          if (width > 50) {
+            const fontSize = 14;
+            ctx.fillStyle = "#ffffff";
+            ctx.lineWidth = 0;
+            ctx.font = `${fontSize}px "Noto Sans"`;
+            this.wrapText(ctx, text, left + 4, top + fontSize + 4, width);
+          }
 
           index += 1;
         }
@@ -528,7 +530,7 @@ export class elementTimelineCanvas extends LitElement {
       this.timeline[targetId].filetype,
     );
 
-    const minDuration = 100;
+    const minDuration = 10;
 
     if (elementType == "static") {
       if (this.targetDuration - this.pxToMilliseconds(dx) <= minDuration) {
@@ -554,7 +556,7 @@ export class elementTimelineCanvas extends LitElement {
       this.timeline[targetId].filetype,
     );
 
-    const minDuration = 100;
+    const minDuration = 10;
 
     if (elementType == "static") {
       if (this.targetDuration + this.pxToMilliseconds(dx) <= minDuration) {

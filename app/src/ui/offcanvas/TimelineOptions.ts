@@ -60,10 +60,6 @@ export class OffcanvasList extends LitElement {
         style="height: calc(${this.resize.vertical
           .bottom}% - 92px); visibility: visible;"
       >
-        <div class="offcanvas-header row d-flex justify-content-between">
-          <div class="col"></div>
-          <div class="col text-end"></div>
-        </div>
         <div class="">
           <input
             type="hidden"

@@ -1,9 +1,15 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
+import {
+  ImageElementType,
+  ITimelineStore,
+  useTimelineStore,
+} from "../../states/timelineStore";
+import { millisecondsToPx } from "../../utils/time";
+import { uiStore } from "../../states/uiStore";
 
 @customElement("keyframe-editor")
 export class KeyframeEditor extends LitElement {
-  timeline: any;
   elementId: string;
   animationType: string;
   tension: number;
@@ -17,9 +23,9 @@ export class KeyframeEditor extends LitElement {
   points: number[][][];
   selectLine: number;
   keyframePointBody: any;
+
   constructor() {
     super();
-    this.timeline = document.querySelector("element-timeline").timeline;
 
     this.elementId = this.getAttribute("element-id");
     this.animationType = this.getAttribute("animation-type");
@@ -40,88 +46,192 @@ export class KeyframeEditor extends LitElement {
     this.points = [[[0, 0]], [[0, 0]]];
 
     this.selectLine = 0;
+
+    this.addEventListener("scroll", this.handleScroll.bind(this));
+  }
+
+  @query("#keyframeEditerCanvasRef") canvas!: HTMLCanvasElement;
+
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline = this.timelineState.timeline;
+
+  @property()
+  timelineRange = this.timelineState.range;
+
+  @property()
+  timelineScroll = this.timelineState.scroll;
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
+  createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+      this.timelineRange = state.range;
+      this.timelineScroll = state.scroll;
+      this.timelineCursor = state.cursor;
+
+      this.drawCanvas();
+    });
+
+    uiStore.subscribe((state) => {
+      this.drawCanvas();
+    });
+
+    return this;
   }
 
   render() {
     this.showKeyframeEditorButtonGroup();
 
-    const template = this.template();
-    this.innerHTML = template;
+    // this.divBody = this.querySelector("div");
+    // this.svgBody = this.divBody.querySelector("svg");
+    // this.keyframePointBody = this.divBody.querySelector("keyframe-point");
 
-    this.divBody = this.querySelector("div");
-    this.svgBody = this.divBody.querySelector("svg");
-    this.keyframePointBody = this.divBody.querySelector("keyframe-point");
+    // this.lineCount =
+    //   this.timeline[this.elementId].animation[this.animationType].points.length;
 
-    this.lineCount =
-      this.timeline[this.elementId].animation[this.animationType].points.length;
+    // if (
+    //   this.timeline[this.elementId].animation[this.animationType].isActivate ==
+    //   false
+    // ) {
+    //   //NOTE: 나중에 opacity 추가할때는 따로 수정
+    //   this.points[0][0][1] = this.timeline[this.elementId].location.x;
+    //   this.points[1][0][1] = this.timeline[this.elementId].location.y;
+    // } else {
+    //   this.points[0][0][1] =
+    //     this.timeline[this.elementId].animation[
+    //       this.animationType
+    //     ].points[0][0][1];
+    //   this.points[1][0][1] =
+    //     this.timeline[this.elementId].animation[
+    //       this.animationType
+    //     ].points[1][0][1];
+    // }
 
-    if (
-      this.timeline[this.elementId].animation[this.animationType].isActivate ==
-      false
-    ) {
-      //NOTE: 나중에 opacity 추가할때는 따로 수정
-      this.points[0][0][1] = this.timeline[this.elementId].location.x;
-      this.points[1][0][1] = this.timeline[this.elementId].location.y;
-    } else {
-      this.points[0][0][1] =
-        this.timeline[this.elementId].animation[
-          this.animationType
-        ].points[0][0][1];
-      this.points[1][0][1] =
-        this.timeline[this.elementId].animation[
-          this.animationType
-        ].points[1][0][1];
-    }
+    // this.timeline[this.elementId].animation[this.animationType].isActivate =
+    //   true;
 
-    this.timeline[this.elementId].animation[this.animationType].isActivate =
-      true;
+    // this.clearLineEditorGroup();
 
-    this.clearLineEditorGroup();
+    // for (let line = 0; line < this.lineCount; line++) {
+    //   this.addLineEditor(line);
+    //   this.drawLine(line, true);
+    //   this.loadPoint(line);
+    // }
 
-    for (let line = 0; line < this.lineCount; line++) {
-      this.addLineEditor(line);
-      this.drawLine(line, true);
-      this.loadPoint(line);
-    }
+    // const timelineRange = Number(
+    //   document.querySelector("element-timeline-range").value,
+    // );
+    // const timeMagnification = timelineRange / 4;
 
-    const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
-    );
-    const timeMagnification = timelineRange / 4;
+    // this.addPadding({
+    //   px: (this.timeline[this.elementId].startTime / 5) * timeMagnification,
+    //   type: "start",
+    // });
 
-    this.addPadding({
-      px: (this.timeline[this.elementId].startTime / 5) * timeMagnification,
-      type: "start",
-    });
-
-    this.querySelector("div").classList.add("position-relative");
+    // this.querySelector("div").classList.add("position-relative");
     //this.querySelector("div").style.height = `${this.scrollHeight}px`
 
     this.classList.add(
       "h-100",
       "w-100",
       "position-absolute",
-      "overflow-scroll"
+      "overflow-scroll",
     );
 
-    let animationPanel = document.querySelector(
-      `animation-panel[element-id="${this.elementId}"]`
-    );
-    animationPanel.updateItem();
+    // let animationPanel = document.querySelector(
+    //   `animation-panel[element-id="${this.elementId}"]`,
+    // );
+    // animationPanel.updateItem();
 
-    this.fillBackground();
+    return html` <div style="overflow: hidden;">
+      <canvas
+        id="keyframeEditerCanvasRef"
+        style="width: 100%;"
+        @mousewheel=${this._handleMouseWheel}
+      ></canvas>
+    </div>`;
   }
 
-  template() {
-    return `
-        <div>
-        <keyframe-padding class="keyframe-padding" style="width: 100px;"></keyframe-padding>
-        <svg class="keyframe-svg" style="left: 100px;">
+  private drawCursor(ctx) {
+    const now =
+      millisecondsToPx(this.timelineCursor, this.timelineRange) -
+      this.timelineScroll;
 
-        </svg>
-        <keyframe-point style="left: 100px;" class="position-absolute"></keyframe-point>
+    ctx.fillStyle = "#dbdaf0";
+    ctx.beginPath();
+    ctx.rect(now, 0, 2, this.canvas.height);
+    ctx.fill();
+  }
 
-        </div>`;
+  private drawLeftPadding(ctx) {
+    const targetTimeline: ImageElementType = this.timeline[this.elementId];
+
+    const startPx =
+      millisecondsToPx(targetTimeline.startTime, this.timelineRange) -
+      this.timelineScroll;
+
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.rect(0, 0, startPx, this.canvas.height);
+    ctx.fill();
+  }
+
+  private drawRightPadding(ctx) {
+    const targetTimeline: ImageElementType = this.timeline[this.elementId];
+
+    const startPx =
+      millisecondsToPx(
+        targetTimeline.startTime + targetTimeline.duration,
+        this.timelineRange,
+      ) - this.timelineScroll;
+
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.rect(startPx, 0, this.canvas.width - startPx, this.canvas.height);
+    ctx.fill();
+  }
+
+  private drawCanvas() {
+    const ctx = this.canvas.getContext("2d");
+    if (ctx) {
+      const dpr = window.devicePixelRatio;
+      this.canvas.style.width = `${window.innerWidth}px`;
+
+      this.canvas.width = window.innerWidth * dpr;
+      this.canvas.height =
+        document.querySelector("element-timeline").offsetHeight * dpr;
+
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.scale(dpr, dpr);
+
+      ctx.fillStyle = "#0f1012";
+      ctx.beginPath();
+      ctx.rect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.fill();
+
+      this.drawLeftPadding(ctx);
+      this.drawRightPadding(ctx);
+      this.drawCursor(ctx);
+    }
+  }
+
+  _handleMouseWheel(e) {
+    const newScroll = this.timelineScroll + e.deltaX;
+
+    this.drawCanvas();
+
+    if (newScroll >= 0) {
+      this.timelineState.setScroll(newScroll);
+    }
+  }
+
+  updated() {
+    this.drawCanvas();
   }
 
   showKeyframeEditorButtonGroup() {
@@ -138,13 +248,6 @@ export class KeyframeEditor extends LitElement {
     document
       .querySelector("element-timeline-canvas")
       .closeAnimationPanel(this.elementId);
-  }
-
-  fillBackground() {
-    setTimeout(() => {
-      this.querySelector("div").style.height = `${this.scrollHeight}px`;
-      console.log("scrollHeight", this.scrollHeight);
-    }, 100);
   }
 
   addPadding({ px, type }) {
@@ -190,7 +293,7 @@ export class KeyframeEditor extends LitElement {
       .querySelector("#timelineOptionLineEditor")
       .insertAdjacentHTML(
         "beforeend",
-        `<button line="${line}" onclick="document.querySelector('keyframe-editor').changeLineEditor('${line}')" type="button" class="btn btn-secondary btn-sm">Line${line}</button>`
+        `<button line="${line}" onclick="document.querySelector('keyframe-editor').changeLineEditor('${line}')" type="button" class="btn btn-secondary btn-sm">Line${line}</button>`,
       );
   }
 
@@ -221,7 +324,6 @@ export class KeyframeEditor extends LitElement {
       }
 
       this.drawLine(line, true);
-      this.fillBackground();
     }
   }
 
@@ -251,7 +353,7 @@ export class KeyframeEditor extends LitElement {
 
   drawPoint({ x, y, line }) {
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timeMagnification = timelineRange / 4;
 
@@ -260,7 +362,7 @@ export class KeyframeEditor extends LitElement {
 
     this.keyframePointBody.insertAdjacentHTML(
       "beforeend",
-      `<div class="position-absolute keyframe-point" style="top: ${insertY}px; left: ${insertX}px;"></div>`
+      `<div class="position-absolute keyframe-point" style="top: ${insertY}px; left: ${insertX}px;"></div>`,
     );
   }
 
@@ -300,11 +402,11 @@ export class KeyframeEditor extends LitElement {
       `
         <polyline id="keyframePolyline${line}" />
         <path id="keyframePath${line}" class="keyframe-path-${line + 1}" />
-        <path id="keyframeHiddenPath${line}" class="d-none" />`
+        <path id="keyframeHiddenPath${line}" class="d-none" />`,
     );
 
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timeMagnification = timelineRange / 4;
 
@@ -318,16 +420,16 @@ export class KeyframeEditor extends LitElement {
     }
 
     this.path[line] = this.svgBody.querySelector(
-      `path[id='keyframePath${line}']`
+      `path[id='keyframePath${line}']`,
     );
     this.path[line].setAttribute("d", this.drawPath(points, this.tension));
 
     this.hiddenPath[line] = this.svgBody.querySelector(
-      `path[id='keyframeHiddenPath${line}']`
+      `path[id='keyframeHiddenPath${line}']`,
     );
     this.hiddenPath[line].setAttribute(
       "d",
-      this.drawPath(this.points[line], this.tension)
+      this.drawPath(this.points[line], this.tension),
     );
 
     let loadPointLength =
@@ -402,7 +504,7 @@ export class KeyframeEditor extends LitElement {
 
   handleMousedown(e) {
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timeMagnification = timelineRange / 4;
 
@@ -417,7 +519,7 @@ export class KeyframeEditor extends LitElement {
     this.drawLine(this.selectLine, true);
 
     let animationPanel = document.querySelector(
-      `animation-panel[element-id="${this.elementId}"]`
+      `animation-panel[element-id="${this.elementId}"]`,
     );
     animationPanel.updateItem();
   }
@@ -430,12 +532,5 @@ export class KeyframeEditor extends LitElement {
     }
     let elementTimeline = document.querySelector("element-timeline");
     elementTimeline.scrollTo(this.scrollLeft, elementTimeline.scrollTop);
-  }
-
-  connectedCallback() {
-    this.render();
-
-    this.svgBody.addEventListener("mousedown", this.handleMousedown.bind(this));
-    this.addEventListener("scroll", this.handleScroll.bind(this));
   }
 }

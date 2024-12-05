@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 
-type ImageElementType = {
+export type ImageElementType = {
   key: string;
   priority?: number;
   blob?: string;

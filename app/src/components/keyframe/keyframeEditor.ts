@@ -112,9 +112,6 @@ export class KeyframeEditor extends LitElement {
     //     ].points[1][0][1];
     // }
 
-    // this.timeline[this.elementId].animation[this.animationType].isActivate =
-    //   true;
-
     // this.clearLineEditorGroup();
 
     // for (let line = 0; line < this.lineCount; line++) {
@@ -148,13 +145,69 @@ export class KeyframeEditor extends LitElement {
     // );
     // animationPanel.updateItem();
 
+    this.timeline[this.elementId].animation[this.animationType].isActivate =
+      true;
+
+    // this.timelineState.patchTimeline(this.timeline);
+
+    console.log(this.timeline);
+
     return html` <div style="overflow: hidden;">
       <canvas
         id="keyframeEditerCanvasRef"
         style="width: 100%;"
         @mousewheel=${this._handleMouseWheel}
+        @click=${this._handleMouseClick}
       ></canvas>
     </div>`;
+  }
+
+  private drawDots(ctx) {
+    const pointsX = this.timeline[this.elementId].animation.position.points[0];
+    const pointsY = this.timeline[this.elementId].animation.position.points[1];
+
+    //     ctx.beginPath();
+    // ctx.moveTo(30, 50);
+    // ctx.lineTo(150, 100);
+    // ctx.stroke();
+
+    for (let index = 0; index < pointsX.length; index++) {
+      const element = pointsX[index];
+      ctx.fillStyle = "#dbdaf0";
+
+      ctx.beginPath();
+      const x =
+        millisecondsToPx(element[0], this.timelineRange) - this.timelineScroll;
+      ctx.arc(element[0], element[1], 4, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    for (let index = 0; index < pointsY.length; index++) {
+      const element = pointsY[index];
+      ctx.fillStyle = "#dbdaf0";
+
+      ctx.beginPath();
+      ctx.arc(element[0], element[1], 4, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  }
+
+  private drawLines(ctx) {
+    const pointsX = this.timeline[this.elementId].animation.position.points[0];
+    const pointsY = this.timeline[this.elementId].animation.position.points[1];
+
+    ctx.strokeStyle = "#dbdaf0";
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+
+    for (let index = 0; index < pointsX.length; index++) {
+      const element = pointsX[index];
+
+      ctx.lineTo(element[0], element[1]);
+    }
+
+    ctx.stroke();
   }
 
   private drawCursor(ctx) {
@@ -217,6 +270,8 @@ export class KeyframeEditor extends LitElement {
       this.drawLeftPadding(ctx);
       this.drawRightPadding(ctx);
       this.drawCursor(ctx);
+      this.drawDots(ctx);
+      this.drawLines(ctx);
     }
   }
 
@@ -228,6 +283,20 @@ export class KeyframeEditor extends LitElement {
     if (newScroll >= 0) {
       this.timelineState.setScroll(newScroll);
     }
+  }
+
+  _handleMouseClick(e) {
+    const insertX = e.offsetX;
+    const insertY = e.offsetY;
+
+    this.addPoint({
+      x: insertX,
+      y: insertY,
+      line: this.selectLine,
+    });
+    this.drawCanvas();
+
+    console.log(e.offsetX, e.offsetY, e);
   }
 
   updated() {
@@ -334,21 +403,23 @@ export class KeyframeEditor extends LitElement {
       line: line,
     });
 
-    this.drawPoint({
-      x: x,
-      y: y,
-      line: line,
-    });
+    // this.drawPoint({
+    //   x: x,
+    //   y: y,
+    //   line: line,
+    // });
 
     let loadPointLength =
       this.points[line][this.points[line].length - 1][0] - 1;
-    //let allPoints = this.getInterpolatedPoints(loadPointLength, line)
+    //let allPoints = this.getInterpolatedPoints(loadPointLength, line);
 
     this.timeline[this.elementId].animation[this.animationType].isActivate =
       true;
     this.timeline[this.elementId].animation[this.animationType].points[line] =
       this.points[line];
-    //this.timeline[this.elementId].animation[this.animationType].allpoints[line] = allPoints
+    // this.timeline[this.elementId].animation[this.animationType].allpoints[
+    //   line
+    // ] = allPoints;
   }
 
   drawPoint({ x, y, line }) {
@@ -434,7 +505,7 @@ export class KeyframeEditor extends LitElement {
 
     let loadPointLength =
       this.points[line][this.points[line].length - 1][0] - 1;
-    let allPoints = this.getInterpolatedPoints(loadPointLength, line, points);
+    let allPoints = this.getInterpolatedPoints(loadPointLength, line);
     this.timeline[this.elementId].animation[this.animationType].allpoints[
       line
     ] = allPoints;
@@ -485,7 +556,7 @@ export class KeyframeEditor extends LitElement {
     };
   }
 
-  getInterpolatedPoints(loadPointLength, line, tmppoints) {
+  getInterpolatedPoints(loadPointLength, line) {
     let points = [];
     let indexDivision = 4;
     let indexAt = 0;

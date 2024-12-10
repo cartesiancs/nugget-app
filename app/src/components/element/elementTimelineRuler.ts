@@ -21,7 +21,7 @@ export class ElementTimelineRuler extends LitElement {
     this.mousemoveEventHandler = undefined;
     this.mouseTimeout = undefined;
     this.rulerType = "sec";
-    this.timeMagnification = 1;
+    this.timeMagnification = (0.9 / 4) * 1.1111111111;
     this.addEventListener("mousedown", this.handleMousedown);
     document.addEventListener("mouseup", this.handleMouseup.bind(this));
   }

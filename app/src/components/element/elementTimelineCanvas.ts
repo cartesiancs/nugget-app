@@ -393,15 +393,6 @@ export class elementTimelineCanvas extends LitElement {
     }
   }
 
-  repositionCursor() {
-    const cursorDom = document.querySelector("element-timeline-cursor");
-    const controlDom = document.querySelector("element-control");
-
-    const progress = controlDom.progress;
-
-    cursorDom.style.left = `${progress - this.timelineScroll}px`;
-  }
-
   private guide({
     element,
     filetype,
@@ -737,7 +728,6 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
-    this.repositionCursor();
 
     if (this.canvasVerticalScroll + e.deltaY > 0) {
       this.canvasVerticalScroll += e.deltaY;

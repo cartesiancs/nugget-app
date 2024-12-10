@@ -120,7 +120,7 @@ export class ElementControl extends LitElement {
           html`<element-control-asset
             elementId="${elementId}"
             elementFiletype="${element.filetype}"
-          ></element-control-asset>`
+          ></element-control-asset>`,
         );
       }
     }
@@ -164,7 +164,7 @@ export class ElementControl extends LitElement {
       let horizontalResizeWidth = Math.round(innerWidth * horizontalPadding);
       let horizontalResizeHeight = Math.round(
         (horizontalResizeWidth * this.renderOption.previewSize.h) /
-          this.renderOption.previewSize.w
+          this.renderOption.previewSize.w,
       );
 
       let verticalResizeHeight =
@@ -240,7 +240,7 @@ export class ElementControl extends LitElement {
 
   removeElementById(elementId) {
     this.querySelector(
-      `element-control-asset[element-id="${elementId}"]`
+      `element-control-asset[element-id="${elementId}"]`,
     ).remove();
     this.timeline = document.querySelector("element-timeline").timeline;
   }
@@ -358,7 +358,7 @@ export class ElementControl extends LitElement {
     const elementId = this.generateUUID();
     const video = document.createElement("video");
     const toastMetadata = bootstrap.Toast.getInstance(
-      document.getElementById("loadMetadataToast")
+      document.getElementById("loadMetadataToast"),
     );
     toastMetadata.show();
 
@@ -490,7 +490,7 @@ export class ElementControl extends LitElement {
 
   showAnimation(elementId, animationType) {
     let index = Math.round(
-      document.querySelector("element-control").progressTime / 20
+      document.querySelector("element-control").progressTime / 20,
     );
     let indexToMs = index * 20;
     let startTime = Number(this.timeline[elementId].startTime);
@@ -518,7 +518,7 @@ export class ElementControl extends LitElement {
     if (document.getElementById(`element-${elementId}`) == null) {
       this.insertAdjacentHTML(
         "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`
+        `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`,
       );
     } else {
       document
@@ -536,7 +536,7 @@ export class ElementControl extends LitElement {
     if (document.getElementById(`element-${elementId}`) == null) {
       this.insertAdjacentHTML(
         "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`
+        `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`,
       );
 
       let video = document
@@ -587,7 +587,7 @@ export class ElementControl extends LitElement {
     if (document.getElementById(`element-${elementId}`) == null) {
       this.insertAdjacentHTML(
         "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="audio"></element-control-asset>`
+        `<element-control-asset element-id="${elementId}" element-filetype="audio"></element-control-asset>`,
       );
 
       let audio = document
@@ -636,7 +636,7 @@ export class ElementControl extends LitElement {
     if (document.getElementById(`element-${elementId}`) == null) {
       this.insertAdjacentHTML(
         "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`
+        `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`,
       );
     } else {
       document
@@ -645,8 +645,8 @@ export class ElementControl extends LitElement {
     }
 
     if (
-      this.timeline[elementId].animation.isActivate == true &&
-      this.timeline[elementId].animation.allpoints.length >
+      this.timeline[elementId].animation["position"].isActivate == true &&
+      this.timeline[elementId].animation["position"].allpoints.length >
         document.querySelector("element-control").progress
     ) {
       this.showAnimation(elementId, "position");
@@ -704,7 +704,7 @@ export class ElementControl extends LitElement {
     const cursorDom = document.querySelector("element-timeline-cursor");
 
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timeMagnification = timelineRange / 4;
 
@@ -731,14 +731,14 @@ export class ElementControl extends LitElement {
         }
 
         let targetAnimationPanel = document.querySelector(
-          `animation-panel[element-id="${elementId}"]`
+          `animation-panel[element-id="${elementId}"]`,
         );
         let targetElementBar = document.querySelector(
-          `element-bar[element-id="${elementId}"]`
+          `element-bar[element-id="${elementId}"]`,
         );
 
         let originalLeft = targetElementBar.millisecondsToPx(
-          this.timeline[elementId].startTime
+          this.timeline[elementId].startTime,
         );
 
         targetAnimationPanel.updateItem();
@@ -749,7 +749,7 @@ export class ElementControl extends LitElement {
 
   getTimeFromProgress() {
     let timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     let timeMagnification = timelineRange / 4;
 
@@ -760,10 +760,10 @@ export class ElementControl extends LitElement {
 
   getTimeFromTimelineBar() {
     let timelineCursorProgress = Number(
-      this.timelineCursor.style.left.split("px")[0]
+      this.timelineCursor.style.left.split("px")[0],
     );
     let timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     let timeMagnification = timelineRange / 4;
 
@@ -776,10 +776,10 @@ export class ElementControl extends LitElement {
     allElementBar.forEach((element: any) => {
       let elementId = element.getAttribute("element-id");
       let originalWidth = element.millisecondsToPx(
-        this.timeline[elementId].duration
+        this.timeline[elementId].duration,
       );
       let originalLeft = element.millisecondsToPx(
-        this.timeline[elementId].startTime
+        this.timeline[elementId].startTime,
       );
       let changedWidth = originalWidth;
       let changedLeft = originalLeft;
@@ -789,11 +789,11 @@ export class ElementControl extends LitElement {
 
       if (element.elementBarType == "dynamic") {
         let trimStart = element.millisecondsToPx(
-          this.timeline[elementId].trim.startTime
+          this.timeline[elementId].trim.startTime,
         );
         let trimEnd = element.millisecondsToPx(
           this.timeline[elementId].duration -
-            this.timeline[elementId].trim.endTime
+            this.timeline[elementId].trim.endTime,
         );
 
         element.setTrimStart(trimStart);
@@ -865,7 +865,7 @@ export class ElementControl extends LitElement {
     const elapsed = Date.now() - this.startTime;
 
     let nowTimelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     let nowTimelineProgress =
       Number(this.timelineCursor.style.left.split("px")[0]) + nowTimelineRange;
@@ -985,7 +985,7 @@ export class DragAlignmentGuide extends LitElement {
         .querySelector("#video")
         .insertAdjacentHTML(
           "beforeend",
-          `<alignment-guide position="${position}" class="alignment-guide alignment-guide-${position}"></alignment-guide>`
+          `<alignment-guide position="${position}" class="alignment-guide alignment-guide-${position}"></alignment-guide>`,
         );
       this.hideGuide({ position: position });
     }

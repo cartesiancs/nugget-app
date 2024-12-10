@@ -1,34 +1,34 @@
 import { createStore } from "zustand/vanilla";
 
 export type ImageElementType = {
-  key: string;
+  key?: string;
   priority?: number;
   blob?: string;
   startTime?: number;
   duration?: number;
   opacity?: number;
   location?: { x: number; y: number };
-  rotation?: 0;
+  rotation?: number;
   width?: number;
   height?: number;
   localpath?: string;
   filetype?: string;
   animation?: {
-    position: {
-      isActivate: boolean;
-      points: number[][];
-      allpoints: number[][];
+    position?: {
+      isActivate?: boolean;
+      points?: number[][];
+      allpoints?: number[][];
     };
-    opacity: {
-      isActivate: boolean;
-      points: number[][];
-      allpoints: number[][];
+    opacity?: {
+      isActivate?: boolean;
+      points?: number[][];
+      allpoints?: number[][];
     };
   };
 };
 
 type VideoElementType = {
-  key: string;
+  key?: string;
 
   priority?: number;
   blob?: string;
@@ -46,7 +46,7 @@ type VideoElementType = {
 };
 
 type TextElementType = {
-  key: string;
+  key?: string;
   blob?: string;
 
   priority?: number;
@@ -67,21 +67,21 @@ type TextElementType = {
   width?: number;
   widthInner?: number;
   animation?: {
-    position: {
-      isActivate: boolean;
-      points: number[][];
-      allpoints: number[][];
+    position?: {
+      isActivate?: boolean;
+      points?: number[][];
+      allpoints?: number[][];
     };
-    opacity: {
-      isActivate: boolean;
-      points: number[][];
-      allpoints: number[][];
+    opacity?: {
+      isActivate?: boolean;
+      points?: number[][];
+      allpoints?: number[][];
     };
   };
 };
 
 type AudioElementType = {
-  key: string;
+  key?: string;
 
   priority?: number;
   startTime?: number;
@@ -92,14 +92,15 @@ type AudioElementType = {
   filetype?: string;
 };
 
-type TimelineArrayType =
-  | ImageElementType
-  | VideoElementType
-  | TextElementType
-  | AudioElementType;
+interface Timeline {
+  [elementId: string]: ImageElementType &
+    VideoElementType &
+    TextElementType &
+    AudioElementType;
+}
 
 export interface ITimelineStore {
-  timeline: any;
+  timeline: Timeline;
   range: number;
   scroll: number;
   cursor: number;

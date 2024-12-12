@@ -10,6 +10,7 @@ import {
 } from "../../context/timelineContext";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { darkenColor } from "../../utils/rgbColor";
+import { TimelineController } from "../../controllers/timeline";
 
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
@@ -83,8 +84,8 @@ export class elementTimelineCanvas extends LitElement {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
       this.timelineRange = state.range;
-      this.timelineScroll = state.scroll;
       this.timelineCursor = state.cursor;
+      this.timelineScroll = state.scroll;
 
       this.setTimelineColor();
       this.drawCanvas();
@@ -701,9 +702,10 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   showMenuDropdown({ x, y }) {
+    // ${this.animationPanelDropdownTemplate()}
     document.querySelector("#menuRightClick").innerHTML = `
         <menu-dropdown-body top="${y}" left="${x}">
-          ${this.animationPanelDropdownTemplate()}
+          
           <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
         </menu-dropdown-body>`;
   }
@@ -827,6 +829,7 @@ export class elementTimelineCanvas extends LitElement {
 
     if (event.ctrlKey && event.keyCode == 67) {
       //CTL c
+      console.log("SS");
       this.copySeletedElement();
     }
 
@@ -869,6 +872,12 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   protected render(): unknown {
+    if (document.querySelector("#elementTimelineCanvasRef")) {
+      this.timelineState.setCanvasWidth(
+        document.querySelector("#elementTimelineCanvasRef").clientWidth,
+      );
+    }
+
     return html` ${this.renderCanvas()}`;
   }
 }

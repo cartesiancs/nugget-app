@@ -1,31 +1,20 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ITestStore, testStore } from "../../states/testStore";
 import { IProjectStore, projectStore } from "../../states/projectStore";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { RenderController } from "../../controllers/render";
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
-  private renderControll = new RenderController();
-
-  @property()
-  countState: ITestStore = testStore.getInitialState();
+  private renderControl = new RenderController();
 
   @property()
   projectState: IProjectStore = projectStore.getInitialState();
 
   @property()
-  count = this.countState.count;
-
-  @property()
   nowDirectory = this.projectState.nowDirectory;
 
   createRenderRoot() {
-    testStore.subscribe((state) => {
-      this.count = state.count;
-    });
-
     projectStore.subscribe((state) => {
       this.nowDirectory = state.nowDirectory;
     });
@@ -33,16 +22,12 @@ export class ControlRender extends LitElement {
     return this;
   }
 
-  handleClickButton() {
-    this.countState.updateCount();
-  }
-
   handleClickActionButton() {
     //this.renderControll.requestRender();
   }
 
   handleClickRenderButton() {
-    this.renderControll.requestRender();
+    this.renderControl.requestRender();
   }
 
   render() {
@@ -73,9 +58,6 @@ export class ControlRender extends LitElement {
         </div>
       </div>
 
-      <button class="btn btn-blue-fill" @click=${this.handleClickActionButton}>
-        Active
-      </button>
       <button class="btn btn-blue-fill" @click=${this.handleClickRenderButton}>
         Export
       </button>`;

@@ -434,9 +434,13 @@ export class ElementTimelineRange extends LitElement {
   @property()
   timelineRange = this.timelineState.range;
 
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineRange = state.range;
+      this.timelineCursor = state.cursor;
     });
 
     return this;

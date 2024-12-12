@@ -1,4 +1,5 @@
 import { createStore } from "zustand/vanilla";
+import { millisecondsToPx, pxToMilliseconds } from "../utils/time";
 
 export type ImageElementType = {
   key?: string;
@@ -104,6 +105,7 @@ export interface ITimelineStore {
   range: number;
   scroll: number;
   cursor: number;
+  canvasWidth: number;
 
   addTimeline: (key: string, timeline: any) => void;
   clearTimeline: () => void;
@@ -112,6 +114,8 @@ export interface ITimelineStore {
   setRange: (range: number) => void;
   setScroll: (scroll: number) => void;
   setCursor: (cursor: number) => void;
+  setCanvasWidth: (canvasWidth: number) => void;
+
   increaseCursor: (dt: number) => void;
 }
 
@@ -120,6 +124,7 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   range: 0.9,
   scroll: 0,
   cursor: 0,
+  canvasWidth: 500,
 
   addTimeline: (key: string, timeline: any) =>
     set((state) => ({ timeline: { ...state.timeline, [key]: timeline } })),
@@ -138,9 +143,19 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   patchTimeline: (timeline: any) =>
     set((state) => ({ timeline: { ...timeline } })),
 
-  setRange: (range: number) => set((state) => ({ range: range })),
+  setRange: (range: number) =>
+    set((state) => ({
+      range: range,
+      scroll:
+        (state.cursor / 5) * (range / 4) - state.canvasWidth / 2 <= 0
+          ? 0
+          : (state.cursor / 5) * (range / 4) - state.canvasWidth / 2,
+    })),
   setScroll: (scroll: number) => set((state) => ({ scroll: scroll })),
   setCursor: (cursor: number) => set((state) => ({ cursor: cursor })),
+  setCanvasWidth: (canvasWidth: number) =>
+    set((state) => ({ canvasWidth: canvasWidth })),
+
   increaseCursor: (dt: number) =>
     set((state) => ({ cursor: state.cursor + dt })),
 }));

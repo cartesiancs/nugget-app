@@ -1,11 +1,11 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ITestStore, testStore } from "../../states/testStore";
 import "./ControlSetting";
 import "./ControlText";
 import "./ControlExtension";
 import "./ControlRender";
 import { IUIStore, uiStore } from "../../states/uiStore";
+import { TimelineController } from "../../controllers/timeline";
 
 @customElement("control-ui")
 export class Control extends LitElement {

@@ -98,41 +98,6 @@ export class KeyframeEditor extends LitElement {
   render() {
     this.showKeyframeEditorButtonGroup();
 
-    // this.divBody = this.querySelector("div");
-    // this.svgBody = this.divBody.querySelector("svg");
-    // this.keyframePointBody = this.divBody.querySelector("keyframe-point");
-
-    // if (
-    //   this.timeline[this.elementId].animation[this.animationType].isActivate ==
-    //   false
-    // ) {
-    //   //NOTE: 나중에 opacity 추가할때는 따로 수정
-    //   this.points[0][0][1] = this.timeline[this.elementId].location.x;
-    //   this.points[1][0][1] = this.timeline[this.elementId].location.y;
-    // } else {
-    //   this.points[0][0][1] =
-    //     this.timeline[this.elementId].animation[
-    //       this.animationType
-    //     ].points[0][0][1];
-    //   this.points[1][0][1] =
-    //     this.timeline[this.elementId].animation[
-    //       this.animationType
-    //     ].points[1][0][1];
-    // }
-
-    // const timelineRange = Number(
-    //   document.querySelector("element-timeline-range").value,
-    // );
-    // const timeMagnification = timelineRange / 4;
-
-    // this.addPadding({
-    //   px: (this.timeline[this.elementId].startTime / 5) * timeMagnification,
-    //   type: "start",
-    // });
-
-    // this.querySelector("div").classList.add("position-relative");
-    //this.querySelector("div").style.height = `${this.scrollHeight}px`
-
     this.classList.add(
       "h-100",
       "w-100",
@@ -140,17 +105,8 @@ export class KeyframeEditor extends LitElement {
       "overflow-scroll",
     );
 
-    // let animationPanel = document.querySelector(
-    //   `animation-panel[element-id="${this.elementId}"]`,
-    // );
-    // animationPanel.updateItem();
-
     this.timeline[this.elementId].animation[this.animationType].isActivate =
       true;
-
-    // this.timelineState.patchTimeline(this.timeline);
-
-    console.log(this.timeline);
 
     return html` <div style="overflow: hidden;">
       <canvas

@@ -1,6 +1,5 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ITestStore, testStore } from "../../states/testStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("offcanvas-list-ui")
@@ -58,7 +57,7 @@ export class OffcanvasList extends LitElement {
         id="option_bottom"
         aria-labelledby="offcanvasRightLabel"
         style="height: calc(${this.resize.vertical
-          .bottom}% - 92px); visibility: visible;"
+          .bottom}% - 90px); visibility: visible;"
       >
         <div class="">
           <input

@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IUIStore, uiStore } from "./states/uiStore";
-import { timelinerContext } from "./context/timelineContext";
+import { timelineContext } from "./context/timelineContext";
 import { provide } from "@lit/context";
 
 @customElement("app-root")
@@ -14,12 +14,6 @@ export class App extends LitElement {
 
   @property()
   topBarTitle = this.uiState.topBarTitle;
-
-  @provide({ context: timelinerContext })
-  @property()
-  public timelineOptions = {
-    range: 0.9,
-  };
 
   createRenderRoot() {
     uiStore.subscribe((state) => {

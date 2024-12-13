@@ -3,8 +3,8 @@ import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 export type TimelineContentObject = {
-  range: number;
+  canvasVerticalScroll: number;
 };
 
-export const timelinerContext =
-  createContext<TimelineContentObject>("timelineOptions");
+export const timelineContext =
+  createContext<TimelineContentObject>("timelineCanvas");

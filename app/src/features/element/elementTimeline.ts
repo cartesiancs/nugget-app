@@ -3,6 +3,8 @@ import { elementUtils } from "../../utils/element";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { provide } from "@lit/context";
+import { timelineContext } from "../../context/timelineContext";
 
 // NOTE: 조만간 deprecated
 @customElement("element-timeline")
@@ -407,6 +409,12 @@ export class ElementTimeline extends LitElement {
       px: this.scrollLeft,
     });
   }
+
+  @provide({ context: timelineContext })
+  @property()
+  public timelineOptions = {
+    canvasVerticalScroll: 0,
+  };
 
   render() {
     this.classList.add(

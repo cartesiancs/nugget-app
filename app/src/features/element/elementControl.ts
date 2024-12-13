@@ -2,10 +2,6 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { v4 as uuidv4 } from "uuid";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
-import {
-  TimelineContentObject,
-  timelinerContext,
-} from "../../context/timelineContext";
 import { consume } from "@lit/context";
 import {
   IRenderOptionStore,
@@ -46,9 +42,7 @@ export class ElementControl extends LitElement {
   @property()
   cursor = this.timelineState.cursor;
 
-  @consume({ context: timelinerContext })
-  @property({ attribute: false })
-  public timelineOptions?: TimelineContentObject;
+  @property()
   startTime: any;
 
   createRenderRoot() {

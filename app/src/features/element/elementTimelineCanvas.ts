@@ -3,10 +3,10 @@ import { elementUtils } from "../../utils/element";
 import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
-import { consume } from "@lit/context";
+import { consume, provide } from "@lit/context";
 import {
   TimelineContentObject,
-  timelinerContext,
+  timelineContext,
 } from "../../context/timelineContext";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { darkenColor } from "../../utils/rgbColor";
@@ -77,8 +77,11 @@ export class elementTimelineCanvas extends LitElement {
   @property()
   resize = this.uiState.resize;
 
-  @consume({ context: timelinerContext, subscribe: true })
-  public timelineOptions?: TimelineContentObject;
+  @consume({ context: timelineContext })
+  @property({ attribute: false })
+  public timelineOptions = {
+    canvasVerticalScroll: 0,
+  };
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
@@ -372,17 +375,6 @@ export class elementTimelineCanvas extends LitElement {
             ctx.beginPath();
             ctx.rect(left + endTime, top, duration - endTime, height);
             ctx.fill();
-          }
-
-          let splitedFilepath = this.timeline[elementId].localpath.split("/");
-          let text = splitedFilepath[splitedFilepath.length - 1];
-
-          if (width > 50) {
-            const fontSize = 14;
-            ctx.fillStyle = "#ffffff";
-            ctx.lineWidth = 0;
-            ctx.font = `${fontSize}px "Noto Sans"`;
-            this.wrapText(ctx, text, left + 4, top + fontSize + 4, width);
           }
 
           index += 1;
@@ -733,6 +725,7 @@ export class elementTimelineCanvas extends LitElement {
 
     if (this.canvasVerticalScroll + e.deltaY > 0) {
       this.canvasVerticalScroll += e.deltaY;
+      this.timelineOptions.canvasVerticalScroll += e.deltaY;
       this.drawCanvas();
     }
 

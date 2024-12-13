@@ -6,35 +6,37 @@ import fonts from "./functions/fonts";
 
 import "./App";
 
-import "./components/asset/assetList";
-import "./components/asset/assetBrowser";
-import "./components/asset/assetUploader";
+import "./features/asset/assetList";
+import "./features/asset/assetBrowser";
+import "./features/asset/assetUploader";
 
-import "./components/element/elementTimeline";
-import "./components/element/elementTimelineCanvas";
+import "./features/element/elementTimelineLeftOption";
 
-import "./components/element/elementTimelineRuler";
-import "./components/element/elementTimelineCursor";
-import "./components/element/elementControlAsset";
+import "./features/element/elementTimeline";
+import "./features/element/elementTimelineCanvas";
 
-import "./components/keyframe/keyframeEditor";
-import "./components/menu/menuDropdown";
+import "./features/element/elementTimelineRuler";
+import "./features/element/elementTimelineCursor";
+import "./features/element/elementControlAsset";
 
-import "./components/animation/animationPanel";
+import "./features/keyframe/keyframeEditor";
+import "./features/menu/menuDropdown";
 
-import "./components/option/optionGroup";
-import "./components/option/optionText";
-import "./components/option/optionImage";
-import "./components/option/optionVideo";
-import "./components/option/optionAudio";
+import "./features/animation/animationPanel";
 
-import "./components/input/inputText";
+import "./features/option/optionGroup";
+import "./features/option/optionText";
+import "./features/option/optionImage";
+import "./features/option/optionVideo";
+import "./features/option/optionAudio";
 
-import { Tutorial } from "./components/tutorial/tutorial";
-import { TutorialPopover } from "./components/tutorial/tutorialPopover";
+import "./features/input/inputText";
 
-import { Toast } from "./components/toast/toast";
-import { ToastBox } from "./components/toast/toastBox";
+import { Tutorial } from "./features/tutorial/tutorial";
+import { TutorialPopover } from "./features/tutorial/tutorialPopover";
+
+import { Toast } from "./features/toast/toast";
+import { ToastBox } from "./features/toast/toastBox";
 import "./context/timelineContext";
 
 import "./sass/style.scss";
@@ -45,9 +47,9 @@ import "./ui/modal/Modal";
 import "./ui/offcanvas/TimelineOptions";
 import "./ui/toast/Toast";
 
-import "./components/element/elementControl";
-import "./components/preview/previewCanvas";
-import "./components/font/selectFont";
+import "./features/element/elementControl";
+import "./features/preview/previewCanvas";
+import "./features/font/selectFont";
 
 import "./event";
 

@@ -45,6 +45,7 @@ body {
   overflow-y: hidden;
   overscroll-behavior-x: none;
   background-color: #181a1c;
+  overflow: hidden;
 }
 
 input[type="file"]::file-selector-button {

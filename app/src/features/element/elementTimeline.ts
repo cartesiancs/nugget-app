@@ -421,6 +421,7 @@ export class ElementTimeline extends LitElement {
       <element-timeline-cursor></element-timeline-cursor>
       <element-timeline-scroll></element-timeline-scroll>
 
+      <element-timeline-left-option></element-timeline-left-option>
       <element-timeline-canvas></element-timeline-canvas>
     `;
   }

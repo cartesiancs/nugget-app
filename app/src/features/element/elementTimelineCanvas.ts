@@ -862,7 +862,8 @@ export class elementTimelineCanvas extends LitElement {
     return html`
       <canvas
         id="elementTimelineCanvasRef"
-        style="width: 100%;"
+        style="width: 1122px;left: ${this.resize.timelineVertical
+          .leftOption}px;position: absolute;"
         @mousewheel=${this._handleMouseWheel}
         @mousemove=${this._handleMouseMove}
         @mousedown=${this._handleMouseDown}

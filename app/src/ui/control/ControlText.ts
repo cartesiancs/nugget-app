@@ -1,6 +1,5 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ITestStore, testStore } from "../../states/testStore";
 
 @customElement("control-ui-text")
 export class ControlText extends LitElement {

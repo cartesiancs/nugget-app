@@ -1,6 +1,5 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ITestStore, testStore } from "../../states/testStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("toast-list-ui")

@@ -3,6 +3,7 @@ import { elementUtils } from "../../utils/element.js";
 import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("element-timeline-ruler")
 export class ElementTimelineRuler extends LitElement {
@@ -38,6 +39,12 @@ export class ElementTimelineRuler extends LitElement {
   @property()
   timelineCursor = this.timelineState.cursor;
 
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  resize = this.uiState.resize;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineScroll = state.scroll;
@@ -50,13 +57,19 @@ export class ElementTimelineRuler extends LitElement {
       this.drawRuler();
     });
 
+    uiStore.subscribe((state) => {
+      this.resize = state.resize;
+    });
+
     return this;
   }
 
   render() {
     this.classList.add("ps-0", "overflow-hidden", "position-absolute");
     this.style.top = "40px";
+    this.style.left = `${this.resize.timelineVertical.leftOption}px`;
 
+    this.style.position = "absolute";
     this.width = document.querySelector("element-timeline").clientWidth;
     this.height = 30;
 
@@ -251,9 +264,13 @@ export class ElementTimelineRuler extends LitElement {
     const cursorDom = document.querySelector("element-timeline-cursor");
 
     this.timelineState.setCursor(
-      this.pxToMilliseconds(e.pageX + this.timelineScroll),
+      this.pxToMilliseconds(
+        e.pageX + this.timelineScroll - this.resize.timelineVertical.leftOption,
+      ),
     );
-    cursorDom.style.left = `${e.pageX + this.timelineScroll}px`;
+    cursorDom.style.left = `${
+      e.pageX + this.timelineScroll - this.resize.timelineVertical.leftOption
+    }px`;
 
     this.moveTime(e);
 

@@ -11,8 +11,13 @@ export interface IUIStore {
       preview: number;
       option: number;
     };
+    timelineVertical: {
+      leftOption: number;
+    };
   };
   topBarTitle: string;
+  updateTimelineVertical: (px: number) => void;
+
   updateVertical: (criteria: number) => void;
   updateHorizontal: (criteria: number, panel: "panel" | "preview") => void;
   setTopBarTitle: (topBarTitle: string) => void;
@@ -29,6 +34,9 @@ export const uiStore = createStore<IUIStore>((set) => ({
       preview: 50,
       option: 20,
     },
+    timelineVertical: {
+      leftOption: 170,
+    },
   },
   topBarTitle: "Nugget",
 
@@ -37,11 +45,21 @@ export const uiStore = createStore<IUIStore>((set) => ({
       topBarTitle: topBarTitle,
     })),
 
+  updateTimelineVertical: (px) =>
+    set((state) => ({
+      resize: {
+        vertical: { ...state.resize.vertical },
+        horizontal: { ...state.resize.horizontal },
+        timelineVertical: { leftOption: px },
+      },
+    })),
+
   updateVertical: (criteria) =>
     set((state) => ({
       resize: {
         vertical: { top: 100 - criteria, bottom: criteria },
         horizontal: { ...state.resize.horizontal },
+        timelineVertical: { ...state.resize.timelineVertical },
       },
     })),
 
@@ -57,6 +75,7 @@ export const uiStore = createStore<IUIStore>((set) => ({
               preview: 100 - (optionPer + criteria),
               option: state.resize.horizontal.option,
             },
+            timelineVertical: { ...state.resize.timelineVertical },
           },
         };
       }
@@ -71,6 +90,7 @@ export const uiStore = createStore<IUIStore>((set) => ({
               preview: criteria - state.resize.horizontal.panel,
               option: 100 - criteria,
             },
+            timelineVertical: { ...state.resize.timelineVertical },
           },
         };
       }

@@ -1,12 +1,9 @@
 import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
-import {
-  ImageElementType,
-  ITimelineStore,
-  useTimelineStore,
-} from "../../states/timelineStore";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { millisecondsToPx, pxToMilliseconds } from "../../utils/time";
 import { uiStore } from "../../states/uiStore";
+import { ImageElementType } from "../../@types/timeline";
 
 @customElement("keyframe-editor")
 export class KeyframeEditor extends LitElement {

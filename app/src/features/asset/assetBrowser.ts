@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import asset from "../../functions/asset";
+import { AssetController } from "../../controllers/asset";
 
 @customElement("asset-browser")
 export class AssetBrowser extends LitElement {
@@ -10,6 +10,12 @@ export class AssetBrowser extends LitElement {
 
     this.directory = "";
   }
+
+  createRenderRoot() {
+    return this;
+  }
+
+  private assetControl = new AssetController();
 
   render() {
     const template = this.template();
@@ -47,31 +53,31 @@ export class AssetBrowser extends LitElement {
     let splitNowDirectory = this.directory.split("/");
     let splitPrevDirectory = splitNowDirectory.slice(
       -splitNowDirectory.length,
-      -1
+      -1,
     );
 
-    asset.requestAllDir(splitPrevDirectory.join("/"));
+    this.assetControl.requestAllDir(splitPrevDirectory.join("/"));
   }
 
   connectedCallback() {
     this.render();
 
     let prevDirectoryButton = this.querySelector("div").querySelector(
-      "button[ref='arrowup']"
+      "button[ref='arrowup']",
     );
     prevDirectoryButton.addEventListener(
       "click",
-      this.clickPrevDirectoryButton.bind(this)
+      this.clickPrevDirectoryButton.bind(this),
     );
   }
 
   disconnectedCallback() {
     let prevDirectoryButton = this.querySelector("div").querySelector(
-      "button[ref='arrowup']"
+      "button[ref='arrowup']",
     );
     prevDirectoryButton.removeEventListener(
       "click",
-      this.clickPrevDirectoryButton
+      this.clickPrevDirectoryButton,
     );
   }
 }

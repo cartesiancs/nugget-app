@@ -1,10 +1,17 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { AssetController } from "../../controllers/asset";
 
 @customElement("asset-upload-drop")
 export class AssetDropUploader extends LitElement {
+  private assetControl = new AssetController();
+
   constructor() {
     super();
+  }
+
+  createRenderRoot() {
+    return this;
   }
 
   render() {
@@ -49,7 +56,7 @@ export class AssetDropUploader extends LitElement {
     e.preventDefault();
     try {
       let filePath = e.dataTransfer.files[0].path;
-      NUGGET.asset.add(filePath);
+      this.assetControl.add(filePath);
       this.classList.add("d-none");
     } catch (error) {
       setTimeout(() => {

@@ -25,6 +25,21 @@ export type ImageElementType = {
   };
 };
 
+export type GifElementType = {
+  key?: string;
+  priority?: number;
+  blob?: string;
+  startTime?: number;
+  duration?: number;
+  opacity?: number;
+  location?: { x: number; y: number };
+  rotation?: number;
+  width?: number;
+  height?: number;
+  localpath?: string;
+  filetype?: string;
+};
+
 export type VideoElementType = {
   key?: string;
 
@@ -94,5 +109,6 @@ export interface Timeline {
   [elementId: string]: ImageElementType &
     VideoElementType &
     TextElementType &
-    AudioElementType;
+    AudioElementType &
+    GifElementType;
 }

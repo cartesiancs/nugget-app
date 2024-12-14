@@ -9,8 +9,11 @@ const mime = {
     jpeg: {
       type: "image",
     },
-    gif: {
+    webp: {
       type: "image",
+    },
+    gif: {
+      type: "gif",
     },
     mp4: {
       type: "video",

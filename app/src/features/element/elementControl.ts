@@ -317,34 +317,35 @@ export class ElementControl extends LitElement {
         },
       };
 
-      // this.timelineState.addTimeline(elementId, {
-      //   priority: this.getNowPriority(),
-      //   blob: blob,
-      //   startTime: 0,
-      //   duration: 1000,
-      //   opacity: 100,
-      //   location: { x: 0, y: 0 },
-      //   rotation: 0,
-      //   width: width,
-      //   height: height,
-      //   localpath: path,
-      //   filetype: "image",
-      //   animation: {
-      //     position: {
-      //       isActivate: false,
-      //       points: [[], []],
-      //       allpoints: [[], []],
-      //     },
-      //     opacity: {
-      //       isActivate: false,
-      //       points: [[]],
-      //       allpoints: [[]],
-      //     },
-      //   },
-      // });
+      this.timelineState.patchTimeline(this.timeline);
+    };
+  }
+
+  addGif(blob, path) {
+    const elementId = this.generateUUID();
+    const img = document.createElement("img");
+
+    img.src = blob;
+    img.onload = () => {
+      let resize = this.fitElementSizeOnPreview(img.width, img.height);
+      let width = resize.width;
+      let height = resize.height; // /division
+
+      this.timeline[elementId] = {
+        priority: this.getNowPriority(),
+        blob: blob,
+        startTime: 0,
+        duration: 1000,
+        opacity: 100,
+        location: { x: 0, y: 0 },
+        rotation: 0,
+        width: width,
+        height: height,
+        localpath: path,
+        filetype: "gif",
+      };
 
       this.timelineState.patchTimeline(this.timeline);
-      // this.showImage(elementId);
     };
   }
 

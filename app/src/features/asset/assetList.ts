@@ -1,7 +1,7 @@
 import { path } from "../../functions/path";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import asset from "../../functions/asset";
+import { AssetController } from "../../controllers/asset";
 
 @customElement("asset-list")
 export class AssetList extends LitElement {
@@ -33,7 +33,7 @@ export class AssetList extends LitElement {
     let listBody = this.querySelector("div");
     listBody.insertAdjacentHTML(
       "beforeend",
-      `<asset-file asset-name="${filename}"></asset-file>`
+      `<asset-file asset-name="${filename}"></asset-file>`,
     );
   }
 
@@ -48,7 +48,7 @@ export class AssetList extends LitElement {
     let listBody = this.querySelector("div");
     listBody.insertAdjacentHTML(
       "beforeend",
-      `<asset-folder asset-name="${foldername}"></asset-folder>`
+      `<asset-folder asset-name="${foldername}"></asset-folder>`,
     );
   }
 
@@ -75,11 +75,17 @@ export class AssetFile extends LitElement {
       "bd-highlight",
       "overflow-hidden",
       "mt-1",
-      "asset"
+      "asset",
     );
     this.filename = this.getAttribute("asset-name");
     this.directory = document.querySelector("asset-list").nowDirectory;
   }
+
+  createRenderRoot() {
+    return this;
+  }
+
+  private assetControl = new AssetController();
 
   async render() {
     const fileType = NUGGET.mime.lookup(this.filename).type;
@@ -133,7 +139,7 @@ export class AssetFile extends LitElement {
   }
 
   handleClick() {
-    NUGGET.asset.add(`${this.directory}/${this.filename}`);
+    this.assetControl.add(`${this.directory}/${this.filename}`);
     //this.patchToControl(`${this.directory}/${this.filename}`, `${this.directory}`)
   }
 
@@ -166,7 +172,7 @@ export class AssetFile extends LitElement {
                   0,
                   0,
                   thumbnailCanvas.width,
-                  thumbnailCanvas.height
+                  thumbnailCanvas.height,
                 );
 
                 thumbnailCanvas.toBlob((blob) => {
@@ -209,6 +215,7 @@ export class AssetFile extends LitElement {
 export class AssetFolder extends LitElement {
   foldername: string;
   directory: any;
+
   constructor() {
     super();
 
@@ -219,11 +226,17 @@ export class AssetFolder extends LitElement {
       "bd-highlight",
       "overflow-hidden",
       "mt-1",
-      "asset"
+      "asset",
     );
     this.foldername = this.getAttribute("asset-name");
     this.directory = document.querySelector("asset-list").nowDirectory;
   }
+
+  createRenderRoot() {
+    return this;
+  }
+
+  private assetControl = new AssetController();
 
   render() {
     const template = this.template();
@@ -236,7 +249,7 @@ export class AssetFolder extends LitElement {
   }
 
   handleClick() {
-    asset.requestAllDir(`${this.directory}/${this.foldername}`);
+    this.assetControl.requestAllDir(`${this.directory}/${this.foldername}`);
   }
 
   connectedCallback() {

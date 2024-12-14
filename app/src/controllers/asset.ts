@@ -1,18 +1,24 @@
-import { path } from "./path";
+import { ReactiveController, ReactiveControllerHost } from "lit";
+import { rendererModal } from "../utils/modal";
+import { path } from "../functions/path";
+import mime from "../functions/mime";
+import { IProjectStore, projectStore } from "../states/projectStore";
+import { property } from "lit/decorators.js";
 
-const asset = {
-  nowDirectory: "",
+export class AssetController implements ReactiveController {
+  private host: ReactiveControllerHost;
 
-  loadPrevDirectory: function () {
-    let splitNowDirectory = asset.nowDirectory.split("/");
+  public loadPrevDirectory(nowDirectory) {
+    let splitNowDirectory = nowDirectory.split("/");
     let splitPrevDirectory = splitNowDirectory.slice(
       -splitNowDirectory.length,
-      -1
+      -1,
     );
 
-    asset.requestAllDir(splitPrevDirectory.join("/"));
-  },
-  add: function (originPath) {
+    this.requestAllDir(splitPrevDirectory.join("/"));
+  }
+
+  public add(originPath) {
     const filepath = path.encode(originPath);
     fetch(`file://${filepath}`)
       .then((res) => {
@@ -20,7 +26,7 @@ const asset = {
       })
       .then((blob) => {
         let blobUrl = URL.createObjectURL(blob);
-        let blobType = blob.type.split("/")[0]; // image, video, audio ...
+        let blobType = mime.lookup(filepath).type;
         let control: any = document.querySelector("element-control");
 
         if (blobType == "image") {
@@ -29,14 +35,14 @@ const asset = {
           control.addVideo(blobUrl, filepath);
         } else if (blobType == "audio") {
           control.addAudio(blobUrl, filepath);
+        } else if (blobType == "gif") {
+          control.addGif(blobUrl, filepath);
         }
       });
-  },
+  }
 
-  requestAllDir(dir) {
-    //ipcRenderer.send('REQ_ALL_DIR', dir)
+  public requestAllDir(dir) {
     window.electronAPI.req.filesystem.getDirectory(dir).then((result) => {
-      console.log("a", result);
       let fileLists = {};
       const assetList = document.querySelector("asset-list");
       const assetBrowser = document.querySelector("asset-browser");
@@ -63,7 +69,13 @@ const asset = {
         }
       }
     });
-  },
-};
+  }
 
-export default asset;
+  hostConnected() {
+    // projectStore.subscribe((state) => {
+    //   this.nowDirectory = state.nowDirectory;
+    // });
+  }
+
+  hostDisconnected() {}
+}

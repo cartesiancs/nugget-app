@@ -31,9 +31,22 @@ export class ControlRender extends LitElement {
   }
 
   render() {
-    return html` <label class="form-label text-light">화질 설정</label>
+    return html` <label class="form-label text-light">비트레이트</label>
+      <div class="input-group mb-3">
+        <input
+          id="videoBitrate"
+          type="number"
+          class="form-control bg-default text-light"
+          placeholder=""
+          value="5000"
+        />
+        <span class="input-group-text bg-default text-light" id="basic-addon2"
+          >bitrate</span
+        >
+      </div>
+
       <br />
-      <div class="text-light mb-2">
+      <!-- <div class="text-light mb-2">
         <div class="form-check form-check-inline">
           <input
             class="form-check-input"
@@ -56,7 +69,7 @@ export class ControlRender extends LitElement {
           />
           <label class="form-check-label">높음</label>
         </div>
-      </div>
+      </div> -->
 
       <button class="btn btn-blue-fill" @click=${this.handleClickRenderButton}>
         Export

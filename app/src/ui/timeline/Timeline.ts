@@ -52,8 +52,6 @@ export class Timeline extends LitElement {
   }
 
   _handleKeydown(event) {
-    event.preventDefault();
-
     if (event.keyCode == 32) {
       // Space
       if (this.isPlay) {

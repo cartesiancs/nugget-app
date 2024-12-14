@@ -31,6 +31,7 @@ type OptionType = {
   videoDuration: number;
   videoDestination: string;
   videoDestinationFolder: string;
+  videoBitrate: number;
   previewRatio: string;
   previewSize: {
     w: string;
@@ -122,7 +123,7 @@ export const renderMain = {
       estimatedTimeDecrease -= 500;
       evt.sender.send(
         "PROCESSING",
-        ((estimatedTime - estimatedTimeDecrease) / estimatedTime) * 100
+        ((estimatedTime - estimatedTimeDecrease) / estimatedTime) * 100,
       );
     }, 500);
 
@@ -163,7 +164,7 @@ export const renderMain = {
     command.audioCodec("aac");
     command.videoCodec("libx264");
     command.fps(60);
-    command.videoBitrate(5500);
+    command.videoBitrate(options.videoBitrate);
     command.format("mp4");
     command.run();
 
@@ -242,10 +243,10 @@ export const renderFilter = {
       //NOTE: 버그 지뢰임 나중에 해결해야
 
       let trimStartHMS = renderUtil.convertMillisecondToHMS(
-        object.element.trim.startTime / 1000
+        object.element.trim.startTime / 1000,
       );
       let trimDurationHMS = renderUtil.convertMillisecondToHMS(
-        (object.element.trim.endTime - object.element.trim.startTime) / 1000
+        (object.element.trim.endTime - object.element.trim.startTime) / 1000,
       );
 
       if (isExistAudio == true) {
@@ -255,7 +256,7 @@ export const renderFilter = {
           .inputOptions(
             `-itsoffset ${
               options.startTime + object.element.trim.startTime / 1000
-            }`
+            }`,
           );
       } else {
         object.command
@@ -287,14 +288,14 @@ export const renderFilter = {
 
     // NOTE: 회전시 사분면 사이드 잘림
     object.filter.push(
-      `[image${elementCounts.video}]rotate=${options.rotationRadian}:c=none[image${elementCounts.video}]`
+      `[image${elementCounts.video}]rotate=${options.rotationRadian}:c=none[image${elementCounts.video}]`,
     );
 
     if (checkStaticCondition) {
       object.filter.push(
         `[image${elementCounts.video}]format=argb,geq=r='r(X,Y)':a='${
           options.opacity / 100
-        }*alpha(X,Y)'[image${elementCounts.video}]`
+        }*alpha(X,Y)'[image${elementCounts.video}]`,
       );
     }
 
@@ -340,7 +341,7 @@ export const renderFilter = {
       fontfile: fontPath,
       x: String(
         object.element.location.x +
-          (object.element.width - object.element.widthInner) / 2
+          (object.element.width - object.element.widthInner) / 2,
       ),
       y: String(object.element.location.y),
       startTime: object.element.startTime / 1000,
@@ -386,14 +387,14 @@ export const renderFilter = {
     log.info(
       "[render] addFilterAudio ",
       object.element.localpath,
-      elementCounts.video
+      elementCounts.video,
     );
     log.info("[render] options.startTime ", options.startTime * 1000);
 
     object.filter.push(
       `[${elementCounts.video}:a]adelay=${options.startTime * 1000}|${
         options.startTime * 1000
-      }[audio${elementCounts.video}]`
+      }[audio${elementCounts.video}]`,
     );
 
     mapAudioLists.push(`audio${elementCounts.video}`);

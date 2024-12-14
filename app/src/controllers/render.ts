@@ -8,12 +8,14 @@ export class RenderController implements ReactiveController {
     const elementControlComponent = document.querySelector("element-control");
 
     const projectDuration = Number(
-      document.querySelector("#projectDuration").value
+      document.querySelector("#projectDuration").value,
     );
     const projectFolder = document.querySelector("#projectFolder").value;
     const projectRatio = elementControlComponent.previewRatio;
     const previewSizeH = document.querySelector("#previewSizeH").value;
     const previewSizeW = document.querySelector("#previewSizeW").value;
+
+    const videoBitrate = Number(document.querySelector("#videoBitrate").value);
 
     if (projectFolder == "") {
       document
@@ -30,13 +32,14 @@ export class RenderController implements ReactiveController {
       }
 
       let timeline = _.cloneDeep(
-        document.querySelector("element-timeline").timeline
+        document.querySelector("element-timeline").timeline,
       );
 
       let options = {
         videoDuration: projectDuration,
         videoDestination: result || `${projectFolder}/result.mp4`,
         videoDestinationFolder: projectFolder,
+        videoBitrate: videoBitrate,
         previewRatio: projectRatio,
         previewSize: {
           w: previewSizeW,
@@ -62,7 +65,7 @@ const rendererUtil = {
 
   secondsToProgress(seconds) {
     const projectDuration = Number(
-      document.querySelector("#projectDuration").value
+      document.querySelector("#projectDuration").value,
     );
     return (seconds / projectDuration) * 100;
   },
@@ -278,7 +281,7 @@ const renderAnimation = {
         ) {
           renderAnimation.renderOutput();
         }
-      }
+      },
     );
 
     // let command = ffmpeg()
@@ -330,7 +333,7 @@ const renderAnimation = {
 
     window.electronAPI.req.render.outputVideo(
       renderAnimation.state.elements,
-      renderAnimation.state.options
+      renderAnimation.state.options,
     );
   },
 };

@@ -450,8 +450,8 @@ export class ElementTimelineRange extends LitElement {
       ref="range"
       type="range"
       class="form-range"
-      min="0.001"
-      max="6"
+      min="-8"
+      max="5"
       step="0.01"
       id="timelineRange"
       value="1"
@@ -483,7 +483,11 @@ export class ElementTimelineRange extends LitElement {
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.changeTimelineRange();
 
-    this.timelineState.setRange(parseFloat(e.target.value));
+    const x = parseFloat(e.target.value);
+    const rx = (1 / (1 + Math.pow(Math.E, -x))) * 10;
+    this.timelineState.setRange(rx);
+
+    //this.timelineState.setRange(parseFloat(e.target.value));
   }
 }
 

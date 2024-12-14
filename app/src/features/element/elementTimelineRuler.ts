@@ -268,6 +268,7 @@ export class ElementTimelineRuler extends LitElement {
         e.pageX + this.timelineScroll - this.resize.timelineVertical.leftOption,
       ),
     );
+
     cursorDom.style.left = `${
       e.pageX + this.timelineScroll - this.resize.timelineVertical.leftOption
     }px`;

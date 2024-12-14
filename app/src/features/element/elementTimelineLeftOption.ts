@@ -21,6 +21,9 @@ export class ElementTimelineLeftOption extends LitElement {
   @property()
   timeline = this.timelineState.timeline;
 
+  @property()
+  isAbleResize: boolean = false;
+
   @consume({ context: timelineContext })
   @property({ attribute: false })
   public timelineOptions = {
@@ -37,6 +40,9 @@ export class ElementTimelineLeftOption extends LitElement {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
     });
+
+    window.addEventListener("mouseup", this._handleMouseUp.bind(this));
+    window.addEventListener("mousemove", this._handleMouseMove.bind(this));
 
     return this;
   }
@@ -115,6 +121,35 @@ export class ElementTimelineLeftOption extends LitElement {
     }
   }
 
+  _handleMouseMove(e) {
+    const elementControlComponent = document.querySelector("element-control");
+
+    if (this.isAbleResize) {
+      const windowWidth = window.innerWidth;
+      const nowX = e.clientX;
+      const resizeX = nowX;
+
+      if (resizeX <= 20) {
+        this.uiState.updateTimelineVertical(20);
+        elementControlComponent.resizeEvent();
+        return false;
+      }
+
+      this.uiState.updateTimelineVertical(resizeX);
+      elementControlComponent.resizeEvent();
+    }
+  }
+
+  _handleMouseUp() {
+    this.isAbleResize = false;
+  }
+
+  _handleClickResizePanel() {
+    this.isAbleResize = true;
+
+    console.log("a");
+  }
+
   protected render(): unknown {
     return html`
       <canvas
@@ -123,6 +158,11 @@ export class ElementTimelineLeftOption extends LitElement {
           .leftOption}px;position: absolute; height: 100%;"
         class="tab-content"
       ></canvas>
+      <div
+        class="split-col-bar"
+        style="left: ${this.resize.timelineVertical.leftOption}px;"
+        @mousedown=${this._handleClickResizePanel}
+      ></div>
     `;
   }
 }

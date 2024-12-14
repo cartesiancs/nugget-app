@@ -286,9 +286,11 @@ export class ElementTimelineRuler extends LitElement {
     e.stopPropagation();
     this.mousemoveEventHandler = this.handleMousemove.bind(this);
     document.addEventListener("mousemove", this.mousemoveEventHandler);
+    this.handleMousemove(e);
   }
 
   handleMouseup(e) {
     document.removeEventListener("mousemove", this.mousemoveEventHandler);
+    document.removeEventListener("click", this.mousemoveEventHandler);
   }
 }

@@ -34,8 +34,34 @@ export class Timeline extends LitElement {
 
     window.addEventListener("mouseup", this._handleMouseUp.bind(this));
     window.addEventListener("mousemove", this._handleMouseMove.bind(this));
+    document.addEventListener("keydown", this._handleKeydown.bind(this));
 
     return this;
+  }
+
+  play() {
+    const elementControlComponent = document.querySelector("element-control");
+    elementControlComponent.play();
+    this.isPlay = true;
+  }
+
+  stop() {
+    const elementControlComponent = document.querySelector("element-control");
+    elementControlComponent.stop();
+    this.isPlay = false;
+  }
+
+  _handleKeydown(event) {
+    event.preventDefault();
+
+    if (event.keyCode == 32) {
+      // Space
+      if (this.isPlay) {
+        this.stop();
+      } else {
+        this.play();
+      }
+    }
   }
 
   _handleMouseMove(e) {
@@ -67,15 +93,11 @@ export class Timeline extends LitElement {
   }
 
   _handleClickPlay() {
-    const elementControlComponent = document.querySelector("element-control");
-    elementControlComponent.play();
-    this.isPlay = true;
+    this.play();
   }
 
   _handleClickStop() {
-    const elementControlComponent = document.querySelector("element-control");
-    elementControlComponent.stop();
-    this.isPlay = false;
+    this.stop();
   }
 
   _handleClickReset() {

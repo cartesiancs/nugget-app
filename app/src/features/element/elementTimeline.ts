@@ -37,8 +37,6 @@ export class ElementTimeline extends LitElement {
     this.addEventListener("mousedown", this.handleMousedown.bind(this));
     this.addEventListener("scroll", this.handleScroll.bind(this));
 
-    document.addEventListener("keydown", this.handleKeydown.bind(this));
-
     window.addEventListener("DOMContentLoaded", () => {
       this.elementControl = document.querySelector("element-control");
     });
@@ -381,19 +379,6 @@ export class ElementTimeline extends LitElement {
     document
       .querySelector("keyframe-editor")
       .scrollTo(this.scrollLeft, this.scrollTop);
-  }
-
-  handleKeydown(event) {
-    console.log("event keycode > ", event.keyCode);
-    if (this.elementControl.existActiveElement == true) {
-      return 0;
-    }
-
-    if (event.keyCode == 32) {
-      // Space
-      event.preventDefault();
-      this.togglePlayer();
-    }
   }
 
   handleMousedown() {

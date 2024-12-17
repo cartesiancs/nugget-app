@@ -529,6 +529,7 @@ export class elementTimelineCanvas extends LitElement {
 
     if (elementType == "dynamic") {
       if (this.targetTrim.startTime + this.pxToMilliseconds(dx) > 0) {
+        this.timeline[targetId].startTime = this.targetStartTime;
         this.timeline[targetId].trim.startTime =
           this.targetTrim.startTime + this.pxToMilliseconds(dx);
       }
@@ -547,6 +548,7 @@ export class elementTimelineCanvas extends LitElement {
         return false;
       }
 
+      this.timeline[targetId].startTime = this.targetStartTime;
       this.timeline[targetId].duration =
         this.targetDuration + this.pxToMilliseconds(dx);
     }
@@ -556,6 +558,7 @@ export class elementTimelineCanvas extends LitElement {
         this.targetTrim.endTime + this.pxToMilliseconds(dx) <
         this.targetDuration
       ) {
+        this.timeline[targetId].startTime = this.targetStartTime;
         this.timeline[targetId].trim.endTime =
           this.targetTrim.endTime + this.pxToMilliseconds(dx);
       }
@@ -697,7 +700,7 @@ export class elementTimelineCanvas extends LitElement {
     // ${this.animationPanelDropdownTemplate()}
     document.querySelector("#menuRightClick").innerHTML = `
         <menu-dropdown-body top="${y}" left="${x}">
-          
+        ${this.animationPanelDropdownTemplate()}
           <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
         </menu-dropdown-body>`;
   }

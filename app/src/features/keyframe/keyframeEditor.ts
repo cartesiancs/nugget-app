@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { millisecondsToPx, pxToMilliseconds } from "../../utils/time";
-import { uiStore } from "../../states/uiStore";
+import { IUIStore, uiStore } from "../../states/uiStore";
 import { ImageElementType } from "../../@types/timeline";
 
 @customElement("keyframe-editor")
@@ -64,6 +64,12 @@ export class KeyframeEditor extends LitElement {
   @property()
   timelineCursor = this.timelineState.cursor;
 
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  resize = this.uiState.resize;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
@@ -75,6 +81,8 @@ export class KeyframeEditor extends LitElement {
     });
 
     uiStore.subscribe((state) => {
+      this.resize = state.resize;
+
       this.drawCanvas();
     });
 
@@ -99,7 +107,7 @@ export class KeyframeEditor extends LitElement {
       "h-100",
       "w-100",
       "position-absolute",
-      "overflow-scroll",
+      "overflow-hidden",
     );
 
     this.timeline[this.elementId].animation[this.animationType].isActivate =
@@ -108,7 +116,8 @@ export class KeyframeEditor extends LitElement {
     return html` <div style="overflow: hidden;">
       <canvas
         id="keyframeEditerCanvasRef"
-        style="width: 100%;"
+        style="width: 100%; left: ${this.resize.timelineVertical
+          .leftOption}px; position: absolute;"
         @mousewheel=${this._handleMouseWheel}
         @click=${this._handleMouseClick}
       ></canvas>

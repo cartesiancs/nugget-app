@@ -97,6 +97,22 @@ export class ElementTimelineRuler extends LitElement {
     return result;
   }
 
+  private formatSecondsToTime(seconds: any): any {
+    const totalSeconds = parseInt(seconds, 10);
+    if (isNaN(totalSeconds) || totalSeconds < 0) {
+      return "Invalid input";
+    }
+
+    const minutes: any = Math.floor(totalSeconds / 60);
+    const remainingSeconds: any = totalSeconds % 60;
+
+    if (minutes === 0) {
+      return `${remainingSeconds}s`;
+    }
+
+    return `${minutes}m ${remainingSeconds}s`;
+  }
+
   drawCursorHead() {
     const ctx = this.canvas.getContext("2d");
 
@@ -185,12 +201,14 @@ export class ElementTimelineRuler extends LitElement {
       if (count % (10 * range) == 0) {
         startY = 10;
         ctx.strokeStyle = "#e3e3e3";
-        ctx.font = "12px serif";
-        ctx.strokeText(
-          `${(Number(count / 10) + startNumber * range) / unitSplit}${unit}`,
-          startX - term / 2,
-          10,
-        );
+        ctx.font = "300 12px serif";
+        ctx.font;
+        if (unit == "s") {
+          const text = this.formatSecondsToTime(
+            (Number(count / 10) + startNumber * range) / unitSplit,
+          );
+          ctx.strokeText(`${text}`, startX - term / 2, 10);
+        }
       } else {
         ctx.strokeStyle = "#e3e3e3";
       }

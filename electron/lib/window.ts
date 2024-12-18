@@ -41,7 +41,6 @@ const window = {
       backgroundColor: WINDOW_BACKGROUND_COLOR,
       icon: WINDOW_ICON,
       titleBarStyle: "hidden",
-      frame: false,
 
       trafficLightPosition: { x: 10, y: 10 },
     });

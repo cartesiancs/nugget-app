@@ -151,6 +151,8 @@ if (!gotTheLock) {
     }
   });
 
+  app.commandLine.appendSwitch("js-flags", "--max-old-space-size=4096");
+
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow();
     validateFFmpeg();

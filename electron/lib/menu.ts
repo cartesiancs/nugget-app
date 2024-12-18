@@ -101,7 +101,6 @@ const template: any = [
           let mainWindow = new BrowserWindow({
             width: 600,
             height: 400,
-            frame: false,
             titleBarStyle: "customButtonsOnHover",
 
             webPreferences: {

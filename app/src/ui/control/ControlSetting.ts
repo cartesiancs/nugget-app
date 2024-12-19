@@ -4,9 +4,12 @@ import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
+import { LocaleController } from "../../controllers/locale";
 
 @customElement("control-ui-setting")
 export class ControlSetting extends LitElement {
+  private lc = new LocaleController(this);
+
   @property()
   renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
 
@@ -38,6 +41,14 @@ export class ControlSetting extends LitElement {
     this.renderOptionStore.updateOptions(this.renderOption);
   }
 
+  _handleClickChangeLang() {
+    if (this.lc.value == "ko") {
+      this.lc.changeLanguage("en");
+    } else {
+      this.lc.changeLanguage("ko");
+    }
+  }
+
   render() {
     return html` <p class="text-secondary" ref="appVersion">
         ${this.appVersion}
@@ -57,26 +68,28 @@ export class ControlSetting extends LitElement {
           class="btn btn-sm btn-default text-light"
           onclick="NUGGET.directory.select()"
         >
-          프로젝트 폴더 지정
+          ${this.lc.t("setting.select_project_folder")}
         </button>
       </div>
 
-      <label class="form-label text-light">영상 시간</label>
+      <label class="form-label text-light"
+        >${this.lc.t("setting.video_duration")}</label
+      >
       <div class="input-group mb-3">
         <input
           id="projectDuration"
           type="number"
           class="form-control bg-default text-light"
-          placeholder="진행초 e.g) 0"
+          placeholder="${this.lc.t("setting.seconds")} e.g) 0"
           onchange="document.querySelector('element-timeline-ruler').updateRulerLength(this)"
           value="10"
         />
         <span class="input-group-text bg-default text-light" id="basic-addon2"
-          >초</span
+          >${this.lc.t("setting.seconds_unit")}</span
         >
       </div>
 
-      <label class="form-label text-light">프레임</label>
+      <label class="form-label text-light">${this.lc.t("setting.frame")}</label>
       <div class="input-group mb-3">
         <input
           id="projectDuration"
@@ -91,7 +104,9 @@ export class ControlSetting extends LitElement {
         >
       </div>
 
-      <label class="form-label text-light">해상도</label>
+      <label class="form-label text-light"
+        >${this.lc.t("setting.resolution")}</label
+      >
       <div class="d-flex flex-row bd-highlight mb-2">
         <input
           id="previewSizeH"
@@ -113,14 +128,15 @@ export class ControlSetting extends LitElement {
         class="btn btn-sm btn-default text-light mt-1"
         onclick="NUGGET.project.save()"
       >
-        프로젝트 저장
+        ${this.lc.t("setting.save_project")}
       </button>
       <button
         class="btn btn-sm btn-default text-light mt-1"
         onclick="NUGGET.project.load()"
       >
-        프로젝트 불러오기
+        ${this.lc.t("setting.load_project")}
       </button>
+
       <!-- <button class="btn btn-sm bg-primary text-light mt-1" onclick="window.electronAPI.req.progressBar.test()">PROGRESSBARTEST </button> -->
       <br />
 
@@ -131,6 +147,15 @@ export class ControlSetting extends LitElement {
         data-bs-target="#shortKey"
       >
         <span class="material-symbols-outlined"> keyboard </span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-default text-light mt-1"
+        data-bs-toggle="modal"
+        data-bs-target="#changeLang"
+      >
+        <span class="material-symbols-outlined"> language </span>
       </button>
 
       <br />`;

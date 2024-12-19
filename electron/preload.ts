@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from "electron";
 const request = {
   app: {
     forceClose: () => ipcRenderer.send("app:forceClose"),
+    restart: () => ipcRenderer.send("app:restart"),
     getResourcesPath: () => ipcRenderer.invoke("app:getResourcesPath"),
     getAppInfo: () => ipcRenderer.invoke("app:getAppInfo"),
   },

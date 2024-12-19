@@ -7,6 +7,11 @@ export const ipcApp = {
     app.quit();
   },
 
+  restart: async (evt) => {
+    app.relaunch();
+    app.exit();
+  },
+
   getAppInfo: async (event) => {
     let info = {
       version: app.getVersion(),

@@ -117,6 +117,8 @@ ipcMain.handle("store:get", ipcStore.get);
 ipcMain.handle("store:delete", ipcStore.delete);
 
 ipcMain.on("app:forceClose", ipcApp.forceClose);
+ipcMain.on("app:restart", ipcApp.restart);
+
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);
 ipcMain.handle("font:getLists", fontLib.getFontList);

@@ -11,6 +11,7 @@ import {
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { darkenColor } from "../../utils/rgbColor";
 import { TimelineController } from "../../controllers/timeline";
+import { IKeyframeStore, keyframeStore } from "../../states/keyframeStore";
 
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
@@ -72,6 +73,12 @@ export class elementTimelineCanvas extends LitElement {
   isOpenAnimationPanelId = [];
 
   @property()
+  keyframeState: IKeyframeStore = keyframeStore.getInitialState();
+
+  @property()
+  target = this.keyframeState.target;
+
+  @property()
   uiState: IUIStore = uiStore.getInitialState();
 
   @property()
@@ -97,6 +104,10 @@ export class elementTimelineCanvas extends LitElement {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
       this.drawCanvas();
+    });
+
+    keyframeStore.subscribe((state) => {
+      this.target = state.target;
     });
 
     return this;
@@ -316,20 +327,26 @@ export class elementTimelineCanvas extends LitElement {
           ctx.lineWidth = 0;
 
           if (elementType == "static") {
-            if (this.targetId == elementId) {
-              ctx.fillStyle = this.timelineColor[elementId];
-              ctx.strokeStyle = "#ffffff";
-              ctx.lineWidth = 3;
-            } else {
-              ctx.fillStyle = this.timelineColor[elementId];
-              ctx.strokeStyle = this.timelineColor[elementId];
-              ctx.lineWidth = 0;
-            }
+            ctx.fillStyle = this.timelineColor[elementId];
+            ctx.strokeStyle = this.timelineColor[elementId];
+            ctx.lineWidth = 0;
 
             ctx.beginPath();
             ctx.rect(left, top, width, height);
             ctx.fill();
             ctx.stroke();
+
+            if (this.targetId == elementId) {
+              const activeHeight = 4;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.rect(left, top + height - activeHeight, width, activeHeight);
+              ctx.fill();
+              ctx.fillStyle = this.timelineColor[elementId];
+              ctx.strokeStyle = this.timelineColor[elementId];
+              ctx.lineWidth = 0;
+            }
           } else if (elementType == "dynamic") {
             const startTime = this.millisecondsToPx(
               this.timeline[elementId].trim.startTime,
@@ -341,21 +358,25 @@ export class elementTimelineCanvas extends LitElement {
               this.timeline[elementId].duration,
             );
 
-            if (this.targetId == elementId) {
-              ctx.fillStyle = this.timelineColor[elementId];
-              ctx.strokeStyle = "#ffffff";
-              ctx.lineWidth = 3;
-            } else {
-              ctx.fillStyle = this.timelineColor[elementId];
-              ctx.strokeStyle = this.timelineColor[elementId];
-
-              ctx.lineWidth = 0;
-            }
+            ctx.fillStyle = this.timelineColor[elementId];
+            ctx.strokeStyle = this.timelineColor[elementId];
+            ctx.lineWidth = 0;
 
             ctx.beginPath();
             ctx.rect(left, top, width, height);
             ctx.fill();
-            ctx.stroke();
+
+            if (this.targetId == elementId) {
+              const activeHeight = 4;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.rect(left, top + height - activeHeight, width, activeHeight);
+              ctx.fill();
+              ctx.fillStyle = this.timelineColor[elementId];
+              ctx.strokeStyle = this.timelineColor[elementId];
+              ctx.lineWidth = 0;
+            }
 
             const darkenRate = 0.8;
 
@@ -643,13 +664,15 @@ export class elementTimelineCanvas extends LitElement {
     let timelineOptionOffcanvas = new bootstrap.Offcanvas(
       document.getElementById("option_bottom"),
     );
-    let timelineOption = document.querySelector("#timelineOptionBody");
     let targetElementId = document.querySelector(
       "#timelineOptionTargetElement",
     );
 
-    timelineOption.innerHTML = `<keyframe-editor element-id="${targetId}" animation-type="${"position"}"></keyframe-editor>`;
-    timelineOption.classList.remove("d-none");
+    this.keyframeState.update({
+      elementId: targetId,
+      isShow: true,
+    });
+
     targetElementId.value = targetId;
     timelineOptionOffcanvas.show();
   }
@@ -658,19 +681,14 @@ export class elementTimelineCanvas extends LitElement {
     this.isOpenAnimationPanelId = this.isOpenAnimationPanelId.filter(
       (item) => !item.includes(targetId),
     );
-
-    const animationPanel: any = this.querySelector(
-      `animation-panel[element-id='${targetId}']`,
-    );
-
-    animationPanel.hide();
   }
 
   animationPanelDropdownTemplate() {
     // NOTE: 영상 애니메이션은 아직 지원 안함
 
     if (
-      this.targetMediaType == "dynamic" ||
+      elementUtils.getElementType(this.timeline[this.targetId].filetype) ==
+        "dynamic" ||
       this.timeline[this.targetId].filetype == "text"
     ) {
       return "";

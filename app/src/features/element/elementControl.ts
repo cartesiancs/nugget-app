@@ -306,12 +306,28 @@ export class ElementControl extends LitElement {
         animation: {
           position: {
             isActivate: false,
-            points: [[], []],
-            allpoints: [[], []],
+            x: [
+              {
+                type: "cubic",
+                p: [0, 0],
+                cs: [0, 0],
+                ce: [0, 0],
+              },
+            ],
+            y: [
+              {
+                type: "cubic",
+                p: [0, 0],
+                cs: [0, 0],
+                ce: [0, 0],
+              },
+            ],
+            ax: [[], []],
+            ay: [[], []],
           },
           opacity: {
             isActivate: false,
-            points: [[]],
+            x: [],
             allpoints: [[]],
           },
         },
@@ -439,12 +455,12 @@ export class ElementControl extends LitElement {
       animation: {
         position: {
           isActivate: false,
-          points: [[], []],
+          points: [],
           allpoints: [[], []],
         },
         opacity: {
           isActivate: false,
-          points: [[]],
+          points: [],
           allpoints: [[]],
         },
       },
@@ -483,29 +499,47 @@ export class ElementControl extends LitElement {
     };
   }
 
+  findNearestY(pairs, a) {
+    let closestY = null;
+    let closestDiff = Infinity;
+
+    for (const [x, y] of pairs) {
+      const diff = Math.abs(x - a);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestY = y;
+      }
+    }
+
+    return closestY;
+  }
+
   showAnimation(elementId, animationType) {
-    let index = Math.round(
-      document.querySelector("element-control").progressTime / 20,
-    );
+    let index = Math.round(this.progressTime / 16);
     let indexToMs = index * 20;
     let startTime = Number(this.timeline[elementId].startTime);
     let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+    console.log(index, indexPoint);
 
     try {
       if (indexPoint < 0) {
         return 0;
       }
 
+      const x = this.findNearestY(
+        this.timeline[elementId].animation[animationType].ax,
+        this.progressTime + this.timeline[elementId].startTime,
+      );
+
       document.querySelector(`#element-${elementId}`).style.left = `${
-        this.timeline[elementId].animation[animationType].allpoints[0][
-          indexPoint
-        ].y / this.previewRatio
+        x / 10
       }px`;
-      document.querySelector(`#element-${elementId}`).style.top = `${
-        this.timeline[elementId].animation[animationType].allpoints[1][
-          indexPoint
-        ].y / this.previewRatio
-      }px`;
+      // document.querySelector(`#element-${elementId}`).style.top = `${
+      //   this.timeline[elementId].animation[animationType].ax[1][
+      //     indexPoint
+      //   ].y / this.previewRatio
+      // }px`;
     } catch (error) {}
   }
 

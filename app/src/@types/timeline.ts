@@ -1,3 +1,10 @@
+export type CubicKeyframeType = {
+  type: "cubic" | "linear";
+  p: number[];
+  cs: number[];
+  ce: number[];
+};
+
 export type ImageElementType = {
   key?: string;
   priority?: number;
@@ -14,12 +21,15 @@ export type ImageElementType = {
   animation?: {
     position?: {
       isActivate?: boolean;
-      points?: number[][];
-      allpoints?: number[][];
+      x?: CubicKeyframeType[];
+      y?: CubicKeyframeType[];
+
+      ax?: number[][];
+      ay?: number[][];
     };
     opacity?: {
       isActivate?: boolean;
-      points?: number[][];
+      x?: CubicKeyframeType[];
       allpoints?: number[][];
     };
   };

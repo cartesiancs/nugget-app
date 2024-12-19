@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { millisecondsToPx, pxToMilliseconds } from "../../utils/time";
@@ -7,8 +7,6 @@ import { ImageElementType } from "../../@types/timeline";
 
 @customElement("keyframe-editor")
 export class KeyframeEditor extends LitElement {
-  elementId: string;
-  animationType: string;
   tension: number;
   divBody: any;
   svgBody: any;
@@ -20,12 +18,13 @@ export class KeyframeEditor extends LitElement {
   points: number[][][];
   selectLine: number;
   keyframePointBody: any;
+  prevElementId: any;
+  isDrag: boolean;
+  clickDot: string;
+  clickIndex: number;
 
   constructor() {
     super();
-
-    this.elementId = this.getAttribute("element-id");
-    this.animationType = this.getAttribute("animation-type");
 
     this.tension = 1;
     this.divBody = undefined;
@@ -42,10 +41,25 @@ export class KeyframeEditor extends LitElement {
     this.lineCount = 1;
     this.points = [[[0, 0]], [[0, 0]]];
 
+    this.prevElementId = "";
+
     this.selectLine = 0;
+
+    this.clickIndex = -1;
+    this.clickDot = "";
+    this.isDrag = false;
 
     this.addEventListener("scroll", this.handleScroll.bind(this));
   }
+
+  @property()
+  isShow;
+
+  @property()
+  elementId;
+
+  @property()
+  animationType;
 
   @query("#keyframeEditerCanvasRef") canvas!: HTMLCanvasElement;
 
@@ -86,52 +100,155 @@ export class KeyframeEditor extends LitElement {
       this.drawCanvas();
     });
 
-    this.lineCount =
-      this.timeline[this.elementId].animation[this.animationType].points.length;
-
-    this.clearLineEditorGroup();
-
-    for (let line = 0; line < this.lineCount; line++) {
-      this.addLineEditor(line);
-    }
-
-    this.changeLineEditor(0);
-
     return this;
   }
 
   render() {
-    this.showKeyframeEditorButtonGroup();
+    try {
+      console.log(this.timeline);
+      if (this.isShow) {
+        if (this.prevElementId != this.elementId) {
+          if (
+            this.timeline[this.elementId].animation[this.animationType]
+              .isActivate
+          ) {
+            this.points = [
+              ...this.timeline[this.elementId].animation[this.animationType]
+                .points,
+            ];
+          } else {
+            this.points = [[[0, 0]], [[0, 0]]];
+          }
+          this.prevElementId = this.elementId;
+        }
 
-    this.classList.add(
-      "h-100",
-      "w-100",
-      "position-absolute",
-      "overflow-hidden",
-    );
+        try {
+          this.lineCount =
+            this.timeline[this.elementId].animation[
+              this.animationType
+            ].points.length;
 
-    this.timeline[this.elementId].animation[this.animationType].isActivate =
-      true;
+          this.clearLineEditorGroup();
 
-    return html` <div style="overflow: hidden;">
-      <canvas
-        id="keyframeEditerCanvasRef"
-        style="width: 100%; left: ${this.resize.timelineVertical
-          .leftOption}px; position: absolute;"
-        @mousewheel=${this._handleMouseWheel}
-        @click=${this._handleMouseClick}
-      ></canvas>
-    </div>`;
+          for (let line = 0; line < this.lineCount; line++) {
+            this.addLineEditor(line);
+          }
+
+          this.changeLineEditor(0);
+        } catch (error) {}
+      }
+
+      if (this.isShow) {
+        this.showKeyframeEditorButtonGroup();
+
+        this.classList.add(
+          "h-100",
+          "w-100",
+          "position-absolute",
+          "overflow-hidden",
+        );
+
+        this.timeline[this.elementId].animation[this.animationType].isActivate =
+          true;
+
+        return html` <div>
+          <canvas
+            id="keyframeEditerCanvasRef"
+            style="width: 100%; left: ${this.resize.timelineVertical
+              .leftOption}px; position: absolute;"
+            @mousewheel=${this._handleMouseWheel}
+            @mousedown=${this._handleMouseDown}
+            @mousemove=${this._handleMouseMove}
+            @mouseup=${this._handleMouseUp}
+          ></canvas>
+        </div>`;
+      } else {
+        this.hideKeyframeEditorButtonGroup();
+      }
+    } catch (error) {}
+  }
+
+  _handleMouseMove(e) {
+    //console.log(e);
+    const px =
+      pxToMilliseconds(e.offsetX, this.timelineRange) +
+      pxToMilliseconds(this.timelineScroll, this.timelineRange);
+    const py = e.offsetY;
+
+    //console.log(px);
+
+    if (this.isDrag) {
+      console.log("SDFFFF");
+      this.timeline[this.elementId].animation.position.x[this.clickIndex][
+        this.clickDot
+      ][0] = px;
+      this.timeline[this.elementId].animation.position.x[this.clickIndex][
+        this.clickDot
+      ][1] = py;
+      this.interpolate();
+
+      this.drawCanvas();
+    }
+  }
+
+  _handleMouseDown(e) {
+    const padding = 50;
+    const px =
+      pxToMilliseconds(e.offsetX, this.timelineRange) +
+      pxToMilliseconds(this.timelineScroll, this.timelineRange);
+    const py = e.offsetY;
+
+    console.log(px, py);
+
+    for (
+      let index = 0;
+      index < this.timeline[this.elementId].animation.position.x.length;
+      index++
+    ) {
+      const element = this.timeline[this.elementId].animation.position.x[index];
+
+      if (
+        element.cs[0] > px - padding &&
+        element.cs[0] < px + padding &&
+        element.cs[1] > py - padding &&
+        element.cs[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "cs";
+        this.isDrag = true;
+      }
+
+      if (
+        element.ce[0] > px - padding &&
+        element.ce[0] < px + padding &&
+        element.ce[1] > py - padding &&
+        element.ce[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "ce";
+        this.isDrag = true;
+      }
+    }
+
+    if (!this.isDrag) {
+      this.addPoint({
+        x: px,
+        y: py,
+        line: this.selectLine,
+      });
+      this.drawCanvas();
+    }
+
+    return;
+  }
+
+  _handleMouseUp() {
+    this.isDrag = false;
   }
 
   private drawDots(ctx) {
-    const pointsX = this.timeline[this.elementId].animation.position.points[0];
-    const pointsY = this.timeline[this.elementId].animation.position.points[1];
-
-    //     ctx.beginPath();
-    // ctx.moveTo(30, 50);
-    // ctx.lineTo(150, 100);
-    // ctx.stroke();
+    console.log(this.elementId);
+    const pointsX = this.timeline[this.elementId].animation.position.x;
 
     for (let index = 0; index < pointsX.length; index++) {
       const element = pointsX[index];
@@ -140,26 +257,49 @@ export class KeyframeEditor extends LitElement {
       ctx.beginPath();
 
       const x =
-        millisecondsToPx(element[0], this.timelineRange) - this.timelineScroll;
-      ctx.arc(x, element[1], 4, 0, 2 * Math.PI);
-      ctx.fill();
-    }
+        millisecondsToPx(element.p[0], this.timelineRange) -
+        this.timelineScroll;
 
-    for (let index = 0; index < pointsY.length; index++) {
-      const element = pointsY[index];
-      ctx.fillStyle = "#ed3c21";
+      const y = element.p[1];
+      ctx.arc(x, element.p[1], 4, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = "#b7bcf7";
 
       ctx.beginPath();
-      const x =
-        millisecondsToPx(element[0], this.timelineRange) - this.timelineScroll;
-      ctx.arc(x, element[1], 4, 0, 2 * Math.PI);
+      const sx =
+        millisecondsToPx(element.cs[0], this.timelineRange) -
+        this.timelineScroll;
+      const sy = element.cs[1];
+      ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
       ctx.fill();
+
+      ctx.beginPath();
+      const ex =
+        millisecondsToPx(element.ce[0], this.timelineRange) -
+        this.timelineScroll;
+      const ey = element.ce[1];
+      ctx.arc(ex, ey, 4, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.strokeStyle = "#b7bcf7";
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(sx, sy);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#b7bcf7";
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
     }
   }
 
   private drawLines(ctx) {
-    const pointsX = this.timeline[this.elementId].animation.position.points[0];
-    const pointsY = this.timeline[this.elementId].animation.position.points[1];
+    const pointsX = this.timeline[this.elementId].animation.position.ax;
 
     ctx.strokeStyle = "#403af0";
 
@@ -168,20 +308,6 @@ export class KeyframeEditor extends LitElement {
 
     for (let index = 0; index < pointsX.length; index++) {
       const element = pointsX[index];
-      const x =
-        millisecondsToPx(element[0], this.timelineRange) - this.timelineScroll;
-      ctx.lineTo(x, element[1]);
-    }
-
-    ctx.stroke();
-
-    ctx.strokeStyle = "#ed3c21";
-
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-
-    for (let index = 0; index < pointsY.length; index++) {
-      const element = pointsY[index];
       const x =
         millisecondsToPx(element[0], this.timelineRange) - this.timelineScroll;
       ctx.lineTo(x, element[1]);
@@ -230,29 +356,35 @@ export class KeyframeEditor extends LitElement {
   }
 
   private drawCanvas() {
-    const ctx = this.canvas.getContext("2d");
-    if (ctx) {
-      const dpr = window.devicePixelRatio;
-      this.canvas.style.width = `${window.innerWidth}px`;
-
-      this.canvas.width = window.innerWidth * dpr;
-      this.canvas.height =
-        document.querySelector("element-timeline").offsetHeight * dpr;
-
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.scale(dpr, dpr);
-
-      ctx.fillStyle = "#0f1012";
-      ctx.beginPath();
-      ctx.rect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.fill();
-
-      this.drawLeftPadding(ctx);
-      this.drawRightPadding(ctx);
-      this.drawCursor(ctx);
-      this.drawDots(ctx);
-      this.drawLines(ctx);
+    if (!this.isShow) {
+      return false;
     }
+
+    try {
+      const ctx = this.canvas.getContext("2d");
+      if (ctx) {
+        const dpr = window.devicePixelRatio;
+        this.canvas.style.width = `${window.innerWidth}px`;
+
+        this.canvas.width = window.innerWidth * dpr;
+        this.canvas.height =
+          document.querySelector("element-timeline").offsetHeight * dpr;
+
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.scale(dpr, dpr);
+
+        ctx.fillStyle = "#0f1012";
+        ctx.beginPath();
+        ctx.rect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fill();
+
+        this.drawLeftPadding(ctx);
+        this.drawRightPadding(ctx);
+        this.drawCursor(ctx);
+        this.drawDots(ctx);
+        this.drawLines(ctx);
+      }
+    } catch (error) {}
   }
 
   _handleMouseWheel(e) {
@@ -265,35 +397,13 @@ export class KeyframeEditor extends LitElement {
     }
   }
 
-  _handleMouseClick(e) {
-    const insertX =
-      pxToMilliseconds(e.offsetX, this.timelineRange) +
-      pxToMilliseconds(this.timelineScroll, this.timelineRange);
-
-    const insertY = e.offsetY;
-
-    this.addPoint({
-      x: insertX,
-      y: insertY,
-      line: this.selectLine,
-    });
-    this.drawCanvas();
-
-    console.log(e.offsetX, e.offsetY, e);
-  }
-
   updated() {
     this.drawCanvas();
   }
 
-  showKeyframeEditorButtonGroup() {
-    let targetButton = document.querySelector("#keyframeEditorButtonGroup");
-    targetButton.classList.remove("d-none");
-  }
+  showKeyframeEditorButtonGroup() {}
 
   hideKeyframeEditorButtonGroup() {
-    let targetButton = document.querySelector("#keyframeEditorButtonGroup");
-    targetButton.classList.add("d-none");
     let keyframeEditor = document.getElementById("option_bottom");
     keyframeEditor.classList.remove("show");
     keyframeEditor.classList.add("hide");
@@ -366,37 +476,127 @@ export class KeyframeEditor extends LitElement {
     //   line: line,
     // });
 
-    let loadPointLength =
-      this.points[line][this.points[line].length - 1][0] - 1;
-    //let allPoints = this.interpolateBezier(this.points[line]);
+    console.log(this.timeline[this.elementId].animation[this.animationType]);
+
+    // this.timeline[this.elementId].animation[this.animationType].x.push({
+    //   type: "cubic",
+    //   p: [Math.round(x), Math.round(y)],
+    //   cs: [Math.round(x), Math.round(y)],
+    //   ce: [Math.round(x), Math.round(y)],
+    // });
+
+    this.interpolate();
+
+    // let loadPointLength =
+    //   this.points[line][this.points[line].length - 1][0] - 1;
+    // let allPoints = this.smoothQuadraticBezier(
+    //   this.points[line],
+    //   this.points[line].length * 10,
+    // );
 
     this.timeline[this.elementId].animation[this.animationType].isActivate =
       true;
-    this.timeline[this.elementId].animation[this.animationType].points[line] =
-      this.points[line];
-    // this.timeline[this.elementId].animation[this.animationType].allpoints[
-    //   line
-    // ] = allPoints;
+    // this.timeline[this.elementId].animation[this.animationType].points[line] =
+    //   this.points[line];
   }
 
   insertPointInMiddle({ x, y, line }) {
-    if (this.points[line].length - 1 == 0) {
-      this.points[line].push([x, y]);
+    if (
+      this.timeline[this.elementId].animation[this.animationType].x.length -
+        1 ==
+      0
+    ) {
+      this.timeline[this.elementId].animation[this.animationType].x.push({
+        type: "cubic",
+        p: [x, y],
+        cs: [x, y],
+        ce: [x, y],
+      });
       return 0;
     }
 
-    for (let index = 0; index < this.points[line].length; index++) {
-      if (this.points[line].length - 1 == index) {
-        this.points[line].splice(index + 1, 0, [x, y]);
+    for (
+      let index = 0;
+      index <
+      this.timeline[this.elementId].animation[this.animationType].x.length;
+      index++
+    ) {
+      if (
+        this.timeline[this.elementId].animation[this.animationType].x.length -
+          1 ==
+        index
+      ) {
+        this.timeline[this.elementId].animation[this.animationType].x.splice(
+          index + 1,
+          0,
+          {
+            type: "cubic",
+            p: [x, y],
+            cs: [x, y],
+            ce: [x, y],
+          },
+        );
         return 0;
       } else if (
-        this.points[line][index][0] < x &&
-        this.points[line][index + 1][0] > x
+        this.timeline[this.elementId].animation[this.animationType].x[index]
+          .p[0] < x &&
+        this.timeline[this.elementId].animation[this.animationType].x[index + 1]
+          .p[0] > x
       ) {
-        this.points[line].splice(index + 1, 0, [x, y]);
+        this.timeline[this.elementId].animation[this.animationType].x.splice(
+          index + 1,
+          0,
+          {
+            type: "cubic",
+            p: [x, y],
+            cs: [x, y],
+            ce: [x, y],
+          },
+        );
         return 0;
       }
     }
+  }
+
+  interpolate() {
+    const array = this.timeline[this.elementId].animation[this.animationType].x;
+
+    const interpolationArray = [];
+
+    for (let ic = 0; ic < array.length - 1; ic++) {
+      const interpolation = this.cubic(array[ic], array[ic + 1], ic);
+
+      for (let index = 0; index < interpolation.length; index++) {
+        const element = interpolation[index];
+
+        interpolationArray.push(element);
+      }
+    }
+
+    this.timeline[this.elementId].animation[this.animationType].ax =
+      interpolationArray;
+
+    console.log(interpolationArray);
+  }
+
+  cubic(d0, d1, index) {
+    let result = [];
+
+    for (let t = 0; t <= 1; t = t + 1 / 30) {
+      const x =
+        Math.pow(1 - t, 3) * d0.p[0] +
+        3 * Math.pow(1 - t, 2) * t * d0.ce[0] +
+        3 * (1 - t) * Math.pow(t, 2) * d1.cs[0] +
+        Math.pow(t, 3) * d1.p[0];
+      const y =
+        Math.pow(1 - t, 3) * d0.p[1] +
+        3 * Math.pow(1 - t, 2) * t * d0.ce[1] +
+        3 * (1 - t) * Math.pow(t, 2) * d1.cs[1] +
+        Math.pow(t, 3) * d1.p[1];
+      result.push([x, y]);
+    }
+
+    return result;
   }
 
   getRemovedDuplicatePoint({ x, line }) {

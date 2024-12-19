@@ -1,9 +1,16 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IUIStore, uiStore } from "../../states/uiStore";
+import { IKeyframeStore, keyframeStore } from "../../states/keyframeStore";
 
 @customElement("offcanvas-list-ui")
 export class OffcanvasList extends LitElement {
+  @property()
+  keyframeState: IKeyframeStore = keyframeStore.getInitialState();
+
+  @property()
+  target = this.keyframeState.target;
+
   @property()
   uiState: IUIStore = uiStore.getInitialState();
 
@@ -13,6 +20,10 @@ export class OffcanvasList extends LitElement {
   createRenderRoot() {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
+    });
+
+    keyframeStore.subscribe((state) => {
+      this.target = state.target;
     });
 
     return this;
@@ -66,7 +77,13 @@ export class OffcanvasList extends LitElement {
             value="aaaa-aaaa-aaaa-aaaa"
           />
 
-          <div id="timelineOptionBody" class="d-none"></div>
+          <div id="timelineOptionBody">
+            <keyframe-editor
+              elementId="${this.target.elementId}"
+              isShow="${this.target.isShow}"
+              animationType="${"position"}"
+            ></keyframe-editor>
+          </div>
         </div>
       </div>
     `;

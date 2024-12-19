@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
+import { IKeyframeStore, keyframeStore } from "../../states/keyframeStore";
 
 @customElement("timeline-ui")
 export class Timeline extends LitElement {
@@ -21,6 +22,12 @@ export class Timeline extends LitElement {
   resize = this.uiState.resize;
 
   @property()
+  keyframeState: IKeyframeStore = keyframeStore.getInitialState();
+
+  @property()
+  target = this.keyframeState.target;
+
+  @property()
   isPlay: boolean = false;
 
   createRenderRoot() {
@@ -30,6 +37,10 @@ export class Timeline extends LitElement {
 
     uiStore.subscribe((state) => {
       this.resize = state.resize;
+    });
+
+    keyframeStore.subscribe((state) => {
+      this.target = state.target;
     });
 
     window.addEventListener("mouseup", this._handleMouseUp.bind(this));
@@ -49,6 +60,21 @@ export class Timeline extends LitElement {
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.stop();
     this.isPlay = false;
+  }
+
+  _handleClickClosedKeyframe() {
+    let keyframeEditor = document.getElementById("option_bottom");
+    keyframeEditor.classList.remove("show");
+    keyframeEditor.classList.add("hide");
+
+    document
+      .querySelector("element-timeline-canvas")
+      .closeAnimationPanel(this.target.elementId);
+
+    this.keyframeState.update({
+      elementId: "",
+      isShow: false,
+    });
   }
 
   _handleKeydown(event) {
@@ -127,6 +153,27 @@ export class Timeline extends LitElement {
     }
   }
 
+  keyframeOption() {
+    if (this.target.isShow) {
+      return html` <button
+          type="button"
+          class="btn btn-dark btn-sm"
+          data-bs-dismiss="offcanvas"
+          @click=${this._handleClickClosedKeyframe}
+          aria-label="close"
+        >
+          키프레임 에디터 닫기
+        </button>
+        <div
+          class="btn-group"
+          role="group"
+          id="timelineOptionLineEditor"
+        ></div>`;
+    }
+
+    return html``;
+  }
+
   render() {
     return html`
       <div
@@ -153,22 +200,7 @@ export class Timeline extends LitElement {
           </div>
         </div>
         <div class="col-5">
-          <div id="keyframeEditorButtonGroup" class="d-none">
-            <button
-              type="button"
-              class="btn btn-dark btn-sm"
-              data-bs-dismiss="offcanvas"
-              onclick="document.querySelector('keyframe-editor').hideKeyframeEditorButtonGroup()"
-              aria-label="close"
-            >
-              키프레임 에디터 닫기
-            </button>
-            <div
-              class="btn-group"
-              role="group"
-              id="timelineOptionLineEditor"
-            ></div>
-          </div>
+          <div id="keyframeEditorButtonGroup">${this.keyframeOption()}</div>
         </div>
 
         <div class="col-3 row d-flex align-items-center m-0 p-0">

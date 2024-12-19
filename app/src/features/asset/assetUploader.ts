@@ -33,7 +33,7 @@ export class AssetDropUploader extends LitElement {
     return `
         <div class="row justify-content-center align-items-start">
             <b class="col-12 align-self-center text-light position-fixed text-center">
-                여기에 파일을 드롭해주세요
+                Drop File 
             </b>
         </div>`;
   }

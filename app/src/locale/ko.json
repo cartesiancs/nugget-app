@@ -14,7 +14,12 @@
     "load_project": "프로젝트 불러오기",
     "bitrate": "비트레이트",
     "bitrate_unit": "bitrate",
-    "export": "내보내기"
+    "export": "내보내기",
+    "need_select_project_folder": "프로젝트 폴더를 지정해주세요.",
+    "text": "텍스트",
+    "position": "위치",
+    "opacity": "불투명도",
+    "audio": "오디오"
   },
   "modal": {
     "change_language": "언어 변경",

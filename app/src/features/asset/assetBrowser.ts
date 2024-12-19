@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
+import { LocaleController } from "../../controllers/locale";
 
 @customElement("asset-browser")
 export class AssetBrowser extends LitElement {
@@ -18,13 +19,12 @@ export class AssetBrowser extends LitElement {
   private assetControl = new AssetController();
 
   render() {
-    const template = this.template();
-    this.innerHTML = template;
-  }
-
-  template() {
-    return `<div class="d-flex flex-row p-0 mt-2">
-      <button ref="arrowup" class="btn btn-transparent btn-sm">
+    return html`<div class="d-flex flex-row p-0 mt-2">
+      <button
+        ref="arrowup"
+        class="btn btn-transparent btn-sm"
+        @click=${this.clickPrevDirectoryButton}
+      >
         <span class="material-symbols-outlined icon-sm"> arrow_upward </span>
       </button>
       <input
@@ -57,27 +57,5 @@ export class AssetBrowser extends LitElement {
     );
 
     this.assetControl.requestAllDir(splitPrevDirectory.join("/"));
-  }
-
-  connectedCallback() {
-    this.render();
-
-    let prevDirectoryButton = this.querySelector("div").querySelector(
-      "button[ref='arrowup']",
-    );
-    prevDirectoryButton.addEventListener(
-      "click",
-      this.clickPrevDirectoryButton.bind(this),
-    );
-  }
-
-  disconnectedCallback() {
-    let prevDirectoryButton = this.querySelector("div").querySelector(
-      "button[ref='arrowup']",
-    );
-    prevDirectoryButton.removeEventListener(
-      "click",
-      this.clickPrevDirectoryButton,
-    );
   }
 }

@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { LocaleController } from "../../controllers/locale";
 
 @customElement("option-audio")
 export class OptionAudio extends LitElement {
@@ -11,8 +12,12 @@ export class OptionAudio extends LitElement {
     this.elementId = "";
   }
 
+  private lc = new LocaleController(this);
+
   render() {
-    return html` <label class="form-label text-light">오디오</label>
+    return html` <label class="form-label text-light"
+        >${this.lc.t("setting.audio")}</label
+      >
       <div class="d-flex flex-row bd-highlight mb-2"></div>`;
   }
 

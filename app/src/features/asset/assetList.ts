@@ -2,6 +2,7 @@ import { path } from "../../functions/path";
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
+import { LocaleController } from "../../controllers/locale";
 
 @customElement("asset-list")
 export class AssetList extends LitElement {
@@ -13,13 +14,24 @@ export class AssetList extends LitElement {
     this.nowDirectory = "";
   }
 
-  render() {
-    const template = this.template();
-    this.innerHTML = template;
+  private lc = new LocaleController(this);
+
+  createRenderRoot() {
+    return this;
   }
 
-  template() {
-    return `<div class="row px-2"> <p class="text-light mt-2 text-center">프로젝트 폴더를 지정한 후 표시됩니다.</p> <button class="btn btn-sm btn-default text-light" onclick="NUGGET.directory.select()">프로젝트 폴더 지정</button> </div>`;
+  render() {
+    return html`<div class="row px-2">
+      <p class="text-light mt-2 text-center">
+        ${this.lc.t("setting.need_select_project_folder")}
+      </p>
+      <button
+        class="btn btn-sm btn-default text-light"
+        onclick="NUGGET.directory.select()"
+      >
+        ${this.lc.t("setting.select_project_folder")}
+      </button>
+    </div>`;
   }
 
   getFile(filename) {
@@ -54,10 +66,6 @@ export class AssetList extends LitElement {
 
   clearList() {
     this.querySelector("div").innerHTML = "";
-  }
-
-  connectedCallback() {
-    this.render();
   }
 }
 

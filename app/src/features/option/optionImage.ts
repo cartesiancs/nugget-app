@@ -1,10 +1,12 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { LocaleController } from "../../controllers/locale";
 
 @customElement("option-image")
 export class OptionImage extends LitElement {
   elementId: string;
+  private lc = new LocaleController(this);
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
@@ -29,7 +31,9 @@ export class OptionImage extends LitElement {
 
   render() {
     return html`
-      <label class="form-label text-light">위치</label>
+      <label class="form-label text-light"
+        >${this.lc.t("setting.position")}</label
+      >
       <div class="d-flex flex-row bd-highlight mb-2">
         <input
           aria-event="location-x"
@@ -47,7 +51,9 @@ export class OptionImage extends LitElement {
         />
       </div>
 
-      <label class="form-label text-light">불투명도</label>
+      <label class="form-label text-light"
+        >${this.lc.t("setting.opacity")}</label
+      >
       <div class="d-flex flex-row bd-highlight mb-2">
         <input
           aria-event="opacity"
@@ -85,7 +91,7 @@ export class OptionImage extends LitElement {
 
   handleLocation() {
     const targetElement = document.querySelector(
-      `element-control-asset[element-id='${this.elementId}']`
+      `element-control-asset[element-id='${this.elementId}']`,
     );
     const xDom: any = this.querySelector("input[aria-event='location-x'");
     const yDom: any = this.querySelector("input[aria-event='location-y'");

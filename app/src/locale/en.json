@@ -14,7 +14,12 @@
     "load_project": "Load Project",
     "bitrate": "Bitrate",
     "bitrate_unit": "bitrate",
-    "export": "Export"
+    "export": "Export",
+    "need_select_project_folder": "Select a project folder",
+    "text": "text",
+    "position": "Position",
+    "opacity": "Opacity",
+    "audio": "Audio"
   },
   "modal": {
     "change_language": "Change Language",

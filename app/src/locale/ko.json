@@ -1,0 +1,32 @@
+{
+  "test": "테스트",
+  "render": {
+    "start": "랜더링 시작"
+  },
+  "setting": {
+    "select_project_folder": "프로젝트 폴더 지정",
+    "video_duration": "영상 길이",
+    "seconds": "초단위",
+    "seconds_unit": "초",
+    "frame": "프레임",
+    "resolution": "해상도",
+    "save_project": "프로젝트 저장",
+    "load_project": "프로젝트 불러오기",
+    "bitrate": "비트레이트",
+    "bitrate_unit": "bitrate",
+    "export": "내보내기",
+    "need_select_project_folder": "프로젝트 폴더를 지정해주세요.",
+    "text": "텍스트",
+    "position": "위치",
+    "opacity": "불투명도",
+    "audio": "오디오"
+  },
+  "modal": {
+    "change_language": "언어 변경",
+    "change_language_description": "언어를 변경하시면 앱을 재시작해야 합니다.",
+    "needs_to_restart": "재시작 필요",
+    "needs_to_restart_description": "경고: 저장되지 않은 작업물은 사라질 수 있습니다. 프로젝트를 저장했는지 확인해주세요.",
+    "restart": "재시작",
+    "close": "닫기"
+  }
+}

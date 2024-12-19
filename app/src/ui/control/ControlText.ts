@@ -1,8 +1,11 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { LocaleController } from "../../controllers/locale";
 
 @customElement("control-ui-text")
 export class ControlText extends LitElement {
+  private lc = new LocaleController(this);
+
   createRenderRoot() {
     return this;
   }
@@ -22,7 +25,7 @@ export class ControlText extends LitElement {
           text_fields
         </span>
         <b class="align-self-center text-ellipsis text-light text-center"
-          >텍스트</b
+          >${this.lc.t("setting.text")}</b
         >
       </div>
     </div>`;

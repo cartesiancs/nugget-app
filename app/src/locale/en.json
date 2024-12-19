@@ -1,0 +1,32 @@
+{
+  "test": "test",
+  "render": {
+    "start": "render start"
+  },
+  "setting": {
+    "select_project_folder": "Select Folder",
+    "video_duration": "Duration",
+    "seconds": "Seconds",
+    "seconds_unit": "s",
+    "frame": "Frame",
+    "resolution": "Resolution",
+    "save_project": "Save Project",
+    "load_project": "Load Project",
+    "bitrate": "Bitrate",
+    "bitrate_unit": "bitrate",
+    "export": "Export",
+    "need_select_project_folder": "Select a project folder",
+    "text": "text",
+    "position": "Position",
+    "opacity": "Opacity",
+    "audio": "Audio"
+  },
+  "modal": {
+    "change_language": "Change Language",
+    "change_language_description": "If you change the language, you will have to restart the app.",
+    "needs_to_restart": " Needs to Restart",
+    "needs_to_restart_description": "WARNING: You may lose unsaved tasks.",
+    "restart": "Restart",
+    "close": "Close"
+  }
+}

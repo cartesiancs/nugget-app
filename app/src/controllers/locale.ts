@@ -15,7 +15,7 @@ export class LocaleController implements ReactiveController {
     (this.host = host).addController(this);
 
     window.electronAPI.req.store.get("LANG").then((item) => {
-      this.value = item.value;
+      this.value = item.value || "en";
     });
   }
 
@@ -55,7 +55,7 @@ export class LocaleController implements ReactiveController {
 
   hostConnected() {
     window.electronAPI.req.store.get("LANG").then((item) => {
-      this.value = item.value;
+      this.value = item.value || "en";
       this.host.requestUpdate();
     });
   }

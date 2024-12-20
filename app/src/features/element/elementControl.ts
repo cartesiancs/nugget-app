@@ -520,8 +520,6 @@ export class ElementControl extends LitElement {
     let startTime = Number(this.timeline[elementId].startTime);
     let indexPoint = Math.round((indexToMs - startTime) / 20);
 
-    console.log(index, indexPoint);
-
     try {
       if (indexPoint < 0) {
         return 0;
@@ -529,17 +527,18 @@ export class ElementControl extends LitElement {
 
       const x = this.findNearestY(
         this.timeline[elementId].animation[animationType].ax,
-        this.progressTime + this.timeline[elementId].startTime,
+        this.progressTime - this.timeline[elementId].startTime,
+      );
+
+      const y = this.findNearestY(
+        this.timeline[elementId].animation[animationType].ay,
+        this.progressTime - this.timeline[elementId].startTime,
       );
 
       document.querySelector(`#element-${elementId}`).style.left = `${
         x / 10
       }px`;
-      // document.querySelector(`#element-${elementId}`).style.top = `${
-      //   this.timeline[elementId].animation[animationType].ax[1][
-      //     indexPoint
-      //   ].y / this.previewRatio
-      // }px`;
+      document.querySelector(`#element-${elementId}`).style.top = `${y / 10}px`;
     } catch (error) {}
   }
 

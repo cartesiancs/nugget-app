@@ -123,10 +123,8 @@ export class KeyframeEditor extends LitElement {
         }
 
         try {
-          this.lineCount =
-            this.timeline[this.elementId].animation[
-              this.animationType
-            ].points.length;
+          // position이면 2개 나머지는 1개
+          this.lineCount = 2;
 
           this.clearLineEditorGroup();
 
@@ -168,128 +166,72 @@ export class KeyframeEditor extends LitElement {
     } catch (error) {}
   }
 
-  _handleMouseMove(e) {
-    //console.log(e);
-    const px =
-      pxToMilliseconds(e.offsetX, this.timelineRange) +
-      pxToMilliseconds(this.timelineScroll, this.timelineRange);
-    const py = e.offsetY;
-
-    //console.log(px);
-
-    if (this.isDrag) {
-      console.log("SDFFFF");
-      this.timeline[this.elementId].animation.position.x[this.clickIndex][
-        this.clickDot
-      ][0] = px;
-      this.timeline[this.elementId].animation.position.x[this.clickIndex][
-        this.clickDot
-      ][1] = py;
-      this.interpolate();
-
-      this.drawCanvas();
-    }
-  }
-
-  _handleMouseDown(e) {
-    const padding = 50;
-    const px =
-      pxToMilliseconds(e.offsetX, this.timelineRange) +
-      pxToMilliseconds(this.timelineScroll, this.timelineRange);
-    const py = e.offsetY;
-
-    console.log(px, py);
-
-    for (
-      let index = 0;
-      index < this.timeline[this.elementId].animation.position.x.length;
-      index++
-    ) {
-      const element = this.timeline[this.elementId].animation.position.x[index];
-
-      if (
-        element.cs[0] > px - padding &&
-        element.cs[0] < px + padding &&
-        element.cs[1] > py - padding &&
-        element.cs[1] < py + padding
-      ) {
-        this.clickIndex = index;
-        this.clickDot = "cs";
-        this.isDrag = true;
-      }
-
-      if (
-        element.ce[0] > px - padding &&
-        element.ce[0] < px + padding &&
-        element.ce[1] > py - padding &&
-        element.ce[1] < py + padding
-      ) {
-        this.clickIndex = index;
-        this.clickDot = "ce";
-        this.isDrag = true;
-      }
-    }
-
-    if (!this.isDrag) {
-      this.addPoint({
-        x: px,
-        y: py,
-        line: this.selectLine,
-      });
-      this.drawCanvas();
-    }
-
-    return;
-  }
-
-  _handleMouseUp() {
-    this.isDrag = false;
-  }
-
   private drawDots(ctx) {
-    console.log(this.elementId);
     const pointsX = this.timeline[this.elementId].animation.position.x;
+    const pointsY = this.timeline[this.elementId].animation.position.y;
 
-    for (let index = 0; index < pointsX.length; index++) {
-      const element = pointsX[index];
-      ctx.fillStyle = "#403af0";
+    this.drawDotsLoop({
+      ctx: ctx,
+      dots: pointsX,
+      color: "#403af0",
+      subColor: "#b7bcf7",
+    });
+
+    this.drawDotsLoop({
+      ctx: ctx,
+      dots: pointsY,
+      color: "#e83535",
+      subColor: "#ed7979",
+    });
+  }
+
+  drawDotsLoop({ ctx, dots, color, subColor }) {
+    for (let index = 0; index < dots.length; index++) {
+      const element = dots[index];
+      ctx.fillStyle = color;
 
       ctx.beginPath();
 
       const x =
-        millisecondsToPx(element.p[0], this.timelineRange) -
-        this.timelineScroll;
+        millisecondsToPx(
+          element.p[0] + this.timeline[this.elementId].startTime,
+          this.timelineRange,
+        ) - this.timelineScroll;
 
       const y = element.p[1];
       ctx.arc(x, element.p[1], 4, 0, 2 * Math.PI);
       ctx.fill();
 
-      ctx.fillStyle = "#b7bcf7";
+      ctx.fillStyle = subColor;
 
       ctx.beginPath();
       const sx =
-        millisecondsToPx(element.cs[0], this.timelineRange) -
-        this.timelineScroll;
+        millisecondsToPx(
+          element.cs[0] + this.timeline[this.elementId].startTime,
+          this.timelineRange,
+        ) - this.timelineScroll;
       const sy = element.cs[1];
       ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.beginPath();
       const ex =
-        millisecondsToPx(element.ce[0], this.timelineRange) -
-        this.timelineScroll;
+        millisecondsToPx(
+          element.ce[0] + this.timeline[this.elementId].startTime,
+          this.timelineRange,
+        ) - this.timelineScroll;
       const ey = element.ce[1];
       ctx.arc(ex, ey, 4, 0, 2 * Math.PI);
       ctx.fill();
 
-      ctx.strokeStyle = "#b7bcf7";
+      ctx.strokeStyle = subColor;
 
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(sx, sy);
       ctx.stroke();
 
-      ctx.strokeStyle = "#b7bcf7";
+      ctx.strokeStyle = subColor;
 
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -300,19 +242,34 @@ export class KeyframeEditor extends LitElement {
 
   private drawLines(ctx) {
     const pointsX = this.timeline[this.elementId].animation.position.ax;
+    const pointsY = this.timeline[this.elementId].animation.position.ay;
 
     ctx.strokeStyle = "#403af0";
-
     ctx.beginPath();
     ctx.moveTo(0, 0);
-
     for (let index = 0; index < pointsX.length; index++) {
       const element = pointsX[index];
       const x =
-        millisecondsToPx(element[0], this.timelineRange) - this.timelineScroll;
+        millisecondsToPx(
+          element[0] + this.timeline[this.elementId].startTime,
+          this.timelineRange,
+        ) - this.timelineScroll;
       ctx.lineTo(x, element[1]);
     }
+    ctx.stroke();
 
+    ctx.strokeStyle = "#e83535";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    for (let index = 0; index < pointsY.length; index++) {
+      const element = pointsY[index];
+      const x =
+        millisecondsToPx(
+          element[0] + this.timeline[this.elementId].startTime,
+          this.timelineRange,
+        ) - this.timelineScroll;
+      ctx.lineTo(x, element[1]);
+    }
     ctx.stroke();
   }
 
@@ -395,6 +352,89 @@ export class KeyframeEditor extends LitElement {
     if (newScroll >= 0) {
       this.timelineState.setScroll(newScroll);
     }
+  }
+
+  _handleMouseMove(e) {
+    //console.log(e);
+    const px =
+      pxToMilliseconds(e.offsetX, this.timelineRange) +
+      pxToMilliseconds(this.timelineScroll, this.timelineRange) -
+      this.timeline[this.elementId].startTime;
+    const py = e.offsetY;
+    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
+
+    //console.log(px);
+
+    if (this.isDrag) {
+      this.timeline[this.elementId].animation.position[lineToAlpha][
+        this.clickIndex
+      ][this.clickDot][0] = px;
+      this.timeline[this.elementId].animation.position[lineToAlpha][
+        this.clickIndex
+      ][this.clickDot][1] = py;
+
+      this.interpolate(this.selectLine);
+
+      this.drawCanvas();
+    }
+  }
+
+  _handleMouseDown(e) {
+    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
+
+    const padding = 100;
+    const px =
+      pxToMilliseconds(e.offsetX, this.timelineRange) +
+      pxToMilliseconds(this.timelineScroll, this.timelineRange) -
+      this.timeline[this.elementId].startTime;
+    const py = e.offsetY;
+
+    for (
+      let index = 0;
+      index <
+      this.timeline[this.elementId].animation.position[lineToAlpha].length;
+      index++
+    ) {
+      const element =
+        this.timeline[this.elementId].animation.position[lineToAlpha][index];
+
+      if (
+        element.cs[0] > px - padding &&
+        element.cs[0] < px + padding &&
+        element.cs[1] > py - padding &&
+        element.cs[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "cs";
+        this.isDrag = true;
+      }
+
+      if (
+        element.ce[0] > px - padding &&
+        element.ce[0] < px + padding &&
+        element.ce[1] > py - padding &&
+        element.ce[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "ce";
+        this.isDrag = true;
+      }
+    }
+
+    if (!this.isDrag) {
+      this.addPoint({
+        x: px,
+        y: py,
+        line: this.selectLine,
+      });
+      this.drawCanvas();
+    }
+
+    return;
+  }
+
+  _handleMouseUp() {
+    this.isDrag = false;
   }
 
   updated() {
@@ -485,7 +525,7 @@ export class KeyframeEditor extends LitElement {
     //   ce: [Math.round(x), Math.round(y)],
     // });
 
-    this.interpolate();
+    this.interpolate(line);
 
     // let loadPointLength =
     //   this.points[line][this.points[line].length - 1][0] - 1;
@@ -501,16 +541,22 @@ export class KeyframeEditor extends LitElement {
   }
 
   insertPointInMiddle({ x, y, line }) {
+    const lineToAlpha = line == 0 ? "x" : "y";
+    const subDots = 100;
+
     if (
-      this.timeline[this.elementId].animation[this.animationType].x.length -
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
+        .length -
         1 ==
       0
     ) {
-      this.timeline[this.elementId].animation[this.animationType].x.push({
+      this.timeline[this.elementId].animation[this.animationType][
+        lineToAlpha
+      ].push({
         type: "cubic",
         p: [x, y],
-        cs: [x, y],
-        ce: [x, y],
+        cs: [x - subDots, y],
+        ce: [x + subDots, y],
       });
       return 0;
     }
@@ -518,53 +564,65 @@ export class KeyframeEditor extends LitElement {
     for (
       let index = 0;
       index <
-      this.timeline[this.elementId].animation[this.animationType].x.length;
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
+        .length;
       index++
     ) {
       if (
-        this.timeline[this.elementId].animation[this.animationType].x.length -
+        this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
+          .length -
           1 ==
         index
       ) {
-        this.timeline[this.elementId].animation[this.animationType].x.splice(
-          index + 1,
-          0,
-          {
-            type: "cubic",
-            p: [x, y],
-            cs: [x, y],
-            ce: [x, y],
-          },
-        );
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ].splice(index + 1, 0, {
+          type: "cubic",
+          p: [x, y],
+          cs: [x - subDots, y],
+          ce: [x + subDots, y],
+        });
         return 0;
       } else if (
-        this.timeline[this.elementId].animation[this.animationType].x[index]
-          .p[0] < x &&
-        this.timeline[this.elementId].animation[this.animationType].x[index + 1]
-          .p[0] > x
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][index].p[0] < x &&
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][index + 1].p[0] > x
       ) {
-        this.timeline[this.elementId].animation[this.animationType].x.splice(
-          index + 1,
-          0,
-          {
-            type: "cubic",
-            p: [x, y],
-            cs: [x, y],
-            ce: [x, y],
-          },
-        );
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ].splice(index + 1, 0, {
+          type: "cubic",
+          p: [x, y],
+          cs: [x - subDots, y],
+          ce: [x + subDots, y],
+        });
         return 0;
       }
     }
   }
 
-  interpolate() {
-    const array = this.timeline[this.elementId].animation[this.animationType].x;
+  interpolate(line) {
+    const lineToAlpha = line == 0 ? "x" : "y";
+    const lineToAllAlpha = line == 0 ? "ax" : "ay";
+
+    const array =
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha];
 
     const interpolationArray = [];
 
     for (let ic = 0; ic < array.length - 1; ic++) {
-      const interpolation = this.cubic(array[ic], array[ic + 1], ic);
+      const interval = array[ic + 1].p[0] - array[ic].p[0];
+      const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
+
+      console.log(intervalFrames, "interval");
+      const interpolation = this.cubic(
+        array[ic],
+        array[ic + 1],
+        intervalFrames,
+      );
 
       for (let index = 0; index < interpolation.length; index++) {
         const element = interpolation[index];
@@ -573,16 +631,17 @@ export class KeyframeEditor extends LitElement {
       }
     }
 
-    this.timeline[this.elementId].animation[this.animationType].ax =
-      interpolationArray;
+    this.timeline[this.elementId].animation[this.animationType][
+      lineToAllAlpha
+    ] = interpolationArray;
 
     console.log(interpolationArray);
   }
 
-  cubic(d0, d1, index) {
+  cubic(d0, d1, iteration = 30) {
     let result = [];
 
-    for (let t = 0; t <= 1; t = t + 1 / 30) {
+    for (let t = 0; t <= 1; t = t + 1 / iteration) {
       const x =
         Math.pow(1 - t, 3) * d0.p[0] +
         3 * Math.pow(1 - t, 2) * t * d0.ce[0] +

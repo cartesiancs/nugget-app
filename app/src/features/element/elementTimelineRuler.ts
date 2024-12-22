@@ -113,6 +113,25 @@ export class ElementTimelineRuler extends LitElement {
     return `${minutes}m ${remainingSeconds}s`;
   }
 
+  private formatMinutesToHourMinute(minutesInput: any): string {
+    const totalMinutes = parseInt(minutesInput, 10);
+
+    if (isNaN(totalMinutes) || totalMinutes < 0) {
+      return "Invalid input";
+    }
+
+    const hours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
+
+    const formattedMinutes = String(remainingMinutes).padStart(2, "0");
+
+    if (totalMinutes === 0 || totalMinutes <= 60) {
+      return `${totalMinutes}m`;
+    }
+
+    return `${hours}h ${formattedMinutes}m`;
+  }
+
   drawCursorHead() {
     const ctx = this.canvas.getContext("2d");
 
@@ -163,7 +182,7 @@ export class ElementTimelineRuler extends LitElement {
       unitSplit = 60;
       unit = "m";
     } else if (
-      this.imeMagnification < 0.01 &&
+      this.timeMagnification < 0.01 &&
       this.timeMagnification >= 0.001
     ) {
       range = 60 * 5;
@@ -207,6 +226,17 @@ export class ElementTimelineRuler extends LitElement {
           const text = this.formatSecondsToTime(
             (Number(count / 10) + startNumber * range) / unitSplit,
           );
+          ctx.strokeText(`${text}`, startX - term / 2, 10);
+        } else if (unit == "m") {
+          const text = this.formatMinutesToHourMinute(
+            (Number(count / 10) + startNumber * range) / unitSplit,
+          );
+
+          ctx.strokeText(`${text}`, startX - term / 2, 10);
+        } else {
+          const text = `${
+            (Number(count / 10) + startNumber * range) / unitSplit
+          }${unit}`;
           ctx.strokeText(`${text}`, startX - term / 2, 10);
         }
       } else {

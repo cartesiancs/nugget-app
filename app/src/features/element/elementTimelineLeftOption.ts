@@ -4,6 +4,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { consume } from "@lit/context";
 import { timelineContext } from "../../context/timelineContext";
+import { elementUtils } from "../../utils/element";
 
 @customElement("element-timeline-left-option")
 export class ElementTimelineLeftOption extends LitElement {
@@ -28,6 +29,7 @@ export class ElementTimelineLeftOption extends LitElement {
   @property({ attribute: false })
   public timelineOptions = {
     canvasVerticalScroll: 0,
+    panelOptions: [],
   };
 
   createRenderRoot() {
@@ -115,10 +117,90 @@ export class ElementTimelineLeftOption extends LitElement {
             );
           }
 
+          if (
+            elementUtils.getElementType(this.timeline[elementId].filetype) ==
+            "static"
+          ) {
+            const isActive = this.isActiveAnimationPanel(elementId);
+            if (isActive) {
+              ctx.fillStyle = "#62a88f";
+            } else {
+              ctx.fillStyle = "#37485c";
+            }
+
+            ctx.beginPath();
+            ctx.rect(
+              this.resize.timelineVertical.leftOption - height,
+              top,
+              height,
+              height,
+            );
+            ctx.fill();
+
+            if (isActive) {
+              index += 1;
+              const panelTop =
+                index * height * 1.2 -
+                this.timelineOptions.canvasVerticalScroll;
+              ctx.fillStyle = "#62a88f";
+
+              ctx.beginPath();
+              ctx.rect(
+                0,
+                panelTop,
+                this.resize.timelineVertical.leftOption,
+                height,
+              );
+              ctx.fill();
+
+              const fontSize = 14;
+              ctx.fillStyle = "#ffffff";
+              ctx.lineWidth = 0;
+              ctx.font = `${fontSize}px "Noto Sans"`;
+              this.wrapText(
+                ctx,
+                "Position",
+                4,
+                panelTop + fontSize + 4,
+                this.resize.timelineVertical.leftOption,
+              );
+            }
+          }
+
           index += 1;
         }
       }
     }
+  }
+
+  private drawRequestTimelineCanvas() {
+    document.querySelector("element-timeline-canvas").drawCanvas();
+  }
+
+  deactivateAnimationPanel(elementId) {
+    const panelOptions = this.timelineOptions.panelOptions.filter((item) => {
+      return item.elementId != elementId;
+    });
+
+    this.timelineOptions.panelOptions = panelOptions;
+    this.drawRequestTimelineCanvas();
+  }
+
+  activateAnimationPanel(elementId) {
+    this.timelineOptions.panelOptions.push({
+      elementId: elementId,
+      activeAnimation: true,
+    });
+
+    this.drawRequestTimelineCanvas();
+  }
+
+  isActiveAnimationPanel(elementId) {
+    return (
+      this.timelineOptions.panelOptions.findIndex((item) => {
+        return item.elementId == elementId;
+      }) != -1
+    );
   }
 
   _handleMouseMove(e) {
@@ -144,6 +226,53 @@ export class ElementTimelineLeftOption extends LitElement {
     this.isAbleResize = false;
   }
 
+  _handleMouseClickCanvas(e) {
+    const x = e.offsetX;
+    const y = e.offsetY;
+    let index = 1;
+
+    for (const elementId in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+        const height = 30;
+        const top =
+          index * height * 1.2 - this.timelineOptions.canvasVerticalScroll;
+
+        if (
+          x > this.resize.timelineVertical.leftOption - height &&
+          x < this.resize.timelineVertical.leftOption &&
+          y > top &&
+          y < top + height
+        ) {
+          const isImage =
+            elementUtils.getElementType(this.timeline[elementId].filetype) ==
+            "static";
+
+          if (!isImage) {
+            index += 1;
+            continue;
+          }
+          const isActive = this.isActiveAnimationPanel(elementId);
+
+          if (isActive) {
+            this.deactivateAnimationPanel(elementId);
+          } else {
+            this.activateAnimationPanel(elementId);
+          }
+
+          this.drawCanvas();
+        }
+
+        const isActive = this.isActiveAnimationPanel(elementId);
+
+        if (isActive) {
+          index += 1;
+        }
+
+        index += 1;
+      }
+    }
+  }
+
   _handleClickResizePanel() {
     this.isAbleResize = true;
 
@@ -157,6 +286,7 @@ export class ElementTimelineLeftOption extends LitElement {
         style="width: ${this.resize.timelineVertical
           .leftOption}px;position: absolute; height: 100%;"
         class="tab-content"
+        @mousedown=${this._handleMouseClickCanvas}
       ></canvas>
       <div
         class="split-col-bar"

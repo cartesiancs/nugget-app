@@ -399,6 +399,7 @@ export class ElementTimeline extends LitElement {
   @property()
   public timelineOptions = {
     canvasVerticalScroll: 0,
+    panelOptions: [],
   };
 
   render() {
@@ -453,7 +454,7 @@ export class ElementTimelineRange extends LitElement {
       max="5"
       step="0.01"
       id="timelineRange"
-      value="1"
+      value="-2"
       @change=${this.updateRange}
       @input=${this.updateRange}
     />`;

@@ -88,6 +88,7 @@ export class elementTimelineCanvas extends LitElement {
   @property({ attribute: false })
   public timelineOptions = {
     canvasVerticalScroll: 0,
+    panelOptions: [],
   };
 
   createRenderRoot() {
@@ -398,6 +399,57 @@ export class elementTimelineCanvas extends LitElement {
             ctx.fill();
           }
 
+          const isActive = this.isActiveAnimationPanel(elementId);
+
+          if (isActive) {
+            index += 1;
+            const panelTop =
+              index * height * 1.2 - this.timelineOptions.canvasVerticalScroll;
+            ctx.fillStyle = "#24252b";
+
+            ctx.beginPath();
+            ctx.rect(0, panelTop, this.canvas.width, height);
+            ctx.fill();
+
+            for (
+              let index = 0;
+              index < this.timeline[elementId].animation.position.x.length;
+              index++
+            ) {
+              const element =
+                this.timeline[elementId].animation.position.x[index];
+
+              const p =
+                this.millisecondsToPx(
+                  this.timeline[elementId].startTime + element.p[0],
+                ) - this.timelineScroll;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(p, panelTop + height / 2, 4, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+
+            for (
+              let index = 0;
+              index < this.timeline[elementId].animation.position.y.length;
+              index++
+            ) {
+              const element =
+                this.timeline[elementId].animation.position.y[index];
+
+              const p =
+                this.millisecondsToPx(
+                  this.timeline[elementId].startTime + element.p[0],
+                ) - this.timelineScroll;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(p, panelTop + height / 2, 4, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+          }
+
           index += 1;
         }
       }
@@ -405,6 +457,29 @@ export class elementTimelineCanvas extends LitElement {
       this.drawEndTimeline();
       this.drawCursor();
     }
+  }
+
+  deactivateAnimationPanel(elementId) {
+    const panelOptions = this.timelineOptions.panelOptions.filter((item) => {
+      return item.elementId != elementId;
+    });
+
+    this.timelineOptions.panelOptions = panelOptions;
+  }
+
+  activateAnimationPanel(elementId) {
+    this.timelineOptions.panelOptions.push({
+      elementId: elementId,
+      activeAnimation: true,
+    });
+  }
+
+  isActiveAnimationPanel(elementId) {
+    return (
+      this.timelineOptions.panelOptions.findIndex((item) => {
+        return item.elementId == elementId;
+      }) != -1
+    );
   }
 
   private guide({
@@ -649,6 +724,12 @@ export class elementTimelineCanvas extends LitElement {
               return { targetId: targetId, cursorType: "move" };
             }
           }
+        }
+
+        const isActive = this.isActiveAnimationPanel(elementId);
+
+        if (isActive) {
+          index += 1;
         }
 
         index += 1;

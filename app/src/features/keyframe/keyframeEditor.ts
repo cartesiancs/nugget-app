@@ -510,34 +510,10 @@ export class KeyframeEditor extends LitElement {
       line: line,
     });
 
-    // this.drawPoint({
-    //   x: x,
-    //   y: y,
-    //   line: line,
-    // });
-
-    console.log(this.timeline[this.elementId].animation[this.animationType]);
-
-    // this.timeline[this.elementId].animation[this.animationType].x.push({
-    //   type: "cubic",
-    //   p: [Math.round(x), Math.round(y)],
-    //   cs: [Math.round(x), Math.round(y)],
-    //   ce: [Math.round(x), Math.round(y)],
-    // });
-
     this.interpolate(line);
-
-    // let loadPointLength =
-    //   this.points[line][this.points[line].length - 1][0] - 1;
-    // let allPoints = this.smoothQuadraticBezier(
-    //   this.points[line],
-    //   this.points[line].length * 10,
-    // );
 
     this.timeline[this.elementId].animation[this.animationType].isActivate =
       true;
-    // this.timeline[this.elementId].animation[this.animationType].points[line] =
-    //   this.points[line];
   }
 
   insertPointInMiddle({ x, y, line }) {
@@ -617,7 +593,6 @@ export class KeyframeEditor extends LitElement {
       const interval = array[ic + 1].p[0] - array[ic].p[0];
       const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
 
-      console.log(intervalFrames, "interval");
       const interpolation = this.cubic(
         array[ic],
         array[ic + 1],

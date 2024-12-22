@@ -105,7 +105,6 @@ export class KeyframeEditor extends LitElement {
 
   render() {
     try {
-      console.log(this.timeline);
       if (this.isShow) {
         if (this.prevElementId != this.elementId) {
           if (
@@ -609,8 +608,6 @@ export class KeyframeEditor extends LitElement {
     this.timeline[this.elementId].animation[this.animationType][
       lineToAllAlpha
     ] = interpolationArray;
-
-    console.log(interpolationArray);
   }
 
   cubic(d0, d1, iteration = 30) {

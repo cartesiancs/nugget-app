@@ -35,7 +35,7 @@ export class InputText extends LitElement {
 
     this.value = this.initValue;
     this.parentInputBox = document.querySelector(
-      `element-control-asset[element-id="${this.elementId}"]`
+      `element-control-asset[element-id="${this.elementId}"]`,
     );
   }
 
@@ -52,7 +52,7 @@ export class InputText extends LitElement {
 
     return html`<span
       contenteditable="true"
-      style="height: 100%; outline: none; line-height: initial; width: 100%;"
+      style="height: 100%; outline: none; line-height: initial; width: 100%; text-align: left;"
       @input=${this._handleInput}
       >${this.initValue}</span
     >`;

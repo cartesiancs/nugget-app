@@ -47,7 +47,7 @@ export class RenderController implements ReactiveController {
         },
       };
 
-      renderAnimation.render(timeline, options);
+      prerender.render(timeline, options);
     });
   }
 
@@ -85,7 +85,7 @@ const renderProgress = {
   },
 };
 
-const renderAnimation = {
+const prerender = {
   state: {
     animateElements: {},
     elements: undefined,
@@ -98,12 +98,12 @@ const renderAnimation = {
   initAnimateElementState: function (elementId) {
     let canvas = document.createElement("canvas");
     canvas.classList.add("d-none");
-    canvas.setAttribute("width", "1920");
-    canvas.setAttribute("height", "1080");
+    canvas.setAttribute("width", prerender.state.options.previewSize.w);
+    canvas.setAttribute("height", prerender.state.options.previewSize.h);
 
     let context = canvas.getContext("2d");
 
-    renderAnimation.state.animateElements[elementId] = {
+    prerender.state.animateElements[elementId] = {
       renderFrameLength: 0,
       savedFrameCount: 0,
       isCombineFrames: false,
@@ -114,18 +114,11 @@ const renderAnimation = {
 
   render: function (elements, options) {
     console.log(elements);
-    renderAnimation.state.elements = elements;
-    renderAnimation.state.options = options;
-    renderAnimation.state.numberOfRenderingRequired = 0;
+    prerender.state.elements = elements;
+    prerender.state.options = options;
+    prerender.state.numberOfRenderingRequired = 0;
 
     let path = `${options.videoDestinationFolder}/renderAnimation`;
-
-    // let canvas = document.createElement("canvas")
-    // canvas.classList.add("d-none")
-    // canvas.setAttribute('width', "1920")
-    // canvas.setAttribute('height', "1080")
-
-    // let context = canvas.getContext("2d");
 
     window.electronAPI.req.filesystem
       .mkdir(path, { recursive: true })
@@ -142,33 +135,48 @@ const renderAnimation = {
               continue;
             }
 
-            if (element.filetype !== "image") {
-              continue;
-            }
+            if (element.filetype == "text") {
+              prerender.initAnimateElementState(elementId);
+              prerender.state.numberOfRenderingRequired += 1;
 
-            if (element.animation["position"].isActivate == true) {
-              renderAnimation.initAnimateElementState(elementId);
-              renderAnimation.state.numberOfRenderingRequired += 1;
-
-              let frames = renderAnimation.renderFrame({
+              let frame = prerender.renderText({
                 elementId: elementId,
                 elements: element,
               });
 
-              for (let index = 0; index < frames.length; index++) {
-                renderAnimation.saveFrame({
+              prerender.saveTextImage({
+                elementId: elementId,
+                data: frame,
+                outputDir: path,
+                frame: 0,
+              });
+            }
+
+            if (element.filetype == "image") {
+              if (element.animation["position"].isActivate == true) {
+                prerender.initAnimateElementState(elementId);
+                prerender.state.numberOfRenderingRequired += 1;
+
+                let frames = prerender.renderFrame({
                   elementId: elementId,
-                  data: frames[index],
-                  outputDir: path,
-                  frame: index,
+                  elements: element,
                 });
+
+                for (let index = 0; index < frames.length; index++) {
+                  prerender.saveFrame({
+                    elementId: elementId,
+                    data: frames[index],
+                    outputDir: path,
+                    frame: index,
+                  });
+                }
               }
             }
           }
         }
 
-        if (renderAnimation.state.numberOfRenderingRequired == 0) {
-          renderAnimation.renderOutput();
+        if (prerender.state.numberOfRenderingRequired == 0) {
+          prerender.renderOutput();
         }
       });
   },
@@ -188,9 +196,25 @@ const renderAnimation = {
     return closestY;
   },
 
+  renderText: function ({ elementId, elements }) {
+    let canvas = prerender.state.animateElements[elementId].canvas;
+    let context = prerender.state.animateElements[elementId].context;
+
+    prerender.state.animateElements[elementId].renderFrameLength = 1;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    context.fillStyle = elements.textcolor;
+    context.lineWidth = 0;
+    context.font = `${elements.fontsize}px Arial`;
+    context.fillText(elements.text, elements.location.x, elements.location.y);
+
+    return canvas.toDataURL("image/png");
+  },
+
   renderFrame: function ({ elementId, elements }) {
-    let canvas = renderAnimation.state.animateElements[elementId].canvas;
-    let context = renderAnimation.state.animateElements[elementId].context;
+    let canvas = prerender.state.animateElements[elementId].canvas;
+    let context = prerender.state.animateElements[elementId].context;
 
     let ax = elements.animation["position"].ax;
     let ay = elements.animation["position"].ay;
@@ -198,17 +222,16 @@ const renderAnimation = {
     const maxLength = ax.length > ay.length ? ax.length : ay.length;
 
     let canvasImage = [];
-    renderAnimation.state.animateElements[elementId].renderFrameLength =
-      maxLength;
+    prerender.state.animateElements[elementId].renderFrameLength = maxLength;
 
     for (let index = 0; index < maxLength; index++) {
       context.clearRect(0, 0, canvas.width, canvas.height);
       let point = {
-        x: renderAnimation.findNearestY(ax, index * (1000 / 60)),
-        y: renderAnimation.findNearestY(ay, index * (1000 / 60)),
+        x: prerender.findNearestY(ax, index * (1000 / 60)),
+        y: prerender.findNearestY(ay, index * (1000 / 60)),
       };
 
-      renderAnimation.drawImage(elementId, context, point);
+      prerender.drawImage(elementId, context, point);
       context.stroke();
       canvasImage.push(canvas.toDataURL("image/png"));
     }
@@ -223,8 +246,8 @@ const renderAnimation = {
 
     let x = 0 + point.x;
     let y = point.y;
-    let w = renderAnimation.state.elements[elementId].width;
-    let h = renderAnimation.state.elements[elementId].height;
+    let w = prerender.state.elements[elementId].width;
+    let h = prerender.state.elements[elementId].height;
 
     context.drawImage(elementBody, x, y, w, h);
   },
@@ -239,21 +262,51 @@ const renderAnimation = {
     window.electronAPI.req.filesystem
       .writeFile(fileName, base64Data, "base64")
       .then((isCompleted) => {
-        renderAnimation.state.animateElements[elementId].savedFrameCount += 1;
+        prerender.state.animateElements[elementId].savedFrameCount += 1;
 
         if (
-          renderAnimation.state.animateElements[elementId].savedFrameCount >=
-            renderAnimation.state.animateElements[elementId]
-              .renderFrameLength &&
-          renderAnimation.state.animateElements[elementId].isCombineFrames ==
-            false
+          prerender.state.animateElements[elementId].savedFrameCount >=
+            prerender.state.animateElements[elementId].renderFrameLength &&
+          prerender.state.animateElements[elementId].isCombineFrames == false
         ) {
-          renderAnimation.state.animateElements[elementId].isCombineFrames ==
-            true;
-          renderAnimation.combineFrame({
+          prerender.state.animateElements[elementId].isCombineFrames == true;
+          prerender.combineFrame({
             elementId: elementId,
             outputDir: outputDir,
           });
+        }
+      });
+  },
+
+  saveTextImage: function ({ data, outputDir, frame, elementId }) {
+    const frameLength = 4;
+    const base64Data = data.substring("data:image/png;base64,".length);
+    const fileName = `${outputDir}/` + `prerender-${elementId}.png`;
+
+    window.electronAPI.req.filesystem
+      .writeFile(fileName, base64Data, "base64")
+      .then((isCompleted) => {
+        prerender.state.animateElements[elementId].savedFrameCount += 1;
+
+        prerender.state.elements[elementId].filetype = "image";
+        prerender.state.elements[elementId].opacity = 100;
+        prerender.state.elements[elementId].location.x = 0;
+        prerender.state.elements[elementId].location.y = 0;
+        prerender.state.elements[elementId].width = parseInt(
+          prerender.state.options.previewSize.w,
+        );
+        prerender.state.elements[elementId].height = parseInt(
+          prerender.state.options.previewSize.h,
+        );
+        prerender.state.elements[elementId].localpath = fileName;
+
+        prerender.state.renderingCount += 1;
+
+        if (
+          prerender.state.renderingCount >=
+          prerender.state.numberOfRenderingRequired
+        ) {
+          prerender.renderOutput();
         }
       });
   },
@@ -269,78 +322,41 @@ const renderAnimation = {
           return 0;
         }
 
-        renderAnimation.state.elements[elementId].filetype = "video";
-        renderAnimation.state.elements[elementId].isExistAudio = false;
-        renderAnimation.state.elements[elementId].localpath = outputVideoPath;
-        renderAnimation.state.elements[elementId].trim = {
+        prerender.state.elements[elementId].filetype = "video";
+        prerender.state.elements[elementId].isExistAudio = false;
+        prerender.state.elements[elementId].localpath = outputVideoPath;
+        prerender.state.elements[elementId].trim = {
           startTime: 0,
-          endTime: renderAnimation.state.elements[elementId].duration,
+          endTime: prerender.state.elements[elementId].duration,
         };
-        renderAnimation.state.elements[elementId].height = 1080;
-        renderAnimation.state.elements[elementId].width = 1920;
-        renderAnimation.state.elements[elementId].location = { x: 0, y: 50 };
-        renderAnimation.state.elements[elementId].codec = {
+        prerender.state.elements[elementId].height = parseInt(
+          prerender.state.options.previewSize.h,
+        );
+        prerender.state.elements[elementId].width = parseInt(
+          prerender.state.options.previewSize.w,
+        );
+        prerender.state.elements[elementId].location = { x: 0, y: 0 };
+        prerender.state.elements[elementId].codec = {
           video: "libvpx-vp9",
           audio: "default",
         };
 
-        renderAnimation.state.renderingCount += 1;
-        renderAnimation.state.renderingProgress =
-          (renderAnimation.state.renderingCount /
-            renderAnimation.state.numberOfRenderingRequired) *
+        prerender.state.renderingCount += 1;
+        prerender.state.renderingProgress =
+          (prerender.state.renderingCount /
+            prerender.state.numberOfRenderingRequired) *
           100;
 
-        renderProgress.show(renderAnimation.state.renderingProgress);
+        renderProgress.show(prerender.state.renderingProgress);
 
         if (
-          renderAnimation.state.renderingCount >=
-          renderAnimation.state.numberOfRenderingRequired
+          prerender.state.renderingCount >=
+          prerender.state.numberOfRenderingRequired
         ) {
-          renderAnimation.renderOutput();
+          prerender.renderOutput();
         }
       },
     );
-
-    // let command = ffmpeg()
-    // let outputVideoPath = `${outputDir}/${elementId}.webm`
-    // console.log('Animation processing', renderAnimation.state.renderingCount, renderAnimation.state.numberOfRenderingRequired);
-
-    //NOTE: 다중 애니메이션 랜더링까진 ok, 근데 투명도가 적용이 안됨
-
-    // command.input(`${outputDir}/frame-${elementId}-%04d.png`)
-    // command.inputFPS(50);
-    // command.videoCodec('libvpx-vp9')
-    // command.inputOptions('-pix_fmt yuva420p');
-    // command.format('webm')
-    // command.output(outputVideoPath)
-    // command.on('end', function() {
-    //     console.log('Finish processing');
-
-    //     renderAnimation.state.elements[elementId].filetype = 'video'
-    //     renderAnimation.state.elements[elementId].isExistAudio = false
-    //     renderAnimation.state.elements[elementId].localpath = outputVideoPath
-    //     renderAnimation.state.elements[elementId].trim = { startTime: 0, endTime: renderAnimation.state.elements[elementId].duration }
-    //     renderAnimation.state.elements[elementId].height = 1080
-    //     renderAnimation.state.elements[elementId].width = 1920
-    //     renderAnimation.state.elements[elementId].location = {x: 0, y: 50}
-    //     renderAnimation.state.elements[elementId].codec = { video: "libvpx-vp9", audio: "default" }
-
-    //     renderAnimation.state.renderingCount += 1
-    //     renderAnimation.state.renderingProgress = renderAnimation.state.renderingCount/renderAnimation.state.numberOfRenderingRequired*100
-
-    //     renderProgress.show(renderAnimation.state.renderingProgress)
-
-    //     if (renderAnimation.state.renderingCount >= renderAnimation.state.numberOfRenderingRequired) {
-    //         renderAnimation.renderOutput()
-    //     }
-
-    //     console.log('Finished processing');
-    // })
-
-    // command.on('error', function(err, stdout, stderr) {
-    //     console.log('Render Error', err.message);
-    // });
-    // command.run();
   },
 
   renderOutput: function () {
@@ -349,8 +365,8 @@ const renderAnimation = {
     //ipcRenderer.send('RENDER', renderAnimation.state.elements, renderAnimation.state.options)
 
     window.electronAPI.req.render.outputVideo(
-      renderAnimation.state.elements,
-      renderAnimation.state.options,
+      prerender.state.elements,
+      prerender.state.options,
     );
   },
 };

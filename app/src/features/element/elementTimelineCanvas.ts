@@ -906,6 +906,29 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   _handleKeydown(event) {
+    if (event.keyCode == 39) {
+      const elementControl = document.querySelector("element-control");
+
+      elementControl.progress = this.timelineScroll + 1000 / 60;
+
+      elementControl.stop();
+      elementControl.appearAllElementInTime();
+      this.timelineState.increaseCursor(1000 / 60);
+    }
+
+    // arrowBack
+    if (event.keyCode == 37) {
+      const elementControl = document.querySelector("element-control");
+
+      elementControl.progress = this.timelineScroll - 1000 / 60;
+
+      elementControl.stop();
+      elementControl.appearAllElementInTime();
+      this.timelineState.increaseCursor(1000 / 60);
+
+      this.timelineState.decreaseCursor(1000 / 60);
+    }
+
     if (event.keyCode == 8) {
       // backspace
       // event.preventDefault();

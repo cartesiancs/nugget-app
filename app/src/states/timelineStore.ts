@@ -19,6 +19,7 @@ export interface ITimelineStore {
   setCanvasWidth: (canvasWidth: number) => void;
 
   increaseCursor: (dt: number) => void;
+  decreaseCursor: (dt: number) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
@@ -60,4 +61,7 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
 
   increaseCursor: (dt: number) =>
     set((state) => ({ cursor: state.cursor + dt })),
+
+  decreaseCursor: (dt: number) =>
+    set((state) => ({ cursor: state.cursor - dt })),
 }));

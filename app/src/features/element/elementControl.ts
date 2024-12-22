@@ -536,9 +536,11 @@ export class ElementControl extends LitElement {
       );
 
       document.querySelector(`#element-${elementId}`).style.left = `${
-        x / 10
+        x / this.previewRatio
       }px`;
-      document.querySelector(`#element-${elementId}`).style.top = `${y / 10}px`;
+      document.querySelector(`#element-${elementId}`).style.top = `${
+        y / this.previewRatio
+      }px`;
     } catch (error) {}
   }
 

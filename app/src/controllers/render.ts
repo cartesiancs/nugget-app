@@ -173,24 +173,41 @@ const renderAnimation = {
       });
   },
 
+  findNearestY(pairs, a) {
+    let closestY = null;
+    let closestDiff = Infinity;
+
+    for (const [x, y] of pairs) {
+      const diff = Math.abs(x - a);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestY = y;
+      }
+    }
+
+    return closestY;
+  },
+
   renderFrame: function ({ elementId, elements }) {
     let canvas = renderAnimation.state.animateElements[elementId].canvas;
     let context = renderAnimation.state.animateElements[elementId].context;
 
-    let allPoints = elements.animation["position"].allpoints;
+    let ax = elements.animation["position"].ax;
+    let ay = elements.animation["position"].ay;
+
+    const maxLength = ax.length > ay.length ? ax.length : ay.length;
+
     let canvasImage = [];
     renderAnimation.state.animateElements[elementId].renderFrameLength =
-      allPoints[0].length;
+      maxLength;
 
-    for (let index = 0; index < allPoints[0].length; index++) {
+    for (let index = 0; index < maxLength; index++) {
       context.clearRect(0, 0, canvas.width, canvas.height);
       let point = {
-        x: allPoints[0][index].y,
-        y:
-          index < allPoints[1].length
-            ? allPoints[1][index].y
-            : allPoints[1][allPoints[1].length - 1].y,
+        x: renderAnimation.findNearestY(ax, index * (1000 / 60)),
+        y: renderAnimation.findNearestY(ay, index * (1000 / 60)),
       };
+
       renderAnimation.drawImage(elementId, context, point);
       context.stroke();
       canvasImage.push(canvas.toDataURL("image/png"));
@@ -201,7 +218,7 @@ const renderAnimation = {
 
   drawImage: function (elementId, context, point) {
     let elementBody = document
-      .querySelector(`element-control-asset[element-id='${elementId}']`)
+      .querySelector(`element-control-asset[elementid='${elementId}']`)
       .querySelector("img");
 
     let x = 0 + point.x;

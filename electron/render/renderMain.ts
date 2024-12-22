@@ -190,9 +190,11 @@ export const renderMain = {
     let outputVideoPath = `${outputDir}/${elementId}.webm`;
 
     command.input(`${outputDir}/frame-${elementId}-%04d.png`);
-    command.inputFPS(50);
+    command.inputFPS(60);
     command.videoCodec("libvpx-vp9");
     command.inputOptions("-pix_fmt yuva420p");
+    command.inputOptions("-framerate 60/1");
+
     command.format("webm");
     command.output(outputVideoPath);
     command.on("end", function () {

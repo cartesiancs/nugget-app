@@ -207,7 +207,11 @@ const prerender = {
     context.fillStyle = elements.textcolor;
     context.lineWidth = 0;
     context.font = `${elements.fontsize}px Arial`;
-    context.fillText(elements.text, elements.location.x, elements.location.y);
+    context.fillText(
+      elements.text,
+      elements.location.x,
+      elements.location.y + elements.fontsize,
+    );
 
     return canvas.toDataURL("image/png");
   },

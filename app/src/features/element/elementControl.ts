@@ -1,5 +1,5 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { v4 as uuidv4 } from "uuid";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { consume } from "@lit/context";
@@ -26,6 +26,8 @@ export class ElementControl extends LitElement {
   previewRatio: number;
   innerWidth: number;
   fps: number;
+
+  @query("#elementControlCanvasRef") canvas!: HTMLCanvasElement;
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
@@ -121,7 +123,7 @@ export class ElementControl extends LitElement {
 
     this.resizePreview();
 
-    return html` ${template} `;
+    return html``;
   }
 
   async resizeEvent() {
@@ -291,6 +293,8 @@ export class ElementControl extends LitElement {
       let width = resize.width;
       let height = resize.height; // /division
 
+      console.log(width, height, img.width, "AAAAA");
+
       this.timeline[elementId] = {
         priority: this.getNowPriority(),
         blob: blob,
@@ -299,8 +303,8 @@ export class ElementControl extends LitElement {
         opacity: 100,
         location: { x: 0, y: 0 },
         rotation: 0,
-        width: width,
-        height: height,
+        width: img.width,
+        height: img.height,
         localpath: path,
         filetype: "image",
         animation: {
@@ -706,18 +710,22 @@ export class ElementControl extends LitElement {
   }
 
   changeTextSize({ elementId, size }) {
-    let elementBody = document.querySelector(`#element-${elementId}`);
-    let inputTarget = elementBody.querySelector("input-text");
+    try {
+      let elementBody = document.querySelector(`#element-${elementId}`);
+      let inputTarget = elementBody.querySelector("input-text");
 
-    inputTarget.setWidthInner();
+      inputTarget.setWidthInner();
 
-    let textSize = Number(size) / this.previewRatio;
-    elementBody.style.fontSize = `${textSize}px`;
-    elementBody.style.height = `${textSize}px`;
+      let textSize = Number(size) / this.previewRatio;
+      elementBody.style.fontSize = `${textSize}px`;
+      elementBody.style.height = `${textSize}px`;
 
-    this.timeline[elementId].fontsize = Number(size);
-    this.timeline[elementId].height = Number(size);
-    this.timelineState.patchTimeline(this.timeline);
+      this.timeline[elementId].fontsize = Number(size);
+      this.timeline[elementId].height = Number(size);
+      this.timelineState.patchTimeline(this.timeline);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   changeTextFont({ elementId, fontPath, fontType, fontName }) {

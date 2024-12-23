@@ -5,6 +5,8 @@ import fonts from "./functions/fonts";
 
 import "./App";
 
+import "./features/preview/previewCanvas";
+
 import "./features/asset/assetList";
 import "./features/asset/assetBrowser";
 import "./features/asset/assetUploader";
@@ -17,6 +19,7 @@ import "./features/element/elementTimelineCanvas";
 import "./features/element/elementTimelineRuler";
 import "./features/element/elementTimelineCursor";
 import "./features/element/elementControlAsset";
+import "./features/element/elementTimelineRange";
 
 import "./features/keyframe/keyframeEditor";
 import "./features/menu/menuDropdown";
@@ -47,7 +50,6 @@ import "./ui/offcanvas/TimelineOptions";
 import "./ui/toast/Toast";
 
 import "./features/element/elementControl";
-import "./features/preview/previewCanvas";
 import "./features/font/selectFont";
 
 import "./event";

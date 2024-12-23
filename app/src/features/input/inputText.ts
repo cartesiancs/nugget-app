@@ -63,13 +63,17 @@ export class InputText extends LitElement {
     this.parentInputBox.style.width = `${this.offsetWidth}px`;
   }
 
-  // setWidthInner() {
-  //   let resizedInput = this.parentInputBox.convertRelativeToAbsoluteSize({
-  //     w: this.querySelector("span").offsetWidth,
-  //   });
-  //   this.timeline[this.elementId].widthInner = resizedInput.w;
-  //   this.timelineState.patchTimeline(this.timeline);
-  // }
+  setWidthInner() {
+    console.log();
+    let resizedInput = document
+      .querySelector(`element-control-asset[elementid="${this.elementId}"]`)
+      .convertRelativeToAbsoluteSize({
+        w: this.querySelector("span").offsetWidth,
+      });
+
+    this.timeline[this.elementId].widthInner = resizedInput.w;
+    this.timelineState.patchTimeline(this.timeline);
+  }
 
   updateText({ value }: { value: string }) {
     console.log(this.timeline[this.elementId], this.timeline, this.elementId);

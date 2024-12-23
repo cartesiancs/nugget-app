@@ -190,7 +190,7 @@ export class Control extends LitElement {
         <div id="videobox">
           <div class="d-flex justify-content-center">
             <div id="video" class="video">
-              <canvas id="preview" class="preview"></canvas>
+              <preview-canvas></preview-canvas>
               <element-control></element-control>
               <drag-alignment-guide></drag-alignment-guide>
             </div>

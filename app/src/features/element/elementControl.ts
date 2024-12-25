@@ -123,7 +123,7 @@ export class ElementControl extends LitElement {
 
     this.resizePreview();
 
-    return html``;
+    return html`${template}`;
   }
 
   async resizeEvent() {
@@ -910,7 +910,6 @@ export class ElementControl extends LitElement {
 
     this.progress = nowTimelineProgress;
     this.progressTime = elapsed;
-
     this.timelineState.setCursor(elapsed);
 
     if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
@@ -993,9 +992,9 @@ export class ElementControl extends LitElement {
     this.timelineState.setCursor(0);
   }
 
-  handleClickPreview() {
-    this.deactivateAllOutline();
-  }
+  // handleClickPreview() {
+  //   this.deactivateAllOutline();
+  // }
 }
 
 @customElement("drag-alignment-guide")

@@ -26,6 +26,8 @@ export class ElementControlAsset extends LitElement {
       this.timeline = state.timeline;
     });
 
+    this.classList.add("d-none");
+
     return this;
   }
 
@@ -90,32 +92,32 @@ export class ElementControlAsset extends LitElement {
     this.classList.add("element-drag");
     this.setAttribute("id", `element-${this.elementId}`);
 
-    if (this.elementFiletype !== "text") {
-      this.setAttribute(
-        "style",
-        `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${
-          resizeElement.x
-        }px; height: ${resizeElement.h}px; transform: rotate(${
-          this.timeline[this.elementId].rotation
-        }deg);`,
-      );
-    } else if (this.elementFiletype == "text") {
-      let resizeRatio = this.elementControl.previewRatio;
-      let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
+    // if (this.elementFiletype !== "text") {
+    //   this.setAttribute(
+    //     "style",
+    //     `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${
+    //       resizeElement.x
+    //     }px; height: ${resizeElement.h}px; transform: rotate(${
+    //       this.timeline[this.elementId].rotation
+    //     }deg);`,
+    //   );
+    // } else if (this.elementFiletype == "text") {
+    //   let resizeRatio = this.elementControl.previewRatio;
+    //   let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
 
-      this.setAttribute(
-        "style",
-        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
-      );
-      this.elementControl.changeTextFont({
-        elementId: this.elementId,
-        fontPath: this.timeline[this.elementId].fontpath,
-        fontType: this.timeline[this.elementId].fonttype,
-        fontName: this.timeline[this.elementId].fontname,
-      });
-    }
+    //   this.setAttribute(
+    //     "style",
+    //     `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
+    //   );
+    //   this.elementControl.changeTextFont({
+    //     elementId: this.elementId,
+    //     fontPath: this.timeline[this.elementId].fontpath,
+    //     fontType: this.timeline[this.elementId].fonttype,
+    //     fontName: this.timeline[this.elementId].fontname,
+    //   });
+    // }
 
-    this.setPriority();
+    //this.setPriority();
 
     return html`${template}`;
   }
@@ -154,7 +156,7 @@ export class ElementControlAsset extends LitElement {
       src="${this.timeline[this.elementId].localpath}"
       alt=""
       style="opacity: ${this.timeline[this.elementId].opacity}%;"
-      class="element-image"
+      class="element-image d-none"
       draggable="false"
     />`;
   }
@@ -163,7 +165,7 @@ export class ElementControlAsset extends LitElement {
     return html`<video
       src="${this.timeline[this.elementId].localpath}"
       alt=""
-      class="element-video"
+      class="element-video d-none"
       draggable="false"
     ></video>`;
   }
@@ -176,6 +178,7 @@ export class ElementControlAsset extends LitElement {
 
   templateText() {
     return html`<input-text
+      class="d-none"
       elementId="${this.elementId}"
       initValue="${this.timeline[this.elementId].text}"
       initColor="${this.timeline[this.elementId].textcolor}"
@@ -384,7 +387,7 @@ export class ElementControlAsset extends LitElement {
         }
       }
 
-      this.showDragAlignmentGuide();
+      //this.showDragAlignmentGuide();
     }
   }
 

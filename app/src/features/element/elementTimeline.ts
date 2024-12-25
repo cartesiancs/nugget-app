@@ -162,7 +162,7 @@ export class ElementTimeline extends LitElement {
   }
 
   handleMousedown() {
-    this.elementControl.deactivateAllOutline();
+    // this.elementControl.deactivateAllOutline();
   }
 
   handleScroll() {

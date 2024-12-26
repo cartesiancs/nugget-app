@@ -113,6 +113,7 @@ export class PreviewCanvss extends LitElement {
     renderOptionStore.subscribe((state) => {
       this.renderOption = state.options;
       this.setPreviewRatio();
+      this.drawCanvas();
     });
 
     return this;
@@ -153,8 +154,8 @@ export class PreviewCanvss extends LitElement {
     if (ctx) {
       const dpr = window.devicePixelRatio;
 
-      this.canvas.width = 1920;
-      this.canvas.height = 1080;
+      this.canvas.width = this.renderOption.previewSize.w;
+      this.canvas.height = this.renderOption.previewSize.h;
 
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 

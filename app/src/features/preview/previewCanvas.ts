@@ -131,6 +131,21 @@ export class PreviewCanvss extends LitElement {
     this.canvas.style.cursor = this.cursorType;
   }
 
+  findNearestY(pairs, a) {
+    let closestY = null;
+    let closestDiff = Infinity;
+
+    for (const [x, y] of pairs) {
+      const diff = Math.abs(x - a);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestY = y;
+      }
+    }
+
+    return closestY;
+  }
+
   drawCanvas() {
     let index = 1;
 
@@ -173,6 +188,37 @@ export class PreviewCanvss extends LitElement {
               })[0];
 
               ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+              let animationType = "position";
+
+              if (
+                this.timeline[elementId].animation[animationType].isActivate ==
+                true
+              ) {
+                let index = Math.round(this.timelineCursor / 16);
+                let indexToMs = index * 20;
+                let startTime = Number(this.timeline[elementId].startTime);
+                let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                try {
+                  if (indexPoint < 0) {
+                    return 0;
+                  }
+
+                  const ax = this.findNearestY(
+                    this.timeline[elementId].animation[animationType].ax,
+                    this.timelineCursor - this.timeline[elementId].startTime,
+                  );
+
+                  const ay = this.findNearestY(
+                    this.timeline[elementId].animation[animationType].ay,
+                    this.timelineCursor - this.timeline[elementId].startTime,
+                  );
+
+                  ctx.drawImage(img.object, ax, ay, w, h);
+
+                  continue;
+                } catch (error) {}
+              }
               ctx.drawImage(img.object, x, y, w, h);
             } else {
               let img = new Image();

@@ -81,6 +81,7 @@ export class InputText extends LitElement {
   }
 
   _handleInput(event) {
+    event.preventDefault();
     let value = event.target.outerText;
 
     this.updateText({ value: value });

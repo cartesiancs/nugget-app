@@ -672,12 +672,7 @@ export class ElementControl extends LitElement {
         "beforeend",
         `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`,
       );
-    } else {
-      document
-        .querySelector(`#element-${elementId}`)
-        .classList.remove("d-none");
     }
-
     if (
       this.timeline[elementId].animation["position"].isActivate == true &&
       this.timeline[elementId].animation["position"].allpoints.length >
@@ -698,6 +693,15 @@ export class ElementControl extends LitElement {
     this.timeline[elementId].text = inputValue;
 
     elementBody.style.width = `${inputTarget.offsetWidth}px`;
+  }
+
+  changeTextValue({ elementId, value }) {
+    let elementBody = document.querySelector(`#element-${elementId}`);
+
+    let inputTarget = elementBody.querySelector("input-text");
+
+    this.timeline[elementId].text = value;
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   changeTextColor({ elementId, color }) {

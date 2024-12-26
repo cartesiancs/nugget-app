@@ -34,12 +34,14 @@ export class PreviewCanvss extends LitElement {
     | "nesw-resize"
     | "nwse-resize";
   isStretch: boolean;
+  isEditText: boolean;
   constructor() {
     super();
 
     this.previewRatio = 1920 / 1920;
     this.isMove = false;
     this.isStretch = false;
+    this.isEditText = false;
     this.moveType = "none";
     this.cursorType = "default";
 
@@ -120,6 +122,9 @@ export class PreviewCanvss extends LitElement {
     const width = this.canvas.offsetWidth;
 
     this.previewRatio = this.renderOption.previewSize.w / width;
+
+    const controlDom = document.querySelector("element-control");
+    controlDom.previewRatio = this.previewRatio;
   }
 
   updateCursor() {
@@ -166,6 +171,8 @@ export class PreviewCanvss extends LitElement {
               const img = this.loadedObjects.filter((item) => {
                 return item.elementId == elementId;
               })[0];
+
+              ctx.globalAlpha = this.timeline[elementId].opacity / 100;
               ctx.drawImage(img.object, x, y, w, h);
             } else {
               let img = new Image();
@@ -175,6 +182,7 @@ export class PreviewCanvss extends LitElement {
                   object: img,
                 });
 
+                ctx.globalAlpha = this.timeline[elementId].opacity / 100;
                 ctx.drawImage(img, x, y, w, h);
               };
               img.src = this.timeline[elementId].localpath;
@@ -197,6 +205,23 @@ export class PreviewCanvss extends LitElement {
                 `element-control-asset[elementid='${elementId}'] > video`,
               );
               ctx.drawImage(video, x, y, w, h);
+            } catch (error) {}
+          }
+
+          if (fileType == "text") {
+            try {
+              if (this.isEditText) {
+                continue;
+              }
+              ctx.fillStyle = this.timeline[elementId].textcolor;
+              ctx.lineWidth = 0;
+              ctx.font = `${this.timeline[elementId].fontsize}px Arial`;
+              ctx.fillText(
+                this.timeline[elementId].text,
+                this.timeline[elementId].location.x,
+                this.timeline[elementId].location.y +
+                  this.timeline[elementId].fontsize,
+              );
             } catch (error) {}
           }
 
@@ -235,10 +260,10 @@ export class PreviewCanvss extends LitElement {
 
   collisionCheck({ x, y, w, h, mx, my, padding }) {
     if (
-      mx > x + padding &&
-      mx < x + w - padding &&
-      my > y + padding &&
-      my < y + h - padding
+      mx > x + padding / 2 &&
+      mx < x + w - padding / 2 &&
+      my > y + padding / 2 &&
+      my < y + h - padding / 2
     ) {
       return {
         type: "position",
@@ -322,6 +347,16 @@ export class PreviewCanvss extends LitElement {
     }
   }
 
+  showSideOption(elementId) {
+    const optionGroup = document.querySelector("option-group");
+    const fileType = this.timeline[elementId].filetype;
+
+    optionGroup.showOption({
+      filetype: fileType,
+      elementId: elementId,
+    });
+  }
+
   _handleMouseDown(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
@@ -355,6 +390,7 @@ export class PreviewCanvss extends LitElement {
           this.moveType = "position";
           this.cursorType = "grabbing";
           this.isMove = true;
+          this.showSideOption(elementId);
         } else if (collide.type == "stretchW") {
           this.activeElementId = elementId;
           this.mouseOrigin = {
@@ -436,6 +472,7 @@ export class PreviewCanvss extends LitElement {
           this.moveType = collide.type;
           this.cursorType = "nesw-resize";
         } else {
+          this.isEditText = false;
           this.cursorType = "default";
         }
         this.updateCursor();
@@ -569,6 +606,47 @@ export class PreviewCanvss extends LitElement {
   _handleMouseUp(e) {
     this.isMove = false;
     this.isStretch = false;
+  }
+
+  _handleDblClick(e) {
+    const mx = e.offsetX * this.previewRatio;
+    const my = e.offsetY * this.previewRatio;
+    const padding = 40;
+
+    for (const elementId in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+        const x = this.timeline[elementId].location.x;
+        const y = this.timeline[elementId].location.y;
+        const w = this.timeline[elementId].width;
+        const h = this.timeline[elementId].height;
+        const fileType = this.timeline[elementId].filetype;
+
+        if (fileType != "text") {
+          continue;
+        }
+
+        const collide = this.collisionCheck({
+          x: x,
+          y: y,
+          w: w,
+          h: h,
+          my: my,
+          mx: mx,
+          padding: padding,
+        });
+
+        if (collide.type == "position") {
+          this.activeElementId = elementId;
+
+          this.elementOrigin = { x: x, y: y, w: w, h: h };
+          this.isEditText = true;
+          this.drawCanvas();
+        } else {
+          this.cursorType = "default";
+        }
+        this.updateCursor();
+      }
+    }
   }
 
   protected render() {

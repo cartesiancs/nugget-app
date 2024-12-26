@@ -101,21 +101,21 @@ export class ElementControlAsset extends LitElement {
     //       this.timeline[this.elementId].rotation
     //     }deg);`,
     //   );
-    // } else if (this.elementFiletype == "text") {
-    //   let resizeRatio = this.elementControl.previewRatio;
-    //   let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
+    if (this.elementFiletype == "text") {
+      let resizeRatio = this.elementControl.previewRatio;
+      let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
 
-    //   this.setAttribute(
-    //     "style",
-    //     `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
-    //   );
-    //   this.elementControl.changeTextFont({
-    //     elementId: this.elementId,
-    //     fontPath: this.timeline[this.elementId].fontpath,
-    //     fontType: this.timeline[this.elementId].fonttype,
-    //     fontName: this.timeline[this.elementId].fontname,
-    //   });
-    // }
+      this.setAttribute(
+        "style",
+        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
+      );
+      this.elementControl.changeTextFont({
+        elementId: this.elementId,
+        fontPath: this.timeline[this.elementId].fontpath,
+        fontType: this.timeline[this.elementId].fonttype,
+        fontName: this.timeline[this.elementId].fontname,
+      });
+    }
 
     //this.setPriority();
 
@@ -178,7 +178,6 @@ export class ElementControlAsset extends LitElement {
 
   templateText() {
     return html`<input-text
-      class="d-none"
       elementId="${this.elementId}"
       initValue="${this.timeline[this.elementId].text}"
       initColor="${this.timeline[this.elementId].textcolor}"

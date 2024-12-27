@@ -50,6 +50,21 @@ export class KeyframeEditor extends LitElement {
     this.isDrag = false;
 
     this.addEventListener("scroll", this.handleScroll.bind(this));
+
+    console.log("B");
+
+    try {
+      // position이면 2개 나머지는 1개
+      this.lineCount = 2;
+
+      this.clearLineEditorGroup();
+
+      for (let line = 0; line < this.lineCount; line++) {
+        this.addLineEditor(line);
+      }
+
+      this.changeLineEditor(0);
+    } catch (error) {}
   }
 
   @property()
@@ -104,6 +119,7 @@ export class KeyframeEditor extends LitElement {
   }
 
   render() {
+    console.log("A");
     try {
       if (this.isShow) {
         if (this.prevElementId != this.elementId) {
@@ -120,19 +136,6 @@ export class KeyframeEditor extends LitElement {
           }
           this.prevElementId = this.elementId;
         }
-
-        try {
-          // position이면 2개 나머지는 1개
-          this.lineCount = 2;
-
-          this.clearLineEditorGroup();
-
-          for (let line = 0; line < this.lineCount; line++) {
-            this.addLineEditor(line);
-          }
-
-          this.changeLineEditor(0);
-        } catch (error) {}
       }
 
       if (this.isShow) {

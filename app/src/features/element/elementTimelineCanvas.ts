@@ -50,6 +50,10 @@ export class elementTimelineCanvas extends LitElement {
 
     window.addEventListener("resize", this.drawCanvas);
     window.addEventListener("keydown", this._handleKeydown.bind(this));
+    document.addEventListener(
+      "mousedown",
+      this._handleDocumentClick.bind(this),
+    );
   }
 
   @query("#elementTimelineCanvasRef") canvas!: HTMLCanvasElement;
@@ -112,6 +116,13 @@ export class elementTimelineCanvas extends LitElement {
     });
 
     return this;
+  }
+
+  _handleDocumentClick(e) {
+    if (e.target.id != "elementTimelineCanvasRef") {
+      this.targetId = "";
+      this.drawCanvas();
+    }
   }
 
   setTimelineColor() {

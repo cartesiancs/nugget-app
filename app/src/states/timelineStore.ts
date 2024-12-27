@@ -8,6 +8,9 @@ export interface ITimelineStore {
   scroll: number;
   cursor: number;
   canvasWidth: number;
+  control: {
+    isPlay: boolean;
+  };
 
   addTimeline: (key: string, timeline: any) => void;
   clearTimeline: () => void;
@@ -20,6 +23,8 @@ export interface ITimelineStore {
 
   increaseCursor: (dt: number) => void;
   decreaseCursor: (dt: number) => void;
+  switchPlay: () => void;
+  setPlay: (isPlay: boolean) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
@@ -28,6 +33,9 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   scroll: 0,
   cursor: 0,
   canvasWidth: 500,
+  control: {
+    isPlay: false,
+  },
 
   addTimeline: (key: string, timeline: any) =>
     set((state) => ({ timeline: { ...state.timeline, [key]: timeline } })),
@@ -64,4 +72,10 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
 
   decreaseCursor: (dt: number) =>
     set((state) => ({ cursor: state.cursor - dt })),
+
+  switchPlay: () =>
+    set((state) => ({ control: { isPlay: !state.control.isPlay } })),
+
+  setPlay: (isPlay: boolean) =>
+    set((state) => ({ control: { isPlay: isPlay } })),
 }));

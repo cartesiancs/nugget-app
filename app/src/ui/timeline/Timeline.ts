@@ -28,11 +28,12 @@ export class Timeline extends LitElement {
   target = this.keyframeState.target;
 
   @property()
-  isPlay: boolean = false;
+  isPlay: boolean = this.timelineState.control.isPlay;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineCursor = state.cursor;
+      this.isPlay = state.control.isPlay;
     });
 
     uiStore.subscribe((state) => {
@@ -53,13 +54,13 @@ export class Timeline extends LitElement {
   play() {
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.play();
-    this.isPlay = true;
+    this.timelineState.setPlay(true);
   }
 
   stop() {
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.stop();
-    this.isPlay = false;
+    this.timelineState.setPlay(false);
   }
 
   _handleClickClosedKeyframe() {
@@ -79,6 +80,7 @@ export class Timeline extends LitElement {
 
   _handleKeydown(event) {
     if (event.keyCode == 32) {
+      event.preventDefault();
       // Space
       if (this.isPlay) {
         this.stop();
@@ -127,7 +129,7 @@ export class Timeline extends LitElement {
   _handleClickReset() {
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.reset();
-    this.isPlay = false;
+    this.timelineState.setPlay(false);
   }
 
   togglePlayButton() {
@@ -186,7 +188,6 @@ export class Timeline extends LitElement {
         <div class="col-4">
           <div class="d-flex justify-content-start">
             ${this.togglePlayButton()}
-
             <button
               class="btn btn-xs btn-transparent ms-2"
               @click=${this._handleClickReset}

@@ -47,11 +47,15 @@ export class ElementControl extends LitElement {
   @property()
   startTime: any;
 
+  @property()
+  isTimelinePlay: boolean = this.timelineState.control.isPlay;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
       this.cursor = state.cursor;
       this.progressTime = state.cursor;
+      this.isTimelinePlay = state.control.isPlay;
     });
 
     renderOptionStore.subscribe((state) => {

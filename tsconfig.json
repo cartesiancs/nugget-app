@@ -5,14 +5,17 @@
     "moduleResolution": "node",
     "outDir": "./main",
     "esModuleInterop": true,
-
     "resolveJsonModule": true,
     "sourceMap": true,
     "allowJs": true,
+    "strict": true,
+    "noUnusedLocals": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "removeComments": false,
     "noImplicitAny": false
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

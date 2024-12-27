@@ -104,6 +104,7 @@
     "electron-progressbar": "^2.0.1",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.3.9",
+    "eslint-config-airbnb": "^19.0.4",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.1.0",
     "get-system-fonts": "^2.0.2",

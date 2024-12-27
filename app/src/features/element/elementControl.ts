@@ -944,6 +944,16 @@ export class ElementControl extends LitElement {
     this.pauseAllDynamicElements();
   }
 
+  reset() {
+    this.progress = 0;
+    this.progressTime = 0;
+    this.stop();
+
+    this.appearAllElementInTime();
+
+    this.timelineState.setCursor(0);
+  }
+
   pauseVideo(elementId) {
     let secondsOfRelativeTime =
       -(this.timeline[elementId].startTime - this.progressTime) / 1000;
@@ -985,15 +995,6 @@ export class ElementControl extends LitElement {
     }
     this.activeElementId = "";
     this.existActiveElement = false;
-  }
-
-  reset() {
-    this.progress = 0;
-    this.progressTime = 0;
-    this.stop();
-
-    this.appearAllElementInTime();
-    this.timelineState.setCursor(0);
   }
 
   // handleClickPreview() {

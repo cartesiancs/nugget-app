@@ -408,6 +408,9 @@ export class PreviewCanvss extends LitElement {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
     const padding = 40;
+    let isMoveTemp = false;
+    let isStretchTemp = false;
+    let activeElementTemp = "";
 
     for (const elementId in this.timeline) {
       if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
@@ -428,7 +431,7 @@ export class PreviewCanvss extends LitElement {
         });
 
         if (collide.type == "position") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
@@ -436,86 +439,95 @@ export class PreviewCanvss extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           this.moveType = "position";
           this.cursorType = "grabbing";
-          this.isMove = true;
+          isMoveTemp = true;
+          isStretchTemp = false;
           this.showSideOption(elementId);
         } else if (collide.type == "stretchW") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "ew-resize";
         } else if (collide.type == "stretchE") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "ew-resize";
         } else if (collide.type == "stretchN") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "ns-resize";
         } else if (collide.type == "stretchS") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "ns-resize";
         } else if (collide.type == "stretchNW") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "nwse-resize";
         } else if (collide.type == "stretchSE") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "nwse-resize";
         } else if (collide.type == "stretchNE") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "nesw-resize";
         } else if (collide.type == "stretchSW") {
-          this.activeElementId = elementId;
+          activeElementTemp = elementId;
           this.mouseOrigin = {
             x: mx,
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
-          this.isStretch = true;
+          isStretchTemp = true;
+          isMoveTemp = false;
           this.moveType = collide.type;
           this.cursorType = "nesw-resize";
         } else {
@@ -524,6 +536,12 @@ export class PreviewCanvss extends LitElement {
         }
         this.updateCursor();
       }
+    }
+
+    if (activeElementTemp != "") {
+      this.activeElementId = activeElementTemp;
+      this.isMove = isMoveTemp;
+      this.isStretch = isStretchTemp;
     }
   }
 
@@ -534,52 +552,54 @@ export class PreviewCanvss extends LitElement {
 
     let isCollide = false;
 
-    for (const elementId in this.timeline) {
-      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-        const x = this.timeline[elementId].location.x;
-        const y = this.timeline[elementId].location.y;
-        const w = this.timeline[elementId].width;
-        const h = this.timeline[elementId].height;
-        const fileType = this.timeline[elementId].filetype;
+    if (!this.isMove || !this.isStretch) {
+      for (const elementId in this.timeline) {
+        if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+          const x = this.timeline[elementId].location.x;
+          const y = this.timeline[elementId].location.y;
+          const w = this.timeline[elementId].width;
+          const h = this.timeline[elementId].height;
+          const fileType = this.timeline[elementId].filetype;
 
-        const collide = this.collisionCheck({
-          x: x,
-          y: y,
-          w: w,
-          h: h,
-          my: my,
-          mx: mx,
-          padding: padding,
-        });
+          const collide = this.collisionCheck({
+            x: x,
+            y: y,
+            w: w,
+            h: h,
+            my: my,
+            mx: mx,
+            padding: padding,
+          });
 
-        if (collide.type == "position") {
-          this.activeElementId = elementId;
-          this.cursorType = "grabbing";
-          isCollide = true;
-        } else if (collide.type == "stretchW") {
-          this.cursorType = "ew-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchE") {
-          this.cursorType = "ew-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchN") {
-          this.cursorType = "ns-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchS") {
-          this.cursorType = "ns-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchNW") {
-          this.cursorType = "nwse-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchSW") {
-          this.cursorType = "nesw-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchNE") {
-          this.cursorType = "nesw-resize";
-          isCollide = true;
-        } else if (collide.type == "stretchSE") {
-          this.cursorType = "nwse-resize";
-          isCollide = true;
+          if (collide.type == "position") {
+            //this.activeElementId = elementId;
+            this.cursorType = "grabbing";
+            isCollide = true;
+          } else if (collide.type == "stretchW") {
+            this.cursorType = "ew-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchE") {
+            this.cursorType = "ew-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchN") {
+            this.cursorType = "ns-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchS") {
+            this.cursorType = "ns-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchNW") {
+            this.cursorType = "nwse-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchSW") {
+            this.cursorType = "nesw-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchNE") {
+            this.cursorType = "nesw-resize";
+            isCollide = true;
+          } else if (collide.type == "stretchSE") {
+            this.cursorType = "nwse-resize";
+            isCollide = true;
+          }
         }
       }
     }
@@ -653,6 +673,7 @@ export class PreviewCanvss extends LitElement {
   _handleMouseUp(e) {
     this.isMove = false;
     this.isStretch = false;
+    this.activeElementId = "";
   }
 
   _handleDblClick(e) {

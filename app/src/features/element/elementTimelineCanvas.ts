@@ -924,7 +924,6 @@ export class elementTimelineCanvas extends LitElement {
 
       elementControl.stop();
       elementControl.appearAllElementInTime();
-      this.timelineState.increaseCursor(1000 / 60);
 
       this.timelineState.decreaseCursor(1000 / 60);
     }

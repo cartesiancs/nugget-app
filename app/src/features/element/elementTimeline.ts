@@ -34,7 +34,6 @@ export class ElementTimeline extends LitElement {
     //this.directory = ''
     this.elementControl;
 
-    this.addEventListener("mousedown", this.handleMousedown.bind(this));
     this.addEventListener("scroll", this.handleScroll.bind(this));
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -159,10 +158,6 @@ export class ElementTimeline extends LitElement {
 
     elementTimelineRuler.setTopPosition(scrollTop);
     elementTimelineCursor.style.top = `${scrollTop}px`;
-  }
-
-  handleMousedown() {
-    // this.elementControl.deactivateAllOutline();
   }
 
   handleScroll() {

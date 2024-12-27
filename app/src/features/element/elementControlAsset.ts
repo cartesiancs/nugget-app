@@ -27,6 +27,7 @@ export class ElementControlAsset extends LitElement {
     });
 
     this.classList.add("d-none");
+    this.style.display = "none";
 
     return this;
   }
@@ -101,21 +102,21 @@ export class ElementControlAsset extends LitElement {
     //       this.timeline[this.elementId].rotation
     //     }deg);`,
     //   );
-    if (this.elementFiletype == "text") {
-      let resizeRatio = this.elementControl.previewRatio;
-      let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
+    // if (this.elementFiletype == "text") {
+    //   let resizeRatio = this.elementControl.previewRatio;
+    //   let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
 
-      this.setAttribute(
-        "style",
-        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
-      );
-      this.elementControl.changeTextFont({
-        elementId: this.elementId,
-        fontPath: this.timeline[this.elementId].fontpath,
-        fontType: this.timeline[this.elementId].fonttype,
-        fontName: this.timeline[this.elementId].fontname,
-      });
-    }
+    //   this.setAttribute(
+    //     "style",
+    //     `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
+    //   );
+    //   this.elementControl.changeTextFont({
+    //     elementId: this.elementId,
+    //     fontPath: this.timeline[this.elementId].fontpath,
+    //     fontType: this.timeline[this.elementId].fonttype,
+    //     fontName: this.timeline[this.elementId].fontname,
+    //   });
+    // }
 
     //this.setPriority();
 

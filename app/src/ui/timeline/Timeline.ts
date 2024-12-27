@@ -127,6 +127,7 @@ export class Timeline extends LitElement {
   _handleClickReset() {
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.reset();
+    this.isPlay = false;
   }
 
   togglePlayButton() {

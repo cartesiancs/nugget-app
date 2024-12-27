@@ -164,6 +164,7 @@ export const renderMain = {
     command.audioCodec("aac");
     command.videoCodec("libx264");
     command.fps(60);
+    command.inputOptions("-vsync 0");
     command.videoBitrate(options.videoBitrate);
     command.format("mp4");
     command.run();
@@ -194,6 +195,7 @@ export const renderMain = {
     command.videoCodec("libvpx-vp9");
     command.inputOptions("-pix_fmt yuva420p");
     command.inputOptions("-framerate 60/1");
+    command.inputOptions("-vsync 0");
 
     command.format("webm");
     command.output(outputVideoPath);

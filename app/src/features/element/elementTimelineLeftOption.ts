@@ -128,14 +128,16 @@ export class ElementTimelineLeftOption extends LitElement {
               ctx.fillStyle = "#37485c";
             }
 
-            ctx.beginPath();
-            ctx.rect(
-              this.resize.timelineVertical.leftOption - height,
-              top,
-              height,
-              height,
-            );
-            ctx.fill();
+            if (this.timeline[elementId].filetype == "image") {
+              ctx.beginPath();
+              ctx.rect(
+                this.resize.timelineVertical.leftOption - height,
+                top,
+                height,
+                height,
+              );
+              ctx.fill();
+            }
 
             if (isActive) {
               index += 1;
@@ -251,6 +253,12 @@ export class ElementTimelineLeftOption extends LitElement {
             index += 1;
             continue;
           }
+
+          if (this.timeline[elementId].filetype != "image") {
+            index += 1;
+            continue;
+          }
+
           const isActive = this.isActiveAnimationPanel(elementId);
 
           if (isActive) {

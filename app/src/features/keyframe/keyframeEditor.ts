@@ -22,6 +22,7 @@ export class KeyframeEditor extends LitElement {
   isDrag: boolean;
   clickDot: string;
   clickIndex: number;
+  verticalScroll: number;
 
   constructor() {
     super();
@@ -49,9 +50,9 @@ export class KeyframeEditor extends LitElement {
     this.clickDot = "";
     this.isDrag = false;
 
-    this.addEventListener("scroll", this.handleScroll.bind(this));
+    this.verticalScroll = 0;
 
-    console.log("B");
+    this.addEventListener("scroll", this.handleScroll.bind(this));
 
     try {
       // position이면 2개 나머지는 1개
@@ -222,8 +223,8 @@ export class KeyframeEditor extends LitElement {
           this.timelineRange,
         ) - this.timelineScroll;
 
-      const y = element.p[1];
-      ctx.arc(x, element.p[1], 4, 0, 2 * Math.PI);
+      const y = element.p[1] + this.verticalScroll;
+      ctx.arc(x, y, 4, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.fillStyle = subColor;
@@ -234,7 +235,7 @@ export class KeyframeEditor extends LitElement {
           element.cs[0] + this.timeline[this.elementId].startTime,
           this.timelineRange,
         ) - this.timelineScroll;
-      const sy = element.cs[1];
+      const sy = element.cs[1] + this.verticalScroll;
       ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
       ctx.fill();
 
@@ -244,7 +245,7 @@ export class KeyframeEditor extends LitElement {
           element.ce[0] + this.timeline[this.elementId].startTime,
           this.timelineRange,
         ) - this.timelineScroll;
-      const ey = element.ce[1];
+      const ey = element.ce[1] + this.verticalScroll;
       ctx.arc(ex, ey, 4, 0, 2 * Math.PI);
       ctx.fill();
 
@@ -278,7 +279,7 @@ export class KeyframeEditor extends LitElement {
           element[0] + this.timeline[this.elementId].startTime,
           this.timelineRange,
         ) - this.timelineScroll;
-      ctx.lineTo(x, element[1]);
+      ctx.lineTo(x, element[1] + this.verticalScroll);
     }
     ctx.stroke();
 
@@ -292,7 +293,7 @@ export class KeyframeEditor extends LitElement {
           element[0] + this.timeline[this.elementId].startTime,
           this.timelineRange,
         ) - this.timelineScroll;
-      ctx.lineTo(x, element[1]);
+      ctx.lineTo(x, element[1] + this.verticalScroll);
     }
     ctx.stroke();
   }
@@ -370,99 +371,6 @@ export class KeyframeEditor extends LitElement {
     } catch (error) {}
   }
 
-  _handleMouseWheel(e) {
-    const newScroll = this.timelineScroll + e.deltaX;
-
-    this.drawCanvas();
-
-    if (newScroll >= 0) {
-      this.timelineState.setScroll(newScroll);
-    }
-  }
-
-  _handleMouseMove(e) {
-    //console.log(e);
-    const px =
-      pxToMilliseconds(e.offsetX, this.timelineRange) +
-      pxToMilliseconds(this.timelineScroll, this.timelineRange) -
-      this.timeline[this.elementId].startTime;
-    const py = e.offsetY;
-    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
-
-    //console.log(px);
-
-    if (this.isDrag) {
-      this.timeline[this.elementId].animation.position[lineToAlpha][
-        this.clickIndex
-      ][this.clickDot][0] = px;
-      this.timeline[this.elementId].animation.position[lineToAlpha][
-        this.clickIndex
-      ][this.clickDot][1] = py;
-
-      this.interpolate(this.selectLine);
-
-      this.drawCanvas();
-    }
-  }
-
-  _handleMouseDown(e) {
-    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
-
-    const padding = 100;
-    const px =
-      pxToMilliseconds(e.offsetX, this.timelineRange) +
-      pxToMilliseconds(this.timelineScroll, this.timelineRange) -
-      this.timeline[this.elementId].startTime;
-    const py = e.offsetY;
-
-    for (
-      let index = 0;
-      index <
-      this.timeline[this.elementId].animation.position[lineToAlpha].length;
-      index++
-    ) {
-      const element =
-        this.timeline[this.elementId].animation.position[lineToAlpha][index];
-
-      if (
-        element.cs[0] > px - padding &&
-        element.cs[0] < px + padding &&
-        element.cs[1] > py - padding &&
-        element.cs[1] < py + padding
-      ) {
-        this.clickIndex = index;
-        this.clickDot = "cs";
-        this.isDrag = true;
-      }
-
-      if (
-        element.ce[0] > px - padding &&
-        element.ce[0] < px + padding &&
-        element.ce[1] > py - padding &&
-        element.ce[1] < py + padding
-      ) {
-        this.clickIndex = index;
-        this.clickDot = "ce";
-        this.isDrag = true;
-      }
-    }
-
-    if (!this.isDrag) {
-      this.addPoint({
-        x: px,
-        y: py,
-        line: this.selectLine,
-      });
-      this.drawCanvas();
-    }
-
-    return;
-  }
-
-  _handleMouseUp() {
-    this.isDrag = false;
-  }
-
   updated() {
     this.drawCanvas();
   }
@@ -532,7 +440,7 @@ export class KeyframeEditor extends LitElement {
   addPoint({ x, y, line }) {
     this.insertPointInMiddle({
       x: Math.round(x),
-      y: Math.round(y),
+      y: Math.round(y) - this.verticalScroll,
       line: line,
     });
 
@@ -675,5 +583,99 @@ export class KeyframeEditor extends LitElement {
     }
     let elementTimeline = document.querySelector("element-timeline");
     elementTimeline.scrollTo(this.scrollLeft, elementTimeline.scrollTop);
+  }
+
+  _handleMouseWheel(e) {
+    const newScroll = this.timelineScroll + e.deltaX;
+    this.verticalScroll -= e.deltaY;
+
+    this.drawCanvas();
+
+    if (newScroll >= 0) {
+      this.timelineState.setScroll(newScroll);
+    }
+  }
+
+  _handleMouseMove(e) {
+    //console.log(e);
+    const px =
+      pxToMilliseconds(e.offsetX, this.timelineRange) +
+      pxToMilliseconds(this.timelineScroll, this.timelineRange) -
+      this.timeline[this.elementId].startTime;
+    const py = e.offsetY;
+    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
+
+    //console.log(px);
+
+    if (this.isDrag) {
+      this.timeline[this.elementId].animation.position[lineToAlpha][
+        this.clickIndex
+      ][this.clickDot][0] = px;
+      this.timeline[this.elementId].animation.position[lineToAlpha][
+        this.clickIndex
+      ][this.clickDot][1] = py;
+
+      this.interpolate(this.selectLine);
+
+      this.drawCanvas();
+    }
+  }
+
+  _handleMouseDown(e) {
+    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
+
+    const padding = 100;
+    const px =
+      pxToMilliseconds(e.offsetX, this.timelineRange) +
+      pxToMilliseconds(this.timelineScroll, this.timelineRange) -
+      this.timeline[this.elementId].startTime;
+    const py = e.offsetY;
+
+    for (
+      let index = 0;
+      index <
+      this.timeline[this.elementId].animation.position[lineToAlpha].length;
+      index++
+    ) {
+      const element =
+        this.timeline[this.elementId].animation.position[lineToAlpha][index];
+
+      if (
+        element.cs[0] > px - padding &&
+        element.cs[0] < px + padding &&
+        element.cs[1] > py - padding &&
+        element.cs[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "cs";
+        this.isDrag = true;
+      }
+
+      if (
+        element.ce[0] > px - padding &&
+        element.ce[0] < px + padding &&
+        element.ce[1] > py - padding &&
+        element.ce[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "ce";
+        this.isDrag = true;
+      }
+    }
+
+    if (!this.isDrag) {
+      this.addPoint({
+        x: px,
+        y: py,
+        line: this.selectLine,
+      });
+      this.drawCanvas();
+    }
+
+    return;
+  }
+
+  _handleMouseUp() {
+    this.isDrag = false;
   }
 }

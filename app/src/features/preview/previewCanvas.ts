@@ -66,7 +66,7 @@ export class PreviewCanvss extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline = this.timelineState.timeline;
+  timeline: any = this.timelineState.timeline;
 
   @property()
   timelineRange = this.timelineState.range;
@@ -210,15 +210,15 @@ export class PreviewCanvss extends LitElement {
                     return 0;
                   }
 
-                  const ax: any = this.findNearestY(
+                  const ax = this.findNearestY(
                     imageElement.animation[animationType].ax,
                     this.timelineCursor - imageElement.startTime,
-                  );
+                  ) as any;
 
                   const ay: any = this.findNearestY(
                     imageElement.animation[animationType].ay,
                     this.timelineCursor - imageElement.startTime,
-                  );
+                  ) as any;
 
                   ctx.drawImage(img.object, ax, ay, w, h);
 
@@ -242,13 +242,12 @@ export class PreviewCanvss extends LitElement {
           }
 
           if (fileType == "video") {
-            const videoElement = this.timeline[elementId] as any;
-
             if (
               !(
                 this.timelineCursor >=
-                  startTime + videoElement.trim.startTime &&
-                this.timelineCursor < videoElement.trim.endTime
+                  startTime + this.timeline[elementId].trim.startTime &&
+                this.timelineCursor <
+                  startTime + this.timeline[elementId].trim.endTime
               )
             ) {
               continue;
@@ -276,6 +275,12 @@ export class PreviewCanvss extends LitElement {
                 y + (this.timeline[elementId].fontsize || 0),
               );
             } catch (error) {}
+          }
+
+          if (this.isMove) {
+            if (this.isAlign({ x: x, y: y, w: w, h: h })) {
+              this.drawAlign(ctx);
+            }
           }
 
           if (this.activeElementId == elementId) {
@@ -308,6 +313,88 @@ export class PreviewCanvss extends LitElement {
           }
         }
       }
+    }
+  }
+
+  drawAlign(ctx) {
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(this.renderOption.previewSize.w, 0);
+    ctx.lineTo(
+      this.renderOption.previewSize.w,
+      this.renderOption.previewSize.h,
+    );
+    ctx.lineTo(0, this.renderOption.previewSize.h);
+    ctx.lineTo(0, 0);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(this.renderOption.previewSize.w / 2, 0);
+    ctx.lineTo(
+      this.renderOption.previewSize.w / 2,
+      this.renderOption.previewSize.h,
+    );
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, this.renderOption.previewSize.h / 2);
+    ctx.lineTo(
+      this.renderOption.previewSize.w,
+      this.renderOption.previewSize.h / 2,
+    );
+    ctx.stroke();
+  }
+
+  isAlign({ x, y, w, h }) {
+    const padding = 20;
+    let isChange = false;
+    let nx = x;
+    let ny = y;
+
+    const cw = this.renderOption.previewSize.w;
+    const ch = this.renderOption.previewSize.h;
+
+    console.log(x, y, cw);
+    // top
+    if (y < 0 + padding && y > 0 - padding) {
+      ny = 0;
+      isChange = true;
+    }
+
+    if (x < 0 + padding && x > 0 - padding) {
+      nx = 0;
+      isChange = true;
+    }
+
+    if (x + w < cw + padding && x + w > cw - padding) {
+      nx = cw - w;
+      isChange = true;
+    }
+
+    if (y + h < ch + padding && y + h > ch - padding) {
+      ny = ch - h;
+      isChange = true;
+    }
+
+    if (x + w / 2 < cw / 2 + padding && x + w / 2 > cw / 2 - padding) {
+      nx = cw / 2 - w / 2;
+      isChange = true;
+    }
+
+    if (y + h / 2 < ch / 2 + padding && y + h / 2 > ch / 2 - padding) {
+      ny = ch / 2 - h / 2;
+      isChange = true;
+    }
+
+    if (isChange) {
+      return {
+        x: nx,
+        y: ny,
+      };
+    } else {
+      return undefined;
     }
   }
 
@@ -425,6 +512,17 @@ export class PreviewCanvss extends LitElement {
         const w = this.timeline[elementId].width as number;
         const h = this.timeline[elementId].height as number;
         const fileType = this.timeline[elementId].filetype;
+        const startTime = this.timeline[elementId].startTime as number;
+        const duration = this.timeline[elementId].duration as number;
+
+        if (
+          !(
+            this.timelineCursor >= startTime &&
+            this.timelineCursor < startTime + duration
+          )
+        ) {
+          continue;
+        }
 
         const collide = this.collisionCheck({
           x: x,
@@ -622,6 +720,20 @@ export class PreviewCanvss extends LitElement {
       location.x = this.elementOrigin.x + dx;
       location.y = this.elementOrigin.y + dy;
 
+      const alignLocation = this.isAlign({
+        x: this.elementOrigin.x + dx,
+        y: this.elementOrigin.y + dy,
+        w: this.elementOrigin.w,
+        h: this.elementOrigin.h,
+      });
+
+      if (alignLocation) {
+        location.x = alignLocation?.x;
+        location.y = alignLocation?.y;
+      }
+
+      console.log(alignLocation);
+
       this.timelineState.patchTimeline(this.timeline);
     }
 
@@ -685,7 +797,7 @@ export class PreviewCanvss extends LitElement {
   _handleMouseUp(e) {
     this.isMove = false;
     this.isStretch = false;
-    this.activeElementId = "";
+    this.drawCanvas();
   }
 
   _handleDblClick(e) {

@@ -33,7 +33,7 @@ export class ElementControl extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline = this.timelineState.timeline;
+  timeline: any = this.timelineState.timeline;
 
   @property()
   renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
@@ -435,7 +435,7 @@ export class ElementControl extends LitElement {
         };
 
         this.timelineState.patchTimeline(this.timeline);
-        // this.showVideo(elementId);
+        this.showVideo(elementId);
       });
 
       // ffmpeg.ffprobe(path, (err, metadata) => {
@@ -580,7 +580,7 @@ export class ElementControl extends LitElement {
     if (element == null) {
       this.insertAdjacentHTML(
         "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`,
+        `<element-control-asset elementId="${elementId}" elementFiletype="video"></element-control-asset>`,
       );
 
       let video = element.querySelector("video");
@@ -590,7 +590,9 @@ export class ElementControl extends LitElement {
 
       video.currentTime = secondsOfRelativeTime;
     } else {
-      let video = element.querySelector("video");
+      const videoElement: any = document.getElementById(`element-${elementId}`);
+
+      let video = videoElement.querySelector("video");
       let secondsOfRelativeTime =
         -((this.timeline[elementId].startTime as number) - this.progressTime) /
         1000;
@@ -821,36 +823,36 @@ export class ElementControl extends LitElement {
     return milliseconds;
   }
 
-  // adjustAllElementBarWidth(ratio) {
-  //   const allElementBar = document.querySelectorAll("element-bar");
-  //   allElementBar.forEach((element: any) => {
-  //     let elementId = element.getAttribute("element-id");
-  //     let originalWidth = element.millisecondsToPx(
-  //       this.timeline[elementId].duration,
-  //     );
-  //     let originalLeft = element.millisecondsToPx(
-  //       this.timeline[elementId].startTime,
-  //     );
-  //     let changedWidth = originalWidth;
-  //     let changedLeft = originalLeft;
+  adjustAllElementBarWidth(ratio) {
+    const allElementBar = document.querySelectorAll("element-bar");
+    allElementBar.forEach((element: any) => {
+      let elementId = element.getAttribute("element-id");
+      let originalWidth = element.millisecondsToPx(
+        this.timeline[elementId].duration,
+      );
+      let originalLeft = element.millisecondsToPx(
+        this.timeline[elementId].startTime,
+      );
+      let changedWidth = originalWidth;
+      let changedLeft = originalLeft;
 
-  //     element.setWidth(changedWidth);
-  //     element.setLeft(changedLeft);
+      element.setWidth(changedWidth);
+      element.setLeft(changedLeft);
 
-  //     if (element.elementBarType == "dynamic") {
-  //       let trimStart = element.millisecondsToPx(
-  //         this.timeline[elementId].trim.startTime,
-  //       );
-  //       let trimEnd = element.millisecondsToPx(
-  //         this.timeline[elementId].duration -
-  //           this.timeline[elementId].trim.endTime,
-  //       );
+      if (element.elementBarType == "dynamic") {
+        let trimStart = element.millisecondsToPx(
+          this.timeline[elementId].trim.startTime,
+        );
+        let trimEnd = element.millisecondsToPx(
+          this.timeline[elementId].duration -
+            this.timeline[elementId].trim.endTime,
+        );
 
-  //       element.setTrimStart(trimStart);
-  //       element.setTrimEnd(trimEnd);
-  //     }
-  //   });
-  // }
+        element.setTrimStart(trimStart);
+        element.setTrimEnd(trimEnd);
+      }
+    });
+  }
 
   getMillisecondsToISOTime(milliseconds) {
     let time = new Date(milliseconds).toISOString().slice(11, 22);
@@ -879,19 +881,21 @@ export class ElementControl extends LitElement {
 
   appearAllElementInTime() {
     for (let elementId in this.timeline) {
-      const target: any = this.timeline[elementId];
-
-      let filetype = target.filetype;
+      let filetype = this.timeline[elementId].filetype;
       let checkFiletype =
-        (target.startTime as number) > this.progressTime ||
-        (target.startTime as number) + (target.duration as number) <
+        (this.timeline[elementId].startTime as number) > this.progressTime ||
+        (this.timeline[elementId].startTime as number) +
+          (this.timeline[elementId].duration as number) <
           this.progressTime;
 
       if (filetype == "video" || filetype == "audio") {
         checkFiletype =
-          (target.startTime as number) + target.trim.startTime >
+          (this.timeline[elementId].startTime as number) +
+            this.timeline[elementId].trim.startTime >
             this.progressTime ||
-          target.startTime + target.trim.endTime < this.progressTime;
+          this.timeline[elementId].startTime +
+            this.timeline[elementId].trim.endTime <
+            this.progressTime;
       }
 
       if (checkFiletype) {

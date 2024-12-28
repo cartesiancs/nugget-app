@@ -18,6 +18,7 @@ export type ImageElementType = {
   height?: number;
   localpath?: string;
   filetype?: string;
+  ratio?: number;
   animation?: {
     position?: {
       isActivate?: boolean;
@@ -48,6 +49,7 @@ export type GifElementType = {
   height?: number;
   localpath?: string;
   filetype?: string;
+  ratio?: number;
 };
 
 export type VideoElementType = {
@@ -66,6 +68,7 @@ export type VideoElementType = {
   isExistAudio?: boolean;
   filetype?: string;
   codec?: { video: string; audio: string };
+  ratio?: number;
 };
 
 export type TextElementType = {
@@ -89,6 +92,8 @@ export type TextElementType = {
   height?: number;
   width?: number;
   widthInner?: number;
+  ratio?: number;
+
   animation?: {
     position?: {
       isActivate?: boolean;

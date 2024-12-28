@@ -497,6 +497,23 @@ export class PreviewCanvss extends LitElement {
     });
   }
 
+  getVectorMagnitude(x, y) {
+    const magnitude = Math.sqrt(x * x + y * y);
+    return x < 0 || y < 0 ? -magnitude : magnitude;
+  }
+
+  getIntersection({ m, a1, b1, a2, b2 }) {
+    const m1 = m;
+    const m2 = -m;
+    const rx = (m1 * a1 - m2 * a2 + b2 - b1) / (m1 - m2);
+    const ry = m1 * (rx - a1) + b1;
+
+    return {
+      x: rx,
+      y: ry,
+    };
+  }
+
   _handleMouseDown(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
@@ -742,30 +759,72 @@ export class PreviewCanvss extends LitElement {
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
       const location = this.timeline[this.activeElementId].location as { x; y };
+      const filetype = this.timeline[this.activeElementId].filetype;
 
       const moveE = () => {
         if (this.elementOrigin.w + dx <= minSize) return false;
-        this.timeline[this.activeElementId].width = this.elementOrigin.w + dx;
+        const width = this.elementOrigin.w + dx;
+        const ratio = this.timeline[this.activeElementId].ratio;
+        this.timeline[this.activeElementId].width = width;
+
+        if (filetype == "text") {
+          return false;
+        }
+
+        this.timeline[this.activeElementId].height = width / ratio;
+        this.timeline[this.activeElementId].location.y =
+          this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveW = () => {
         if (this.elementOrigin.w - dx <= minSize) return false;
+        const width = this.elementOrigin.w - dx;
+        const ratio = this.timeline[this.activeElementId].ratio;
 
         this.timeline[this.activeElementId].width = this.elementOrigin.w - dx;
-        location.x = this.elementOrigin.x + dx;
+        this.timeline[this.activeElementId].location.x =
+          this.elementOrigin.x + dx;
+
+        if (filetype == "text") {
+          return false;
+        }
+
+        this.timeline[this.activeElementId].height = width / ratio;
+        this.timeline[this.activeElementId].location.y =
+          this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveN = () => {
         if (this.elementOrigin.h - dy <= minSize) return false;
+        const height = this.elementOrigin.h - dy;
+        const ratio = this.timeline[this.activeElementId].ratio;
 
-        this.timeline[this.activeElementId].height = this.elementOrigin.h - dy;
-        location.y = this.elementOrigin.y + dy;
+        this.timeline[this.activeElementId].height = height;
+        this.timeline[this.activeElementId].location.y =
+          this.elementOrigin.y + dy;
+
+        if (filetype == "text") {
+          return false;
+        }
+
+        this.timeline[this.activeElementId].width = height * ratio;
+        this.timeline[this.activeElementId].location.x =
+          this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
       const moveS = () => {
         if (this.elementOrigin.h + dy <= minSize) return false;
+        const height = this.elementOrigin.h + dy;
+        const ratio = this.timeline[this.activeElementId].ratio;
+        this.timeline[this.activeElementId].height = height;
 
-        this.timeline[this.activeElementId].height = this.elementOrigin.h + dy;
+        if (filetype == "text") {
+          return false;
+        }
+
+        this.timeline[this.activeElementId].width = height * ratio;
+        this.timeline[this.activeElementId].location.x =
+          this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
       if (this.moveType == "stretchE") {
@@ -777,17 +836,65 @@ export class PreviewCanvss extends LitElement {
       } else if (this.moveType == "stretchS") {
         moveS();
       } else if (this.moveType == "stretchNW") {
-        moveN();
-        moveW();
+        const ratio = this.timeline[this.activeElementId].ratio;
+        const intr = this.getIntersection({
+          m: 1,
+          a1: this.elementOrigin.x,
+          b1: this.elementOrigin.y,
+          a2: this.elementOrigin.x + dx,
+          b2: this.elementOrigin.y + dy,
+        });
+
+        this.timeline[this.activeElementId].width =
+          this.elementOrigin.w + (this.elementOrigin.x - intr.x);
+        this.timeline[this.activeElementId].height =
+          (this.elementOrigin.w + (this.elementOrigin.x - intr.x)) / ratio;
+        this.timeline[this.activeElementId].location.y =
+          this.elementOrigin.y +
+          (this.elementOrigin.h - this.timeline[this.activeElementId].height);
+
+        this.timeline[this.activeElementId].location.x = intr.x;
       } else if (this.moveType == "stretchSW") {
-        moveS();
-        moveW();
+        const ratio = this.timeline[this.activeElementId].ratio;
+        const intr = this.getIntersection({
+          m: -1,
+          a1: this.elementOrigin.x,
+          b1: this.elementOrigin.h,
+          a2: this.elementOrigin.x + dx,
+          b2: this.elementOrigin.h + dy,
+        });
+
+        this.timeline[this.activeElementId].height = intr.y;
+        this.timeline[this.activeElementId].width = intr.y * ratio;
+
+        this.timeline[this.activeElementId].location.x =
+          this.elementOrigin.x - (intr.y * ratio - this.elementOrigin.w);
       } else if (this.moveType == "stretchSE") {
-        moveS();
-        moveE();
+        const ratio = this.timeline[this.activeElementId].ratio;
+        const intr = this.getIntersection({
+          m: 1,
+          a1: this.elementOrigin.w,
+          b1: this.elementOrigin.h,
+          a2: this.elementOrigin.w + dx,
+          b2: this.elementOrigin.h + dy,
+        });
+
+        this.timeline[this.activeElementId].height = intr.y;
+        this.timeline[this.activeElementId].width = intr.y * ratio;
       } else if (this.moveType == "stretchNE") {
-        moveN();
-        moveE();
+        const ratio = this.timeline[this.activeElementId].ratio;
+        const intr = this.getIntersection({
+          m: -1,
+          a1: this.elementOrigin.w,
+          b1: this.elementOrigin.y,
+          a2: this.elementOrigin.w + dx,
+          b2: this.elementOrigin.y + dy,
+        });
+
+        this.timeline[this.activeElementId].width = intr.x;
+        this.timeline[this.activeElementId].height = intr.x / ratio;
+        this.timeline[this.activeElementId].location.y =
+          this.elementOrigin.y - (intr.x / ratio - this.elementOrigin.h);
       }
 
       this.timelineState.patchTimeline(this.timeline);

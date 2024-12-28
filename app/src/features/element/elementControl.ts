@@ -316,6 +316,7 @@ export class ElementControl extends LitElement {
         height: img.height,
         localpath: path,
         filetype: "image",
+        ratio: img.width / img.height,
         animation: {
           position: {
             isActivate: false,
@@ -428,6 +429,7 @@ export class ElementControl extends LitElement {
           rotation: 0,
           width: width,
           height: height,
+          ratio: width / height,
           localpath: path,
           isExistAudio: isExist,
           filetype: "video",

@@ -1,5 +1,4 @@
 import { createStore } from "zustand/vanilla";
-import { millisecondsToPx, pxToMilliseconds } from "../utils/time";
 import { Timeline } from "../@types/timeline";
 
 export interface ITimelineStore {

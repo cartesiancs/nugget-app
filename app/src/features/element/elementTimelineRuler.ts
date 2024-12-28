@@ -13,10 +13,9 @@ export class ElementTimelineRuler extends LitElement {
   mouseTimeout: any;
   rulerType: string;
   timeMagnification: number;
-  imeMagnification: number;
-  resizeInterval: string | number;
+  resizeInterval: string | number | undefined;
   width: any;
-  height: number;
+  height: number | undefined;
   constructor() {
     super();
     this.mousemoveEventHandler = undefined;
@@ -133,7 +132,7 @@ export class ElementTimelineRuler extends LitElement {
   }
 
   drawCursorHead() {
-    const ctx = this.canvas.getContext("2d");
+    const ctx: any = this.canvas.getContext("2d");
 
     const now =
       this.millisecondsToPx(this.timelineCursor) - this.timelineScroll + 1;
@@ -154,13 +153,13 @@ export class ElementTimelineRuler extends LitElement {
   drawRuler() {
     this.width = document.querySelector("element-timeline").clientWidth;
 
-    const ctx = this.canvas.getContext("2d");
+    const ctx: any = this.canvas.getContext("2d");
 
     const dpr = window.devicePixelRatio;
     this.canvas.style.width = `${this.width}px`;
 
     this.canvas.width = this.width * dpr;
-    this.canvas.height = this.height * dpr;
+    this.canvas.height = (this.height as number) * dpr;
 
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.scale(dpr, dpr);

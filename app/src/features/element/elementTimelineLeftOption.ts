@@ -20,14 +20,14 @@ export class ElementTimelineLeftOption extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline = this.timelineState.timeline;
+  timeline: any = this.timelineState.timeline;
 
   @property()
   isAbleResize: boolean = false;
 
   @consume({ context: timelineContext })
   @property({ attribute: false })
-  public timelineOptions = {
+  public timelineOptions: any = {
     canvasVerticalScroll: 0,
     panelOptions: [],
   };

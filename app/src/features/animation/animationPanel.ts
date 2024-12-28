@@ -7,7 +7,7 @@ export class AnimationPanel extends LitElement {
   isShow: boolean;
   constructor() {
     super();
-    this.elementId = this.getAttribute("element-id");
+    this.elementId = this.getAttribute("element-id") || "";
 
     this.isShow = false;
   }
@@ -15,22 +15,25 @@ export class AnimationPanel extends LitElement {
   render() {
     const innerElements = this.innerHTML;
     const template = this.template();
+    const div: any = this.querySelector("div");
 
     this.innerHTML = template;
     this.hide();
     this.style.display = "inline-block";
     this.classList.add("position-relative", "w-100", "bg-dark");
-    this.querySelector("div").innerHTML = innerElements;
+    div.innerHTML = innerElements;
   }
 
   updateItem() {
-    const innerElements = this.querySelector("div").innerHTML;
+    const div: any = this.querySelector("div");
+
+    const innerElements = div.innerHTML;
     this.clearItem();
 
     const template = this.template();
 
     this.innerHTML = template;
-    this.querySelector("div").innerHTML = innerElements;
+    div.innerHTML = innerElements;
   }
 
   move(left) {
@@ -65,8 +68,8 @@ export class AnimationPanelItem extends HTMLElement {
   constructor() {
     super();
 
-    this.animationType = this.getAttribute("animation-type");
-    this.elementId = this.getAttribute("element-id");
+    this.animationType = this.getAttribute("animation-type") || "";
+    this.elementId = this.getAttribute("element-id") || "";
 
     this.timeline = document.querySelector("element-timeline").timeline;
   }
@@ -93,7 +96,7 @@ export class AnimationPanelItem extends HTMLElement {
   // NOTE: 포인트 타입 지정안되어이ㅛ음
   insertPointFromTimeline() {
     const timelineRange = Number(
-      document.querySelector("element-timeline-range").value
+      document.querySelector("element-timeline-range").value,
     );
     const timeMagnification = timelineRange / 4;
 
@@ -113,7 +116,7 @@ export class AnimationPanelItem extends HTMLElement {
   addPoint(left) {
     this.insertAdjacentHTML(
       "beforeend",
-      `<div class="text-light position-absolute keyframe-diamond" style="left: ${left}px;">panel item </div>`
+      `<div class="text-light position-absolute keyframe-diamond" style="left: ${left}px;">panel item </div>`,
     );
   }
 
@@ -124,7 +127,7 @@ export class AnimationPanelItem extends HTMLElement {
 
   showMenuDropdown({ x, y }) {
     document.querySelector(
-      "#menuRightClick"
+      "#menuRightClick",
     ).innerHTML = `<menu-dropdown-body top="${y}" left="${x}">
             <menu-dropdown-item onclick="document.querySelector('element-timeline').showKeyframeEditor('${this.elementId}', '${this.animationType}')" item-name="키프레임 편집"></menu-dropdown-item>
         </menu-dropdown-body>`;

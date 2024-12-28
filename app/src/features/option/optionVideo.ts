@@ -67,8 +67,8 @@ export class OptionVideo extends LitElement {
   updateValue() {
     const xDom: any = this.querySelector("input[aria-event='location-x'");
     const yDom: any = this.querySelector("input[aria-event='location-y'");
-    xDom.value = this.timeline[this.elementId].location.x;
-    yDom.value = this.timeline[this.elementId].location.y;
+    xDom.value = this.timeline[this.elementId].location?.x;
+    yDom.value = this.timeline[this.elementId].location?.y;
   }
 
   handleLocation() {

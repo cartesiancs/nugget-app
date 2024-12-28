@@ -84,8 +84,8 @@ export class OptionImage extends LitElement {
     const yDom: any = this.querySelector("input[aria-event='location-y'");
     const opacity: any = this.querySelector("input[aria-event='opacity'");
 
-    xDom.value = this.timeline[this.elementId].location.x;
-    yDom.value = this.timeline[this.elementId].location.y;
+    xDom.value = this.timeline[this.elementId].location?.x;
+    yDom.value = this.timeline[this.elementId].location?.y;
     opacity.value = this.timeline[this.elementId].opacity;
   }
 

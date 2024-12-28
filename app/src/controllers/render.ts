@@ -2,7 +2,7 @@ import { ReactiveController, ReactiveControllerHost } from "lit";
 import { rendererModal } from "../utils/modal";
 
 export class RenderController implements ReactiveController {
-  private host: ReactiveControllerHost;
+  private host: ReactiveControllerHost | undefined;
 
   public requestRender() {
     const elementControlComponent = document.querySelector("element-control");
@@ -85,7 +85,7 @@ const renderProgress = {
   },
 };
 
-const prerender = {
+const prerender: any = {
   state: {
     animateElements: {},
     elements: undefined,
@@ -217,7 +217,8 @@ const prerender = {
   },
 
   renderFrame: function ({ elementId, elements }) {
-    let canvas = prerender.state.animateElements[elementId].canvas;
+    let canvas: HTMLCanvasElement =
+      prerender.state.animateElements[elementId].canvas;
     let context = prerender.state.animateElements[elementId].context;
 
     let ax = elements.animation["position"].ax;
@@ -225,7 +226,7 @@ const prerender = {
 
     const maxLength = ax.length > ay.length ? ax.length : ay.length;
 
-    let canvasImage = [];
+    let canvasImage: string[] = [];
     prerender.state.animateElements[elementId].renderFrameLength = maxLength;
 
     for (let index = 0; index < maxLength; index++) {

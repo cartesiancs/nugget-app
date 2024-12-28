@@ -24,7 +24,7 @@ export class ElementControl extends LitElement {
   progress: number;
   progressTime: number;
   previewRatio: number;
-  innerWidth: number;
+  innerWidth: number | undefined;
   fps: number;
 
   @query("#elementControlCanvasRef") canvas!: HTMLCanvasElement;
@@ -61,7 +61,7 @@ export class ElementControl extends LitElement {
     renderOptionStore.subscribe((state) => {
       this.renderOption = state.options;
 
-      this.resizePreview();
+      //this.resizePreview();
     });
 
     return this;
@@ -112,26 +112,26 @@ export class ElementControl extends LitElement {
   }
 
   render() {
-    const template = [];
+    const template: any = [];
     for (const elementId in this.timeline) {
       if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
         const element = this.timeline[elementId];
         template.push(
           html`<element-control-asset
             elementId="${elementId}"
-            elementFiletype="${element.filetype}"
+            elementFiletype="${element.filetype || ""}"
           ></element-control-asset>`,
         );
       }
     }
 
-    this.resizePreview();
+    //this.resizePreview();
 
     return html`${template}`;
   }
 
   async resizeEvent() {
-    this.resizePreview();
+    //this.resizePreview();
     clearTimeout(this.resizeTimeout);
 
     if (this.isResizeStart == false) {
@@ -147,56 +147,58 @@ export class ElementControl extends LitElement {
     }, 300);
   }
 
-  resizePreview() {
-    try {
-      let innerWidth = document.getElementById("split_col_2").offsetWidth;
-      let splitTopHeight = document.getElementById("split_top").offsetHeight;
-      let splitBottomHeight =
-        document.getElementById("split_bottom").offsetHeight;
-      let videoBoxHeight = document.getElementById("videobox").offsetHeight;
-      let videoHeight = document.getElementById("video").offsetHeight;
+  // resizePreview() {
+  //   try {
+  //     let innerWidth = document.getElementById("split_col_2").offsetWidth;
+  //     let splitTopHeight = document.getElementById("split_top").offsetHeight;
+  //     let splitBottomHeight =
+  //       document.getElementById("split_bottom").offsetHeight;
+  //     let videoBoxHeight = document.getElementById("videobox").offsetHeight;
+  //     let videoHeight = document.getElementById("video").offsetHeight;
 
-      let elementTimelineHeight =
-        document.querySelector("element-timeline").offsetHeight;
+  //     let elementTimelineHeight =
+  //       document.querySelector("element-timeline").offsetHeight;
 
-      let horizontalPadding = 0.95;
-      let verticalPadding = 0.92;
-      let horizontalResizeWidth = Math.round(innerWidth * horizontalPadding);
-      let horizontalResizeHeight = Math.round(
-        (horizontalResizeWidth * this.renderOption.previewSize.h) /
-          this.renderOption.previewSize.w,
-      );
+  //     let horizontalPadding = 0.95;
+  //     let verticalPadding = 0.92;
+  //     let horizontalResizeWidth = Math.round(innerWidth * horizontalPadding);
+  //     let horizontalResizeHeight = Math.round(
+  //       (horizontalResizeWidth * this.renderOption.previewSize.h) /
+  //         this.renderOption.previewSize.w,
+  //     );
 
-      let verticalResizeHeight =
-        (window.innerHeight -
-          (splitBottomHeight + 20) -
-          (videoBoxHeight - videoHeight)) *
-        verticalPadding;
-      let verticalResizeWidth =
-        verticalResizeHeight *
-        (this.renderOption.previewSize.w / this.renderOption.previewSize.h);
+  //     let verticalResizeHeight =
+  //       (window.innerHeight -
+  //         (splitBottomHeight + 20) -
+  //         (videoBoxHeight - videoHeight)) *
+  //       verticalPadding;
+  //     let verticalResizeWidth =
+  //       verticalResizeHeight *
+  //       (this.renderOption.previewSize.w / this.renderOption.previewSize.h);
 
-      let width =
-        horizontalResizeWidth > verticalResizeWidth
-          ? verticalResizeWidth
-          : horizontalResizeWidth;
-      let height =
-        horizontalResizeHeight > verticalResizeHeight
-          ? verticalResizeHeight
-          : horizontalResizeHeight;
+  //     let width =
+  //       horizontalResizeWidth > verticalResizeWidth
+  //         ? verticalResizeWidth
+  //         : horizontalResizeWidth;
+  //     let height =
+  //       horizontalResizeHeight > verticalResizeHeight
+  //         ? verticalResizeHeight
+  //         : horizontalResizeHeight;
 
-      let preview = document.getElementById("preview");
-      let video = document.getElementById("video");
-      preview.setAttribute("width", String(width));
-      preview.setAttribute("height", String(height));
-      preview.style.width = `${width}px`;
-      preview.style.height = `${height}px`;
-      video.style.width = `${width}px`;
-      video.style.height = `${height}px`;
+  //     let preview = document.getElementById("preview");
+  //     let video = document.getElementById("video");
+  //     if (preview == null) return false;
+  //     if (video == null) return false;
+  //     preview.setAttribute("width", String(width));
+  //     preview.setAttribute("height", String(height));
+  //     preview.style.width = `${width}px`;
+  //     preview.style.height = `${height}px`;
+  //     video.style.width = `${width}px`;
+  //     video.style.height = `${height}px`;
 
-      this.previewRatio = this.renderOption.previewSize.w / width;
-    } catch (error) {}
-  }
+  //     this.previewRatio = this.renderOption.previewSize.w / width;
+  //   } catch (error) {}
+  // }
 
   matchAllElementsSizeToPreview() {
     for (const elementId in this.timeline) {
@@ -208,9 +210,9 @@ export class ElementControl extends LitElement {
         let elementWidth =
           Number(this.timeline[elementId].width) / this.previewRatio;
         let elementTop =
-          Number(this.timeline[elementId].location.y) / this.previewRatio;
+          Number(this.timeline[elementId].location?.y) / this.previewRatio;
         let elementLeft =
-          Number(this.timeline[elementId].location.x) / this.previewRatio;
+          Number(this.timeline[elementId].location?.x) / this.previewRatio;
 
         if (this.timeline[elementId].filetype != "text") {
           targetElement.resizeStyle({
@@ -238,12 +240,13 @@ export class ElementControl extends LitElement {
     }
   }
 
-  removeElementById(elementId) {
-    this.querySelector(
-      `element-control-asset[element-id="${elementId}"]`,
-    ).remove();
-    this.timeline = document.querySelector("element-timeline").timeline;
-  }
+  // removeElementById(elementId) {
+
+  //   this.querySelector(
+  //     `element-control-asset[element-id="${elementId}"]`,
+  //   ).remove();
+  //   this.timeline = document.querySelector("element-timeline").timeline;
+  // }
 
   removeAllElementAsset() {
     const assetLists = this.querySelectorAll("element-control-asset");
@@ -274,13 +277,15 @@ export class ElementControl extends LitElement {
       return 1;
     }
 
-    let lastPriority = 1;
+    let lastPriority: any = 1;
 
     for (const key in this.timeline) {
       if (Object.hasOwnProperty.call(this.timeline, key)) {
         const element = this.timeline[key];
         lastPriority =
-          lastPriority < element.priority ? element.priority : lastPriority;
+          lastPriority < (element.priority as number)
+            ? element.priority
+            : lastPriority;
       }
     }
 
@@ -522,74 +527,73 @@ export class ElementControl extends LitElement {
     return closestY;
   }
 
-  showAnimation(elementId, animationType) {
-    let index = Math.round(this.progressTime / 16);
-    let indexToMs = index * 20;
-    let startTime = Number(this.timeline[elementId].startTime);
-    let indexPoint = Math.round((indexToMs - startTime) / 20);
+  // showAnimation(elementId, animationType) {
+  //   let index = Math.round(this.progressTime / 16);
+  //   let indexToMs = index * 20;
+  //   let startTime = Number(this.timeline[elementId].startTime);
+  //   let indexPoint = Math.round((indexToMs - startTime) / 20);
 
-    try {
-      if (indexPoint < 0) {
-        return 0;
-      }
+  //   try {
+  //     if (indexPoint < 0) {
+  //       return 0;
+  //     }
 
-      const x = this.findNearestY(
-        this.timeline[elementId].animation[animationType].ax,
-        this.progressTime - this.timeline[elementId].startTime,
-      );
+  //     const x = this.findNearestY(
+  //       this.timeline[elementId].animation[animationType].ax,
+  //       this.progressTime - this.timeline[elementId].startTime,
+  //     );
 
-      const y = this.findNearestY(
-        this.timeline[elementId].animation[animationType].ay,
-        this.progressTime - this.timeline[elementId].startTime,
-      );
+  //     const y = this.findNearestY(
+  //       this.timeline[elementId].animation[animationType].ay,
+  //       this.progressTime - this.timeline[elementId].startTime,
+  //     );
 
-      document.querySelector(`#element-${elementId}`).style.left = `${
-        x / this.previewRatio
-      }px`;
-      document.querySelector(`#element-${elementId}`).style.top = `${
-        y / this.previewRatio
-      }px`;
-    } catch (error) {}
-  }
+  //     document.querySelector(`#element-${elementId}`).style.left = `${
+  //       x / this.previewRatio
+  //     }px`;
+  //     document.querySelector(`#element-${elementId}`).style.top = `${
+  //       y / this.previewRatio
+  //     }px`;
+  //   } catch (error) {}
+  // }
 
-  showImage(elementId) {
-    if (document.getElementById(`element-${elementId}`) == null) {
-      this.insertAdjacentHTML(
-        "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`,
-      );
-    } else {
-      document
-        .querySelector(`#element-${elementId}`)
-        .classList.remove("d-none");
-    }
+  // showImage(elementId) {
+  //   if (document.getElementById(`element-${elementId}`) == null) {
+  //     this.insertAdjacentHTML(
+  //       "beforeend",
+  //       `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`,
+  //     );
+  //   } else {
+  //     document
+  //       .querySelector(`#element-${elementId}`)
+  //       .classList.remove("d-none");
+  //   }
 
-    let animationType = "position";
-    if (this.timeline[elementId].animation[animationType].isActivate == true) {
-      this.showAnimation(elementId, animationType);
-    }
-  }
+  //   let animationType = "position";
+  //   if (this.timeline[elementId].animation[animationType].isActivate == true) {
+  //     this.showAnimation(elementId, animationType);
+  //   }
+  // }
 
   showVideo(elementId) {
-    if (document.getElementById(`element-${elementId}`) == null) {
+    const element: any = document.getElementById(`element-${elementId}`);
+    if (element == null) {
       this.insertAdjacentHTML(
         "beforeend",
         `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`,
       );
 
-      let video = document
-        .getElementById(`element-${elementId}`)
-        .querySelector("video");
+      let video = element.querySelector("video");
       let secondsOfRelativeTime =
-        (this.timeline[elementId].startTime - this.progressTime) / 1000;
+        ((this.timeline[elementId].startTime as number) - this.progressTime) /
+        1000;
 
       video.currentTime = secondsOfRelativeTime;
     } else {
-      let video = document
-        .getElementById(`element-${elementId}`)
-        .querySelector("video");
+      let video = element.querySelector("video");
       let secondsOfRelativeTime =
-        -(this.timeline[elementId].startTime - this.progressTime) / 1000;
+        -((this.timeline[elementId].startTime as number) - this.progressTime) /
+        1000;
 
       if (
         !!(
@@ -622,25 +626,25 @@ export class ElementControl extends LitElement {
   }
 
   showAudio(elementId) {
-    if (document.getElementById(`element-${elementId}`) == null) {
+    const element: any = document.getElementById(`element-${elementId}`);
+
+    if (element == null) {
       this.insertAdjacentHTML(
         "beforeend",
         `<element-control-asset element-id="${elementId}" element-filetype="audio"></element-control-asset>`,
       );
 
-      let audio = document
-        .getElementById(`element-${elementId}`)
-        .querySelector("audio");
+      let audio = element.querySelector("audio");
       let secondsOfRelativeTime =
-        (this.timeline[elementId].startTime - this.progressTime) / 1000;
+        ((this.timeline[elementId].startTime as number) - this.progressTime) /
+        1000;
 
       audio.currentTime = secondsOfRelativeTime;
     } else {
-      let audio = document
-        .getElementById(`element-${elementId}`)
-        .querySelector("audio");
+      let audio = element.querySelector("audio");
       let secondsOfRelativeTime =
-        -(this.timeline[elementId].startTime - this.progressTime) / 1000;
+        -((this.timeline[elementId].startTime as number) - this.progressTime) /
+        1000;
 
       if (
         !!(
@@ -670,21 +674,21 @@ export class ElementControl extends LitElement {
     }
   }
 
-  showText(elementId) {
-    if (document.getElementById(`element-${elementId}`) == null) {
-      this.insertAdjacentHTML(
-        "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`,
-      );
-    }
-    if (
-      this.timeline[elementId].animation["position"].isActivate == true &&
-      this.timeline[elementId].animation["position"].allpoints.length >
-        document.querySelector("element-control").progress
-    ) {
-      this.showAnimation(elementId, "position");
-    }
-  }
+  // showText(elementId) {
+  //   if (document.getElementById(`element-${elementId}`) == null) {
+  //     this.insertAdjacentHTML(
+  //       "beforeend",
+  //       `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`,
+  //     );
+  //   }
+  //   if (
+  //     this.timeline[elementId].animation["position"].isActivate == true &&
+  //     this.timeline[elementId].animation["position"].allpoints.length >
+  //       document.querySelector("element-control").progress
+  //   ) {
+  //     this.showAnimation(elementId, "position");
+  //   }
+  // }
 
   changeText(elementId) {
     let elementBody = document.querySelector(`#element-${elementId}`);
@@ -759,39 +763,39 @@ export class ElementControl extends LitElement {
     }
 
     cursorDom.style.left = `${(this.progressTime / 5) * timeMagnification}px`;
-    this.adjustAllElementBarWidth(timeMagnification);
+    // this.adjustAllElementBarWidth(timeMagnification);
     //this.updateAllAnimationPanel();
   }
 
-  updateAllAnimationPanel() {
-    for (const elementId in this.timeline) {
-      if (Object.hasOwnProperty.call(this.timeline, elementId)) {
-        const element = this.timeline[elementId];
+  // updateAllAnimationPanel() {
+  //   for (const elementId in this.timeline) {
+  //     if (Object.hasOwnProperty.call(this.timeline, elementId)) {
+  //       const element = this.timeline[elementId];
 
-        if (element.filetype != "image") {
-          continue;
-        }
+  //       if (element.filetype != "image") {
+  //         continue;
+  //       }
 
-        if (element.animation.position.isActivate == false) {
-          continue;
-        }
+  //       if (element.animation.position.isActivate == false) {
+  //         continue;
+  //       }
 
-        let targetAnimationPanel = document.querySelector(
-          `animation-panel[element-id="${elementId}"]`,
-        );
-        let targetElementBar = document.querySelector(
-          `element-bar[element-id="${elementId}"]`,
-        );
+  //       let targetAnimationPanel = document.querySelector(
+  //         `animation-panel[element-id="${elementId}"]`,
+  //       );
+  //       let targetElementBar = document.querySelector(
+  //         `element-bar[element-id="${elementId}"]`,
+  //       );
 
-        let originalLeft = targetElementBar.millisecondsToPx(
-          this.timeline[elementId].startTime,
-        );
+  //       let originalLeft = targetElementBar.millisecondsToPx(
+  //         this.timeline[elementId].startTime,
+  //       );
 
-        targetAnimationPanel.updateItem();
-        targetElementBar.animationPanelMove(originalLeft);
-      }
-    }
-  }
+  //       targetAnimationPanel.updateItem();
+  //       targetElementBar.animationPanelMove(originalLeft);
+  //     }
+  //   }
+  // }
 
   getTimeFromProgress() {
     let timelineRange = Number(
@@ -817,36 +821,36 @@ export class ElementControl extends LitElement {
     return milliseconds;
   }
 
-  adjustAllElementBarWidth(ratio) {
-    const allElementBar = document.querySelectorAll("element-bar");
-    allElementBar.forEach((element: any) => {
-      let elementId = element.getAttribute("element-id");
-      let originalWidth = element.millisecondsToPx(
-        this.timeline[elementId].duration,
-      );
-      let originalLeft = element.millisecondsToPx(
-        this.timeline[elementId].startTime,
-      );
-      let changedWidth = originalWidth;
-      let changedLeft = originalLeft;
+  // adjustAllElementBarWidth(ratio) {
+  //   const allElementBar = document.querySelectorAll("element-bar");
+  //   allElementBar.forEach((element: any) => {
+  //     let elementId = element.getAttribute("element-id");
+  //     let originalWidth = element.millisecondsToPx(
+  //       this.timeline[elementId].duration,
+  //     );
+  //     let originalLeft = element.millisecondsToPx(
+  //       this.timeline[elementId].startTime,
+  //     );
+  //     let changedWidth = originalWidth;
+  //     let changedLeft = originalLeft;
 
-      element.setWidth(changedWidth);
-      element.setLeft(changedLeft);
+  //     element.setWidth(changedWidth);
+  //     element.setLeft(changedLeft);
 
-      if (element.elementBarType == "dynamic") {
-        let trimStart = element.millisecondsToPx(
-          this.timeline[elementId].trim.startTime,
-        );
-        let trimEnd = element.millisecondsToPx(
-          this.timeline[elementId].duration -
-            this.timeline[elementId].trim.endTime,
-        );
+  //     if (element.elementBarType == "dynamic") {
+  //       let trimStart = element.millisecondsToPx(
+  //         this.timeline[elementId].trim.startTime,
+  //       );
+  //       let trimEnd = element.millisecondsToPx(
+  //         this.timeline[elementId].duration -
+  //           this.timeline[elementId].trim.endTime,
+  //       );
 
-        element.setTrimStart(trimStart);
-        element.setTrimEnd(trimEnd);
-      }
-    });
-  }
+  //       element.setTrimStart(trimStart);
+  //       element.setTrimEnd(trimEnd);
+  //     }
+  //   });
+  // }
 
   getMillisecondsToISOTime(milliseconds) {
     let time = new Date(milliseconds).toISOString().slice(11, 22);
@@ -875,31 +879,30 @@ export class ElementControl extends LitElement {
 
   appearAllElementInTime() {
     for (let elementId in this.timeline) {
-      let filetype = this.timeline[elementId].filetype;
+      const target: any = this.timeline[elementId];
+
+      let filetype = target.filetype;
       let checkFiletype =
-        this.timeline[elementId].startTime > this.progressTime ||
-        this.timeline[elementId].startTime + this.timeline[elementId].duration <
+        (target.startTime as number) > this.progressTime ||
+        (target.startTime as number) + (target.duration as number) <
           this.progressTime;
 
       if (filetype == "video" || filetype == "audio") {
         checkFiletype =
-          this.timeline[elementId].startTime +
-            this.timeline[elementId].trim.startTime >
+          (target.startTime as number) + target.trim.startTime >
             this.progressTime ||
-          this.timeline[elementId].startTime +
-            this.timeline[elementId].trim.endTime <
-            this.progressTime;
+          target.startTime + target.trim.endTime < this.progressTime;
       }
 
       if (checkFiletype) {
         this.hideElement(elementId);
       } else {
         if (filetype == "image") {
-          this.showImage(elementId);
+          //this.showImage(elementId);
         } else if (filetype == "video") {
           this.showVideo(elementId);
         } else if (filetype == "text") {
-          this.showText(elementId);
+          // this.showText(elementId);
         } else if (filetype == "audio") {
           this.showAudio(elementId);
         }
@@ -920,7 +923,7 @@ export class ElementControl extends LitElement {
     this.progressTime = elapsed;
     this.timelineState.setCursor(elapsed);
 
-    if (this.innerWidth + this.offsetWidth >= this.offsetWidth) {
+    if ((this.innerWidth as number) + this.offsetWidth >= this.offsetWidth) {
       this.stop();
     }
 
@@ -959,19 +962,19 @@ export class ElementControl extends LitElement {
   }
 
   pauseVideo(elementId) {
+    const target: any = document.getElementById(`element-${elementId}`);
     let secondsOfRelativeTime =
-      -(this.timeline[elementId].startTime - this.progressTime) / 1000;
-    let video = document
-      .getElementById(`element-${elementId}`)
-      .querySelector("video");
+      -((this.timeline[elementId].startTime as number) - this.progressTime) /
+      1000;
+    let video = target.querySelector("video");
     video.currentTime = secondsOfRelativeTime;
     video.pause();
   }
 
   pauseAudio(elementId) {
-    let audio = document
-      .getElementById(`element-${elementId}`)
-      .querySelector("audio");
+    const target: any = document.getElementById(`element-${elementId}`);
+
+    let audio = target.querySelector("audio");
     audio.pause();
   }
 

@@ -1,6 +1,4 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { rendererModal } from "../utils/modal";
-import { property } from "lit/decorators";
 
 // NOTE:  deprecated
 

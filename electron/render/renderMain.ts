@@ -11,7 +11,7 @@ let elementCounts = {
   video: 1,
   audio: 0,
 };
-let mapAudioLists = [];
+let mapAudioLists: any = [];
 import { mainWindow } from "../main.js";
 import { renderUtil } from "./renderUtil";
 
@@ -61,7 +61,7 @@ export const renderMain = {
     let textFileLists = ["text"];
     let audioFileLists = ["audio"];
 
-    let filter = [];
+    let filter: any = [];
     let command = ffmpeg();
     command
       .input(`${resourcesPath}/assets/images/background.png`)

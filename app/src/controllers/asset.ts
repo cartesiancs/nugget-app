@@ -1,12 +1,9 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { rendererModal } from "../utils/modal";
 import { path } from "../functions/path";
 import mime from "../functions/mime";
-import { IProjectStore, projectStore } from "../states/projectStore";
-import { property } from "lit/decorators.js";
 
 export class AssetController implements ReactiveController {
-  private host: ReactiveControllerHost;
+  private host: ReactiveControllerHost | undefined;
 
   public loadPrevDirectory(nowDirectory) {
     let splitNowDirectory = nowDirectory.split("/");

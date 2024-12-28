@@ -42,7 +42,8 @@ export class AssetList extends LitElement {
         ? ""
         : splitedFilename[splitedFilenameLength - 1];
 
-    let listBody = this.querySelector("div");
+    let listBody: HTMLDivElement | null = this.querySelector("div");
+    if (listBody == null) return false;
     listBody.insertAdjacentHTML(
       "beforeend",
       `<asset-file asset-name="${filename}"></asset-file>`,
@@ -58,6 +59,8 @@ export class AssetList extends LitElement {
         : splitedFoldername[splitedFoldernameLength - 1];
 
     let listBody = this.querySelector("div");
+    if (listBody == null) return false;
+
     listBody.insertAdjacentHTML(
       "beforeend",
       `<asset-folder asset-name="${foldername}"></asset-folder>`,
@@ -65,7 +68,10 @@ export class AssetList extends LitElement {
   }
 
   clearList() {
-    this.querySelector("div").innerHTML = "";
+    const div = this.querySelector("div");
+    if (div == null) return false;
+
+    div.innerHTML = "";
   }
 }
 
@@ -85,7 +91,7 @@ export class AssetFile extends LitElement {
       "mt-1",
       "asset",
     );
-    this.filename = this.getAttribute("asset-name");
+    this.filename = this.getAttribute("asset-name") || "";
     this.directory = document.querySelector("asset-list").nowDirectory;
   }
 
@@ -175,6 +181,7 @@ export class AssetFile extends LitElement {
                 thumbnailCanvas.height = height;
 
                 let ctx = thumbnailCanvas.getContext("2d");
+                if (!ctx) return false;
                 ctx.drawImage(
                   videoElement,
                   0,
@@ -183,7 +190,7 @@ export class AssetFile extends LitElement {
                   thumbnailCanvas.height,
                 );
 
-                thumbnailCanvas.toBlob((blob) => {
+                thumbnailCanvas.toBlob((blob: any) => {
                   try {
                     const newImg = document.createElement("img");
                     const url = URL.createObjectURL(blob);
@@ -236,7 +243,7 @@ export class AssetFolder extends LitElement {
       "mt-1",
       "asset",
     );
-    this.foldername = this.getAttribute("asset-name");
+    this.foldername = this.getAttribute("asset-name") || "";
     this.directory = document.querySelector("asset-list").nowDirectory;
   }
 

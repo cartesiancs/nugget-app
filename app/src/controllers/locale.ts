@@ -1,8 +1,6 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
-import { rendererModal } from "../utils/modal";
 import EnLang from "../locale/en.json";
 import KoLang from "../locale/ko.json";
-import { property, state } from "lit/decorators.js";
 
 type AbleLanguage = "en" | "ko";
 

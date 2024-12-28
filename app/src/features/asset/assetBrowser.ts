@@ -1,7 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
-import { LocaleController } from "../../controllers/locale";
 
 @customElement("asset-browser")
 export class AssetBrowser extends LitElement {
@@ -39,8 +38,11 @@ export class AssetBrowser extends LitElement {
   }
 
   updateDirectoryInput(path) {
-    let directoryInput: any =
-      this.querySelector("div").querySelector("input[ref='text']");
+    const root: HTMLDivElement | null = this.querySelector("div");
+    if (root == null) {
+      return false;
+    }
+    let directoryInput: any = root.querySelector("input[ref='text']");
     directoryInput.value = path;
   }
 

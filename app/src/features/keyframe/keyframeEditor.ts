@@ -82,7 +82,7 @@ export class KeyframeEditor extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline = this.timelineState.timeline;
+  timeline: any = this.timelineState.timeline;
 
   @property()
   timelineRange = this.timelineState.range;
@@ -119,7 +119,6 @@ export class KeyframeEditor extends LitElement {
   }
 
   render() {
-    console.log("A");
     try {
       if (this.isShow) {
         if (this.prevElementId != this.elementId) {
@@ -152,6 +151,29 @@ export class KeyframeEditor extends LitElement {
           true;
 
         return html` <div>
+          <div class="btn-group" role="group" id="timelineOptionLineEditor">
+            <button
+              line="0"
+              @click=${() => this.changeLineEditor("0")}
+              type="button"
+              class="btn ${this.selectLine == 0
+                ? "btn-primary"
+                : "btn-secondary"} btn-sm"
+            >
+              Line0
+            </button>
+
+            <button
+              line="1"
+              @click=${() => this.changeLineEditor("1")}
+              type="button"
+              class="btn ${this.selectLine == 1
+                ? "btn-primary"
+                : "btn-secondary"} btn-sm"
+            >
+              Line1
+            </button>
+          </div>
           <canvas
             id="keyframeEditerCanvasRef"
             style="width: 100%; left: ${this.resize.timelineVertical
@@ -287,7 +309,8 @@ export class KeyframeEditor extends LitElement {
   }
 
   private drawLeftPadding(ctx) {
-    const targetTimeline: ImageElementType = this.timeline[this.elementId];
+    const targetTimeline: ImageElementType | any =
+      this.timeline[this.elementId];
 
     const startPx =
       millisecondsToPx(targetTimeline.startTime, this.timelineRange) -
@@ -300,7 +323,8 @@ export class KeyframeEditor extends LitElement {
   }
 
   private drawRightPadding(ctx) {
-    const targetTimeline: ImageElementType = this.timeline[this.elementId];
+    const targetTimeline: ImageElementType | any =
+      this.timeline[this.elementId];
 
     const startPx =
       millisecondsToPx(
@@ -446,7 +470,7 @@ export class KeyframeEditor extends LitElement {
   showKeyframeEditorButtonGroup() {}
 
   hideKeyframeEditorButtonGroup() {
-    let keyframeEditor = document.getElementById("option_bottom");
+    let keyframeEditor: any = document.getElementById("option_bottom");
     keyframeEditor.classList.remove("show");
     keyframeEditor.classList.add("hide");
     document
@@ -489,7 +513,7 @@ export class KeyframeEditor extends LitElement {
 
   changeLineEditor(line) {
     this.selectLine = Number(line);
-    this.highlightLineEditorButton(line);
+    this.requestUpdate();
   }
 
   addLineEditor(line) {
@@ -589,7 +613,7 @@ export class KeyframeEditor extends LitElement {
     const array =
       this.timeline[this.elementId].animation[this.animationType][lineToAlpha];
 
-    const interpolationArray = [];
+    const interpolationArray: any = [];
 
     for (let ic = 0; ic < array.length - 1; ic++) {
       const interval = array[ic + 1].p[0] - array[ic].p[0];
@@ -614,7 +638,7 @@ export class KeyframeEditor extends LitElement {
   }
 
   cubic(d0, d1, iteration = 30) {
-    let result = [];
+    let result: number[][] = [];
 
     for (let t = 0; t <= 1; t = t + 1 / iteration) {
       const x =
@@ -634,7 +658,7 @@ export class KeyframeEditor extends LitElement {
   }
 
   getRemovedDuplicatePoint({ x, line }) {
-    let tmp = [];
+    let tmp: any = [];
     this.points[line].forEach((element) => {
       if (element[0] != x) {
         tmp.push(element);

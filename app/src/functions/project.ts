@@ -54,8 +54,8 @@ const project = {
       let filepath = path;
 
       window.electronAPI.req.filesystem.readFile(filepath).then((data) => {
-        JSZip.loadAsync(data).then(function (zip) {
-          let aa = zip
+        JSZip.loadAsync(data).then(function (zip: any) {
+          zip
             .file("timeline.json")
             .async("string")
             .then(async (result) => {

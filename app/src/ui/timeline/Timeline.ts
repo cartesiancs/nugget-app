@@ -64,7 +64,10 @@ export class Timeline extends LitElement {
   }
 
   _handleClickClosedKeyframe() {
-    let keyframeEditor = document.getElementById("option_bottom");
+    const keyframeEditor: HTMLElement | null =
+      document.getElementById("option_bottom");
+    if (keyframeEditor == null) return false;
+
     keyframeEditor.classList.remove("show");
     keyframeEditor.classList.add("hide");
 
@@ -158,7 +161,8 @@ export class Timeline extends LitElement {
 
   keyframeOption() {
     if (this.target.isShow) {
-      return html` <button
+      return html`
+        <button
           type="button"
           class="btn btn-dark btn-sm"
           data-bs-dismiss="offcanvas"
@@ -167,11 +171,7 @@ export class Timeline extends LitElement {
         >
           키프레임 에디터 닫기
         </button>
-        <div
-          class="btn-group"
-          role="group"
-          id="timelineOptionLineEditor"
-        ></div>`;
+      `;
     }
 
     return html``;

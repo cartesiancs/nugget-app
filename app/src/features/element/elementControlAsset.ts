@@ -82,8 +82,8 @@ export class ElementControlAsset extends LitElement {
     }
 
     let resizeElement = this.convertAbsoluteToRelativeSize({
-      x: this.timeline[this.elementId].location.x,
-      y: this.timeline[this.elementId].location.y,
+      x: this.timeline[this.elementId].location?.x,
+      y: this.timeline[this.elementId].location?.y,
       w: !this.timeline[this.elementId].width
         ? 500
         : this.timeline[this.elementId].width,
@@ -154,7 +154,7 @@ export class ElementControlAsset extends LitElement {
 
   templateImage() {
     return html`<img
-      src="${this.timeline[this.elementId].localpath}"
+      src="${this.timeline[this.elementId].localpath || ""}"
       alt=""
       style="opacity: ${this.timeline[this.elementId].opacity}%;"
       class="element-image d-none"
@@ -164,7 +164,7 @@ export class ElementControlAsset extends LitElement {
 
   templateVideo() {
     return html`<video
-      src="${this.timeline[this.elementId].localpath}"
+      src="${this.timeline[this.elementId].localpath || ""}"
       alt=""
       class="element-video d-none"
       draggable="false"
@@ -172,16 +172,18 @@ export class ElementControlAsset extends LitElement {
   }
 
   templateAudio() {
-    return html`<audio src="${
-      this.timeline[this.elementId].localpath
-    }" class="d-none" draggable="false"></video>`;
+    return html`<audio
+      src="${this.timeline[this.elementId].localpath || ""} "
+      class="d-none"
+      draggable="false"
+    ></audio>`;
   }
 
   templateText() {
     return html`<input-text
       elementId="${this.elementId}"
-      initValue="${this.timeline[this.elementId].text}"
-      initColor="${this.timeline[this.elementId].textcolor}"
+      initValue="${this.timeline[this.elementId].text || ""}"
+      initColor="${this.timeline[this.elementId].textcolor || ""}"
     ></input-text>`;
   }
 
@@ -245,114 +247,114 @@ export class ElementControlAsset extends LitElement {
     return Number(px.split("px")[0]);
   }
 
-  showDragAlignmentGuide() {
-    let dragAlignmentGuide = document.querySelector("drag-alignment-guide");
-    let videoCanvas = document.querySelector("#video");
-    let allowableRange = 6;
+  // showDragAlignmentGuide() {
+  //   let dragAlignmentGuide = document.querySelector("drag-alignment-guide");
+  //   let videoCanvas = document.querySelector("#video");
+  //   let allowableRange = 6;
 
-    let canvas = {
-      width: Number(videoCanvas.style.width.split("px")[0]),
-      height: Number(videoCanvas.style.height.split("px")[0]),
-    };
+  //   let canvas = {
+  //     width: Number(videoCanvas.style.width.split("px")[0]),
+  //     height: Number(videoCanvas.style.height.split("px")[0]),
+  //   };
 
-    let elementPositions = {
-      top: Number(this.style.top.split("px")[0]),
-      left: Number(this.style.left.split("px")[0]),
-      width: Number(this.style.width.split("px")[0]),
-      height: Number(this.style.height.split("px")[0]),
-      centerTop:
-        Number(this.style.height.split("px")[0]) / 2 +
-        Number(this.style.top.split("px")[0]),
-      centerLeft:
-        Number(this.style.width.split("px")[0]) / 2 +
-        Number(this.style.left.split("px")[0]),
-    };
+  //   let elementPositions = {
+  //     top: Number(this.style.top.split("px")[0]),
+  //     left: Number(this.style.left.split("px")[0]),
+  //     width: Number(this.style.width.split("px")[0]),
+  //     height: Number(this.style.height.split("px")[0]),
+  //     centerTop:
+  //       Number(this.style.height.split("px")[0]) / 2 +
+  //       Number(this.style.top.split("px")[0]),
+  //     centerLeft:
+  //       Number(this.style.width.split("px")[0]) / 2 +
+  //       Number(this.style.left.split("px")[0]),
+  //   };
 
-    if (
-      elementPositions.top < allowableRange &&
-      elementPositions.top > -allowableRange
-    ) {
-      dragAlignmentGuide.showGuide({ position: "top" });
-      let y = 0;
-      this.style.top = `${y}px`;
-      let convertLocation = this.convertRelativeToAbsoluteSize({ y: y });
-      this.timeline[this.elementId].location.y = convertLocation.y;
-    } else {
-      dragAlignmentGuide.hideGuide({ position: "top" });
-    }
+  //   if (
+  //     elementPositions.top < allowableRange &&
+  //     elementPositions.top > -allowableRange
+  //   ) {
+  //     dragAlignmentGuide.showGuide({ position: "top" });
+  //     let y = 0;
+  //     this.style.top = `${y}px`;
+  //     let convertLocation = this.convertRelativeToAbsoluteSize({ y: y });
+  //     this.timeline[this.elementId].location.y = convertLocation.y;
+  //   } else {
+  //     dragAlignmentGuide.hideGuide({ position: "top" });
+  //   }
 
-    if (
-      elementPositions.top + elementPositions.height >
-        canvas.height - allowableRange &&
-      elementPositions.top + elementPositions.height <
-        canvas.height + allowableRange
-    ) {
-      dragAlignmentGuide.showGuide({ position: "bottom" });
-      let y = canvas.height - elementPositions.height;
-      this.style.top = `${y}px`;
-      let convertLocation = this.convertRelativeToAbsoluteSize({ y: y });
-      this.timeline[this.elementId].location.y = convertLocation.y;
-    } else {
-      dragAlignmentGuide.hideGuide({ position: "bottom" });
-    }
+  //   if (
+  //     elementPositions.top + elementPositions.height >
+  //       canvas.height - allowableRange &&
+  //     elementPositions.top + elementPositions.height <
+  //       canvas.height + allowableRange
+  //   ) {
+  //     dragAlignmentGuide.showGuide({ position: "bottom" });
+  //     let y = canvas.height - elementPositions.height;
+  //     this.style.top = `${y}px`;
+  //     let convertLocation = this.convertRelativeToAbsoluteSize({ y: y });
+  //     this.timeline[this.elementId].location.y = convertLocation.y;
+  //   } else {
+  //     dragAlignmentGuide.hideGuide({ position: "bottom" });
+  //   }
 
-    if (
-      elementPositions.left < allowableRange &&
-      elementPositions.left > -allowableRange
-    ) {
-      dragAlignmentGuide.showGuide({ position: "left" });
-      let x = 0;
-      this.style.left = `${x}px`;
-      let convertLocation = this.convertRelativeToAbsoluteSize({ x: x });
-      this.timeline[this.elementId].location.x = convertLocation.x;
-    } else {
-      dragAlignmentGuide.hideGuide({ position: "left" });
-    }
+  //   if (
+  //     elementPositions.left < allowableRange &&
+  //     elementPositions.left > -allowableRange
+  //   ) {
+  //     dragAlignmentGuide.showGuide({ position: "left" });
+  //     let x = 0;
+  //     this.style.left = `${x}px`;
+  //     let convertLocation = this.convertRelativeToAbsoluteSize({ x: x });
+  //     this.timeline[this.elementId].location.x = convertLocation.x;
+  //   } else {
+  //     dragAlignmentGuide.hideGuide({ position: "left" });
+  //   }
 
-    if (
-      elementPositions.left + elementPositions.width >
-        canvas.width - allowableRange &&
-      elementPositions.left + elementPositions.width <
-        canvas.width + allowableRange
-    ) {
-      dragAlignmentGuide.showGuide({ position: "right" });
-      let x = canvas.width - elementPositions.width;
-      this.style.left = `${x}px`;
-      let convertLocation = this.convertRelativeToAbsoluteSize({ x: x });
-      this.timeline[this.elementId].location.x = convertLocation.x;
-    } else {
-      dragAlignmentGuide.hideGuide({ position: "right" });
-    }
+  //   if (
+  //     elementPositions.left + elementPositions.width >
+  //       canvas.width - allowableRange &&
+  //     elementPositions.left + elementPositions.width <
+  //       canvas.width + allowableRange
+  //   ) {
+  //     dragAlignmentGuide.showGuide({ position: "right" });
+  //     let x = canvas.width - elementPositions.width;
+  //     this.style.left = `${x}px`;
+  //     let convertLocation = this.convertRelativeToAbsoluteSize({ x: x });
+  //     this.timeline[this.elementId].location.x = convertLocation.x;
+  //   } else {
+  //     dragAlignmentGuide.hideGuide({ position: "right" });
+  //   }
 
-    // 'horizontal', 'vertical'
+  //   // 'horizontal', 'vertical'
 
-    if (
-      elementPositions.centerTop < canvas.height / 2 + 6 &&
-      elementPositions.centerTop > canvas.height / 2 - 6
-    ) {
-      dragAlignmentGuide.showGuide({ position: "horizontal" });
+  //   if (
+  //     elementPositions.centerTop < canvas.height / 2 + 6 &&
+  //     elementPositions.centerTop > canvas.height / 2 - 6
+  //   ) {
+  //     dragAlignmentGuide.showGuide({ position: "horizontal" });
 
-      let y = canvas.height / 2 - elementPositions.height / 2;
-      this.style.top = `${y}px`;
-      let convertLocation = this.convertRelativeToAbsoluteSize({ y: y });
-      this.timeline[this.elementId].location.y = convertLocation.y;
-    } else {
-      dragAlignmentGuide.hideGuide({ position: "horizontal" });
-    }
+  //     let y = canvas.height / 2 - elementPositions.height / 2;
+  //     this.style.top = `${y}px`;
+  //     let convertLocation = this.convertRelativeToAbsoluteSize({ y: y });
+  //     this.timeline[this.elementId].location.y = convertLocation.y;
+  //   } else {
+  //     dragAlignmentGuide.hideGuide({ position: "horizontal" });
+  //   }
 
-    if (
-      elementPositions.centerLeft < canvas.width / 2 + 6 &&
-      elementPositions.centerLeft > canvas.width / 2 - 6
-    ) {
-      dragAlignmentGuide.showGuide({ position: "vertical" });
-      let x = canvas.width / 2 - elementPositions.width / 2;
-      this.style.left = `${x}px`;
-      let convertLocation = this.convertRelativeToAbsoluteSize({ x: x });
-      this.timeline[this.elementId].location.x = convertLocation.x;
-    } else {
-      dragAlignmentGuide.hideGuide({ position: "vertical" });
-    }
-  }
+  //   if (
+  //     elementPositions.centerLeft < canvas.width / 2 + 6 &&
+  //     elementPositions.centerLeft > canvas.width / 2 - 6
+  //   ) {
+  //     dragAlignmentGuide.showGuide({ position: "vertical" });
+  //     let x = canvas.width / 2 - elementPositions.width / 2;
+  //     this.style.left = `${x}px`;
+  //     let convertLocation = this.convertRelativeToAbsoluteSize({ x: x });
+  //     this.timeline[this.elementId].location.x = convertLocation.x;
+  //   } else {
+  //     dragAlignmentGuide.hideGuide({ position: "vertical" });
+  //   }
+  // }
 
   hideDragAlignmentGuide() {
     let dragAlignmentGuide = document.querySelector("drag-alignment-guide");
@@ -380,7 +382,7 @@ export class ElementControlAsset extends LitElement {
       if (x > window.innerWidth) {
         document.removeEventListener("mousemove", this.dragdownEventHandler);
       } else {
-        this.changeLocation({ x: x, y: y });
+        // this.changeLocation({ x: x, y: y });
 
         if (this.elementFiletype == "image") {
           document.querySelector("option-image").updateValue();
@@ -391,15 +393,15 @@ export class ElementControlAsset extends LitElement {
     }
   }
 
-  changeLocation({ x, y }) {
-    this.style.top = `${y}px`;
-    this.style.left = `${x}px`;
+  // changeLocation({ x, y }) {
+  //   this.style.top = `${y}px`;
+  //   this.style.left = `${x}px`;
 
-    let convertLocation = this.convertRelativeToAbsoluteSize({ x: x, y: y });
+  //   let convertLocation = this.convertRelativeToAbsoluteSize({ x: x, y: y });
 
-    this.timeline[this.elementId].location.x = convertLocation.x;
-    this.timeline[this.elementId].location.y = convertLocation.y;
-  }
+  //   this.timeline[this.elementId].location.x = convertLocation.x;
+  //   this.timeline[this.elementId].location.y = convertLocation.y;
+  // }
 
   dragMousedown(e) {
     if (!this.isResize && !this.isRotate) {
@@ -421,59 +423,59 @@ export class ElementControlAsset extends LitElement {
       this.isDrag == true &&
       this.timeline[this.elementId].filetype == "image"
     ) {
-      this.addAnimationPoint({
-        animationType: "position",
-      });
+      // this.addAnimationPoint({
+      //   animationType: "position",
+      // });
     }
     this.isDrag = false;
   }
 
-  addAnimationPoint({ animationType }) {
-    if (
-      this.timeline[this.elementId].animation[animationType].isActivate == false
-    ) {
-      return 0;
-    }
+  // addAnimationPoint({ animationType }) {
+  //   if (
+  //     this.timeline[this.elementId].animation[animationType].isActivate == false
+  //   ) {
+  //     return 0;
+  //   }
 
-    const timelineRange = Number(
-      document.querySelector("element-timeline-range").value,
-    );
-    const timeMagnification = timelineRange / 4;
+  //   const timelineRange = Number(
+  //     document.querySelector("element-timeline-range").value,
+  //   );
+  //   const timeMagnification = timelineRange / 4;
 
-    let keyframeEditor = document.querySelector(
-      `keyframe-editor[element-id="${this.elementId}"]`,
-    );
-    let progress =
-      (this.elementControl.progressTime -
-        this.timeline[this.elementId].startTime) /
-      5;
+  //   let keyframeEditor = document.querySelector(
+  //     `keyframe-editor[element-id="${this.elementId}"]`,
+  //   );
+  //   let progress =
+  //     (this.elementControl.progressTime -
+  //       this.timeline[this.elementId].startTime) /
+  //     5;
 
-    const addPoint = {
-      position: () => {
-        keyframeEditor.addPoint({
-          x: progress,
-          y: this.timeline[this.elementId].location.x,
-          line: 0,
-        });
+  //   const addPoint = {
+  //     position: () => {
+  //       keyframeEditor.addPoint({
+  //         x: progress,
+  //         y: this.timeline[this.elementId].location.x,
+  //         line: 0,
+  //       });
 
-        keyframeEditor.addPoint({
-          x: progress,
-          y: this.timeline[this.elementId].location.y,
-          line: 1,
-        });
+  //       keyframeEditor.addPoint({
+  //         x: progress,
+  //         y: this.timeline[this.elementId].location.y,
+  //         line: 1,
+  //       });
 
-        keyframeEditor.drawLine(0);
-        keyframeEditor.drawLine(1);
-      },
-    };
+  //       keyframeEditor.drawLine(0);
+  //       keyframeEditor.drawLine(1);
+  //     },
+  //   };
 
-    addPoint[animationType]();
+  //   addPoint[animationType]();
 
-    let animationPanel = document.querySelector(
-      `animation-panel[element-id="${this.elementId}"]`,
-    );
-    animationPanel.updateItem();
-  }
+  //   let animationPanel = document.querySelector(
+  //     `animation-panel[element-id="${this.elementId}"]`,
+  //   );
+  //   animationPanel.updateItem();
+  // }
 
   getGcd(a, b) {
     if (b == 0) {
@@ -482,162 +484,162 @@ export class ElementControlAsset extends LitElement {
     return this.getGcd(b, a % b);
   }
 
-  rotate(e) {
-    this.isDrag = false;
-    console.log("rotate", e.target.tagName);
+  // rotate(e) {
+  //   this.isDrag = false;
+  //   console.log("rotate", e.target.tagName);
 
-    if (e.target.tagName != "CANVAS") {
-      return 0;
-    }
+  //   if (e.target.tagName != "CANVAS") {
+  //     return 0;
+  //   }
 
-    let referenceRotationPoint = this.convertAbsoluteToRelativeSize({
-      x:
-        this.timeline[this.elementId].location.x +
-        this.timeline[this.elementId].width / 2,
-      y:
-        this.timeline[this.elementId].location.y +
-        this.timeline[this.elementId].height / 2,
-    });
+  //   let referenceRotationPoint = this.convertAbsoluteToRelativeSize({
+  //     x:
+  //       this.timeline[this.elementId].location.x +
+  //       this.timeline[this.elementId].width / 2,
+  //     y:
+  //       this.timeline[this.elementId].location.y +
+  //       this.timeline[this.elementId].height / 2,
+  //   });
 
-    let mouseX = e.offsetX;
-    let mouseY = e.offsetY;
+  //   let mouseX = e.offsetX;
+  //   let mouseY = e.offsetY;
 
-    let degree =
-      -Math.atan2(
-        referenceRotationPoint.x - mouseX,
-        referenceRotationPoint.y - mouseY,
-      ) /
-      (Math.PI / 180);
+  //   let degree =
+  //     -Math.atan2(
+  //       referenceRotationPoint.x - mouseX,
+  //       referenceRotationPoint.y - mouseY,
+  //     ) /
+  //     (Math.PI / 180);
 
-    console.log();
+  //   console.log();
 
-    if (degree < 0) {
-      degree = 360 + degree;
-    }
+  //   if (degree < 0) {
+  //     degree = 360 + degree;
+  //   }
 
-    this.timeline[this.elementId].rotation = degree;
-    this.style.transform = `rotate(${degree}deg)`;
-  }
+  //   this.timeline[this.elementId].rotation = degree;
+  //   this.style.transform = `rotate(${degree}deg)`;
+  // }
 
-  resize(e) {
-    this.isDrag = false;
+  // resize(e) {
+  //   this.isDrag = false;
 
-    const videoBox = document.querySelector("#video");
-    const rect = videoBox.getBoundingClientRect();
+  //   const videoBox = document.querySelector("#video");
+  //   const rect = videoBox.getBoundingClientRect();
 
-    let x = e.pageX - rect.left - this.initialPosition.x;
-    let y = e.pageY - rect.top - this.initialPosition.y;
-    let w = this.initialPosition.w;
-    let h = this.initialPosition.h;
+  //   let x = e.pageX - rect.left - this.initialPosition.x;
+  //   let y = e.pageY - rect.top - this.initialPosition.y;
+  //   let w = this.initialPosition.w;
+  //   let h = this.initialPosition.h;
 
-    let aspectRatio = w / h;
+  //   let aspectRatio = w / h;
 
-    switch (this.resizeDirection) {
-      case "n":
-        this.resizeStyle({
-          y: this.initialPosition.y + y,
-          h: this.initialPosition.h - y,
-        });
-        // this.style.top = `${this.initialPosition.y+y}px`
-        // this.style.height = `${this.initialPosition.h-y}px`
-        break;
+  //   switch (this.resizeDirection) {
+  //     case "n":
+  //       this.resizeStyle({
+  //         y: this.initialPosition.y + y,
+  //         h: this.initialPosition.h - y,
+  //       });
+  //       // this.style.top = `${this.initialPosition.y+y}px`
+  //       // this.style.height = `${this.initialPosition.h-y}px`
+  //       break;
 
-      case "s":
-        this.resizeStyle({
-          y: this.initialPosition.y,
-          h: y,
-        });
-        // this.style.top = `${}px`
-        // this.style.height = `${y}px`
-        break;
+  //     case "s":
+  //       this.resizeStyle({
+  //         y: this.initialPosition.y,
+  //         h: y,
+  //       });
+  //       // this.style.top = `${}px`
+  //       // this.style.height = `${y}px`
+  //       break;
 
-      case "w":
-        this.resizeStyle({
-          x: this.initialPosition.x + x,
-          w: this.initialPosition.w - x,
-        });
-        // this.style.left = `${}px`
-        // this.style.width = `${this.initialPosition.w-x}px`
-        break;
+  //     case "w":
+  //       this.resizeStyle({
+  //         x: this.initialPosition.x + x,
+  //         w: this.initialPosition.w - x,
+  //       });
+  //       // this.style.left = `${}px`
+  //       // this.style.width = `${this.initialPosition.w-x}px`
+  //       break;
 
-      case "e":
-        this.resizeStyle({
-          x: this.initialPosition.x,
-          w: x,
-        });
-        // this.style.left = `${this.initialPosition.x}px`
-        // this.style.width = `${x}px`
-        break;
+  //     case "e":
+  //       this.resizeStyle({
+  //         x: this.initialPosition.x,
+  //         w: x,
+  //       });
+  //       // this.style.left = `${this.initialPosition.x}px`
+  //       // this.style.width = `${x}px`
+  //       break;
 
-      case "ne":
-        this.resizeStyle({
-          y: this.initialPosition.y + y,
-          h: this.initialPosition.h - y,
-          w: x,
-        });
-        // this.style.top = `${this.initialPosition.y+y}px`
-        // //this.style.height = `${this.initialPosition.h-y}px`
-        // //this.style.width = `${aspectRatio*(this.initialPosition.h-y)}px`
-        // this.style.height = `${this.initialPosition.h-y}px`
-        // this.style.width = `${x}px`
+  //     case "ne":
+  //       this.resizeStyle({
+  //         y: this.initialPosition.y + y,
+  //         h: this.initialPosition.h - y,
+  //         w: x,
+  //       });
+  //       // this.style.top = `${this.initialPosition.y+y}px`
+  //       // //this.style.height = `${this.initialPosition.h-y}px`
+  //       // //this.style.width = `${aspectRatio*(this.initialPosition.h-y)}px`
+  //       // this.style.height = `${this.initialPosition.h-y}px`
+  //       // this.style.width = `${x}px`
 
-        break;
+  //       break;
 
-      case "nw":
-        this.resizeStyle({
-          x: this.initialPosition.x + x,
-          y: this.initialPosition.y + y,
-          h: this.initialPosition.h - y,
-          w: this.initialPosition.w - x,
-        });
-        // this.style.top = `${this.initialPosition.y+y}px`
-        // this.style.height = `${this.initialPosition.h-y}px`
-        // this.style.left = `${this.initialPosition.x+x}px`
-        // this.style.width = `${this.initialPosition.w-x}px`
-        break;
+  //     case "nw":
+  //       this.resizeStyle({
+  //         x: this.initialPosition.x + x,
+  //         y: this.initialPosition.y + y,
+  //         h: this.initialPosition.h - y,
+  //         w: this.initialPosition.w - x,
+  //       });
+  //       // this.style.top = `${this.initialPosition.y+y}px`
+  //       // this.style.height = `${this.initialPosition.h-y}px`
+  //       // this.style.left = `${this.initialPosition.x+x}px`
+  //       // this.style.width = `${this.initialPosition.w-x}px`
+  //       break;
 
-      case "sw":
-        this.resizeStyle({
-          x: this.initialPosition.x + x,
-          h: y,
-          w: this.initialPosition.w - x,
-        });
-        // this.style.height = `${y}px`
-        // this.style.left = `${this.initialPosition.x+x}px`
-        // this.style.width = `${this.initialPosition.w-x}px`
-        break;
+  //     case "sw":
+  //       this.resizeStyle({
+  //         x: this.initialPosition.x + x,
+  //         h: y,
+  //         w: this.initialPosition.w - x,
+  //       });
+  //       // this.style.height = `${y}px`
+  //       // this.style.left = `${this.initialPosition.x+x}px`
+  //       // this.style.width = `${this.initialPosition.w-x}px`
+  //       break;
 
-      case "se":
-        this.resizeStyle({
-          x: this.initialPosition.x,
-          y: this.initialPosition.y,
-          h: y,
-          w: x,
-        });
-        // this.style.top = `${this.initialPosition.y}px`
-        // this.style.height = `${y}px`
-        // this.style.left = `${this.initialPosition.x}px`
-        // this.style.width = `${x}px`
-        break;
+  //     case "se":
+  //       this.resizeStyle({
+  //         x: this.initialPosition.x,
+  //         y: this.initialPosition.y,
+  //         h: y,
+  //         w: x,
+  //       });
+  //       // this.style.top = `${this.initialPosition.y}px`
+  //       // this.style.height = `${y}px`
+  //       // this.style.left = `${this.initialPosition.x}px`
+  //       // this.style.width = `${x}px`
+  //       break;
 
-      default:
-        break;
-    }
-    let resizeRatio = this.elementControl.previewRatio;
+  //     default:
+  //       break;
+  //   }
+  //   let resizeRatio = this.elementControl.previewRatio;
 
-    this.timeline[this.elementId].location.y = Math.round(
-      Number(this.style.top.split("px")[0]) * resizeRatio,
-    );
-    this.timeline[this.elementId].location.x = Math.round(
-      Number(this.style.left.split("px")[0]) * resizeRatio,
-    );
-    this.timeline[this.elementId].width = Math.round(
-      Number(this.style.width.split("px")[0]) * resizeRatio,
-    );
-    this.timeline[this.elementId].height = Math.round(
-      Number(this.style.height.split("px")[0]) * resizeRatio,
-    );
-  }
+  //   this.timeline[this.elementId].location.y = Math.round(
+  //     Number(this.style.top.split("px")[0]) * resizeRatio,
+  //   );
+  //   this.timeline[this.elementId].location.x = Math.round(
+  //     Number(this.style.left.split("px")[0]) * resizeRatio,
+  //   );
+  //   this.timeline[this.elementId].width = Math.round(
+  //     Number(this.style.width.split("px")[0]) * resizeRatio,
+  //   );
+  //   this.timeline[this.elementId].height = Math.round(
+  //     Number(this.style.height.split("px")[0]) * resizeRatio,
+  //   );
+  // }
 
   resizeStyle({ x, y, w, h }: any) {
     this.style.left = !x == false ? `${x}px` : this.style.left;
@@ -661,19 +663,19 @@ export class ElementControlAsset extends LitElement {
     });
   }
 
-  rotateMousedown() {
-    this.isDrag = false;
-    this.isResize = false;
+  // rotateMousedown() {
+  //   this.isDrag = false;
+  //   this.isResize = false;
 
-    if (this.isRotate == false) {
-      this.rotateEventHandler = this.rotate.bind(this);
-      document
-        .querySelector("#preview")
-        .addEventListener("mousemove", this.rotateEventHandler);
-    }
+  //   if (this.isRotate == false) {
+  //     this.rotateEventHandler = this.rotate.bind(this);
+  //     document
+  //       .querySelector("#preview")
+  //       .addEventListener("mousemove", this.rotateEventHandler);
+  //   }
 
-    this.isRotate = true;
-  }
+  //   this.isRotate = true;
+  // }
 
   rotateMouseup() {
     document
@@ -693,8 +695,8 @@ export class ElementControlAsset extends LitElement {
     this.initialPosition.x = Number(this.style.left.split("px")[0]);
     this.initialPosition.y = Number(this.style.top.split("px")[0]);
 
-    this.resizeEventHandler = this.resize.bind(this);
-    document.addEventListener("mousemove", this.resizeEventHandler);
+    // this.resizeEventHandler = this.resize.bind(this);
+    // document.addEventListener("mousemove", this.resizeEventHandler);
   }
 
   resizeMouseup() {

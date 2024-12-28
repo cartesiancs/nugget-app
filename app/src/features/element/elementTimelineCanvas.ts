@@ -18,10 +18,10 @@ export class elementTimelineCanvas extends LitElement {
   targetId: string;
   isDrag: boolean;
   firstClickPosition: { x: number; y: number };
-  targetLastPosition: { x: number; y: number };
+  targetLastPosition: { x: number; y: number } | undefined;
   targetStartTime: number;
   targetDuration: number;
-  targetMediaType: "static" | "dynamic";
+  targetMediaType: "static" | "dynamic" | undefined;
   cursorType: "none" | "move" | "stretchStart" | "stretchEnd";
   cursorNow: number;
   targetTrim: { startTime: number; endTime: number };
@@ -62,7 +62,7 @@ export class elementTimelineCanvas extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline = this.timelineState.timeline;
+  timeline: any = this.timelineState.timeline;
 
   @property()
   timelineRange = this.timelineState.range;
@@ -74,7 +74,7 @@ export class elementTimelineCanvas extends LitElement {
   timelineCursor = this.timelineState.cursor;
 
   @property()
-  isOpenAnimationPanelId = [];
+  isOpenAnimationPanelId: string[] = [];
 
   @property()
   keyframeState: IKeyframeStore = keyframeStore.getInitialState();
@@ -90,7 +90,7 @@ export class elementTimelineCanvas extends LitElement {
 
   @consume({ context: timelineContext })
   @property({ attribute: false })
-  public timelineOptions = {
+  public timelineOptions: any = {
     canvasVerticalScroll: 0,
     panelOptions: [],
   };
@@ -197,7 +197,7 @@ export class elementTimelineCanvas extends LitElement {
     }
 
     if (Array.isArray(obj)) {
-      const copy = [];
+      const copy: any = [];
       obj.forEach((element, index) => {
         copy[index] = this.deepCopy(element);
       });
@@ -277,7 +277,7 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   drawCursor() {
-    const ctx = this.canvas.getContext("2d");
+    const ctx: any = this.canvas.getContext("2d");
     const height = document.querySelector("element-timeline").offsetHeight;
 
     const now =
@@ -294,7 +294,7 @@ export class elementTimelineCanvas extends LitElement {
     const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
 
-    const ctx = this.canvas.getContext("2d");
+    const ctx: any = this.canvas.getContext("2d");
     const height = document.querySelector("element-timeline").offsetHeight;
 
     const end =

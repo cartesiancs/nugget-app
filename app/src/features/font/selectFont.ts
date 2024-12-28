@@ -41,11 +41,12 @@ export class SelectFont extends LitElement {
 
       for (let index = 0; index < result.fonts.length; index++) {
         const font = result.fonts[index];
-        this.querySelector("select[ref='lists']").insertAdjacentHTML(
+        const fontSelect: any = this.querySelector("select[ref='lists']");
+        fontSelect.insertAdjacentHTML(
           "beforeend",
           `<option value-index="${index + 1}" value='${font.path}'>${
             font.name
-          }</option>`
+          }</option>`,
         );
       }
     });
@@ -71,7 +72,8 @@ export class SelectFont extends LitElement {
   }
 
   applyFontStyle({ fontName, fontPath, fontType }) {
-    this.querySelector("style[ref='fontStyles']").insertAdjacentHTML(
+    const fontStyle: any = this.querySelector("style[ref='fontStyles']");
+    fontStyle.insertAdjacentHTML(
       "beforeend",
       `
         @font-face {
@@ -79,15 +81,13 @@ export class SelectFont extends LitElement {
             src: local("${fontName}"),
               url("${fontPath}") format("${fontType}");
         }
-        `
+        `,
     );
   }
 
   connectedCallback() {
     this.render();
-    this.querySelector("select[ref='lists']").addEventListener(
-      "change",
-      this.handleSelect.bind(this)
-    );
+    const fontList: any = this.querySelector("select[ref='lists']");
+    fontList.addEventListener("change", this.handleSelect.bind(this));
   }
 }

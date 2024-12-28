@@ -5,7 +5,7 @@ export const fontLib = {
   getFontList: async (event) => {
     try {
       const files = await getSystemFonts();
-      let lists = [];
+      let lists: any = [];
       for (let index = 0; index < files.length; index++) {
         const fontPath = files[index];
         const fontSplitedPath = fontPath.split(path.sep);

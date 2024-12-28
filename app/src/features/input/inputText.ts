@@ -65,10 +65,11 @@ export class InputText extends LitElement {
 
   setWidthInner() {
     console.log();
+    const span: any = this.querySelector("span");
     let resizedInput = document
       .querySelector(`element-control-asset[elementid="${this.elementId}"]`)
       .convertRelativeToAbsoluteSize({
-        w: this.querySelector("span").offsetWidth,
+        w: span.offsetWidth,
       });
 
     this.timeline[this.elementId].widthInner = resizedInput.w;

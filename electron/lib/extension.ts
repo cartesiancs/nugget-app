@@ -32,10 +32,10 @@ type classType = {
 
 class Extension {
   isDev: boolean;
-  directory: string;
-  file: string;
-  fileList: string[];
-  manifest: manifestType;
+  directory: string | any;
+  file?: string | undefined;
+  fileList: string[] | undefined;
+  manifest: manifestType | any;
 
   constructor({ isDev, directory, file, windowType }: classType) {
     this.isDev = isDev || false;

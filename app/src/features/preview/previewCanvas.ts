@@ -7,6 +7,12 @@ import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
+import { ImageElementType } from "../../@types/timeline";
+
+type ImageTempType = {
+  elementId: string;
+  object: any;
+};
 
 @customElement("preview-canvas")
 export class PreviewCanvss extends LitElement {
@@ -72,7 +78,7 @@ export class PreviewCanvss extends LitElement {
   timelineCursor = this.timelineState.cursor;
 
   @property()
-  loadedObjects = [];
+  loadedObjects: ImageTempType[] = [];
 
   @property()
   canvasMaxHeight = "100%";
@@ -161,13 +167,13 @@ export class PreviewCanvss extends LitElement {
 
       for (const elementId in this.timeline) {
         if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-          const x = this.timeline[elementId].location.x;
-          const y = this.timeline[elementId].location.y;
-          const w = this.timeline[elementId].width;
-          const h = this.timeline[elementId].height;
+          const x = this.timeline[elementId].location?.x as number;
+          const y = this.timeline[elementId].location?.y as number;
+          const w = this.timeline[elementId].width as number;
+          const h = this.timeline[elementId].height as number;
           const fileType = this.timeline[elementId].filetype;
-          const startTime = this.timeline[elementId].startTime;
-          const duration = this.timeline[elementId].duration;
+          const startTime = this.timeline[elementId].startTime as number;
+          const duration = this.timeline[elementId].duration as number;
 
           if (
             !(
@@ -179,8 +185,10 @@ export class PreviewCanvss extends LitElement {
           }
 
           if (fileType == "image") {
+            const imageElement = this.timeline[elementId] as any;
+
             if (
-              this.loadedObjects.findIndex((item) => {
+              this.loadedObjects.findIndex((item: ImageTempType) => {
                 return item.elementId == elementId;
               }) != -1
             ) {
@@ -188,13 +196,10 @@ export class PreviewCanvss extends LitElement {
                 return item.elementId == elementId;
               })[0];
 
-              ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+              ctx.globalAlpha = imageElement.opacity / 100;
               let animationType = "position";
 
-              if (
-                this.timeline[elementId].animation[animationType].isActivate ==
-                true
-              ) {
+              if (imageElement.animation[animationType].isActivate == true) {
                 let index = Math.round(this.timelineCursor / 16);
                 let indexToMs = index * 20;
                 let startTime = Number(this.timeline[elementId].startTime);
@@ -205,14 +210,14 @@ export class PreviewCanvss extends LitElement {
                     return 0;
                   }
 
-                  const ax = this.findNearestY(
-                    this.timeline[elementId].animation[animationType].ax,
-                    this.timelineCursor - this.timeline[elementId].startTime,
+                  const ax: any = this.findNearestY(
+                    imageElement.animation[animationType].ax,
+                    this.timelineCursor - imageElement.startTime,
                   );
 
-                  const ay = this.findNearestY(
-                    this.timeline[elementId].animation[animationType].ay,
-                    this.timelineCursor - this.timeline[elementId].startTime,
+                  const ay: any = this.findNearestY(
+                    imageElement.animation[animationType].ay,
+                    this.timelineCursor - imageElement.startTime,
                   );
 
                   ctx.drawImage(img.object, ax, ay, w, h);
@@ -229,19 +234,21 @@ export class PreviewCanvss extends LitElement {
                   object: img,
                 });
 
-                ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+                ctx.globalAlpha = imageElement.opacity / 100;
                 ctx.drawImage(img, x, y, w, h);
               };
-              img.src = this.timeline[elementId].localpath;
+              img.src = imageElement.localpath;
             }
           }
 
           if (fileType == "video") {
+            const videoElement = this.timeline[elementId] as any;
+
             if (
               !(
                 this.timelineCursor >=
-                  startTime + this.timeline[elementId].trim.startTime &&
-                this.timelineCursor < this.timeline[elementId].trim.endTime
+                  startTime + videoElement.trim.startTime &&
+                this.timelineCursor < videoElement.trim.endTime
               )
             ) {
               continue;
@@ -260,14 +267,13 @@ export class PreviewCanvss extends LitElement {
               if (this.isEditText) {
                 continue;
               }
-              ctx.fillStyle = this.timeline[elementId].textcolor;
+              ctx.fillStyle = this.timeline[elementId].textcolor as string;
               ctx.lineWidth = 0;
               ctx.font = `${this.timeline[elementId].fontsize}px Arial`;
               ctx.fillText(
-                this.timeline[elementId].text,
-                this.timeline[elementId].location.x,
-                this.timeline[elementId].location.y +
-                  this.timeline[elementId].fontsize,
+                this.timeline[elementId].text as string,
+                x,
+                y + (this.timeline[elementId].fontsize || 0),
               );
             } catch (error) {}
           }
@@ -414,10 +420,10 @@ export class PreviewCanvss extends LitElement {
 
     for (const elementId in this.timeline) {
       if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-        const x = this.timeline[elementId].location.x;
-        const y = this.timeline[elementId].location.y;
-        const w = this.timeline[elementId].width;
-        const h = this.timeline[elementId].height;
+        const x = this.timeline[elementId].location?.x as number;
+        const y = this.timeline[elementId].location?.y as number;
+        const w = this.timeline[elementId].width as number;
+        const h = this.timeline[elementId].height as number;
         const fileType = this.timeline[elementId].filetype;
 
         const collide = this.collisionCheck({
@@ -555,8 +561,8 @@ export class PreviewCanvss extends LitElement {
     if (!this.isMove || !this.isStretch) {
       for (const elementId in this.timeline) {
         if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-          const x = this.timeline[elementId].location.x;
-          const y = this.timeline[elementId].location.y;
+          const x = this.timeline[elementId].location?.x;
+          const y = this.timeline[elementId].location?.y;
           const w = this.timeline[elementId].width;
           const h = this.timeline[elementId].height;
           const fileType = this.timeline[elementId].filetype;
@@ -612,35 +618,41 @@ export class PreviewCanvss extends LitElement {
     if (this.isMove) {
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
-      this.timeline[this.activeElementId].location.x =
-        this.elementOrigin.x + dx;
-      this.timeline[this.activeElementId].location.y =
-        this.elementOrigin.y + dy;
+      const location = this.timeline[this.activeElementId].location as { x; y };
+      location.x = this.elementOrigin.x + dx;
+      location.y = this.elementOrigin.y + dy;
 
       this.timelineState.patchTimeline(this.timeline);
     }
 
     if (this.isStretch) {
+      const minSize = 10;
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
+      const location = this.timeline[this.activeElementId].location as { x; y };
 
       const moveE = () => {
+        if (this.elementOrigin.w + dx <= minSize) return false;
         this.timeline[this.activeElementId].width = this.elementOrigin.w + dx;
       };
 
       const moveW = () => {
+        if (this.elementOrigin.w - dx <= minSize) return false;
+
         this.timeline[this.activeElementId].width = this.elementOrigin.w - dx;
-        this.timeline[this.activeElementId].location.x =
-          this.elementOrigin.x + dx;
+        location.x = this.elementOrigin.x + dx;
       };
 
       const moveN = () => {
+        if (this.elementOrigin.h - dy <= minSize) return false;
+
         this.timeline[this.activeElementId].height = this.elementOrigin.h - dy;
-        this.timeline[this.activeElementId].location.y =
-          this.elementOrigin.y + dy;
+        location.y = this.elementOrigin.y + dy;
       };
 
       const moveS = () => {
+        if (this.elementOrigin.h + dy <= minSize) return false;
+
         this.timeline[this.activeElementId].height = this.elementOrigin.h + dy;
       };
 
@@ -683,10 +695,10 @@ export class PreviewCanvss extends LitElement {
 
     for (const elementId in this.timeline) {
       if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-        const x = this.timeline[elementId].location.x;
-        const y = this.timeline[elementId].location.y;
-        const w = this.timeline[elementId].width;
-        const h = this.timeline[elementId].height;
+        const x = this.timeline[elementId].location?.x as number;
+        const y = this.timeline[elementId].location?.y as number;
+        const w = this.timeline[elementId].width as number;
+        const h = this.timeline[elementId].height as number;
         const fileType = this.timeline[elementId].filetype;
 
         if (fileType != "text") {

@@ -94,5 +94,9 @@ export const uiStore = createStore<IUIStore>((set) => ({
           },
         };
       }
+
+      return {
+        ...state,
+      };
     }),
 }));

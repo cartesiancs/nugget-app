@@ -6,10 +6,10 @@ class TutorialPopover extends HTMLElement {
   constructor() {
     super();
 
-    this.tutorialIdx = this.getAttribute("tutorial-idx");
-    this.tutorialTitle = this.getAttribute("tutorial-title");
-    this.tutorialMessage = this.getAttribute("tutorial-message");
-    this.tutorialElementId = this.getAttribute("target-element-id");
+    this.tutorialIdx = this.getAttribute("tutorial-idx") || "";
+    this.tutorialTitle = this.getAttribute("tutorial-title") || "";
+    this.tutorialMessage = this.getAttribute("tutorial-message") || "";
+    this.tutorialElementId = this.getAttribute("target-element-id") || "";
   }
 
   // tutorial-idx="1" tutorial-title="test" tutorial-message="fsdf" target-element-id="

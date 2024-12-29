@@ -49,7 +49,7 @@ const project = {
     window.electronAPI.req.dialog.openFile([".ngt"]).then((path) => {
       console.log("saved!", path);
 
-      elementTimeline.resetTimelineData();
+      timelineStore.clearTimeline();
 
       let filepath = path;
 

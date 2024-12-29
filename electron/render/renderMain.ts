@@ -67,13 +67,15 @@ export const renderMain = {
       .input(`${resourcesPath}/assets/images/background.png`)
       .loop(options.videoDuration);
 
+    filter.push(`[0:v]fps=60, setpts=N/(60*TB)[background]`);
+
     filter.push({
       filter: "scale",
       options: {
         w: parseInt(options.previewSize.w),
         h: parseInt(options.previewSize.h),
       },
-      inputs: "[0:v]",
+      inputs: "[background]",
       outputs: "tmp",
     });
 
@@ -163,8 +165,9 @@ export const renderMain = {
     command.output(options.videoDestination);
     command.audioCodec("aac");
     command.videoCodec("libx264");
-    command.fps(60);
-    command.inputOptions("-vsync 0");
+    command.outputFps(60);
+    command.outputOptions("-framerate 60");
+
     command.videoBitrate(options.videoBitrate);
     command.format("mp4");
     command.run();
@@ -192,10 +195,11 @@ export const renderMain = {
 
     command.input(`${outputDir}/frame-${elementId}-%04d.png`);
     command.inputFPS(60);
+    command.inputOptions("-framerate 60");
     command.videoCodec("libvpx-vp9");
     command.inputOptions("-pix_fmt yuva420p");
-    command.inputOptions("-framerate 60/1");
-    command.inputOptions("-vsync 0");
+    command.outputFps(60);
+    command.outputOptions("-framerate 60");
 
     command.format("webm");
     command.output(outputVideoPath);
@@ -303,6 +307,10 @@ export const renderFilter = {
       );
     }
 
+    object.filter.push(
+      `[image${elementCounts.video}]fps=60, setpts=N/(60*TB)[image${elementCounts.video}]`,
+    );
+
     //:ow=rotw(${options.rotationRadian}):oh=roth(${options.rotationRadian})
 
     object.filter.push({
@@ -315,6 +323,8 @@ export const renderFilter = {
       inputs: `[tmp][image${elementCounts.video}]`,
       outputs: `tmp`,
     });
+
+    object.filter.push(`[tmp]fps=60, setpts=N/(60*TB)[tmp]`);
 
     elementCounts.video += 1;
 

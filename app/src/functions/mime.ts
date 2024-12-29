@@ -48,14 +48,18 @@ const mime = {
   },
   lookup: function (filename) {
     const splitFilename = filename.split(".");
+
     if (splitFilename.length <= 1) {
       return { type: "unknown" };
     } else {
-      if (!this.mimeArray[splitFilename[splitFilename.length - 1]]) {
+      const ext = splitFilename[splitFilename.length - 1];
+      if (!ext) return { type: "unknown" };
+
+      if (!this.mimeArray[ext.toLowerCase()]) {
         return { type: "unknown" };
       } else {
         return {
-          type: this.mimeArray[splitFilename[splitFilename.length - 1]].type,
+          type: this.mimeArray[ext.toLowerCase()].type,
         };
       }
     }

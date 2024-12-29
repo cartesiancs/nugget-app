@@ -8,6 +8,11 @@ export class AssetDropUploader extends LitElement {
 
   constructor() {
     super();
+
+    document.addEventListener("dragenter", this.handleDragEnter.bind(this));
+    document.addEventListener("dragover", this.handleDragOver.bind(this));
+    this.addEventListener("dragleave", this.handleDragLeave.bind(this));
+    this.addEventListener("drop", this.handleDrop.bind(this));
   }
 
   createRenderRoot() {
@@ -56,6 +61,8 @@ export class AssetDropUploader extends LitElement {
     e.preventDefault();
     try {
       let filePath = e.dataTransfer.files[0].path;
+      console.log(e, filePath, e.dataTransfer);
+
       this.assetControl.add(filePath);
       this.classList.add("d-none");
     } catch (error) {
@@ -64,15 +71,4 @@ export class AssetDropUploader extends LitElement {
       }, 800);
     }
   }
-
-  connectedCallback() {
-    this.render();
-
-    document.addEventListener("dragenter", this.handleDragEnter.bind(this));
-    document.addEventListener("dragover", this.handleDragOver.bind(this));
-    this.addEventListener("dragleave", this.handleDragLeave.bind(this));
-    this.addEventListener("drop", this.handleDrop.bind(this));
-  }
-
-  disconnectedCallback() {}
 }

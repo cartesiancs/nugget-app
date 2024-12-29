@@ -453,7 +453,7 @@ export class ElementControl extends LitElement {
       priority: this.getNowPriority(),
       startTime: 0,
       duration: 1000,
-      text: "텍스트",
+      text: "TITLE",
       textcolor: "#ffffff",
       fontsize: 52,
       fontpath: "default",
@@ -464,7 +464,48 @@ export class ElementControl extends LitElement {
       rotation: 0,
       localpath: "/TEXTELEMENT",
       filetype: "text",
-      height: 52,
+      height: 56,
+      width: 500,
+      widthInner: 200,
+      animation: {
+        position: {
+          isActivate: false,
+          points: [],
+          allpoints: [[], []],
+        },
+        opacity: {
+          isActivate: false,
+          points: [],
+          allpoints: [[]],
+        },
+      },
+    };
+
+    this.timelineState.patchTimeline(this.timeline);
+
+    // this.showText(elementId);
+    // this.elementTimeline.addElementBar(elementId);
+  }
+
+  addCustomText(font: { path: string; name: string }) {
+    const elementId = this.generateUUID();
+
+    this.timeline[elementId] = {
+      priority: this.getNowPriority(),
+      startTime: 0,
+      duration: 1000,
+      text: "TITLE",
+      textcolor: "#ffffff",
+      fontsize: 52,
+      fontpath: font.path,
+      fontname: font.name,
+      fontweight: "medium",
+      fonttype: "otf",
+      location: { x: 0, y: 0 },
+      rotation: 0,
+      localpath: "/TEXTELEMENT",
+      filetype: "text",
+      height: 56,
       width: 500,
       widthInner: 200,
       animation: {

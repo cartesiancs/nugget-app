@@ -42,7 +42,7 @@ export class OptionText extends LitElement {
           aria-event="text"
           type="text"
           class="form-control bg-default text-light"
-          value="텍스트"
+          value="TITLE"
         />
       </div>
 
@@ -133,8 +133,8 @@ export class OptionText extends LitElement {
   }
 
   handleChangeText(e) {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
 
     const elementControl = document.querySelector("element-control");
     const text: any = this.querySelector("input[aria-event='text'");

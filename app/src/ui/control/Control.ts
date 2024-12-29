@@ -4,6 +4,9 @@ import "./ControlSetting";
 import "./ControlText";
 import "./ControlExtension";
 import "./ControlRender";
+import "./ControlUtilities";
+import "./ControlFilter";
+
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { TimelineController } from "../../controllers/timeline";
 
@@ -124,6 +127,28 @@ export class Control extends LitElement {
               <button
                 class="btn-nav"
                 data-bs-toggle="pill"
+                data-bs-target="#nav-filter"
+                type="button"
+                role="tab"
+                aria-selected="false"
+              >
+                <span class="material-symbols-outlined"> library_books</span>
+              </button>
+
+              <button
+                class="btn-nav"
+                data-bs-toggle="pill"
+                data-bs-target="#nav-util"
+                type="button"
+                role="tab"
+                aria-selected="false"
+              >
+                <span class="material-symbols-outlined"> page_info</span>
+              </button>
+
+              <button
+                class="btn-nav"
+                data-bs-toggle="pill"
                 data-bs-target="#nav-option"
                 type="button"
                 role="tab"
@@ -166,6 +191,14 @@ export class Control extends LitElement {
 
               <div class="tab-pane fade" id="nav-option" role="tabpanel">
                 <control-ui-extension />
+              </div>
+
+              <div class="tab-pane fade" id="nav-util" role="tabpanel">
+                <control-ui-util />
+              </div>
+
+              <div class="tab-pane fade" id="nav-filter" role="tabpanel">
+                <control-ui-filter />
               </div>
 
               <div class="tab-pane fade" id="nav-output" role="tabpanel">

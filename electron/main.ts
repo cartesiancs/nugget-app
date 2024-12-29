@@ -122,6 +122,8 @@ ipcMain.on("app:restart", ipcApp.restart);
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);
 ipcMain.handle("font:getLists", fontLib.getFontList);
+ipcMain.handle("font:getLocalFontLists", fontLib.getLocalFontList);
+
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
 

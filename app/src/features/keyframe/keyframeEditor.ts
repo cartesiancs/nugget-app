@@ -440,7 +440,7 @@ export class KeyframeEditor extends LitElement {
   addPoint({ x, y, line }) {
     this.insertPointInMiddle({
       x: Math.round(x),
-      y: Math.round(y) - this.verticalScroll,
+      y: Math.round(y),
       line: line,
     });
 
@@ -602,7 +602,7 @@ export class KeyframeEditor extends LitElement {
       pxToMilliseconds(e.offsetX, this.timelineRange) +
       pxToMilliseconds(this.timelineScroll, this.timelineRange) -
       this.timeline[this.elementId].startTime;
-    const py = e.offsetY;
+    const py = e.offsetY - this.verticalScroll;
     const lineToAlpha = this.selectLine == 0 ? "x" : "y";
 
     //console.log(px);
@@ -629,7 +629,7 @@ export class KeyframeEditor extends LitElement {
       pxToMilliseconds(e.offsetX, this.timelineRange) +
       pxToMilliseconds(this.timelineScroll, this.timelineRange) -
       this.timeline[this.elementId].startTime;
-    const py = e.offsetY;
+    const py = e.offsetY - this.verticalScroll;
 
     for (
       let index = 0;

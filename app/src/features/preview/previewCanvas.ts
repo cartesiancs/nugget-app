@@ -266,9 +266,10 @@ export class PreviewCanvss extends LitElement {
               if (this.isEditText) {
                 continue;
               }
+
               ctx.fillStyle = this.timeline[elementId].textcolor as string;
               ctx.lineWidth = 0;
-              ctx.font = `${this.timeline[elementId].fontsize}px Arial`;
+              ctx.font = `${this.timeline[elementId].fontsize}px ${this.timeline[elementId].fontname}`;
               ctx.fillText(
                 this.timeline[elementId].text as string,
                 x,

@@ -5,11 +5,14 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 @customElement("option-text")
 export class OptionText extends LitElement {
   elementId: string;
+  fontList: any[];
 
   constructor() {
     super();
 
     this.elementId = "";
+    this.fontList = [];
+    this.insertFontLists();
   }
 
   createRenderRoot() {
@@ -18,6 +21,19 @@ export class OptionText extends LitElement {
 
   render() {
     this.hide();
+
+    const fontListTemplate: any = [];
+
+    for (let index = 0; index < this.fontList.length; index++) {
+      const font = this.fontList[index];
+
+      fontListTemplate.push(html` <option
+        value-index="${font.index}"
+        value="${font.value}"
+      >
+        ${font.name}
+      </option>`);
+    }
 
     return html` <div class="mb-2">
         <label class="form-label text-light">텍스트</label>
@@ -55,9 +71,17 @@ export class OptionText extends LitElement {
 
       <div class="mb-2">
         <label class="form-label text-light">폰트</label>
-        <select-font
-          onChangeSelect=${this.handleChangeTextFont.bind(this)}
-        ></select-font>
+        <select
+          @change=${this.handleChangeTextFont}
+          ref="lists"
+          id="fontSelect"
+          class="form-select form-control bg-default text-light"
+          aria-label="Default select example"
+        >
+          <option selected>Select</option>
+          ${fontListTemplate}
+        </select>
+        <style ref="fontStyles"></style>
       </div>`;
   }
 
@@ -72,6 +96,24 @@ export class OptionText extends LitElement {
   setElementId({ elementId }) {
     this.elementId = elementId;
     this.resetValue();
+  }
+
+  insertFontLists() {
+    window.electronAPI.req.font.getLists().then((result) => {
+      if (result.status == 0) {
+        return 0;
+      }
+
+      for (let index = 0; index < result.fonts.length; index++) {
+        const font = result.fonts[index];
+        this.fontList.push({
+          index: index + 1,
+          value: font.path,
+          name: font.name,
+        });
+        this.requestUpdate();
+      }
+    });
   }
 
   resetValue() {
@@ -90,7 +132,10 @@ export class OptionText extends LitElement {
     elementControl.changeTextColor({ elementId: this.elementId, color: color });
   }
 
-  handleChangeText() {
+  handleChangeText(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
     const elementControl = document.querySelector("element-control");
     const text: any = this.querySelector("input[aria-event='text'");
 
@@ -110,15 +155,29 @@ export class OptionText extends LitElement {
     elementControl.changeTextSize({ elementId: this.elementId, size: size });
   }
 
-  handleChangeTextFont() {
+  handleChangeTextFont(e) {
     const selectFont: any = this.querySelector("select-font");
     const elementControl = document.querySelector("element-control");
 
+    const selectElement = document.querySelector("#fontSelect");
+
+    // 선택된 값 가져오기
+    const selectedValue = selectElement.value;
+
+    const value = selectedValue;
+
+    const selectedText =
+      selectElement.options[selectElement.selectedIndex].text;
+
+    const type = value.split("/")[value.split("/").length - 1].split(".")[1];
+
+    console.log(value, selectedText, type);
+
     elementControl.changeTextFont({
       elementId: this.elementId,
-      fontPath: selectFont.path,
-      fontType: selectFont.type,
-      fontName: selectFont.fontname,
+      fontPath: value,
+      fontType: type,
+      fontName: selectedText,
     });
   }
 }

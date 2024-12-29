@@ -752,6 +752,7 @@ export class ElementControl extends LitElement {
 
     this.timeline[elementId].fontpath = fontPath;
     this.timeline[elementId].fontname = fontName;
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   changeTimelineRange() {

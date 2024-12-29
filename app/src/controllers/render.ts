@@ -206,7 +206,8 @@ const prerender: any = {
 
     context.fillStyle = elements.textcolor;
     context.lineWidth = 0;
-    context.font = `${elements.fontsize}px Arial`;
+    context.font = `${elements.fontsize}px ${elements.fontname}`;
+
     context.fillText(
       elements.text,
       elements.location.x,

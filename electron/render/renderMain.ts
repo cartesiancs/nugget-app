@@ -324,7 +324,7 @@ export const renderFilter = {
       outputs: `tmp`,
     });
 
-    object.filter.push(`[tmp]fps=60, setpts=N/(60*TB)[tmp]`);
+    // object.filter.push(`[tmp]fps=60, setpts=N/(60*TB)[tmp]`);
 
     elementCounts.video += 1;
 

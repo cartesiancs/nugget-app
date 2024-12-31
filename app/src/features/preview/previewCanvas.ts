@@ -279,8 +279,9 @@ export class PreviewCanvss extends LitElement {
           }
 
           if (this.isMove) {
-            if (this.isAlign({ x: x, y: y, w: w, h: h })) {
-              this.drawAlign(ctx);
+            const checkAlign = this.isAlign({ x: x, y: y, w: w, h: h });
+            if (checkAlign) {
+              this.drawAlign(ctx, checkAlign.direction);
             }
           }
 
@@ -317,75 +318,107 @@ export class PreviewCanvss extends LitElement {
     }
   }
 
-  drawAlign(ctx) {
+  drawAlign(ctx, direction) {
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(this.renderOption.previewSize.w, 0);
-    ctx.lineTo(
-      this.renderOption.previewSize.w,
-      this.renderOption.previewSize.h,
-    );
-    ctx.lineTo(0, this.renderOption.previewSize.h);
-    ctx.lineTo(0, 0);
-    ctx.stroke();
+    if (direction.includes("top")) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(this.renderOption.previewSize.w, 0);
+      ctx.stroke();
+    }
 
-    ctx.beginPath();
-    ctx.moveTo(this.renderOption.previewSize.w / 2, 0);
-    ctx.lineTo(
-      this.renderOption.previewSize.w / 2,
-      this.renderOption.previewSize.h,
-    );
-    ctx.stroke();
+    if (direction.includes("left")) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, this.renderOption.previewSize.h);
+      ctx.stroke();
+    }
 
-    ctx.beginPath();
-    ctx.moveTo(0, this.renderOption.previewSize.h / 2);
-    ctx.lineTo(
-      this.renderOption.previewSize.w,
-      this.renderOption.previewSize.h / 2,
-    );
-    ctx.stroke();
+    if (direction.includes("right")) {
+      ctx.beginPath();
+      ctx.moveTo(this.renderOption.previewSize.w, 0);
+      ctx.lineTo(
+        this.renderOption.previewSize.w,
+        this.renderOption.previewSize.h,
+      );
+      ctx.stroke();
+    }
+
+    if (direction.includes("bottom")) {
+      ctx.beginPath();
+      ctx.moveTo(0, this.renderOption.previewSize.h);
+      ctx.lineTo(
+        this.renderOption.previewSize.w,
+        this.renderOption.previewSize.h,
+      );
+      ctx.stroke();
+    }
+
+    if (direction.includes("horizontal")) {
+      ctx.beginPath();
+      ctx.moveTo(0, this.renderOption.previewSize.h / 2);
+      ctx.lineTo(
+        this.renderOption.previewSize.w,
+        this.renderOption.previewSize.h / 2,
+      );
+      ctx.stroke();
+    }
+    if (direction.includes("vertical")) {
+      ctx.beginPath();
+      ctx.moveTo(this.renderOption.previewSize.w / 2, 0);
+      ctx.lineTo(
+        this.renderOption.previewSize.w / 2,
+        this.renderOption.previewSize.h,
+      );
+      ctx.stroke();
+    }
   }
 
   isAlign({ x, y, w, h }) {
     const padding = 20;
     let isChange = false;
+    let direction: string[] = [];
     let nx = x;
     let ny = y;
 
     const cw = this.renderOption.previewSize.w;
     const ch = this.renderOption.previewSize.h;
 
-    console.log(x, y, cw);
     // top
     if (y < 0 + padding && y > 0 - padding) {
       ny = 0;
+      direction.push("top");
       isChange = true;
     }
 
     if (x < 0 + padding && x > 0 - padding) {
       nx = 0;
+      direction.push("left");
       isChange = true;
     }
 
     if (x + w < cw + padding && x + w > cw - padding) {
       nx = cw - w;
+      direction.push("right");
       isChange = true;
     }
 
     if (y + h < ch + padding && y + h > ch - padding) {
       ny = ch - h;
+      direction.push("bottom");
       isChange = true;
     }
 
     if (x + w / 2 < cw / 2 + padding && x + w / 2 > cw / 2 - padding) {
       nx = cw / 2 - w / 2;
+      direction.push("vertical");
       isChange = true;
     }
 
     if (y + h / 2 < ch / 2 + padding && y + h / 2 > ch / 2 - padding) {
       ny = ch / 2 - h / 2;
+      direction.push("horizontal");
       isChange = true;
     }
 
@@ -393,6 +426,7 @@ export class PreviewCanvss extends LitElement {
       return {
         x: nx,
         y: ny,
+        direction: direction,
       };
     } else {
       return undefined;

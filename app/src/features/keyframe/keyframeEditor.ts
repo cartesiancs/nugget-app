@@ -152,7 +152,7 @@ export class KeyframeEditor extends LitElement {
           true;
 
         return html` <div>
-          <div class="btn-group" role="group" id="timelineOptionLineEditor">
+          <div class="btn-group p-2" role="group" id="timelineOptionLineEditor">
             <button
               line="0"
               @click=${() => this.changeLineEditor("0")}
@@ -161,7 +161,7 @@ export class KeyframeEditor extends LitElement {
                 ? "btn-primary"
                 : "btn-secondary"} btn-sm"
             >
-              Line0
+              x
             </button>
 
             <button
@@ -172,7 +172,7 @@ export class KeyframeEditor extends LitElement {
                 ? "btn-primary"
                 : "btn-secondary"} btn-sm"
             >
-              Line1
+              y
             </button>
           </div>
           <canvas

@@ -21,11 +21,15 @@ export class ElementTimelineBottomScroll extends LitElement {
   resize = this.uiState.resize;
   isMove: boolean;
   left: number;
+  width: number;
+  mouseLeft: number;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineRange = state.range;
       this.timelineScroll = state.scroll;
+      this.left = this.timelineScroll / this.timelineRange;
+      this.requestUpdate();
     });
 
     uiStore.subscribe((state) => {
@@ -38,13 +42,16 @@ export class ElementTimelineBottomScroll extends LitElement {
   constructor() {
     super();
     this.isMove = false;
+    this.mouseLeft = 0;
     this.left = 0;
+    this.width = 100;
 
     document.addEventListener("mousemove", this._handleMouseMove.bind(this));
     document.addEventListener("mouseup", this._handleMouseUp.bind(this));
   }
 
   render() {
+    this.setWidth();
     return html` <style>
         .timeline-bottom-scroll {
           width: 100%;
@@ -61,7 +68,7 @@ export class ElementTimelineBottomScroll extends LitElement {
           width: 20px;
           height: 12px;
           position: relative;
-          background-color: #363b40;
+          background-color: #202225;
           backdrop-filter: blur(8px);
           position: fixed;
           bottom: 0;
@@ -74,9 +81,22 @@ export class ElementTimelineBottomScroll extends LitElement {
         <div
           @mousedown=${this._handleClickThumb}
           class="timeline-bottom-scroll-thumb"
-          style="left: ${this.left}px;"
+          style="left: ${this.left}px; width: ${this.width}%;"
         ></div>
       </div>`;
+  }
+
+  setWidth() {
+    const timelineCanvas = document.querySelector("#elementTimelineCanvasRef");
+    const projectDuration = document.querySelector("#projectDuration").value;
+    const timelineRange = this.timelineRange;
+    const timeMagnification = timelineRange / 4;
+
+    const end = ((projectDuration * 1000) / 5) * timeMagnification;
+
+    console.log(100 / (end / timelineCanvas.offsetWidth));
+
+    this.width = 100 / (end / timelineCanvas.offsetWidth);
   }
 
   _handleMouseUp(e) {
@@ -86,7 +106,8 @@ export class ElementTimelineBottomScroll extends LitElement {
   _handleMouseMove(e) {
     if (!this.isMove) return false;
 
-    const x = e.clientX - this.resize.timelineVertical.leftOption;
+    const x =
+      e.clientX - this.resize.timelineVertical.leftOption - this.mouseLeft;
 
     if (x <= 0) {
       this.left = 0;
@@ -101,6 +122,7 @@ export class ElementTimelineBottomScroll extends LitElement {
   }
 
   _handleClickThumb(e) {
+    this.mouseLeft = e.clientX - this.resize.timelineVertical.leftOption;
     this.isMove = true;
   }
 }

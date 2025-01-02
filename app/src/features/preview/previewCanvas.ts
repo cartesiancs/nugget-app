@@ -278,14 +278,14 @@ export class PreviewCanvss extends LitElement {
             } catch (error) {}
           }
 
-          if (this.isMove) {
-            const checkAlign = this.isAlign({ x: x, y: y, w: w, h: h });
-            if (checkAlign) {
-              this.drawAlign(ctx, checkAlign.direction);
-            }
-          }
-
           if (this.activeElementId == elementId) {
+            if (this.isMove) {
+              const checkAlign = this.isAlign({ x: x, y: y, w: w, h: h });
+              if (checkAlign) {
+                this.drawAlign(ctx, checkAlign.direction);
+              }
+            }
+
             const padding = 10;
             ctx.lineWidth = 3;
             ctx.strokeStyle = "#ffffff";
@@ -716,6 +716,17 @@ export class PreviewCanvss extends LitElement {
           const w = this.timeline[elementId].width;
           const h = this.timeline[elementId].height;
           const fileType = this.timeline[elementId].filetype;
+          const startTime = this.timeline[elementId].startTime as number;
+          const duration = this.timeline[elementId].duration as number;
+
+          if (
+            !(
+              this.timelineCursor >= startTime &&
+              this.timelineCursor < startTime + duration
+            )
+          ) {
+            continue;
+          }
 
           const collide = this.collisionCheck({
             x: x,
@@ -783,8 +794,6 @@ export class PreviewCanvss extends LitElement {
         location.x = alignLocation?.x;
         location.y = alignLocation?.y;
       }
-
-      console.log(alignLocation);
 
       this.timelineState.patchTimeline(this.timeline);
     }
@@ -871,65 +880,85 @@ export class PreviewCanvss extends LitElement {
       } else if (this.moveType == "stretchS") {
         moveS();
       } else if (this.moveType == "stretchNW") {
-        const ratio = this.timeline[this.activeElementId].ratio;
-        const intr = this.getIntersection({
-          m: 1,
-          a1: this.elementOrigin.x,
-          b1: this.elementOrigin.y,
-          a2: this.elementOrigin.x + dx,
-          b2: this.elementOrigin.y + dy,
-        });
+        if (filetype == "text") {
+          moveN();
+          moveW();
+        } else {
+          const ratio = this.timeline[this.activeElementId].ratio;
+          const intr = this.getIntersection({
+            m: 1,
+            a1: this.elementOrigin.x,
+            b1: this.elementOrigin.y,
+            a2: this.elementOrigin.x + dx,
+            b2: this.elementOrigin.y + dy,
+          });
 
-        this.timeline[this.activeElementId].width =
-          this.elementOrigin.w + (this.elementOrigin.x - intr.x);
-        this.timeline[this.activeElementId].height =
-          (this.elementOrigin.w + (this.elementOrigin.x - intr.x)) / ratio;
-        this.timeline[this.activeElementId].location.y =
-          this.elementOrigin.y +
-          (this.elementOrigin.h - this.timeline[this.activeElementId].height);
+          this.timeline[this.activeElementId].width =
+            this.elementOrigin.w + (this.elementOrigin.x - intr.x);
+          this.timeline[this.activeElementId].height =
+            (this.elementOrigin.w + (this.elementOrigin.x - intr.x)) / ratio;
+          this.timeline[this.activeElementId].location.y =
+            this.elementOrigin.y +
+            (this.elementOrigin.h - this.timeline[this.activeElementId].height);
 
-        this.timeline[this.activeElementId].location.x = intr.x;
+          this.timeline[this.activeElementId].location.x = intr.x;
+        }
       } else if (this.moveType == "stretchSW") {
-        const ratio = this.timeline[this.activeElementId].ratio;
-        const intr = this.getIntersection({
-          m: -1,
-          a1: this.elementOrigin.x,
-          b1: this.elementOrigin.h,
-          a2: this.elementOrigin.x + dx,
-          b2: this.elementOrigin.h + dy,
-        });
+        if (filetype == "text") {
+          moveS();
+          moveW();
+        } else {
+          const ratio = this.timeline[this.activeElementId].ratio;
+          const intr = this.getIntersection({
+            m: -1,
+            a1: this.elementOrigin.x,
+            b1: this.elementOrigin.h,
+            a2: this.elementOrigin.x + dx,
+            b2: this.elementOrigin.h + dy,
+          });
 
-        this.timeline[this.activeElementId].height = intr.y;
-        this.timeline[this.activeElementId].width = intr.y * ratio;
+          this.timeline[this.activeElementId].height = intr.y;
+          this.timeline[this.activeElementId].width = intr.y * ratio;
 
-        this.timeline[this.activeElementId].location.x =
-          this.elementOrigin.x - (intr.y * ratio - this.elementOrigin.w);
+          this.timeline[this.activeElementId].location.x =
+            this.elementOrigin.x - (intr.y * ratio - this.elementOrigin.w);
+        }
       } else if (this.moveType == "stretchSE") {
-        const ratio = this.timeline[this.activeElementId].ratio;
-        const intr = this.getIntersection({
-          m: 1,
-          a1: this.elementOrigin.w,
-          b1: this.elementOrigin.h,
-          a2: this.elementOrigin.w + dx,
-          b2: this.elementOrigin.h + dy,
-        });
+        if (filetype == "text") {
+          moveS();
+          moveE();
+        } else {
+          const ratio = this.timeline[this.activeElementId].ratio;
+          const intr = this.getIntersection({
+            m: 1,
+            a1: this.elementOrigin.w,
+            b1: this.elementOrigin.h,
+            a2: this.elementOrigin.w + dx,
+            b2: this.elementOrigin.h + dy,
+          });
 
-        this.timeline[this.activeElementId].height = intr.y;
-        this.timeline[this.activeElementId].width = intr.y * ratio;
+          this.timeline[this.activeElementId].height = intr.y;
+          this.timeline[this.activeElementId].width = intr.y * ratio;
+        }
       } else if (this.moveType == "stretchNE") {
-        const ratio = this.timeline[this.activeElementId].ratio;
-        const intr = this.getIntersection({
-          m: -1,
-          a1: this.elementOrigin.w,
-          b1: this.elementOrigin.y,
-          a2: this.elementOrigin.w + dx,
-          b2: this.elementOrigin.y + dy,
-        });
+        if (filetype == "text") {
+          moveN();
+          moveE();
+        } else {
+          const ratio = this.timeline[this.activeElementId].ratio;
+          const intr = this.getIntersection({
+            m: -1,
+            a1: this.elementOrigin.w,
+            b1: this.elementOrigin.y,
+            a2: this.elementOrigin.w + dx,
+            b2: this.elementOrigin.y + dy,
+          });
 
-        this.timeline[this.activeElementId].width = intr.x;
-        this.timeline[this.activeElementId].height = intr.x / ratio;
-        this.timeline[this.activeElementId].location.y =
-          this.elementOrigin.y - (intr.x / ratio - this.elementOrigin.h);
+          this.timeline[this.activeElementId].width = intr.x;
+          this.timeline[this.activeElementId].height = intr.x / ratio;
+          this.timeline[this.activeElementId].location.y =
+            this.elementOrigin.y - (intr.x / ratio - this.elementOrigin.h);
+        }
       }
 
       this.timelineState.patchTimeline(this.timeline);

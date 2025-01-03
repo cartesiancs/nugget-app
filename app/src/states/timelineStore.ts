@@ -1,6 +1,8 @@
 import { createStore } from "zustand/vanilla";
 import { Timeline } from "../@types/timeline";
 
+type TimelineCursorType = "pointer" | "text";
+
 export interface ITimelineStore {
   timeline: Timeline;
   range: number;
@@ -9,6 +11,7 @@ export interface ITimelineStore {
   canvasWidth: number;
   control: {
     isPlay: boolean;
+    cursorType: TimelineCursorType;
   };
 
   addTimeline: (key: string, timeline: any) => void;
@@ -24,6 +27,7 @@ export interface ITimelineStore {
   decreaseCursor: (dt: number) => void;
   switchPlay: () => void;
   setPlay: (isPlay: boolean) => void;
+  setCursorType: (cursorType: TimelineCursorType) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
@@ -34,6 +38,7 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   canvasWidth: 500,
   control: {
     isPlay: false,
+    cursorType: "pointer",
   },
 
   addTimeline: (key: string, timeline: any) =>
@@ -73,8 +78,15 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     set((state) => ({ cursor: state.cursor - dt })),
 
   switchPlay: () =>
-    set((state) => ({ control: { isPlay: !state.control.isPlay } })),
+    set((state) => ({
+      control: { ...state.control, ["isPlay"]: !state.control.isPlay },
+    })),
 
   setPlay: (isPlay: boolean) =>
-    set((state) => ({ control: { isPlay: isPlay } })),
+    set((state) => ({ control: { ...state.control, ["isPlay"]: isPlay } })),
+
+  setCursorType: (cursorType: TimelineCursorType) =>
+    set((state) => ({
+      control: { ...state.control, ["cursorType"]: cursorType },
+    })),
 }));

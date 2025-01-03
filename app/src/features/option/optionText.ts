@@ -7,6 +7,9 @@ export class OptionText extends LitElement {
   elementId: string;
   fontList: any[];
 
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
   constructor() {
     super();
 
@@ -38,7 +41,9 @@ export class OptionText extends LitElement {
     return html` <div class="mb-2">
         <label class="form-label text-light">텍스트</label>
         <input
+          @click=${this.handleClickTextForm}
           @input=${this.handleChangeText}
+          @change=${this.handleChangeText}
           aria-event="text"
           type="text"
           class="form-control bg-default text-light"
@@ -125,6 +130,10 @@ export class OptionText extends LitElement {
     fontSize.value = timeline[this.elementId].fontsize;
   }
 
+  handleClickTextForm() {
+    this.timelineState.setCursorType("text");
+  }
+
   handleChangeTextColor() {
     const elementControl = document.querySelector("element-control");
     const fontColor: any = this.querySelector("input[aria-event='font-color'");
@@ -133,8 +142,8 @@ export class OptionText extends LitElement {
   }
 
   handleChangeText(e) {
-    e.preventDefault();
-    e.stopPropagation();
+    // e.preventDefault();
+    // e.stopPropagation();
 
     const elementControl = document.querySelector("element-control");
     const text: any = this.querySelector("input[aria-event='text'");

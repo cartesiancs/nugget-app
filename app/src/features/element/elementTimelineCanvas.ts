@@ -874,6 +874,8 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleMouseDown(e) {
     try {
+      this.timelineState.setCursorType("pointer");
+
       const x = e.offsetX;
       const y = e.offsetY;
 

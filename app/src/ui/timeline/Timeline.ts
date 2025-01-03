@@ -31,10 +31,14 @@ export class Timeline extends LitElement {
   @property()
   isPlay: boolean = this.timelineState.control.isPlay;
 
+  @property()
+  control = this.timelineState.control;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineCursor = state.cursor;
       this.isPlay = state.control.isPlay;
+      this.control = state.control;
     });
 
     uiStore.subscribe((state) => {
@@ -53,12 +57,19 @@ export class Timeline extends LitElement {
   }
 
   play() {
+    if (this.control.cursorType != "pointer") {
+      return false;
+    }
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.play();
     this.timelineState.setPlay(true);
   }
 
   stop() {
+    if (this.control.cursorType != "pointer") {
+      return false;
+    }
+
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.stop();
     this.timelineState.setPlay(false);
@@ -84,7 +95,7 @@ export class Timeline extends LitElement {
 
   _handleKeydown(event) {
     if (event.keyCode == 32) {
-      event.preventDefault();
+      //event.preventDefault();
       // Space
       if (this.isPlay) {
         this.stop();

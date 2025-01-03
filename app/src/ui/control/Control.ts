@@ -6,6 +6,7 @@ import "./ControlExtension";
 import "./ControlRender";
 import "./ControlUtilities";
 import "./ControlFilter";
+import "../../features/preview/previewTopBar";
 
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { TimelineController } from "../../controllers/timeline";
@@ -212,7 +213,7 @@ export class Control extends LitElement {
       <!-- PREVIEW -->
       <div
         id="split_col_2"
-        class="h-100 position-relative d-flex align-items-center justify-content-center"
+        class="h-100 p-0"
         style="width: ${this.resize.horizontal.preview}%;"
       >
         <div
@@ -220,12 +221,19 @@ export class Control extends LitElement {
           @mousedown=${this._handleClickResizePreview}
         ></div>
 
-        <div id="videobox">
-          <div class="d-flex justify-content-center">
-            <div id="video" class="video">
-              <preview-canvas></preview-canvas>
-              <element-control></element-control>
-              <drag-alignment-guide></drag-alignment-guide>
+        <preview-top-bar></preview-top-bar>
+
+        <div
+          style="height: calc(100% - 2rem);"
+          class="position-relative d-flex align-items-center justify-content-center"
+        >
+          <div id="videobox">
+            <div class="d-flex justify-content-center">
+              <div id="video" class="video">
+                <preview-canvas></preview-canvas>
+                <element-control></element-control>
+                <drag-alignment-guide></drag-alignment-guide>
+              </div>
             </div>
           </div>
         </div>

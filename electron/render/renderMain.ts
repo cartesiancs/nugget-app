@@ -278,6 +278,8 @@ export const renderFilter = {
         }
       }
 
+      log.info("[render] Log aaa");
+
       options.startTime =
         options.startTime + object.element.trim.startTime / 1000;
       options.endTime =
@@ -307,9 +309,10 @@ export const renderFilter = {
       );
     }
 
-    object.filter.push(
-      `[image${elementCounts.video}]fps=60, setpts=N/(60*TB)[image${elementCounts.video}]`,
-    );
+    // 해당 코드를 삽입하면 itsoffset이 동작하지 못함. 쓰지 말 것.
+    // object.filter.push(
+    //   `[image${elementCounts.video}]fps=60, setpts=N/(60*TB)[image${elementCounts.video}]`,
+    // );
 
     //:ow=rotw(${options.rotationRadian}):oh=roth(${options.rotationRadian})
 

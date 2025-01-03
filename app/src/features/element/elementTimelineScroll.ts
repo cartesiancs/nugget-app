@@ -94,8 +94,6 @@ export class ElementTimelineBottomScroll extends LitElement {
 
     const end = ((projectDuration * 1000) / 5) * timeMagnification;
 
-    console.log(100 / (end / timelineCanvas.offsetWidth));
-
     this.width = 100 / (end / timelineCanvas.offsetWidth);
   }
 

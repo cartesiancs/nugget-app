@@ -1018,6 +1018,8 @@ export class PreviewCanvss extends LitElement {
       class="preview"
       style="width: 100%; max-height: calc(${this
         .canvasMaxHeight}px - 16px); cursor: ${this.cursorType};"
+      width="1920"
+      height="1080"
       onclick="${this.handleClickCanvas()}"
       @mousedown=${this._handleMouseDown}
       @mousemove=${this._handleMouseMove}

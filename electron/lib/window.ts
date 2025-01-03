@@ -44,6 +44,7 @@ const window = {
       frame: false,
 
       trafficLightPosition: { x: 10, y: 10 },
+      ...(process.platform !== "darwin" ? { titleBarOverlay: true } : {}),
     });
 
     newWindow.loadFile(indexFile);

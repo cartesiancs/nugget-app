@@ -159,9 +159,6 @@ export class elementTimelineCanvas extends LitElement {
     const timeMagnification = timelineRange / 4;
     const convertPixel = (ms / 5) * timeMagnification;
     const result = Number(convertPixel.toFixed(0));
-    if (result <= 0) {
-      return 0;
-    }
 
     return result;
   }
@@ -255,13 +252,6 @@ export class elementTimelineCanvas extends LitElement {
       "static"
     ) {
       let targetElementStartTime = curserLeft - selected[changedUUID].startTime;
-      console.log(
-        curserLeft,
-        selected[changedUUID].startTime,
-        selected[changedUUID].duration,
-        timelineRange,
-        timelineCursor,
-      );
 
       selected[changedUUID].startTime += targetElementStartTime;
       selected[changedUUID].duration =
@@ -304,6 +294,27 @@ export class elementTimelineCanvas extends LitElement {
     ctx.beginPath();
     ctx.rect(end, 0, 2, height);
     ctx.fill();
+  }
+
+  drawActive(ctx, elementId, left, top, width, height) {
+    const activeHeight = 2;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.rect(left, top + height - activeHeight, width, activeHeight);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(left, top, width, activeHeight);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(left, top, activeHeight, height);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(left + width - activeHeight, top, activeHeight, height);
+    ctx.fill();
+    ctx.fillStyle = this.timelineColor[elementId];
+    ctx.strokeStyle = this.timelineColor[elementId];
+    ctx.lineWidth = 0;
   }
 
   drawCanvas() {
@@ -349,15 +360,7 @@ export class elementTimelineCanvas extends LitElement {
             ctx.stroke();
 
             if (this.targetId == elementId) {
-              const activeHeight = 4;
-
-              ctx.fillStyle = "#ffffff";
-              ctx.beginPath();
-              ctx.rect(left, top + height - activeHeight, width, activeHeight);
-              ctx.fill();
-              ctx.fillStyle = this.timelineColor[elementId];
-              ctx.strokeStyle = this.timelineColor[elementId];
-              ctx.lineWidth = 0;
+              this.drawActive(ctx, elementId, left, top, width, height);
             }
           } else if (elementType == "dynamic") {
             const startTime = this.millisecondsToPx(
@@ -379,15 +382,7 @@ export class elementTimelineCanvas extends LitElement {
             ctx.fill();
 
             if (this.targetId == elementId) {
-              const activeHeight = 4;
-
-              ctx.fillStyle = "#ffffff";
-              ctx.beginPath();
-              ctx.rect(left, top + height - activeHeight, width, activeHeight);
-              ctx.fill();
-              ctx.fillStyle = this.timelineColor[elementId];
-              ctx.strokeStyle = this.timelineColor[elementId];
-              ctx.lineWidth = 0;
+              this.drawActive(ctx, elementId, left, top, width, height);
             }
 
             const darkenRate = 0.8;

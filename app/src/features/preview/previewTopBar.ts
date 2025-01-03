@@ -35,6 +35,8 @@ export class PreviewTopBar extends LitElement {
           gap: 0.5rem;
           height: 2rem;
           border-bottom: 0.05rem #3a3f44 solid;
+          align-items: center;
+          justify-content: space-between;
         }
 
         .timeline-cursor-button {
@@ -43,22 +45,25 @@ export class PreviewTopBar extends LitElement {
       </style>
 
       <div class="timeline-cursor-buttons bg-darker">
-        <button
-          @click=${() => this._handleClickButton("pointer")}
-          class="btn btn-sm ${this.control.cursorType == "pointer"
-            ? "btn-primary"
-            : "btn-default"} text-light m-0"
-        >
-          P
-        </button>
-        <button
-          @click=${() => this._handleClickButton("text")}
-          class="btn btn-sm ${this.control.cursorType == "text"
-            ? "btn-primary"
-            : "btn-default"} text-light m-0"
-        >
-          T
-        </button>
+        <div></div>
+        <div class="d-flex col gap-2 justify-content-end p-1">
+          <button
+            @click=${() => this._handleClickButton("pointer")}
+            class="btn btn-xxs ${this.control.cursorType == "pointer"
+              ? "btn-primary"
+              : "btn-default"} text-light m-0"
+          >
+            <span class="material-symbols-outlined icon-xs"> near_me </span>
+          </button>
+          <button
+            @click=${() => this._handleClickButton("text")}
+            class="btn btn-xxs ${this.control.cursorType == "text"
+              ? "btn-primary"
+              : "btn-default"} text-light m-0"
+          >
+            <span class="material-symbols-outlined icon-xs"> text_fields </span>
+          </button>
+        </div>
       </div>
     `;
   }

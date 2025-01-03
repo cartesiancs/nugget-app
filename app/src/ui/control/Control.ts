@@ -87,7 +87,7 @@ export class Control extends LitElement {
           <div class="d-flex align-items-start h-100">
             <div
               id="sidebar"
-              class="nav flex-column nav-pills bg-dark h-100 pt-1"
+              class="nav sidebar-nav flex-column nav-pills bg-dark h-100 pt-1"
               style="width: 2.5rem;"
               role="tablist"
               aria-orientation="vertical"

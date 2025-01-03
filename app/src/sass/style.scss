@@ -475,3 +475,13 @@ element-timeline-scroll {
 .option-window {
   border-left: 0.05rem #3a3f44 solid;
 }
+
+.btn-xxs {
+  padding: 0.2rem 0.4rem 0.2rem 0.4rem !important;
+  height: fit-content;
+}
+
+.sidebar-nav {
+  flex-wrap: nowrap !important;
+  overflow-y: scroll;
+}

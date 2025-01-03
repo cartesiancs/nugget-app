@@ -44,7 +44,14 @@ const window = {
       frame: false,
 
       trafficLightPosition: { x: 10, y: 10 },
-      ...(process.platform !== "darwin" ? { titleBarOverlay: true } : {}),
+      ...(process.platform !== "darwin"
+        ? {
+            titleBarOverlay: {
+              color: "#0f1012",
+              symbolColor: "#ffffff",
+            },
+          }
+        : {}),
     });
 
     newWindow.loadFile(indexFile);

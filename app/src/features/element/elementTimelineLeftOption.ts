@@ -36,7 +36,8 @@ export class ElementTimelineLeftOption extends LitElement {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
 
-      this.drawCanvas();
+      //this.drawCanvas();
+      this.requestUpdate();
     });
 
     uiStore.subscribe((state) => {
@@ -205,6 +206,24 @@ export class ElementTimelineLeftOption extends LitElement {
     );
   }
 
+  switchActiveAnimationPanel(elementId) {
+    const isActive = this.isActiveAnimationPanel(elementId);
+
+    if (isActive) {
+      this.deactivateAnimationPanel(elementId);
+    } else {
+      this.activateAnimationPanel(elementId);
+    }
+
+    this.requestUpdate();
+  }
+
+  activePositionAnimation(elementId) {
+    document
+      .querySelector("element-timeline-canvas")
+      .openAnimationPanel(elementId);
+  }
+
   _handleMouseMove(e) {
     const elementControlComponent = document.querySelector("element-control");
 
@@ -288,14 +307,106 @@ export class ElementTimelineLeftOption extends LitElement {
   }
 
   protected render(): unknown {
+    const dom: any = [];
+
+    for (const key in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
+        const element = this.timeline[key];
+        let splitedFilepath = this.timeline[key].localpath.split("/");
+        let text = splitedFilepath[splitedFilepath.length - 1];
+
+        dom.push(
+          html`<div
+              style="position: relative; top: -${this.timelineOptions
+                .canvasVerticalScroll}px;"
+              class="element-left-option "
+            >
+              <span class="element-left-option-text">${text}</span>
+
+              <div
+                class="gap-1 justify-content-end ${element.filetype == "image"
+                  ? ""
+                  : "d-none"}"
+              >
+                <button
+                  class="btn btn-xxs btn-default text-light mr-2"
+                  @click=${() => this.switchActiveAnimationPanel(key)}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    more_horiz
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              style="position: relative; top: -${this.timelineOptions
+                .canvasVerticalScroll}px;"
+              class="element-left-option-panel ${this.isActiveAnimationPanel(
+                key,
+              )
+                ? ""
+                : "d-none"}"
+            >
+              <span class="element-left-option-text">POSITION</span>
+
+              <div class="gap-1 justify-content-end">
+                <button
+                  class="btn btn-xxs  text-light mr-2"
+                  @click=${() => this.activePositionAnimation(key)}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    chevron_right
+                  </span>
+                </button>
+              </div>
+            </div> `,
+        );
+      }
+    }
+
     return html`
-      <canvas
-        id="elementTimelineLeftOptionRef"
+      <style>
+        .element-left-option {
+          height: 30px;
+          margin-bottom: 6px;
+          color: #ffffff;
+          background-color: #1c1f23;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 0.5rem;
+        }
+
+        .element-left-option-panel {
+          height: 30px;
+          margin-bottom: 6px;
+          color: #ffffff;
+          background-color: #2277e7;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 0.5rem;
+        }
+
+        .element-left-option-text {
+          color: #ececee;
+          font-size: 14px;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+      </style>
+      <div
         style="width: ${this.resize.timelineVertical
           .leftOption}px;position: absolute; height: 100%;"
         class="tab-content"
-        @mousedown=${this._handleMouseClickCanvas}
-      ></canvas>
+      >
+        <div
+          style="height: 34px; position: relative; top: -${this.timelineOptions
+            .canvasVerticalScroll}px;"
+        ></div>
+        ${dom}
+      </div>
       <div
         class="split-col-bar"
         style="left: ${this.resize.timelineVertical.leftOption}px;"

@@ -204,6 +204,8 @@ const prerender: any = {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    console.log("AAA", elements.fontname);
+
     context.fillStyle = elements.textcolor;
     context.lineWidth = 0;
     context.font = `${elements.fontsize}px ${elements.fontname}`;

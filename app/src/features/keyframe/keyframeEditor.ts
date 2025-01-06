@@ -4,6 +4,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { millisecondsToPx, pxToMilliseconds } from "../../utils/time";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { ImageElementType } from "../../@types/timeline";
+import { KeyframeController } from "../../controllers/keyframe";
 
 @customElement("keyframe-editor")
 export class KeyframeEditor extends LitElement {
@@ -67,6 +68,8 @@ export class KeyframeEditor extends LitElement {
       this.changeLineEditor(0);
     } catch (error) {}
   }
+
+  private keyframeControl = new KeyframeController(this);
 
   @property()
   isShow;
@@ -271,7 +274,6 @@ export class KeyframeEditor extends LitElement {
 
     ctx.strokeStyle = "#403af0";
     ctx.beginPath();
-    ctx.moveTo(0, 0);
     for (let index = 0; index < pointsX.length; index++) {
       const element = pointsX[index];
       const x =
@@ -285,7 +287,6 @@ export class KeyframeEditor extends LitElement {
 
     ctx.strokeStyle = "#e83535";
     ctx.beginPath();
-    ctx.moveTo(0, 0);
     for (let index = 0; index < pointsY.length; index++) {
       const element = pointsY[index];
       const x =
@@ -437,134 +438,6 @@ export class KeyframeEditor extends LitElement {
     document.querySelector("#timelineOptionLineEditor").innerHTML = "";
   }
 
-  addPoint({ x, y, line }) {
-    this.insertPointInMiddle({
-      x: Math.round(x),
-      y: Math.round(y),
-      line: line,
-    });
-
-    this.interpolate(line);
-
-    this.timeline[this.elementId].animation[this.animationType].isActivate =
-      true;
-  }
-
-  insertPointInMiddle({ x, y, line }) {
-    const lineToAlpha = line == 0 ? "x" : "y";
-    const subDots = 100;
-
-    if (
-      this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
-        .length -
-        1 ==
-      0
-    ) {
-      this.timeline[this.elementId].animation[this.animationType][
-        lineToAlpha
-      ].push({
-        type: "cubic",
-        p: [x, y],
-        cs: [x - subDots, y],
-        ce: [x + subDots, y],
-      });
-      return 0;
-    }
-
-    for (
-      let index = 0;
-      index <
-      this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
-        .length;
-      index++
-    ) {
-      if (
-        this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
-          .length -
-          1 ==
-        index
-      ) {
-        this.timeline[this.elementId].animation[this.animationType][
-          lineToAlpha
-        ].splice(index + 1, 0, {
-          type: "cubic",
-          p: [x, y],
-          cs: [x - subDots, y],
-          ce: [x + subDots, y],
-        });
-        return 0;
-      } else if (
-        this.timeline[this.elementId].animation[this.animationType][
-          lineToAlpha
-        ][index].p[0] < x &&
-        this.timeline[this.elementId].animation[this.animationType][
-          lineToAlpha
-        ][index + 1].p[0] > x
-      ) {
-        this.timeline[this.elementId].animation[this.animationType][
-          lineToAlpha
-        ].splice(index + 1, 0, {
-          type: "cubic",
-          p: [x, y],
-          cs: [x - subDots, y],
-          ce: [x + subDots, y],
-        });
-        return 0;
-      }
-    }
-  }
-
-  interpolate(line) {
-    const lineToAlpha = line == 0 ? "x" : "y";
-    const lineToAllAlpha = line == 0 ? "ax" : "ay";
-
-    const array =
-      this.timeline[this.elementId].animation[this.animationType][lineToAlpha];
-
-    const interpolationArray: any = [];
-
-    for (let ic = 0; ic < array.length - 1; ic++) {
-      const interval = array[ic + 1].p[0] - array[ic].p[0];
-      const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
-
-      const interpolation = this.cubic(
-        array[ic],
-        array[ic + 1],
-        intervalFrames,
-      );
-
-      for (let index = 0; index < interpolation.length; index++) {
-        const element = interpolation[index];
-
-        interpolationArray.push(element);
-      }
-    }
-
-    this.timeline[this.elementId].animation[this.animationType][
-      lineToAllAlpha
-    ] = interpolationArray;
-  }
-
-  cubic(d0, d1, iteration = 30) {
-    let result: number[][] = [];
-
-    for (let t = 0; t <= 1; t = t + 1 / iteration) {
-      const x =
-        Math.pow(1 - t, 3) * d0.p[0] +
-        3 * Math.pow(1 - t, 2) * t * d0.ce[0] +
-        3 * (1 - t) * Math.pow(t, 2) * d1.cs[0] +
-        Math.pow(t, 3) * d1.p[0];
-      const y =
-        Math.pow(1 - t, 3) * d0.p[1] +
-        3 * Math.pow(1 - t, 2) * t * d0.ce[1] +
-        3 * (1 - t) * Math.pow(t, 2) * d1.cs[1] +
-        Math.pow(t, 3) * d1.p[1];
-      result.push([x, y]);
-    }
-
-    return result;
-  }
-
   getRemovedDuplicatePoint({ x, line }) {
     let tmp: any = [];
     this.points[line].forEach((element) => {
@@ -615,7 +488,11 @@ export class KeyframeEditor extends LitElement {
         this.clickIndex
       ][this.clickDot][1] = py;
 
-      this.interpolate(this.selectLine);
+      this.keyframeControl.interpolate(
+        this.selectLine,
+        this.elementId,
+        "position",
+      );
 
       this.drawCanvas();
     }
@@ -664,10 +541,12 @@ export class KeyframeEditor extends LitElement {
     }
 
     if (!this.isDrag) {
-      this.addPoint({
+      this.keyframeControl.addPoint({
         x: px,
         y: py,
         line: this.selectLine,
+        elementId: this.elementId,
+        animationType: this.animationType,
       });
       this.drawCanvas();
     }

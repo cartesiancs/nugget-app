@@ -8,6 +8,7 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { ImageElementType } from "../../@types/timeline";
+import { KeyframeController } from "../../controllers/keyframe";
 
 type ImageTempType = {
   elementId: string;
@@ -61,6 +62,8 @@ export class PreviewCanvss extends LitElement {
   handleClickCanvas() {
     //document.querySelector("element-control").handleClickPreview();
   }
+
+  private keyframeControl = new KeyframeController(this);
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
@@ -138,7 +141,7 @@ export class PreviewCanvss extends LitElement {
     this.canvas.style.cursor = this.cursorType;
   }
 
-  findNearestY(pairs, a) {
+  findNearestY(pairs, a): number | null {
     let closestY = null;
     let closestDiff = Infinity;
 
@@ -200,30 +203,34 @@ export class PreviewCanvss extends LitElement {
               let animationType = "position";
 
               if (imageElement.animation[animationType].isActivate == true) {
-                let index = Math.round(this.timelineCursor / 16);
-                let indexToMs = index * 20;
-                let startTime = Number(this.timeline[elementId].startTime);
-                let indexPoint = Math.round((indexToMs - startTime) / 20);
+                if (this.isMove && this.activeElementId == elementId) {
+                  ctx.drawImage(img.object, x, y, w, h);
+                } else {
+                  let index = Math.round(this.timelineCursor / 16);
+                  let indexToMs = index * 20;
+                  let startTime = Number(this.timeline[elementId].startTime);
+                  let indexPoint = Math.round((indexToMs - startTime) / 20);
 
-                try {
-                  if (indexPoint < 0) {
-                    return 0;
-                  }
+                  try {
+                    if (indexPoint < 0) {
+                      return false;
+                    }
 
-                  const ax = this.findNearestY(
-                    imageElement.animation[animationType].ax,
-                    this.timelineCursor - imageElement.startTime,
-                  ) as any;
+                    const ax = this.findNearestY(
+                      imageElement.animation[animationType].ax,
+                      this.timelineCursor - imageElement.startTime,
+                    ) as any;
 
-                  const ay: any = this.findNearestY(
-                    imageElement.animation[animationType].ay,
-                    this.timelineCursor - imageElement.startTime,
-                  ) as any;
+                    const ay = this.findNearestY(
+                      imageElement.animation[animationType].ay,
+                      this.timelineCursor - imageElement.startTime,
+                    ) as any;
 
-                  ctx.drawImage(img.object, ax, ay, w, h);
+                    ctx.drawImage(img.object, ax, ay, w, h);
 
-                  continue;
-                } catch (error) {}
+                    continue;
+                  } catch (error) {}
+                }
               }
               ctx.drawImage(img.object, x, y, w, h);
             } else {
@@ -316,6 +323,29 @@ export class PreviewCanvss extends LitElement {
         }
       }
     }
+  }
+
+  drawKeyframePath(ctx, elementId) {
+    const imageElement = this.timeline[elementId] as any;
+    const fileType = this.timeline[elementId].filetype;
+    const animationType = "position";
+    if (fileType != "image") return false;
+    if (imageElement.animation[animationType].isActivate != true) return false;
+
+    try {
+      const xa = imageElement.animation[animationType].x;
+      const ya = imageElement.animation[animationType].y;
+      // ctx.strokeStyle = "#403af0";
+      // ctx.beginPath();
+
+      // ctx.stroke();
+
+      // for (let index = 0; index < xa.length; index++) {
+      //   const element = xa[index];
+      //   ctx.lineTo(x, );
+
+      // }
+    } catch (error) {}
   }
 
   drawAlign(ctx, direction) {
@@ -549,6 +579,41 @@ export class PreviewCanvss extends LitElement {
     };
   }
 
+  addAnimationPoint(x, y) {
+    const fileType = this.timeline[this.activeElementId].filetype;
+    const startTime = this.timeline[this.activeElementId].startTime;
+
+    const animationType = "position";
+    if (fileType != "image") return false;
+
+    if (
+      this.timeline[this.activeElementId].animation["position"].isActivate !=
+      true
+    ) {
+      return false;
+    }
+
+    try {
+      this.keyframeControl.addPoint({
+        x: this.timelineCursor - startTime,
+        y: x,
+        line: 0,
+        elementId: this.activeElementId,
+        animationType: "position",
+      });
+
+      this.keyframeControl.addPoint({
+        x: this.timelineCursor - startTime,
+        y: y,
+        line: 1,
+        elementId: this.activeElementId,
+        animationType: "position",
+      });
+    } catch (error) {
+      console.log(error, "AAARR");
+    }
+  }
+
   _handleMouseDown(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
@@ -711,13 +776,39 @@ export class PreviewCanvss extends LitElement {
     if (!this.isMove || !this.isStretch) {
       for (const elementId in this.timeline) {
         if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-          const x = this.timeline[elementId].location?.x;
-          const y = this.timeline[elementId].location?.y;
+          let x = this.timeline[elementId].location?.x;
+          let y = this.timeline[elementId].location?.y;
+
           const w = this.timeline[elementId].width;
           const h = this.timeline[elementId].height;
           const fileType = this.timeline[elementId].filetype;
           const startTime = this.timeline[elementId].startTime as number;
           const duration = this.timeline[elementId].duration as number;
+          const animationType = "position";
+
+          if (
+            fileType == "image" &&
+            this.timeline[elementId].animation[animationType].isActivate == true
+          ) {
+            let index = Math.round(this.timelineCursor / 16);
+            let indexToMs = index * 20;
+            let startTime = Number(this.timeline[elementId].startTime);
+            let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+            if (indexPoint < 0) {
+              return false;
+            }
+
+            x = this.findNearestY(
+              this.timeline[elementId].animation[animationType].ax,
+              this.timelineCursor - this.timeline[elementId].startTime,
+            ) as any;
+
+            y = this.findNearestY(
+              this.timeline[elementId].animation[animationType].ay,
+              this.timelineCursor - this.timeline[elementId].startTime,
+            ) as any;
+          }
 
           if (
             !(
@@ -966,6 +1057,10 @@ export class PreviewCanvss extends LitElement {
   }
 
   _handleMouseUp(e) {
+    this.addAnimationPoint(
+      this.timeline[this.activeElementId].location.x,
+      this.timeline[this.activeElementId].location.y,
+    );
     this.isMove = false;
     this.isStretch = false;
     this.drawCanvas();

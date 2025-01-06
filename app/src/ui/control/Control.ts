@@ -213,7 +213,7 @@ export class Control extends LitElement {
       <!-- PREVIEW -->
       <div
         id="split_col_2"
-        class="h-100 p-0"
+        class="h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
         style="width: ${this.resize.horizontal.preview}%;"
       >
         <div

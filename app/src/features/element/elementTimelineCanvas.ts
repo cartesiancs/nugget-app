@@ -28,6 +28,7 @@ export class elementTimelineCanvas extends LitElement {
   timelineColor: {};
   canvasVerticalScroll: number;
   copyedTimelineData: {};
+  isGuide: boolean;
 
   constructor() {
     super();
@@ -41,6 +42,7 @@ export class elementTimelineCanvas extends LitElement {
     };
 
     this.isDrag = false;
+    this.isGuide = false;
     this.firstClickPosition = { x: 0, y: 0 };
     this.cursorType = "none";
     this.cursorNow = 0;
@@ -505,6 +507,8 @@ export class elementTimelineCanvas extends LitElement {
         : this.millisecondsToPx(element.startTime + element.trim.endTime);
     let checkRange = 10;
 
+    let isGuide = false;
+
     if (
       elementBarPosition.startX > startX - checkRange &&
       elementBarPosition.startX < startX + checkRange
@@ -514,8 +518,8 @@ export class elementTimelineCanvas extends LitElement {
           ? startX
           : startX -
             this.millisecondsToPx(this.timeline[targetId].trim.startTime);
-      this.style.left = `${px}px`;
       this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+      isGuide = true;
     }
 
     if (
@@ -527,8 +531,9 @@ export class elementTimelineCanvas extends LitElement {
           ? endX
           : endX -
             this.millisecondsToPx(this.timeline[targetId].trim.startTime);
-      this.style.left = `${px}px`;
       this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+
+      isGuide = true;
     }
 
     if (
@@ -540,8 +545,8 @@ export class elementTimelineCanvas extends LitElement {
           ? startX - this.millisecondsToPx(this.timeline[targetId].duration)
           : startX -
             this.millisecondsToPx(this.timeline[targetId].trim.endTime);
-      this.style.left = `${px}px`;
       this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+      isGuide = true;
     }
 
     if (
@@ -552,9 +557,11 @@ export class elementTimelineCanvas extends LitElement {
         targetElementType == "static"
           ? endX - this.millisecondsToPx(this.timeline[targetId].duration)
           : endX - this.millisecondsToPx(this.timeline[targetId].trim.endTime);
-      this.style.left = `${px}px`;
       this.timeline[targetId].startTime = this.pxToMilliseconds(px);
+      isGuide = true;
     }
+
+    this.isGuide = isGuide;
   }
 
   private magnet({ targetId, px }: { targetId: string; px: number }) {
@@ -602,8 +609,6 @@ export class elementTimelineCanvas extends LitElement {
         });
       }
     }
-
-    this.timelineState.patchTimeline(this.timeline);
   }
 
   updateTargetPosition({ targetId, dx }: { targetId: string; dx: number }) {
@@ -862,13 +867,14 @@ export class elementTimelineCanvas extends LitElement {
 
       if (this.cursorType == "move") {
         this.updateTargetPosition({ targetId: this.targetId, dx: dx });
+        this.magnet({ targetId: this.targetId, px: dx });
       } else if (this.cursorType == "stretchStart") {
         this.updateTargetStartStretch({ targetId: this.targetId, dx: dx });
       } else if (this.cursorType == "stretchEnd") {
         this.updateTargetEndStretch({ targetId: this.targetId, dx: dx });
       }
 
-      this.magnet({ targetId: this.targetId, px: dx });
+      this.timelineState.patchTimeline(this.timeline);
     }
   }
 

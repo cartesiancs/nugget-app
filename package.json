@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "description": "Video Editor",
   "main": "main/main.js",
-  "author": "DeVent",
+  "author": "cartesiancs",
   "scripts": {
     "start": "electron .",
     "dev": "concurrently \"npm run compile\" \"npm run bundle:src\"",
@@ -11,17 +11,17 @@
     "bundle": "npm run bundle:src",
     "bundle:src": "webpack --mode=development --watch",
     "bundle:prod:src": "webpack --mode=production",
-    "build:osx": "electron-builder build --mac",
+    "build:osx": "npm run bundle:prod:src && cross-env GH_TOKEN=<TOKEN> electron-builder build --mac -p always",
     "build:win": "npm run bundle:prod:src && cross-env GH_TOKEN=<TOKEN> electron-builder build --win --x64 -p always",
     "build": "npm run build:osx && npm run build:win"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Team-DeVent/nugget-release"
+    "url": "https://github.com/cartesiancs/nugget-app"
   },
   "build": {
     "productName": "Nugget",
-    "appId": "kr.devent.nugget",
+    "appId": "com.cartesiancs.nugget",
     "asar": true,
     "extraResources": [
       {
@@ -48,14 +48,15 @@
     "mac": {
       "publish": {
         "provider": "github",
-        "owner": "Team-DeVent",
-        "repo": "nugget-release"
+        "owner": "cartesiancs",
+        "repo": "nugget-app"
       },
       "target": [
         "dmg"
       ],
       "icon": "assets/icons/mac/icon.icns",
-      "asarUnpack": "**/*.node"
+      "asarUnpack": "**/*.node",
+      "notarize": true
     },
     "dmg": {
       "internetEnabled": true
@@ -66,8 +67,8 @@
       "verifyUpdateCodeSignature": true,
       "publish": {
         "provider": "github",
-        "owner": "Team-DeVent",
-        "repo": "nugget-release"
+        "owner": "cartesiancs",
+        "repo": "nugget-app"
       },
       "target": [
         "nsis"
@@ -89,7 +90,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "Team-DeVent"
+      "owner": "cartesiancs"
     }
   },
   "dependencies": {

@@ -12,12 +12,14 @@ export class OptionGroup extends LitElement {
   }
 
   showOption({ filetype, elementId }) {
-    this.hideAllOptions();
-    const fileTypeOption: any = this.querySelector(`option-${filetype}`);
-    fileTypeOption.show();
-    fileTypeOption.setElementId({
-      elementId: elementId,
-    });
+    try {
+      this.hideAllOptions();
+      const fileTypeOption: any = this.querySelector(`option-${filetype}`);
+      fileTypeOption.show();
+      fileTypeOption.setElementId({
+        elementId: elementId,
+      });
+    } catch (error) {}
   }
 
   hideAllOptions() {

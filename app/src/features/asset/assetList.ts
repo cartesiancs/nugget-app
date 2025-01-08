@@ -109,6 +109,8 @@ export class AssetFile extends LitElement {
     let template;
     if (fileType == "image") {
       template = this.templateImage(fileUrl);
+    } else if (fileType == "gif") {
+      template = this.templateImage(fileUrl);
     } else if (fileType == "video") {
       if (assetList.blobThumbnail.hasOwnProperty(fileUrl)) {
         let savedThumbnailUrl = assetList.blobThumbnail[fileUrl];

@@ -9,6 +9,7 @@ import {
 } from "../../states/renderOptionStore";
 import { ImageElementType } from "../../@types/timeline";
 import { KeyframeController } from "../../controllers/keyframe";
+import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
 
 type ImageTempType = {
   elementId: string;
@@ -42,6 +43,9 @@ export class PreviewCanvss extends LitElement {
     | "nwse-resize";
   isStretch: boolean;
   isEditText: boolean;
+  gifTempCanvas: HTMLCanvasElement;
+  gifCanvas: { frameImageData: any; tempCtx: any };
+  gifFrames: { key: string; frames: ParsedFrame[] }[];
   constructor() {
     super();
 
@@ -55,6 +59,15 @@ export class PreviewCanvss extends LitElement {
     this.activeElementId = "";
     this.mouseOrigin = { x: 0, y: 0 };
     this.elementOrigin = { x: 0, y: 0, w: 0, h: 0 };
+
+    this.gifTempCanvas = document.createElement("canvas");
+
+    this.gifCanvas = {
+      frameImageData: null,
+      tempCtx: this.gifTempCanvas.getContext("2d") as any,
+    };
+
+    this.gifFrames = [];
   }
 
   @query("#elementPreviewCanvasRef") canvas!: HTMLCanvasElement;
@@ -245,6 +258,91 @@ export class PreviewCanvss extends LitElement {
                 ctx.drawImage(img, x, y, w, h);
               };
               img.src = imageElement.localpath;
+            }
+          }
+
+          if (fileType == "gif") {
+            const imageElement = this.timeline[elementId] as any;
+
+            if (
+              this.gifFrames.findIndex((item) => {
+                return item.key == elementId;
+              }) != -1
+            ) {
+              const delay = 90;
+              const imageIndex = this.gifFrames.findIndex((item) => {
+                return item.key == elementId;
+              });
+              const index =
+                Math.round(this.timelineCursor / delay) %
+                this.gifFrames[imageIndex].frames.length;
+              const firstFrame = this.gifFrames[imageIndex].frames[index];
+
+              let dims = firstFrame.dims;
+
+              if (
+                !this.gifCanvas.frameImageData ||
+                dims.width != this.gifCanvas.frameImageData.width ||
+                dims.height != this.gifCanvas.frameImageData.height
+              ) {
+                this.gifTempCanvas.width = dims.width;
+                this.gifTempCanvas.height = dims.height;
+                this.gifCanvas.frameImageData =
+                  this.gifCanvas.tempCtx.createImageData(
+                    dims.width,
+                    dims.height,
+                  );
+              }
+
+              this.gifCanvas.frameImageData.data.set(firstFrame.patch);
+
+              this.gifCanvas.tempCtx.putImageData(
+                this.gifCanvas.frameImageData,
+                0,
+                0,
+              );
+
+              ctx.drawImage(this.gifTempCanvas, x, y, w, h);
+            } else {
+              fetch(imageElement.localpath)
+                .then((resp) => resp.arrayBuffer())
+                .then((buff) => {
+                  let gif = parseGIF(buff);
+                  let frames = decompressFrames(gif, true);
+
+                  const firstFrame = frames[0];
+
+                  let dims = firstFrame.dims;
+
+                  if (
+                    !this.gifCanvas.frameImageData ||
+                    dims.width != this.gifCanvas.frameImageData.width ||
+                    dims.height != this.gifCanvas.frameImageData.height
+                  ) {
+                    this.gifTempCanvas.width = dims.width;
+                    this.gifTempCanvas.height = dims.height;
+                    this.gifCanvas.frameImageData =
+                      this.gifCanvas.tempCtx.createImageData(
+                        dims.width,
+                        dims.height,
+                      );
+                  }
+
+                  this.gifCanvas.frameImageData.data.set(firstFrame.patch);
+
+                  this.gifCanvas.tempCtx.putImageData(
+                    this.gifCanvas.frameImageData,
+                    0,
+                    0,
+                  );
+
+                  ctx.drawImage(this.gifTempCanvas, x, y, w, h);
+
+                  this.gifFrames.push({
+                    key: elementId,
+                    frames: frames,
+                  });
+                });
             }
           }
 

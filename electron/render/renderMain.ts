@@ -57,7 +57,7 @@ export const renderMain = {
     elementCounts.audio = 0;
 
     let resizeRatio = options.previewRatio;
-    let mediaFileLists = ["image", "video"];
+    let mediaFileLists = ["image", "video", "gif"];
     let textFileLists = ["text"];
     let audioFileLists = ["audio"];
 
@@ -221,7 +221,7 @@ export const renderMain = {
 
 export const renderFilter = {
   addFilterMedia: (object) => {
-    let staticFiletype = ["image"];
+    let staticFiletype = ["image", "gif"];
     let dynamicFiletype = ["video"];
     let checkStaticCondition =
       staticFiletype.indexOf(object.element.filetype) >= 0;
@@ -243,7 +243,18 @@ export const renderFilter = {
     };
 
     if (checkStaticCondition) {
-      object.command.input(object.element.localpath);
+      log.info("[render gif] ", object.element.filetype);
+
+      if (object.element.filetype == "gif") {
+        log.info("[render gif] ", object.element.filetype);
+
+        object.command
+          .input(object.element.localpath)
+          .inputOptions(`-stream_loop -1`)
+          .inputOptions(`-ignore_loop 0`);
+      } else {
+        object.command.input(object.element.localpath);
+      }
     }
 
     if (checkDynamicCondition) {

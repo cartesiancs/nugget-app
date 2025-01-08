@@ -7,6 +7,7 @@ import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
+import { decompressFrames, parseGIF } from "gifuct-js";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -355,28 +356,28 @@ export class ElementControl extends LitElement {
     const elementId = this.generateUUID();
     const img = document.createElement("img");
 
-    img.src = blob;
-    img.onload = () => {
-      let resize = this.fitElementSizeOnPreview(img.width, img.height);
-      let width = resize.width;
-      let height = resize.height; // /division
+    fetch(path)
+      .then((resp) => resp.arrayBuffer())
+      .then((buff) => {
+        let gif = parseGIF(buff);
+        let frames = decompressFrames(gif, true);
+        this.timeline[elementId] = {
+          priority: this.getNowPriority(),
+          blob: blob,
+          startTime: 0,
+          duration: 1000,
+          opacity: 100,
+          location: { x: 0, y: 0 },
+          rotation: 0,
+          width: frames[0].dims.width,
+          height: frames[0].dims.height,
+          localpath: path,
+          filetype: "gif",
+          ratio: frames[0].dims.width / frames[0].dims.height,
+        };
 
-      this.timeline[elementId] = {
-        priority: this.getNowPriority(),
-        blob: blob,
-        startTime: 0,
-        duration: 1000,
-        opacity: 100,
-        location: { x: 0, y: 0 },
-        rotation: 0,
-        width: width,
-        height: height,
-        localpath: path,
-        filetype: "gif",
-      };
-
-      this.timelineState.patchTimeline(this.timeline);
-    };
+        this.timelineState.patchTimeline(this.timeline);
+      });
   }
 
   addVideo(blob, path) {

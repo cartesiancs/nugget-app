@@ -1,3 +1,5 @@
+import { ParsedFrame } from "gifuct-js";
+
 export type CubicKeyframeType = {
   type: "cubic" | "linear";
   p: number[];

@@ -2,7 +2,7 @@ const elementUtils = {
   getElementType(filetype): "undefined" | "static" | "dynamic" {
     let elementType: any = "undefined";
     const elementFileExtensionType = {
-      static: ["image", "text", "png", "jpg", "jpeg"],
+      static: ["image", "text", "png", "jpg", "jpeg", "gif"],
       dynamic: ["video", "audio", "mp4", "mp3", "mov"],
     };
 

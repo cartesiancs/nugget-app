@@ -1,6 +1,10 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import {
+  IControlPanelStore,
+  controlPanelStore,
+} from "../../states/controlPanelStore";
 
 @customElement("preview-top-bar")
 export class PreviewTopBar extends LitElement {
@@ -14,9 +18,23 @@ export class PreviewTopBar extends LitElement {
   @property()
   control = this.timelineState.control;
 
+  @property()
+  controlPanel: IControlPanelStore = controlPanelStore.getInitialState();
+
+  @property()
+  activePanel = this.controlPanel.active;
+
+  @property()
+  nowActivePanel = this.controlPanel.nowActive;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.control = state.control;
+    });
+
+    controlPanelStore.subscribe((state) => {
+      this.activePanel = state.active;
+      this.nowActivePanel = state.nowActive;
     });
 
     return this;
@@ -26,7 +44,24 @@ export class PreviewTopBar extends LitElement {
     this.timelineState.setCursorType(type);
   }
 
+  _handleClickPanelButton(panel) {
+    this.controlPanel.setActivePanel(panel);
+    console.log("A", panel);
+  }
+
   render() {
+    const activePanelMap = this.activePanel.map((item) => {
+      return html` <button
+        @click=${() => this._handleClickPanelButton(item)}
+        class="btn btn-xxs ${this.nowActivePanel == item
+          ? "btn-active"
+          : "btn-default"} text-light preview-top-button m-0"
+      >
+        ${item}
+        <span class="material-symbols-outlined icon-xs"> close </span>
+      </button>`;
+    });
+
     return html`
       <style>
         .timeline-cursor-buttons {
@@ -42,10 +77,29 @@ export class PreviewTopBar extends LitElement {
         .timeline-cursor-button {
           border: none;
         }
+
+        .preview-top-button {
+          font-size: 12px;
+          font-weight: bolder;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
       </style>
 
       <div class="timeline-cursor-buttons bg-darker">
-        <div></div>
+        <div class="d-flex col gap-2 justify-content-start p-1">
+          <button
+            @click=${() => this._handleClickPanelButton("")}
+            class="btn btn-xxs ${this.nowActivePanel == ""
+              ? "btn-active"
+              : "btn-default"} text-light preview-top-button m-0"
+          >
+            preview
+          </button>
+
+          ${activePanelMap}
+        </div>
         <div class="d-flex col gap-2 justify-content-end p-1">
           <button
             @click=${() => this._handleClickButton("pointer")}

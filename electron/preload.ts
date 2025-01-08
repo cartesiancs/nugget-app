@@ -55,6 +55,10 @@ const request = {
   url: {
     openUrl: (url) => ipcRenderer.send("OPEN_URL", url),
   },
+  stream: {
+    saveBufferToVideo: (arrayBuffer) =>
+      ipcRenderer.invoke("stream:saveBufferToVideo", arrayBuffer),
+  },
   extension: {
     openDir: (dir) => ipcRenderer.invoke("extension:open:dir", dir),
     openFile: (file) => ipcRenderer.invoke("extension:open:file", file),

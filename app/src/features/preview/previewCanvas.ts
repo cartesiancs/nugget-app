@@ -269,10 +269,11 @@ export class PreviewCanvss extends LitElement {
                 return item.key == elementId;
               }) != -1
             ) {
-              const delay = 90;
               const imageIndex = this.gifFrames.findIndex((item) => {
                 return item.key == elementId;
               });
+              const delay = this.gifFrames[imageIndex].frames[0].delay;
+
               const index =
                 Math.round(this.timelineCursor / delay) %
                 this.gifFrames[imageIndex].frames.length;

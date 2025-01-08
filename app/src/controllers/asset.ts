@@ -38,6 +38,21 @@ export class AssetController implements ReactiveController {
       });
   }
 
+  public addVideoWithDuration(originPath, duration) {
+    const filepath = path.encode(originPath);
+    fetch(`file://${filepath}`)
+      .then((res) => {
+        return res.blob();
+      })
+      .then((blob) => {
+        let blobUrl = URL.createObjectURL(blob);
+        let blobType = mime.lookup(filepath).type;
+        let control: any = document.querySelector("element-control");
+
+        control.addVideoWithDuration(blobUrl, filepath, duration);
+      });
+  }
+
   public requestAllDir(dir) {
     window.electronAPI.req.filesystem.getDirectory(dir).then((result) => {
       let fileLists = {};

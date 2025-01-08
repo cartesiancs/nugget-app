@@ -447,6 +447,69 @@ export class ElementControl extends LitElement {
     };
   }
 
+  // NOTE: 영상 레코딩시 사용됩니다. 추후 리팩토링 필요합니다.
+  addVideoWithDuration(blob, path, duration) {
+    const elementId = this.generateUUID();
+    const video = document.createElement("video");
+    const toastMetadata = bootstrap.Toast.getInstance(
+      document.getElementById("loadMetadataToast"),
+    );
+    toastMetadata.show();
+
+    video.src = blob;
+    video.preload = "metadata";
+
+    console.log("CBLOCK", blob);
+
+    video.onloadedmetadata = () => {
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+
+      window.electronAPI.req.ffmpeg.getMetadata(blob, path);
+
+      window.electronAPI.res.ffmpeg.getMetadata((evt, blobdata, metadata) => {
+        console.log(blobdata, metadata);
+
+        if (blobdata != blob) {
+          return 0;
+        }
+
+        let isExist = false;
+
+        setTimeout(() => {
+          toastMetadata.hide();
+        }, 1000);
+
+        metadata.streams.forEach((element) => {
+          if (element.codec_type == "audio") {
+            isExist = true;
+          }
+        });
+
+        this.timeline[elementId] = {
+          priority: this.getNowPriority(),
+          blob: blob,
+          startTime: 0,
+          duration: duration,
+          opacity: 100,
+          location: { x: 0, y: 0 },
+          trim: { startTime: 0, endTime: duration },
+          rotation: 0,
+          width: width,
+          height: height,
+          ratio: width / height,
+          localpath: path,
+          isExistAudio: isExist,
+          filetype: "video",
+          codec: { video: "default", audio: "default" },
+        };
+
+        this.timelineState.patchTimeline(this.timeline);
+        this.showVideo(elementId);
+      });
+    };
+  }
+
   addText() {
     const elementId = this.generateUUID();
 

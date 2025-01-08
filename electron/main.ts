@@ -45,6 +45,7 @@ import { ipcTimeline } from "./ipc/ipcTimeline.js";
 import { ipcDialog } from "./ipc/ipcDialog.js";
 import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
 import { downloadFfmpeg, validateFFmpeg } from "./validate.js";
+import { ipcStream } from "./ipc/ipcStream.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -118,6 +119,8 @@ ipcMain.handle("store:delete", ipcStore.delete);
 
 ipcMain.on("app:forceClose", ipcApp.forceClose);
 ipcMain.on("app:restart", ipcApp.restart);
+
+ipcMain.handle("stream:saveBufferToVideo", ipcStream.saveBufferToVideo);
 
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);

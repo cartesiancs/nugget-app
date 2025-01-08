@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu } from "electron";
+import { BrowserWindow, desktopCapturer, Menu, session } from "electron";
 import { menu } from "./menu.js";
 import { autoUpdater } from "electron-updater";
 
@@ -25,6 +25,23 @@ const window = {
 
     autoUpdater.checkForUpdatesAndNotify();
     Menu.setApplicationMenu(menu);
+
+    session.defaultSession.setDisplayMediaRequestHandler((_, callback) => {
+      desktopCapturer
+        .getSources({ types: ["window", "screen"] })
+        .then((sources) => {
+          for (let i = 0; i < sources.length; ++i) {
+            console.log(
+              sources[i].name,
+              sources[i].thumbnail.getSize(),
+              sources[i].thumbnail.getAspectRatio(),
+              sources[i].thumbnail.getScaleFactors(),
+            );
+          }
+
+          callback({ video: sources[0], audio: "loopback" });
+        });
+    });
 
     if (isDev) {
       mainWindow.webContents.openDevTools();

@@ -7,9 +7,14 @@ import "./ControlRender";
 import "./ControlUtilities";
 import "./ControlFilter";
 import "../../features/preview/previewTopBar";
+import "../../features/record/screenRecord";
 
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { TimelineController } from "../../controllers/timeline";
+import {
+  IControlPanelStore,
+  controlPanelStore,
+} from "../../states/controlPanelStore";
 
 @customElement("control-ui")
 export class Control extends LitElement {
@@ -25,9 +30,23 @@ export class Control extends LitElement {
   @property()
   targetResize: "panel" | "preview" = "panel";
 
+  @property()
+  controlPanel: IControlPanelStore = controlPanelStore.getInitialState();
+
+  @property()
+  activePanel = this.controlPanel.active;
+
+  @property()
+  nowActivePanel = this.controlPanel.nowActive;
+
   createRenderRoot() {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
+    });
+
+    controlPanelStore.subscribe((state) => {
+      this.activePanel = state.active;
+      this.nowActivePanel = state.nowActive;
     });
 
     window.addEventListener("mouseup", this._handleMouseUp.bind(this));
@@ -225,7 +244,10 @@ export class Control extends LitElement {
 
         <div
           style="height: calc(100% - 2rem);"
-          class="position-relative d-flex align-items-center justify-content-center"
+          class="position-relative d-flex align-items-center justify-content-center ${this
+            .nowActivePanel == ""
+            ? ""
+            : "d-none"}"
         >
           <div id="videobox">
             <div class="d-flex justify-content-center">
@@ -236,6 +258,16 @@ export class Control extends LitElement {
               </div>
             </div>
           </div>
+        </div>
+
+        <div
+          style="height: calc(100% - 2rem);"
+          class="position-relative d-flex align-items-center justify-content-center ${this
+            .nowActivePanel == "record"
+            ? ""
+            : "d-none"}"
+        >
+          <screen-record-panel></screen-record-panel>
         </div>
       </div>
 

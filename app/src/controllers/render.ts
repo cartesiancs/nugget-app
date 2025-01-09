@@ -131,10 +131,6 @@ const prerender: any = {
           if (Object.hasOwnProperty.call(elements, elementId)) {
             const element = elements[elementId];
 
-            if (element.hasOwnProperty("animation") == false) {
-              continue;
-            }
-
             if (element.filetype == "text") {
               prerender.initAnimateElementState(elementId);
               prerender.state.numberOfRenderingRequired += 1;
@@ -150,6 +146,27 @@ const prerender: any = {
                 outputDir: path,
                 frame: 0,
               });
+            }
+
+            if (element.filetype == "shape") {
+              prerender.initAnimateElementState(elementId);
+              prerender.state.numberOfRenderingRequired += 1;
+
+              let frame = prerender.renderShape({
+                elementId: elementId,
+                elements: element,
+              });
+
+              prerender.saveShapeImage({
+                elementId: elementId,
+                data: frame,
+                outputDir: path,
+                frame: 0,
+              });
+            }
+
+            if (element.hasOwnProperty("animation") == false) {
+              continue;
             }
 
             if (element.filetype == "image") {
@@ -204,8 +221,6 @@ const prerender: any = {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    console.log("AAA", elements.fontname);
-
     context.fillStyle = elements.textcolor;
     context.lineWidth = 0;
     context.font = `${elements.fontsize}px ${elements.fontname}`;
@@ -215,6 +230,33 @@ const prerender: any = {
       elements.location.x,
       elements.location.y + elements.fontsize,
     );
+
+    return canvas.toDataURL("image/png");
+  },
+
+  renderShape: function ({ elementId, elements }) {
+    let canvas = prerender.state.animateElements[elementId].canvas;
+    let context = prerender.state.animateElements[elementId].context;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    prerender.state.animateElements[elementId].renderFrameLength = 1;
+
+    context.beginPath();
+
+    const ratio = elements.oWidth / elements.width;
+
+    for (let index = 0; index < elements.shape.length; index++) {
+      const element = elements.shape[index];
+      const x = element[0] / ratio + elements.location.x;
+      const y = element[1] / ratio + elements.location.y;
+
+      context.fillStyle = "#ffffff";
+      context.lineTo(x, y);
+    }
+
+    context.closePath();
+    context.fillStyle = "#ffffff";
+    context.fill();
 
     return canvas.toDataURL("image/png");
   },
@@ -306,6 +348,31 @@ const prerender: any = {
         prerender.state.elements[elementId].height = parseInt(
           prerender.state.options.previewSize.h,
         );
+        prerender.state.elements[elementId].localpath = fileName;
+
+        prerender.state.renderingCount += 1;
+
+        if (
+          prerender.state.renderingCount >=
+          prerender.state.numberOfRenderingRequired
+        ) {
+          prerender.renderOutput();
+        }
+      });
+  },
+
+  saveShapeImage: function ({ data, outputDir, frame, elementId }) {
+    const frameLength = 4;
+    const base64Data = data.substring("data:image/png;base64,".length);
+    const fileName = `${outputDir}/` + `prerender-${elementId}.png`;
+
+    window.electronAPI.req.filesystem
+      .writeFile(fileName, base64Data, "base64")
+      .then((isCompleted) => {
+        prerender.state.animateElements[elementId].savedFrameCount += 1;
+
+        prerender.state.elements[elementId].filetype = "image";
+        prerender.state.elements[elementId].opacity = 100;
         prerender.state.elements[elementId].localpath = fileName;
 
         prerender.state.renderingCount += 1;

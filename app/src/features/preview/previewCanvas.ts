@@ -10,6 +10,7 @@ import {
 import { ImageElementType } from "../../@types/timeline";
 import { KeyframeController } from "../../controllers/keyframe";
 import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
+import { v4 as uuidv4 } from "uuid";
 
 type ImageTempType = {
   elementId: string;
@@ -40,12 +41,14 @@ export class PreviewCanvss extends LitElement {
     | "ew-resize"
     | "ns-resize"
     | "nesw-resize"
-    | "nwse-resize";
+    | "nwse-resize"
+    | "crosshair";
   isStretch: boolean;
   isEditText: boolean;
   gifTempCanvas: HTMLCanvasElement;
   gifCanvas: { frameImageData: any; tempCtx: any };
   gifFrames: { key: string; frames: ParsedFrame[] }[];
+  nowShapeId: string;
   constructor() {
     super();
 
@@ -68,6 +71,8 @@ export class PreviewCanvss extends LitElement {
     };
 
     this.gifFrames = [];
+
+    this.nowShapeId = "";
   }
 
   @query("#elementPreviewCanvasRef") canvas!: HTMLCanvasElement;
@@ -94,6 +99,9 @@ export class PreviewCanvss extends LitElement {
   timelineCursor = this.timelineState.cursor;
 
   @property()
+  timelineControl = this.timelineState.control;
+
+  @property()
   loadedObjects: ImageTempType[] = [];
 
   @property()
@@ -117,6 +125,7 @@ export class PreviewCanvss extends LitElement {
       this.timelineRange = state.range;
       this.timelineCursor = state.cursor;
       this.timelineScroll = state.scroll;
+      this.timelineControl = state.control;
 
       // this.setTimelineColor();
       this.setPreviewRatio();
@@ -382,6 +391,10 @@ export class PreviewCanvss extends LitElement {
                 y + (this.timeline[elementId].fontsize || 0),
               );
             } catch (error) {}
+          }
+
+          if (fileType == "shape") {
+            this.drawShape(elementId);
           }
 
           if (this.activeElementId == elementId) {
@@ -713,6 +726,82 @@ export class PreviewCanvss extends LitElement {
     }
   }
 
+  drawShape(elementId) {
+    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+
+    const target = this.timeline[elementId];
+
+    ctx.beginPath();
+
+    const ratio = target.oWidth / target.width;
+
+    for (let index = 0; index < target.shape.length; index++) {
+      const element = target.shape[index];
+      const x = element[0] / ratio + target.location.x;
+      const y = element[1] / ratio + target.location.y;
+
+      ctx.fillStyle = "#ffffff";
+      if (this.nowShapeId == elementId) {
+        ctx.arc(x, y, 8, 0, 5 * Math.PI);
+      }
+
+      ctx.lineTo(x, y);
+    }
+
+    ctx.closePath();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+  }
+
+  createShape(x, y) {
+    const elementId = uuidv4();
+
+    const width = this.renderOption.previewSize.w;
+    const height = this.renderOption.previewSize.h;
+
+    this.timeline[elementId] = {
+      key: elementId,
+      priority: 1,
+      blob: "",
+      startTime: 0,
+      duration: 1000,
+      opacity: 100,
+      location: { x: 0, y: 0 },
+      trim: { startTime: 0, endTime: 1000 },
+      rotation: 0,
+      width: width,
+      height: height,
+      oWidth: width,
+      oHeight: height,
+      ratio: width / height,
+      filetype: "shape",
+      localpath: "SHAPE",
+      shape: [[x, y]],
+      option: {
+        fillColor: "#ffffff",
+      },
+    };
+
+    this.timelineState.patchTimeline(this.timeline);
+    return elementId;
+  }
+
+  addShapePoint(x, y) {
+    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+
+    if (this.nowShapeId == "") {
+      // 아직 생성된적 없다면
+      const createdElementId = this.createShape(x, y);
+      this.nowShapeId = createdElementId;
+
+      return false;
+    }
+
+    this.timeline[this.nowShapeId].shape.push([x, y]);
+    this.timelineState.patchTimeline(this.timeline);
+  }
+
   _handleMouseDown(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
@@ -720,6 +809,13 @@ export class PreviewCanvss extends LitElement {
     let isMoveTemp = false;
     let isStretchTemp = false;
     let activeElementTemp = "";
+
+    if (this.timelineControl.cursorType == "shape") {
+      this.addShapePoint(mx, my);
+      return false;
+    }
+
+    this.nowShapeId = "";
 
     for (const elementId in this.timeline) {
       if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
@@ -871,6 +967,12 @@ export class PreviewCanvss extends LitElement {
     const padding = 40;
 
     let isCollide = false;
+
+    if (this.timelineControl.cursorType == "shape") {
+      this.cursorType = "crosshair";
+      this.updateCursor();
+      return false;
+    }
 
     if (!this.isMove || !this.isStretch) {
       for (const elementId in this.timeline) {

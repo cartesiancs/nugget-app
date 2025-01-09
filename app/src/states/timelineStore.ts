@@ -1,7 +1,7 @@
 import { createStore } from "zustand/vanilla";
 import { Timeline } from "../@types/timeline";
 
-type TimelineCursorType = "pointer" | "text";
+type TimelineCursorType = "pointer" | "text" | "shape";
 
 export interface ITimelineStore {
   timeline: Timeline;

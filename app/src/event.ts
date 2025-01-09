@@ -15,12 +15,12 @@ window.electronAPI.res.render.finish((evt) => {
 
   const projectFolder = document.querySelector("#projectFolder").value;
 
-  window.electronAPI.req.filesystem.emptyDirSync(
-    `${projectFolder}/renderAnimation`,
-  );
-  window.electronAPI.req.filesystem.removeDirectory(
-    `${projectFolder}/renderAnimation`,
-  );
+  // window.electronAPI.req.filesystem.emptyDirSync(
+  //   `${projectFolder}/renderAnimation`,
+  // );
+  // window.electronAPI.req.filesystem.removeDirectory(
+  //   `${projectFolder}/renderAnimation`,
+  // );
 });
 
 window.electronAPI.res.render.error((evt, errormsg) => {

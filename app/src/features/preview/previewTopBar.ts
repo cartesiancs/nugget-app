@@ -132,6 +132,14 @@ export class PreviewTopBar extends LitElement {
           >
             <span class="material-symbols-outlined icon-xs"> text_fields </span>
           </button>
+          <button
+            @click=${() => this._handleClickButton("shape")}
+            class="btn btn-xxs ${this.control.cursorType == "shape"
+              ? "btn-primary"
+              : "btn-default"} text-light m-0"
+          >
+            <span class="material-symbols-outlined icon-xs"> square </span>
+          </button>
         </div>
       </div>
     `;

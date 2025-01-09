@@ -54,6 +54,28 @@ export type GifElementType = {
   ratio?: number;
 };
 
+export type ShapeElementType = {
+  key?: string;
+  priority?: number;
+  blob?: string;
+  startTime?: number;
+  duration?: number;
+  opacity?: number;
+  location?: { x: number; y: number };
+  rotation?: number;
+  width?: number;
+  height?: number;
+  oWidth?: number; // 원래 shape 사이즈
+  oHeight?: number;
+  filetype?: string;
+  ratio?: number;
+  localpath?: string;
+  shape?: number[][]; // [[x, y]...]
+  option?: {
+    fillColor?: string;
+  };
+};
+
 export type VideoElementType = {
   key?: string;
 

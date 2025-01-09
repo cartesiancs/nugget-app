@@ -49,6 +49,16 @@ export class PreviewTopBar extends LitElement {
     console.log("A", panel);
   }
 
+  _handleClickRemovePanelButton(panel) {
+    const filter = this.activePanel.filter((item) => {
+      return item != panel;
+    }) as any;
+    this.controlPanel.updatePanel(filter);
+    this.controlPanel.setActivePanel("");
+
+    console.log("A", panel);
+  }
+
   render() {
     const activePanelMap = this.activePanel.map((item) => {
       return html` <button
@@ -58,7 +68,12 @@ export class PreviewTopBar extends LitElement {
           : "btn-default"} text-light preview-top-button m-0"
       >
         ${item}
-        <span class="material-symbols-outlined icon-xs"> close </span>
+        <span
+          class="material-symbols-outlined icon-xs"
+          @click=${() => this._handleClickRemovePanelButton(item)}
+        >
+          close
+        </span>
       </button>`;
     });
 

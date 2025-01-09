@@ -67,7 +67,7 @@ export class ScreenRecordPanel extends LitElement {
   async startRecording() {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 60 },
+        video: { frameRate: 60, displaySurface: "monitor" },
       });
       this.video.srcObject = stream;
       this.video.onloadedmetadata = () => this.video.play();
@@ -130,7 +130,13 @@ export class ScreenRecordPanel extends LitElement {
 
   render() {
     return html`
-      <div>
+      <div
+        class="d-flex"
+        style="flex-direction: column;
+    padding: 1rem;     justify-content: center;
+    align-items: center;
+    gap: 1rem;"
+      >
         <canvas
           id="screenRecordCanvasRef"
           style="width: 60%; max-height: calc(${this
@@ -140,12 +146,15 @@ export class ScreenRecordPanel extends LitElement {
         ></canvas>
 
         <button
-          class="${this.isRecord ? "d-none" : ""}"
+          class="btn btn-primary ${this.isRecord ? "d-none" : ""}"
           @click=${this._handleClickRecord}
         >
           record
         </button>
-        <button class="${this.isRecord ? "" : "d-none"}" @click=${this.stop}>
+        <button
+          class="btn btn-danger ${this.isRecord ? "" : "d-none"}"
+          @click=${this.stop}
+        >
           stop
         </button>
       </div>

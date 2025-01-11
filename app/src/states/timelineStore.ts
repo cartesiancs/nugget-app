@@ -28,6 +28,7 @@ export interface ITimelineStore {
   switchPlay: () => void;
   setPlay: (isPlay: boolean) => void;
   setCursorType: (cursorType: TimelineCursorType) => void;
+  updateTimeline: (targetId: any, targetArray: string[], value: any) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
@@ -57,6 +58,23 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
 
   patchTimeline: (timeline: any) =>
     set((state) => ({ timeline: { ...timeline } })),
+
+  updateTimeline: (targetId: any, targetArray: string[], value: any) =>
+    set((state) => {
+      let timeline: any = { ...state.timeline };
+      let current = timeline[targetId];
+      for (let i = 0; i < targetArray.length - 1; i++) {
+        const key = targetArray[i];
+        current = current[key];
+      }
+      current[targetArray[targetArray.length - 1]] = value;
+      return {
+        timeline: {
+          ...state.timeline,
+          [targetId]: { ...current, ...state.timeline[targetId] },
+        },
+      };
+    }),
 
   setRange: (range: number) =>
     set((state) => ({

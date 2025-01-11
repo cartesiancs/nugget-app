@@ -31,6 +31,7 @@ import "./features/option/optionText";
 import "./features/option/optionImage";
 import "./features/option/optionVideo";
 import "./features/option/optionAudio";
+import "./features/option/optionShape";
 
 import "./features/input/inputText";
 

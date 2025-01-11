@@ -288,6 +288,7 @@ export class Control extends LitElement {
           <option-image></option-image>
           <option-video></option-video>
           <option-audio></option-audio>
+          <option-shape></option-shape>
         </option-group>
       </div>
     `;

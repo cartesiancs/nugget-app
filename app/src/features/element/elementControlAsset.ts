@@ -678,10 +678,12 @@ export class ElementControlAsset extends LitElement {
   // }
 
   rotateMouseup() {
-    document
-      .querySelector("#preview")
-      .removeEventListener("mousemove", this.rotateEventHandler);
-    this.isRotate = false;
+    try {
+      document
+        .querySelector("#preview")
+        .removeEventListener("mousemove", this.rotateEventHandler);
+      this.isRotate = false;
+    } catch (error) {}
   }
 
   resizeMousedown(direction) {

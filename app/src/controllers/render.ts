@@ -250,12 +250,11 @@ const prerender: any = {
       const x = element[0] / ratio + elements.location.x;
       const y = element[1] / ratio + elements.location.y;
 
-      context.fillStyle = "#ffffff";
+      context.fillStyle = elements.option.fillColor;
       context.lineTo(x, y);
     }
 
     context.closePath();
-    context.fillStyle = "#ffffff";
     context.fill();
 
     return canvas.toDataURL("image/png");

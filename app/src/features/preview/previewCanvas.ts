@@ -740,7 +740,7 @@ export class PreviewCanvss extends LitElement {
       const x = element[0] / ratio + target.location.x;
       const y = element[1] / ratio + target.location.y;
 
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = target.option.fillColor;
       if (this.nowShapeId == elementId) {
         ctx.arc(x, y, 8, 0, 5 * Math.PI);
       }
@@ -750,7 +750,6 @@ export class PreviewCanvss extends LitElement {
 
     ctx.closePath();
 
-    ctx.fillStyle = "#ffffff";
     ctx.fill();
   }
 

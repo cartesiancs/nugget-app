@@ -334,8 +334,15 @@ export class elementTimelineCanvas extends LitElement {
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       ctx.scale(dpr, dpr);
 
-      for (const elementId in this.timeline) {
-        if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+      const sortedTimeline = Object.fromEntries(
+        Object.entries(this.timeline).sort(
+          ([, valueA]: any, [, valueB]: any) =>
+            valueA.priority - valueB.priority,
+        ),
+      );
+
+      for (const elementId in sortedTimeline) {
+        if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
           const width = this.millisecondsToPx(
             this.timeline[elementId].duration,
           );
@@ -680,8 +687,14 @@ export class elementTimelineCanvas extends LitElement {
     let targetId = "";
     let cursorType = "none";
 
-    for (const elementId in this.timeline) {
-      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+    const sortedTimeline = Object.fromEntries(
+      Object.entries(this.timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
+    for (const elementId in sortedTimeline) {
+      if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
         const defaultWidth = this.millisecondsToPx(
           this.timeline[elementId].duration,
         );
@@ -829,6 +842,43 @@ export class elementTimelineCanvas extends LitElement {
     //document.querySelector('element-timeline').removeSeletedElements()
   }
 
+  exchangePriority(targetId, next) {
+    // next는 -1이거나, 1이거나
+    const sortedTimeline = Object.fromEntries(
+      Object.entries(this.timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
+    const priorityArray = Object.entries(sortedTimeline).map(
+      ([key, value]: any) => ({
+        key: key,
+        priority: value.priority,
+      }),
+    );
+
+    let targetArrayIndex = -1;
+    let index = 0;
+
+    for (const key in sortedTimeline) {
+      if (Object.prototype.hasOwnProperty.call(sortedTimeline, key)) {
+        if (key == targetId) {
+          targetArrayIndex = index;
+        }
+        index += 1;
+      }
+    }
+
+    if (targetArrayIndex != -1) {
+      this.timeline[targetId].priority =
+        priorityArray[targetArrayIndex + next].priority;
+      this.timeline[priorityArray[targetArrayIndex + next].key].priority =
+        priorityArray[targetArrayIndex].priority;
+    }
+
+    this.timelineState.patchTimeline(this.timeline);
+  }
+
   public removeSeletedElements() {
     this.timelineState.removeTimeline(this.targetId);
   }
@@ -920,6 +970,23 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   _handleKeydown(event) {
+    console.log(event.keyCode);
+
+    // arrowUp
+
+    if (event.keyCode == 38) {
+      console.log(this.targetId);
+      console.log(this.timeline);
+      this.exchangePriority(this.targetId, -1);
+    }
+
+    // arrowDown
+
+    if (event.keyCode == 40) {
+      console.log(this.targetId);
+      this.exchangePriority(this.targetId, 1);
+    }
+
     if (event.keyCode == 39) {
       const elementControl = document.querySelector("element-control");
 

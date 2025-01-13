@@ -53,10 +53,8 @@ export class OptionShape extends LitElement {
   resetValue() {
     const timeline = document.querySelector("element-timeline").timeline;
     const fontColor: any = this.querySelector("input[aria-event='font-color'");
-    const fontSize: any = this.querySelector("input[aria-event='font-size'");
 
-    fontColor.value = timeline[this.elementId].textcolor;
-    fontSize.value = timeline[this.elementId].fontsize;
+    fontColor.value = timeline[this.elementId].option.fillColor;
   }
 
   handleChangeColor() {

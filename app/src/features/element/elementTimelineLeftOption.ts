@@ -309,8 +309,14 @@ export class ElementTimelineLeftOption extends LitElement {
   protected render(): unknown {
     const dom: any = [];
 
-    for (const key in this.timeline) {
-      if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
+    const sortedTimeline = Object.fromEntries(
+      Object.entries(this.timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
+    for (const key in sortedTimeline) {
+      if (Object.prototype.hasOwnProperty.call(sortedTimeline, key)) {
         const element = this.timeline[key];
         let splitedFilepath = this.timeline[key].localpath.split("/");
         let text = splitedFilepath[splitedFilepath.length - 1];

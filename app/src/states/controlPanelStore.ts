@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 
-type ActiveStringType = "record" | "";
+type ActiveStringType = "record" | "" | "audioRecord";
 
 export interface IControlPanelStore {
   active: ActiveStringType[];

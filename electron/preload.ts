@@ -58,6 +58,9 @@ const request = {
   stream: {
     saveBufferToVideo: (arrayBuffer) =>
       ipcRenderer.invoke("stream:saveBufferToVideo", arrayBuffer),
+
+    saveBufferToAudio: (arrayBuffer) =>
+      ipcRenderer.invoke("stream:saveBufferToAudio", arrayBuffer),
   },
   extension: {
     openDir: (dir) => ipcRenderer.invoke("extension:open:dir", dir),

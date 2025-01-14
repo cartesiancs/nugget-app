@@ -619,6 +619,24 @@ export class ElementControl extends LitElement {
     };
   }
 
+  addAudioWithDuration(blob, path, duration) {
+    const elementId = this.generateUUID();
+    const audio = document.createElement("audio");
+
+    this.timeline[elementId] = {
+      priority: this.getNowPriority(),
+      blob: blob,
+      startTime: 0,
+      duration: duration,
+      location: { x: 0, y: 0 }, // NOT USING
+      trim: { startTime: 0, endTime: duration },
+      localpath: path,
+      filetype: "audio",
+    };
+
+    this.timelineState.patchTimeline(this.timeline);
+  }
+
   findNearestY(pairs, a) {
     let closestY = null;
     let closestDiff = Infinity;

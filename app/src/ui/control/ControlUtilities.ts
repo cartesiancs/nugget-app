@@ -27,21 +27,7 @@ export class ControlText extends LitElement {
   _handleClickPanel(name) {
     console.log(name);
 
-    this.controlPanel.updatePanel(["record"]);
-
-    // const video = document.createElement("video");
-    // navigator.mediaDevices
-    //   .getDisplayMedia({
-    //     video: {
-    //       frameRate: 60,
-    //     },
-    //   })
-    //   .then((stream) => {
-    //     video.srcObject = stream;
-    //     video.onloadedmetadata = (e) => video.play();
-    //     console.log("AAA");
-    //   })
-    //   .catch((e) => console.log(e));
+    this.controlPanel.updatePanel([...this.activePanel, name]);
   }
 
   render() {
@@ -55,6 +41,16 @@ export class ControlText extends LitElement {
             radio_button_checked
           </span>
           <b class="align-self-center text-light text-center">Record</b>
+        </div>
+
+        <div
+          class="col-4 d-flex flex-column bd-highlight overflow-hidden mt-1 asset"
+          @click=${() => this._handleClickPanel("audioRecord")}
+        >
+          <span class="material-symbols-outlined icon-lg align-self-center">
+            mic
+          </span>
+          <b class="align-self-center text-light text-center">Audio Record</b>
         </div>
       </div>`;
   }

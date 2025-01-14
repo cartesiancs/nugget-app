@@ -121,6 +121,7 @@ ipcMain.on("app:forceClose", ipcApp.forceClose);
 ipcMain.on("app:restart", ipcApp.restart);
 
 ipcMain.handle("stream:saveBufferToVideo", ipcStream.saveBufferToVideo);
+ipcMain.handle("stream:saveBufferToAudio", ipcStream.saveBufferToAudio);
 
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);

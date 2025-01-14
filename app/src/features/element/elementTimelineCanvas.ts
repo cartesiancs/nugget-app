@@ -879,6 +879,26 @@ export class elementTimelineCanvas extends LitElement {
     this.timelineState.patchTimeline(this.timeline);
   }
 
+  getNowPriority() {
+    if (Object.keys(this.timeline).length == 0) {
+      return 1;
+    }
+
+    let lastPriority: any = 1;
+
+    for (const key in this.timeline) {
+      if (Object.hasOwnProperty.call(this.timeline, key)) {
+        const element = this.timeline[key];
+        lastPriority =
+          lastPriority < (element.priority as number)
+            ? element.priority
+            : lastPriority;
+      }
+    }
+
+    return lastPriority + 1;
+  }
+
   public removeSeletedElements() {
     this.timelineState.removeTimeline(this.targetId);
   }
@@ -1019,7 +1039,10 @@ export class elementTimelineCanvas extends LitElement {
       //CTL v
       for (const elementId in this.copyedTimelineData) {
         if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
-          this.timeline[elementId] = { ...this.copyedTimelineData[elementId] };
+          let tempCopyObject = this.copyedTimelineData[elementId];
+          tempCopyObject.priority = this.getNowPriority();
+
+          this.timeline[elementId] = { ...tempCopyObject };
           this.timelineState.patchTimeline(this.timeline);
         }
       }
@@ -1044,7 +1067,10 @@ export class elementTimelineCanvas extends LitElement {
 
       for (const elementId in this.copyedTimelineData) {
         if (Object.hasOwnProperty.call(this.copyedTimelineData, elementId)) {
-          this.timeline[elementId] = { ...this.copyedTimelineData[elementId] };
+          let tempCopyObject = this.copyedTimelineData[elementId];
+          tempCopyObject.priority = this.getNowPriority();
+
+          this.timeline[elementId] = { ...tempCopyObject };
           this.timelineState.patchTimeline(this.timeline);
         }
       }

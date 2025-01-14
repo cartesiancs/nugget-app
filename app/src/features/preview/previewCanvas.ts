@@ -193,8 +193,15 @@ export class PreviewCanvss extends LitElement {
 
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-      for (const elementId in this.timeline) {
-        if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+      const sortedTimeline = Object.fromEntries(
+        Object.entries(this.timeline).sort(
+          ([, valueA]: any, [, valueB]: any) =>
+            valueA.priority - valueB.priority,
+        ),
+      );
+
+      for (const elementId in sortedTimeline) {
+        if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
           const x = this.timeline[elementId].location?.x as number;
           const y = this.timeline[elementId].location?.y as number;
           const w = this.timeline[elementId].width as number;

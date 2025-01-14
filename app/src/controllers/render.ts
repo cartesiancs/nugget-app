@@ -35,6 +35,13 @@ export class RenderController implements ReactiveController {
         document.querySelector("element-timeline").timeline,
       );
 
+      timeline = Object.fromEntries(
+        Object.entries(timeline).sort(
+          ([, valueA]: any, [, valueB]: any) =>
+            valueA.priority - valueB.priority,
+        ),
+      );
+
       let options = {
         videoDuration: projectDuration,
         videoDestination: result || `${projectFolder}/result.mp4`,

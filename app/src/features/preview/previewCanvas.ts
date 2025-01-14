@@ -898,6 +898,19 @@ export class PreviewCanvss extends LitElement {
           continue;
         }
 
+        if (fileType == "video") {
+          if (
+            !(
+              this.timelineCursor >=
+                startTime + this.timeline[elementId].trim.startTime &&
+              this.timelineCursor <
+                startTime + this.timeline[elementId].trim.endTime
+            )
+          ) {
+            continue;
+          }
+        }
+
         const collide = this.collisionCheck({
           x: x,
           y: y,
@@ -1080,6 +1093,19 @@ export class PreviewCanvss extends LitElement {
             )
           ) {
             continue;
+          }
+
+          if (fileType == "video") {
+            if (
+              !(
+                this.timelineCursor >=
+                  startTime + this.timeline[elementId].trim.startTime &&
+                this.timelineCursor <
+                  startTime + this.timeline[elementId].trim.endTime
+              )
+            ) {
+              continue;
+            }
           }
 
           const collide = this.collisionCheck({

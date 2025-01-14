@@ -49,6 +49,7 @@ export class PreviewCanvss extends LitElement {
   gifCanvas: { frameImageData: any; tempCtx: any };
   gifFrames: { key: string; frames: ParsedFrame[] }[];
   nowShapeId: string;
+  loadedVideos: any[];
   constructor() {
     super();
 
@@ -71,6 +72,8 @@ export class PreviewCanvss extends LitElement {
     };
 
     this.gifFrames = [];
+
+    this.loadedVideos = [];
 
     this.nowShapeId = "";
   }
@@ -368,12 +371,44 @@ export class PreviewCanvss extends LitElement {
               continue;
             }
 
-            try {
-              const video = document.querySelector(
-                `element-control-asset[elementid='${elementId}'] > video`,
-              );
+            if (
+              this.loadedVideos.findIndex((item) => {
+                return item.elementId == elementId;
+              }) != -1
+            ) {
+              const videoIndex = this.loadedVideos.findIndex((item) => {
+                return item.elementId == elementId;
+              });
+
+              const video = this.loadedVideos[videoIndex];
+
+              ctx.drawImage(video.object, x, y, w, h);
+            } else {
+              const video = document.createElement("video");
+
+              this.loadedVideos.push({
+                elementId: elementId,
+                path: this.timeline[elementId].localpath,
+                object: video,
+                isPlay: false,
+              });
+              video.src = this.timeline[elementId].localpath;
+              video.muted = true;
+
               ctx.drawImage(video, x, y, w, h);
-            } catch (error) {}
+
+              video.addEventListener("loadeddata", () => {
+                video.currentTime = 0;
+                ctx.drawImage(video, x, y, w, h);
+              });
+            }
+
+            // try {
+            //   const video = document.querySelector(
+            //     `element-control-asset[elementid='${elementId}'] > video`,
+            //   );
+            //   ctx.drawImage(video, x, y, w, h);
+            // } catch (error) {}
           }
 
           if (fileType == "text") {
@@ -751,6 +786,34 @@ export class PreviewCanvss extends LitElement {
     ctx.closePath();
 
     ctx.fill();
+  }
+
+  public stopPlay() {
+    for (let index = 0; index < this.loadedVideos.length; index++) {
+      try {
+        const element = this.loadedVideos[index];
+        element.isPlay = false;
+        element.object.pause();
+        element.object.currentTime =
+          -(this.timeline[element.elementId].startTime - this.timelineCursor) /
+          1000;
+        this.drawCanvas();
+      } catch (error) {}
+    }
+  }
+
+  public startPlay() {
+    for (let index = 0; index < this.loadedVideos.length; index++) {
+      try {
+        const element = this.loadedVideos[index];
+        element.isPlay = true;
+        element.object.currentTime =
+          -(this.timeline[element.elementId].startTime - this.timelineCursor) /
+          1000;
+
+        element.object.play();
+      } catch (error) {}
+    }
   }
 
   createShape(x, y) {

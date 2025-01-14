@@ -62,6 +62,7 @@ export class Timeline extends LitElement {
     }
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.play();
+
     this.timelineState.setPlay(true);
   }
 
@@ -72,6 +73,7 @@ export class Timeline extends LitElement {
 
     const elementControlComponent = document.querySelector("element-control");
     elementControlComponent.stop();
+
     this.timelineState.setPlay(false);
   }
 

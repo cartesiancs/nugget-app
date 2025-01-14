@@ -1045,6 +1045,9 @@ export class ElementControl extends LitElement {
   }
 
   play() {
+    const previewCanvas = document.querySelector("preview-canvas");
+    previewCanvas.startPlay();
+
     this.scroller = window.requestAnimationFrame(this.step.bind(this));
     this.startTime = Date.now() - this.progressTime;
     this.isPaused = false;
@@ -1052,6 +1055,9 @@ export class ElementControl extends LitElement {
 
   stop() {
     cancelAnimationFrame(this.scroller);
+
+    const previewCanvas = document.querySelector("preview-canvas");
+    previewCanvas.stopPlay();
 
     this.isPaused = true;
     for (const elementId in this.timeline) {
@@ -1064,6 +1070,9 @@ export class ElementControl extends LitElement {
   }
 
   reset() {
+    const previewCanvas = document.querySelector("preview-canvas");
+    previewCanvas.stopPlay();
+
     this.progress = 0;
     this.progressTime = 0;
     this.stop();

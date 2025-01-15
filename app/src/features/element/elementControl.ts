@@ -528,6 +528,7 @@ export class ElementControl extends LitElement {
       options: {
         isBold: false,
         isItalic: false,
+        align: "left",
       },
       location: { x: 0, y: 0 },
       rotation: 0,
@@ -574,6 +575,7 @@ export class ElementControl extends LitElement {
       options: {
         isBold: false,
         isItalic: false,
+        align: "left",
       },
       location: { x: 0, y: 0 },
       rotation: 0,

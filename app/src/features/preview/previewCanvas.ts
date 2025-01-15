@@ -433,11 +433,30 @@ export class PreviewCanvss extends LitElement {
               } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
                 this.timeline[elementId].fontsize
               }px ${this.timeline[elementId].fontname}`;
-              ctx.fillText(
+
+              const fontBoxWidth = ctx.measureText(
                 this.timeline[elementId].text as string,
-                x,
-                y + (this.timeline[elementId].fontsize || 0),
-              );
+              ).width;
+
+              if (this.timeline[elementId].options.align == "left") {
+                ctx.fillText(
+                  this.timeline[elementId].text as string,
+                  x,
+                  y + (this.timeline[elementId].fontsize || 0),
+                );
+              } else if (this.timeline[elementId].options.align == "center") {
+                ctx.fillText(
+                  this.timeline[elementId].text as string,
+                  x + w / 2 - fontBoxWidth / 2,
+                  y + (this.timeline[elementId].fontsize || 0),
+                );
+              } else if (this.timeline[elementId].options.align == "right") {
+                ctx.fillText(
+                  this.timeline[elementId].text as string,
+                  x + w - fontBoxWidth,
+                  y + (this.timeline[elementId].fontsize || 0),
+                );
+              }
             } catch (error) {}
           }
 

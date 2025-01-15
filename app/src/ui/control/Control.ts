@@ -9,6 +9,7 @@ import "./ControlFilter";
 import "../../features/preview/previewTopBar";
 import "../../features/record/screenRecord";
 import "../../features/record/audioRecord";
+import "../../features/caption/automaticCaption";
 
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { TimelineController } from "../../controllers/timeline";
@@ -280,12 +281,22 @@ export class Control extends LitElement {
         >
           <audio-record-panel></audio-record-panel>
         </div>
+
+        <div
+          style="height: calc(100% - 2rem);"
+          class="position-relative d-flex align-items-center justify-content-center ${this
+            .nowActivePanel == "automaticCaption"
+            ? ""
+            : "d-none"}"
+        >
+          <automatic-caption></automatic-caption>
+        </div>
       </div>
 
       <!-- OPTION-->
       <div
         id="split_col_3"
-        class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative option-window p-2"
+        class="bg-darker h-100 overflow-y-scroll overflow-x-hidden position-relative option-window p-2"
         style="width: ${this.resize.horizontal.option}%;"
       >
         <input

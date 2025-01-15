@@ -113,6 +113,7 @@ export type TextElementType = {
   options?: {
     isBold?: boolean;
     isItalic?: boolean;
+    align?: "left" | "center" | "right";
   };
   location?: { x: number; y: number };
   rotation?: number;

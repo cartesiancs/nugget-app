@@ -108,14 +108,48 @@ export class OptionText extends LitElement {
             class="btn btn-sm btn-default text-light"
             @click=${this.handleClickEnableBold}
           >
-            <span class="material-symbols-outlined"> format_bold </span>
+            <span class="material-symbols-outlined icon-sm"> format_bold </span>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-default text-light"
             @click=${this.handleClickEnableItalic}
           >
-            <span class="material-symbols-outlined"> format_italic </span>
+            <span class="material-symbols-outlined icon-sm">
+              format_italic
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <div class="btn-group" role="group" aria-label="Basic example">
+          <button
+            type="button"
+            class="btn btn-sm btn-default text-light"
+            @click=${() => this.handleClickAlign("left")}
+          >
+            <span class="material-symbols-outlined icon-sm">
+              format_align_left
+            </span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-default text-light"
+            @click=${() => this.handleClickAlign("center")}
+          >
+            <span class="material-symbols-outlined icon-sm">
+              format_align_center
+            </span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-default text-light"
+            @click=${() => this.handleClickAlign("right")}
+          >
+            <span class="material-symbols-outlined icon-sm">
+              format_align_right
+            </span>
           </button>
         </div>
       </div>
@@ -160,6 +194,14 @@ export class OptionText extends LitElement {
 
     fontColor.value = timeline[this.elementId].textcolor;
     fontSize.value = timeline[this.elementId].fontsize;
+  }
+
+  handleClickAlign(align) {
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["options", "align"],
+      align,
+    );
   }
 
   handleClickEnableBold() {

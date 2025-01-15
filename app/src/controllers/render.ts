@@ -236,11 +236,27 @@ const prerender: any = {
       elements.options.isBold ? "bold" : ""
     } ${elements.fontsize}px ${elements.fontname}`;
 
-    context.fillText(
-      elements.text,
-      elements.location.x,
-      elements.location.y + elements.fontsize,
-    );
+    const fontBoxWidth = context.measureText(elements.text).width;
+
+    if (elements.options.align == "left") {
+      context.fillText(
+        elements.text,
+        elements.location.x,
+        elements.location.y + elements.fontsize,
+      );
+    } else if (elements.options.align == "center") {
+      context.fillText(
+        elements.text,
+        elements.location.x + elements.width / 2 - fontBoxWidth / 2,
+        elements.location.y + elements.fontsize,
+      );
+    } else if (elements.options.align == "right") {
+      context.fillText(
+        elements.text,
+        elements.location.x + elements.width - fontBoxWidth,
+        elements.location.y + elements.fontsize,
+      );
+    }
 
     return canvas.toDataURL("image/png");
   },

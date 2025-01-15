@@ -58,7 +58,7 @@ export class ModalList extends LitElement {
         >
       </dds-modal>
 
-      <dds-modal modal-id="progressRender" modal-title="랜더링 중 이에요">
+      <dds-modal modal-id="progressRender" modal-title="Rendering...">
         <dds-content>
           <div class="mb-3">
             <div class="progress">
@@ -74,17 +74,17 @@ export class ModalList extends LitElement {
                 25%
               </div>
             </div>
-            <b class="text-secondary"
+            <!-- <b class="text-secondary"
               ><i class="fas fa-info-circle"></i> 랜더링 100%에 도달해도
               일정시간 지연될 수 있어요.
-            </b>
+            </b> -->
           </div>
         </dds-content>
         <dds-modal-button
           button-color="btn-light"
           button-text-color="text-dark"
           is-dismiss="true"
-          >닫기</dds-modal-button
+          >Close</dds-modal-button
         >
       </dds-modal>
 
@@ -114,7 +114,7 @@ export class ModalList extends LitElement {
         >
       </dds-modal>
 
-      <dds-modal modal-id="progressFinish" modal-title="랜더링이 완료되었어요">
+      <dds-modal modal-id="progressFinish" modal-title="Rendering is complete">
         <dds-content>
           <div class="mb-3"></div>
         </dds-content>
@@ -122,13 +122,13 @@ export class ModalList extends LitElement {
           button-color="btn-blue-fill"
           is-dismiss="false"
           @click=${this.openRenderedVideoFolder}
-          >저장폴더 열기</dds-modal-button
+          >Open Saved Folder</dds-modal-button
         >
         <dds-modal-button
           button-color="btn-light"
           button-text-color="text-dark"
           is-dismiss="true"
-          >닫기</dds-modal-button
+          >Close</dds-modal-button
         >
       </dds-modal>
 
@@ -151,8 +151,8 @@ export class ModalList extends LitElement {
 
       <dds-modal
         modal-id="whenClose"
-        modal-title="정말 프로그램을 종료할까요?"
-        modal-subtitle="변경사항은 저장되지 않아요."
+        modal-title="Are you sure you want to exit the program?"
+        modal-subtitle="Changes will not be saved."
       >
         <dds-content>
           <div class="mb-3"></div>
@@ -161,19 +161,19 @@ export class ModalList extends LitElement {
           button-color="btn-red-fill"
           is-dismiss="false"
           @click=${this.forceClose}
-          >네, 종료할게요</dds-modal-button
+          >Yes, I'll exit.</dds-modal-button
         >
         <dds-modal-button
           button-color="btn-light"
           button-text-color="text-dark"
           is-dismiss="true"
-          >아니요</dds-modal-button
+          >No</dds-modal-button
         >
       </dds-modal>
 
       <dds-modal
         modal-id="whenTimelineChanged"
-        modal-title="저장되지 않은 변경사항이 있어요."
+        modal-title="There are unsaved changes."
       >
         <dds-content>
           <div class="mb-3">
@@ -184,7 +184,7 @@ export class ModalList extends LitElement {
           button-color="btn-light"
           button-text-color="text-dark"
           is-dismiss="true"
-          >닫기</dds-modal-button
+          >Close</dds-modal-button
         >
       </dds-modal>
 

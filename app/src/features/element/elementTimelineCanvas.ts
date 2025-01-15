@@ -800,8 +800,7 @@ export class elementTimelineCanvas extends LitElement {
     }
 
     let isShowPanel = this.isShowAnimationPanel();
-    let itemName =
-      isShowPanel == true ? "애니메이션 패널 닫기" : "애니메이션 패널 열기";
+    let itemName = isShowPanel == true ? "close animation" : "open animation";
     let itemOnclickEvent =
       isShowPanel == true
         ? `document.querySelector('element-timeline-canvas').closeAnimationPanel('${this.targetId}')`
@@ -824,7 +823,7 @@ export class elementTimelineCanvas extends LitElement {
     document.querySelector("#menuRightClick").innerHTML = `
         <menu-dropdown-body top="${y}" left="${x}">
         ${this.animationPanelDropdownTemplate()}
-          <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="삭제"> </menu-dropdown-item>
+          <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="remove"> </menu-dropdown-item>
         </menu-dropdown-body>`;
   }
 

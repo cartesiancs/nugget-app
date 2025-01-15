@@ -39,7 +39,7 @@ export class OptionText extends LitElement {
     }
 
     return html` <div class="mb-2">
-        <label class="form-label text-light">텍스트</label>
+        <label class="form-label text-light">Text</label>
         <input
           @click=${this.handleClickTextForm}
           @input=${this.handleChangeText}
@@ -52,7 +52,7 @@ export class OptionText extends LitElement {
       </div>
 
       <div class="mb-2">
-        <label class="form-label text-light">텍스트 색상 선택</label>
+        <label class="form-label text-light">Color</label>
         <input
           @input=${this.handleChangeTextColor}
           aria-event="font-color"
@@ -64,7 +64,7 @@ export class OptionText extends LitElement {
       </div>
 
       <div class="mb-2">
-        <label class="form-label text-light">폰트 크기</label>
+        <label class="form-label text-light">Font Size</label>
         <input
           @change=${this.handleChangeTextSize}
           aria-event="font-size"
@@ -75,7 +75,7 @@ export class OptionText extends LitElement {
       </div>
 
       <div class="mb-2">
-        <label class="form-label text-light">폰트</label>
+        <label class="form-label text-light">Font</label>
         <select
           @change=${this.handleChangeTextFont}
           ref="lists"

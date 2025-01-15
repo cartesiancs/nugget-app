@@ -25,7 +25,7 @@ export class ToastList extends LitElement {
           style="background-color: rgba(37, 38, 43, 0.73);"
         >
           <div class="toast-body">
-            <div class="text-center text-light">메타데이터 불러오는중</div>
+            <div class="text-center text-light">Load Metadata</div>
             <div class="progress mt-2 mb-1">
               <div
                 class="progress-bar progress-bar-striped progress-bar-animated"

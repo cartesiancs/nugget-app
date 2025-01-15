@@ -20,7 +20,7 @@ export class RenderController implements ReactiveController {
     if (projectFolder == "") {
       document
         .querySelector("toast-box")
-        .showToast({ message: "프로젝트 폴더를 지정해주세요", delay: "4000" });
+        .showToast({ message: "Select a project folder", delay: "4000" });
 
       return 0;
     }

@@ -87,14 +87,18 @@ export class ElementTimelineBottomScroll extends LitElement {
   }
 
   setWidth() {
-    const timelineCanvas = document.querySelector("#elementTimelineCanvasRef");
-    const projectDuration = document.querySelector("#projectDuration").value;
-    const timelineRange = this.timelineRange;
-    const timeMagnification = timelineRange / 4;
+    try {
+      const timelineCanvas = document.querySelector(
+        "#elementTimelineCanvasRef",
+      );
+      const projectDuration = document.querySelector("#projectDuration").value;
+      const timelineRange = this.timelineRange;
+      const timeMagnification = timelineRange / 4;
 
-    const end = ((projectDuration * 1000) / 5) * timeMagnification;
+      const end = ((projectDuration * 1000) / 5) * timeMagnification;
 
-    this.width = 100 / (end / timelineCanvas.offsetWidth);
+      this.width = 100 / (end / timelineCanvas.offsetWidth);
+    } catch (error) {}
   }
 
   _handleMouseUp(e) {

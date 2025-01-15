@@ -1,6 +1,6 @@
 {
   "name": "nugget-app",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Video Editor",
   "main": "main/main.js",
   "author": "cartesiancs",

@@ -1353,13 +1353,15 @@ export class PreviewCanvss extends LitElement {
   }
 
   _handleMouseUp(e) {
-    this.addAnimationPoint(
-      this.timeline[this.activeElementId].location.x,
-      this.timeline[this.activeElementId].location.y,
-    );
-    this.isMove = false;
-    this.isStretch = false;
-    this.drawCanvas();
+    try {
+      this.addAnimationPoint(
+        this.timeline[this.activeElementId].location.x,
+        this.timeline[this.activeElementId].location.y,
+      );
+      this.isMove = false;
+      this.isStretch = false;
+      this.drawCanvas();
+    } catch (error) {}
   }
 
   _handleDblClick(e) {

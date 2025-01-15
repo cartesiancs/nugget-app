@@ -109,6 +109,11 @@ export type TextElementType = {
   fontname?: string;
   fontweight?: string;
   fonttype?: string;
+  letterSpacing?: number;
+  options?: {
+    isBold?: boolean;
+    isItalic?: boolean;
+  };
   location?: { x: number; y: number };
   rotation?: number;
   localpath?: string;

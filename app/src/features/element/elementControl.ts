@@ -524,6 +524,11 @@ export class ElementControl extends LitElement {
       fontname: "notosanskr",
       fontweight: "medium",
       fonttype: "otf",
+      letterSpacing: 0,
+      options: {
+        isBold: false,
+        isItalic: false,
+      },
       location: { x: 0, y: 0 },
       rotation: 0,
       localpath: "/TEXTELEMENT",
@@ -565,6 +570,11 @@ export class ElementControl extends LitElement {
       fontname: font.name,
       fontweight: "medium",
       fonttype: "otf",
+      letterSpacing: 0,
+      options: {
+        isBold: false,
+        isItalic: false,
+      },
       location: { x: 0, y: 0 },
       rotation: 0,
       localpath: "/TEXTELEMENT",

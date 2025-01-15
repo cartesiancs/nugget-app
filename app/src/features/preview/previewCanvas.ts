@@ -426,7 +426,13 @@ export class PreviewCanvss extends LitElement {
 
               ctx.fillStyle = this.timeline[elementId].textcolor as string;
               ctx.lineWidth = 0;
-              ctx.font = `${this.timeline[elementId].fontsize}px ${this.timeline[elementId].fontname}`;
+              ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
+
+              ctx.font = `${
+                this.timeline[elementId].options.isItalic ? "italic" : ""
+              } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
+                this.timeline[elementId].fontsize
+              }px ${this.timeline[elementId].fontname}`;
               ctx.fillText(
                 this.timeline[elementId].text as string,
                 x,

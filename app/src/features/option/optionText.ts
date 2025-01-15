@@ -38,7 +38,8 @@ export class OptionText extends LitElement {
       </option>`);
     }
 
-    return html` <div class="mb-2">
+    return html`
+      <div class="mb-2">
         <label class="form-label text-light">Text</label>
         <input
           @click=${this.handleClickTextForm}
@@ -75,6 +76,17 @@ export class OptionText extends LitElement {
       </div>
 
       <div class="mb-2">
+        <label class="form-label text-light">Letter Spacing</label>
+        <input
+          @change=${this.handleChangeLetterSpacing}
+          aria-event="letter-spacing"
+          type="number"
+          class="form-control bg-default text-light"
+          value="0"
+        />
+      </div>
+
+      <div class="mb-2">
         <label class="form-label text-light">Font</label>
         <select
           @change=${this.handleChangeTextFont}
@@ -83,11 +95,31 @@ export class OptionText extends LitElement {
           class="form-select form-control bg-default text-light"
           aria-label="Default select example"
         >
-          <option selected>Select</option>
+          <option selected>pretendard</option>
           ${fontListTemplate}
         </select>
         <style ref="fontStyles"></style>
-      </div>`;
+      </div>
+
+      <div class="mb-2">
+        <div class="btn-group" role="group" aria-label="Basic example">
+          <button
+            type="button"
+            class="btn btn-sm btn-default text-light"
+            @click=${this.handleClickEnableBold}
+          >
+            <span class="material-symbols-outlined"> format_bold </span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-default text-light"
+            @click=${this.handleClickEnableItalic}
+          >
+            <span class="material-symbols-outlined"> format_italic </span>
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   hide() {
@@ -130,8 +162,38 @@ export class OptionText extends LitElement {
     fontSize.value = timeline[this.elementId].fontsize;
   }
 
+  handleClickEnableBold() {
+    const state = useTimelineStore.getState();
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["options", "isBold"],
+      !state.timeline[this.elementId].options?.isBold,
+    );
+  }
+
+  handleClickEnableItalic() {
+    const state = useTimelineStore.getState();
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["options", "isItalic"],
+      !state.timeline[this.elementId].options?.isItalic,
+    );
+  }
+
   handleClickTextForm() {
     this.timelineState.setCursorType("text");
+  }
+
+  handleChangeLetterSpacing(e) {
+    const letterSpacing: any = this.querySelector(
+      "input[aria-event='letter-spacing'",
+    );
+
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["letterSpacing"],
+      parseInt(letterSpacing.value),
+    );
   }
 
   handleChangeTextColor() {

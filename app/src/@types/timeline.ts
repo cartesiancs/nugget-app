@@ -93,6 +93,7 @@ export type VideoElementType = {
   filetype?: string;
   codec?: { video: string; audio: string };
   ratio?: number;
+  speed?: number;
 };
 
 export type TextElementType = {
@@ -148,6 +149,7 @@ export type AudioElementType = {
   trim?: { startTime: number; endTime: number };
   localpath?: string;
   filetype?: string;
+  speed?: number;
 };
 
 export interface Timeline {

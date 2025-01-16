@@ -30,7 +30,8 @@ export class OptionVideo extends LitElement {
   }
 
   render() {
-    return html` <label class="form-label text-light"
+    return html`
+      <label class="form-label text-light"
         >${this.lc.t("setting.position")}</label
       >
       <div class="d-flex flex-row bd-highlight mb-2">
@@ -48,7 +49,21 @@ export class OptionVideo extends LitElement {
           value="0"
           @change=${this.handleLocation}
         />
-      </div>`;
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label text-light">Speed</label>
+        <input
+          @change=${this.updateSpeed}
+          aria-event="speed"
+          type="number"
+          class="form-control bg-default text-light"
+          value="1"
+          min="0.5"
+          max="2"
+        />
+      </div>
+    `;
   }
 
   hide() {
@@ -69,6 +84,16 @@ export class OptionVideo extends LitElement {
     const yDom: any = this.querySelector("input[aria-event='location-y'");
     xDom.value = this.timeline[this.elementId].location?.x;
     yDom.value = this.timeline[this.elementId].location?.y;
+  }
+
+  updateSpeed() {
+    const speed = this.querySelector("input[aria-event='speed'") as any;
+
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["speed"],
+      parseFloat(speed.value),
+    );
   }
 
   handleLocation() {

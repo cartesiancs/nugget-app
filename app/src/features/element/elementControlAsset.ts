@@ -163,12 +163,14 @@ export class ElementControlAsset extends LitElement {
   }
 
   templateVideo() {
-    return html`<video
-      src="${this.timeline[this.elementId].localpath || ""}"
-      alt=""
-      class="element-video d-none"
-      draggable="false"
-    ></video>`;
+    try {
+      return html`<video
+        src="${this.timeline[this.elementId].localpath || ""}"
+        alt=""
+        class="element-video d-none"
+        draggable="false"
+      ></video>`;
+    } catch (error) {}
   }
 
   templateAudio() {

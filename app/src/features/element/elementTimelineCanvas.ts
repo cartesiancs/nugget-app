@@ -343,9 +343,6 @@ export class elementTimelineCanvas extends LitElement {
 
       for (const elementId in sortedTimeline) {
         if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
-          const width = this.millisecondsToPx(
-            this.timeline[elementId].duration,
-          );
           const height = 30;
           const top = index * height * 1.2 - this.canvasVerticalScroll;
           const left =
@@ -359,6 +356,10 @@ export class elementTimelineCanvas extends LitElement {
           ctx.lineWidth = 0;
 
           if (elementType == "static") {
+            const width = this.millisecondsToPx(
+              this.timeline[elementId].duration,
+            );
+
             ctx.fillStyle = this.timelineColor[elementId];
             ctx.strokeStyle = this.timelineColor[elementId];
             ctx.lineWidth = 0;
@@ -372,6 +373,11 @@ export class elementTimelineCanvas extends LitElement {
               this.drawActive(ctx, elementId, left, top, width, height);
             }
           } else if (elementType == "dynamic") {
+            const width = this.millisecondsToPx(
+              this.timeline[elementId].duration /
+                this.timeline[elementId].speed,
+            );
+
             const startTime = this.millisecondsToPx(
               this.timeline[elementId].trim.startTime,
             );
@@ -379,7 +385,8 @@ export class elementTimelineCanvas extends LitElement {
               this.timeline[elementId].trim.endTime,
             );
             const duration = this.millisecondsToPx(
-              this.timeline[elementId].duration,
+              this.timeline[elementId].duration /
+                this.timeline[elementId].speed,
             );
 
             ctx.fillStyle = this.timelineColor[elementId];
@@ -670,7 +677,7 @@ export class elementTimelineCanvas extends LitElement {
     if (elementType == "dynamic") {
       if (
         this.targetTrim.endTime + this.pxToMilliseconds(dx) <
-        this.targetDuration
+        this.targetDuration / this.timeline[targetId].speed
       ) {
         this.timeline[targetId].startTime = this.targetStartTime;
         this.timeline[targetId].trim.endTime =

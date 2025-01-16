@@ -261,17 +261,14 @@ export const renderFilter = {
       //NOTE: 끝 부분 자르기 버그 있음
       //NOTE: 버그 지뢰임 나중에 해결해야
 
-      let trimStartHMS = renderUtil.convertMillisecondToHMS(
-        object.element.trim.startTime / 1000,
-      );
-      let trimDurationHMS = renderUtil.convertMillisecondToHMS(
-        (object.element.trim.endTime - object.element.trim.startTime) / 1000,
-      );
-
       if (isExistAudio == true) {
         object.command
           .input(object.element.localpath)
-          .inputOptions(`-ss ${object.element.trim.startTime / 1000}`)
+          .inputOptions(
+            `-ss ${
+              (object.element.trim.startTime / 1000) * object.element.speed
+            }`,
+          )
           .inputOptions(
             `-itsoffset ${
               options.startTime + object.element.trim.startTime / 1000
@@ -280,7 +277,11 @@ export const renderFilter = {
       } else {
         object.command
           .input(object.element.localpath)
-          .inputOptions(`-ss ${trimStartHMS}`)
+          .inputOptions(
+            `-ss ${
+              (object.element.trim.startTime / 1000) * object.element.speed
+            }`,
+          )
           .inputOptions(`-itsoffset ${options.startTime}`)
           .inputOptions(`-t ${object.element.trim.endTime / 1000}`);
 
@@ -306,6 +307,12 @@ export const renderFilter = {
       inputs: `[${elementCounts.video}:v]`,
       outputs: `image${elementCounts.video}`,
     });
+
+    if (checkDynamicCondition) {
+      object.filter.push(
+        `[image${elementCounts.video}]tpad=start_duration=${options.startTime},setpts=PTS/${object.element.speed}[image${elementCounts.video}]`,
+      );
+    }
 
     // NOTE: 회전시 사분면 사이드 잘림
     object.filter.push(
@@ -337,8 +344,6 @@ export const renderFilter = {
       inputs: `[tmp][image${elementCounts.video}]`,
       outputs: `tmp`,
     });
-
-    // object.filter.push(`[tmp]fps=60, setpts=N/(60*TB)[tmp]`);
 
     elementCounts.video += 1;
 
@@ -403,11 +408,12 @@ export const renderFilter = {
         object.element.trim.endTime / 1000 -
         object.element.trim.startTime / 1000,
       endTime: object.element.startTime / 1000 + object.element.duration / 1000,
+      speed: object.element.speed || 1,
     };
 
     object.command
       .input(object.element.localpath)
-      .inputOptions(`-ss ${options.trim.start}`)
+      .inputOptions(`-ss ${options.trim.start * options.speed}`)
       //.inputOptions(`-itsoffset ${options.startTime}`)
       // .seekInput(options.trim.start)
       .inputOptions(`-t ${options.duration}`);
@@ -420,7 +426,11 @@ export const renderFilter = {
     log.info("[render] options.startTime ", options.startTime * 1000);
 
     object.filter.push(
-      `[${elementCounts.video}:a]adelay=${options.startTime * 1000}|${
+      `[${elementCounts.video}:a]atempo=${options.speed}[audio${elementCounts.video}]`,
+    );
+
+    object.filter.push(
+      `[audio${elementCounts.video}]adelay=${options.startTime * 1000}|${
         options.startTime * 1000
       }[audio${elementCounts.video}]`,
     );

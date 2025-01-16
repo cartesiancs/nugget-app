@@ -58,7 +58,7 @@ export class ControlText extends LitElement {
           @click=${() => this._handleClickPanel("automaticCaption")}
         >
           <span class="material-symbols-outlined icon-lg align-self-center">
-            mic
+            subtitles
           </span>
           <b class="align-self-center text-light text-center"
             >Automatic Caption</b

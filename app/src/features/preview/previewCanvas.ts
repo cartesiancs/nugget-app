@@ -11,6 +11,7 @@ import { ImageElementType } from "../../@types/timeline";
 import { KeyframeController } from "../../controllers/keyframe";
 import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
 import { v4 as uuidv4 } from "uuid";
+import { elementUtils } from "../../utils/element";
 
 type ImageTempType = {
   elementId: string;
@@ -18,7 +19,7 @@ type ImageTempType = {
 };
 
 @customElement("preview-canvas")
-export class PreviewCanvss extends LitElement {
+export class PreviewCanvas extends LitElement {
   previewRatio: number;
   isMove: boolean;
   activeElementId: string;
@@ -210,13 +211,27 @@ export class PreviewCanvss extends LitElement {
           const startTime = this.timeline[elementId].startTime as number;
           const duration = this.timeline[elementId].duration as number;
 
-          if (
-            !(
-              this.timelineCursor >= startTime &&
-              this.timelineCursor < startTime + duration
-            )
-          ) {
-            continue;
+          const elementType = elementUtils.getElementType(fileType);
+
+          if (elementType == "static") {
+            if (
+              !(
+                this.timelineCursor >= startTime &&
+                this.timelineCursor < startTime + duration
+              )
+            ) {
+              continue;
+            }
+          } else {
+            if (
+              !(
+                this.timelineCursor >= startTime &&
+                this.timelineCursor <
+                  startTime + duration / this.timeline[elementId].speed
+              )
+            ) {
+              continue;
+            }
           }
 
           if (fileType == "image") {
@@ -375,6 +390,20 @@ export class PreviewCanvss extends LitElement {
                   startTime + this.timeline[elementId].trim.endTime
               )
             ) {
+              if (
+                this.loadedVideos.findIndex((item) => {
+                  return item.elementId == elementId;
+                }) != -1
+              ) {
+                const videoIndex = this.loadedVideos.findIndex((item) => {
+                  return item.elementId == elementId;
+                });
+
+                const video = this.loadedVideos[videoIndex];
+
+                video.object.muted = true;
+              }
+
               continue;
             }
 
@@ -389,9 +418,12 @@ export class PreviewCanvss extends LitElement {
 
               const video = this.loadedVideos[videoIndex];
 
+              video.object.muted = false;
+
               ctx.drawImage(video.object, x, y, w, h);
             } else {
               const video = document.createElement("video");
+              video.playbackRate = this.timeline[elementId].speed;
 
               this.loadedVideos.push({
                 elementId: elementId,
@@ -400,7 +432,6 @@ export class PreviewCanvss extends LitElement {
                 isPlay: false,
               });
               video.src = this.timeline[elementId].localpath;
-              video.muted = true;
 
               ctx.drawImage(video, x, y, w, h);
 
@@ -827,8 +858,10 @@ export class PreviewCanvss extends LitElement {
         element.isPlay = false;
         element.object.pause();
         element.object.currentTime =
-          -(this.timeline[element.elementId].startTime - this.timelineCursor) /
+          (-(this.timeline[element.elementId].startTime - this.timelineCursor) *
+            this.timeline[element.elementId].speed) /
           1000;
+
         this.drawCanvas();
       } catch (error) {}
     }
@@ -840,8 +873,13 @@ export class PreviewCanvss extends LitElement {
         const element = this.loadedVideos[index];
         element.isPlay = true;
         element.object.currentTime =
-          -(this.timeline[element.elementId].startTime - this.timelineCursor) /
+          (-(this.timeline[element.elementId].startTime - this.timelineCursor) *
+            this.timeline[element.elementId].speed) /
           1000;
+
+        element.object.playbackRate = this.timeline[element.elementId].speed;
+        element.object.muted = true;
+        console.log(this.timeline[element.elementId].speed);
 
         element.object.play();
       } catch (error) {}

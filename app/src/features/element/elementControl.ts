@@ -435,6 +435,7 @@ export class ElementControl extends LitElement {
           isExistAudio: isExist,
           filetype: "video",
           codec: { video: "default", audio: "default" },
+          speed: 1,
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -502,6 +503,7 @@ export class ElementControl extends LitElement {
           isExistAudio: isExist,
           filetype: "video",
           codec: { video: "default", audio: "default" },
+          speed: 1,
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -622,6 +624,7 @@ export class ElementControl extends LitElement {
         trim: { startTime: 0, endTime: duration },
         localpath: path,
         filetype: "audio",
+        speed: 1,
       };
 
       this.timelineState.patchTimeline(this.timeline);
@@ -644,6 +647,7 @@ export class ElementControl extends LitElement {
       trim: { startTime: 0, endTime: duration },
       localpath: path,
       filetype: "audio",
+      speed: 1,
     };
 
     this.timelineState.patchTimeline(this.timeline);
@@ -721,6 +725,8 @@ export class ElementControl extends LitElement {
       );
 
       let video = element.querySelector("video");
+      video.muted = true;
+
       let secondsOfRelativeTime =
         ((this.timeline[elementId].startTime as number) - this.progressTime) /
         1000;
@@ -752,6 +758,7 @@ export class ElementControl extends LitElement {
         } else {
           if (!this.isPlay[elementId]) {
             video.currentTime = secondsOfRelativeTime;
+            video.muted = true;
             video.play();
           }
           this.isPlay[elementId] = true;

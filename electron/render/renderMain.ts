@@ -217,6 +217,43 @@ export const renderMain = {
 
     command.run();
   },
+
+  extractAudioFromVideo: async (event, outputAudio, videoPath) => {
+    let command = ffmpeg();
+    let outputAudioPath = outputAudio;
+
+    command
+      .input(`${videoPath}`)
+      .noVideo()
+      .audioCodec("pcm_s16le")
+      .audioFrequency(44100)
+      .audioChannels(2);
+
+    const timeInterval = setInterval(() => {
+      mainWindow.webContents.send(
+        "ffmpeg:extractAudioFromVideo:progress",
+        "progress",
+      );
+    }, 200);
+
+    command.format("wav");
+    command.output(outputAudioPath);
+    command.on("end", function () {
+      clearInterval(timeInterval);
+
+      log.info("extractAudioFromVideo Finish processing");
+      mainWindow.webContents.send(
+        "ffmpeg:extractAudioFromVideo:finish",
+        outputAudioPath,
+      );
+    });
+
+    command.on("error", function (err, stdout, stderr) {
+      log.info("combineFrame Render Error", err.message);
+    });
+
+    command.run();
+  },
 };
 
 export const renderFilter = {

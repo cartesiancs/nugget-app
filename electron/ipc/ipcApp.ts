@@ -27,4 +27,10 @@ export const ipcApp = {
 
     return { status: 1, path: resourcesPath };
   },
+
+  getTempPath: async (event) => {
+    const path = app.getPath("temp");
+
+    return { status: 1, path: path };
+  },
 };

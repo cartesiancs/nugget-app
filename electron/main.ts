@@ -97,6 +97,10 @@ ipcMain.on("OPEN_URL", shellLib.openUrl);
 ipcMain.on("RENDER", renderMain.start);
 
 ipcMain.handle("ffmpeg:combineFrame", renderMain.combineFrame);
+ipcMain.handle(
+  "ffmpeg:extractAudioFromVideo",
+  renderMain.extractAudioFromVideo,
+);
 
 ipcMain.handle("extension:timeline:get", ipcTimeline.get);
 ipcMain.handle("extension:timeline:add", ipcTimeline.add);
@@ -124,6 +128,7 @@ ipcMain.handle("stream:saveBufferToVideo", ipcStream.saveBufferToVideo);
 ipcMain.handle("stream:saveBufferToAudio", ipcStream.saveBufferToAudio);
 
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
+ipcMain.handle("app:getTempPath", ipcApp.getTempPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);
 ipcMain.handle("font:getLists", fontLib.getFontList);
 ipcMain.handle("font:getLocalFontLists", fontLib.getLocalFontList);

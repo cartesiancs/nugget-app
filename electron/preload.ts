@@ -5,6 +5,7 @@ const request = {
     forceClose: () => ipcRenderer.send("app:forceClose"),
     restart: () => ipcRenderer.send("app:restart"),
     getResourcesPath: () => ipcRenderer.invoke("app:getResourcesPath"),
+    getTempPath: () => ipcRenderer.invoke("app:getTempPath"),
     getAppInfo: () => ipcRenderer.invoke("app:getAppInfo"),
   },
   dialog: {
@@ -46,6 +47,12 @@ const request = {
       ipcRenderer.send("GET_METADATA", bloburl, mediapath),
     combineFrame: (outputDir, elementId) =>
       ipcRenderer.invoke("ffmpeg:combineFrame", outputDir, elementId),
+    extractAudioFromVideo: (outputAudio, videoPath) =>
+      ipcRenderer.invoke(
+        "ffmpeg:extractAudioFromVideo",
+        outputAudio,
+        videoPath,
+      ),
     installFFmpeg: () => ipcRenderer.send("DOWNLOAD_FFMPEG"),
   },
   render: {
@@ -88,6 +95,10 @@ const response = {
   },
   ffmpeg: {
     getMetadata: (callback) => ipcRenderer.on("GET_METADATA", callback),
+    extractAudioFromVideoProgress: (callback) =>
+      ipcRenderer.on("ffmpeg:extractAudioFromVideo:progress", callback),
+    extractAudioFromVideoFinish: (callback) =>
+      ipcRenderer.on("ffmpeg:extractAudioFromVideo:finish", callback),
   },
   shortcut: {
     controlS: (callback) => ipcRenderer.on("SHORTCUT_CONTROL_S", callback),

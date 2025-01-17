@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { useTimelineStore } from "../states/timelineStore";
 import { rendererModal } from "../utils/modal";
 import { uiStore } from "../states/uiStore";
+import { renderOptionStore } from "../states/renderOptionStore";
 
 const arrayBufferToBase64 = (buffer) => {
   var binary = "";
@@ -42,7 +43,7 @@ const project = {
       rendererModal.whenTimelineChanged.show();
       document.querySelector(
         "#whenTimelineChangedMsg",
-      ).innerHTML = `새 프로젝트 파일을 볼러오려면 에디터를 닫고 재실행해 주세요.`;
+      ).innerHTML = `Needs to restart.`;
       return 0;
     }
 
@@ -77,9 +78,7 @@ const project = {
   saveProjectFile: function ({ projectDestination }) {
     const elementTimeline = document.querySelector("element-timeline");
     const timeline = document.querySelector("element-timeline").timeline;
-    const projectDuration = Number(
-      document.querySelector("#projectDuration").value,
-    );
+    const projectDuration = renderOptionStore.getState().options.duration;
     const projectRatio = document.querySelector("element-control").previewRatio;
 
     const zip = new JSZip();

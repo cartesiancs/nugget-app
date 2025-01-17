@@ -308,11 +308,11 @@ export const renderFilter = {
       outputs: `image${elementCounts.video}`,
     });
 
-    if (checkDynamicCondition) {
-      object.filter.push(
-        `[image${elementCounts.video}]tpad=start_duration=${options.startTime},setpts=PTS/${object.element.speed}[image${elementCounts.video}]`,
-      );
-    }
+    // if (checkDynamicCondition) {
+    //   object.filter.push(
+    //     `[image${elementCounts.video}]tpad=start_duration=${options.startTime},setpts=PTS/${object.element.speed}[image${elementCounts.video}]`,
+    //   );
+    // }
 
     // NOTE: 회전시 사분면 사이드 잘림
     object.filter.push(

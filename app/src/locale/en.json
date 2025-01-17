@@ -8,6 +8,7 @@
     "video_duration": "Duration",
     "seconds": "Seconds",
     "seconds_unit": "s",
+    "minute_unit": "m",
     "frame": "Frame",
     "resolution": "Resolution",
     "save_project": "Save Project",

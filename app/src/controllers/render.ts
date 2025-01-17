@@ -1,19 +1,19 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
 import { rendererModal } from "../utils/modal";
+import { renderOptionStore } from "../states/renderOptionStore";
 
 export class RenderController implements ReactiveController {
   private host: ReactiveControllerHost | undefined;
 
   public requestRender() {
+    const renderOptionState = renderOptionStore.getState().options;
     const elementControlComponent = document.querySelector("element-control");
 
-    const projectDuration = Number(
-      document.querySelector("#projectDuration").value,
-    );
+    const projectDuration = renderOptionState.duration;
     const projectFolder = document.querySelector("#projectFolder").value;
     const projectRatio = elementControlComponent.previewRatio;
-    const previewSizeH = document.querySelector("#previewSizeH").value;
-    const previewSizeW = document.querySelector("#previewSizeW").value;
+    const previewSizeH = renderOptionState.previewSize.h;
+    const previewSizeW = renderOptionState.previewSize.w;
 
     const videoBitrate = Number(document.querySelector("#videoBitrate").value);
 
@@ -71,9 +71,9 @@ const rendererUtil = {
   },
 
   secondsToProgress(seconds) {
-    const projectDuration = Number(
-      document.querySelector("#projectDuration").value,
-    );
+    const renderOptionState = renderOptionStore.getState().options;
+
+    const projectDuration = renderOptionState.duration;
     return (seconds / projectDuration) * 100;
   },
 

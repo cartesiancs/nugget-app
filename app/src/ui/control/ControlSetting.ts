@@ -41,6 +41,26 @@ export class ControlSetting extends LitElement {
     this.renderOptionStore.updateOptions(this.renderOption);
   }
 
+  _handleUpdateDurationSecond(e) {
+    const minute = parseInt(
+      document.querySelector("#projectDurationMinute").value,
+    );
+    const second = parseInt(e.target.value);
+
+    this.renderOption.duration = minute * 60 + second;
+    this.renderOptionStore.updateOptions(this.renderOption);
+  }
+
+  _handleUpdateDurationMinute(e) {
+    const minute = parseInt(e.target.value);
+    const second = parseInt(
+      document.querySelector("#projectDurationSecond").value,
+    );
+
+    this.renderOption.duration = minute * 60 + second;
+    this.renderOptionStore.updateOptions(this.renderOption);
+  }
+
   _handleClickChangeLang() {
     if (this.lc.value == "ko") {
       this.lc.changeLanguage("en");
@@ -75,18 +95,34 @@ export class ControlSetting extends LitElement {
       <label class="form-label text-light"
         >${this.lc.t("setting.video_duration")}</label
       >
-      <div class="input-group mb-3">
-        <input
-          id="projectDuration"
-          type="number"
-          class="form-control bg-default text-light"
-          placeholder="${this.lc.t("setting.seconds")} e.g) 0"
-          onchange="document.querySelector('element-timeline-ruler').updateRulerLength(this)"
-          value="10"
-        />
-        <span class="input-group-text bg-default text-light" id="basic-addon2"
-          >${this.lc.t("setting.seconds_unit")}</span
-        >
+      <div class="d-flex flex-row bd-highlight gap-2">
+        <div class="input-group mb-3">
+          <input
+            id="projectDurationMinute"
+            type="number"
+            class="form-control bg-default text-light"
+            placeholder="m"
+            @change=${this._handleUpdateDurationMinute}
+            value="0"
+          />
+          <span class="input-group-text bg-default text-light" id="basic-addon2"
+            >${this.lc.t("setting.minute_unit")}</span
+          >
+        </div>
+
+        <div class="input-group mb-3">
+          <input
+            id="projectDurationSecond"
+            type="number"
+            class="form-control bg-default text-light"
+            placeholder="${this.lc.t("setting.seconds")} e.g) 0"
+            @change=${this._handleUpdateDurationSecond}
+            value="10"
+          />
+          <span class="input-group-text bg-default text-light" id="basic-addon2"
+            >${this.lc.t("setting.seconds_unit")}</span
+          >
+        </div>
       </div>
 
       <label class="form-label text-light">${this.lc.t("setting.frame")}</label>

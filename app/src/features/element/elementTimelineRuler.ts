@@ -261,21 +261,22 @@ export class ElementTimelineRuler extends LitElement {
     // this.drawRuler();
   }
 
-  updateRulerLength(e) {
-    this.updateTimelineEnd();
-  }
+  // updateRulerLength(e) {
+  //   this.updateTimelineEnd();
+  // }
 
-  updateTimelineEnd() {
-    const elementTimelineEnd = document.querySelector("element-timeline-end");
-    const projectDuration = document.querySelector("#projectDuration").value;
+  // NOTE: timeline duration 이거 변경.
+  // updateTimelineEnd() {
+  //   const elementTimelineEnd = document.querySelector("element-timeline-end");
+  //   const projectDuration = document.querySelector("#projectDuration").value;
 
-    const timelineRange = this.timelineRange;
-    const timeMagnification = timelineRange / 4;
+  //   const timelineRange = this.timelineRange;
+  //   const timeMagnification = timelineRange / 4;
 
-    elementTimelineEnd.setEndTimeline({
-      px: ((projectDuration * 1000) / 5) * timeMagnification,
-    });
-  }
+  //   elementTimelineEnd.setEndTimeline({
+  //     px: ((projectDuration * 1000) / 5) * timeMagnification,
+  //   });
+  // }
 
   changeWidth(px) {
     this.style.width = `${px}px`;

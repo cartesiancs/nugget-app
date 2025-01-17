@@ -12,6 +12,10 @@ import { IUIStore, uiStore } from "../../states/uiStore";
 import { darkenColor } from "../../utils/rgbColor";
 import { TimelineController } from "../../controllers/timeline";
 import { IKeyframeStore, keyframeStore } from "../../states/keyframeStore";
+import {
+  IRenderOptionStore,
+  renderOptionStore,
+} from "../../states/renderOptionStore";
 
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
@@ -90,6 +94,12 @@ export class elementTimelineCanvas extends LitElement {
   @property()
   resize = this.uiState.resize;
 
+  @property()
+  renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
+
+  @property()
+  renderOption = this.renderOptionStore.options;
+
   @consume({ context: timelineContext })
   @property({ attribute: false })
   public timelineOptions: any = {
@@ -115,6 +125,10 @@ export class elementTimelineCanvas extends LitElement {
 
     keyframeStore.subscribe((state) => {
       this.target = state.target;
+    });
+
+    renderOptionStore.subscribe((state) => {
+      this.renderOption = state.options;
     });
 
     return this;
@@ -282,7 +296,8 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   drawEndTimeline() {
-    const projectDuration = document.querySelector("#projectDuration").value;
+    const projectDuration = this.renderOption.duration;
+
     const timelineRange = this.timelineRange;
     const timeMagnification = timelineRange / 4;
 

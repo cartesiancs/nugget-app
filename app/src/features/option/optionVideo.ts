@@ -51,7 +51,7 @@ export class OptionVideo extends LitElement {
         />
       </div>
 
-      <div class="mb-2">
+      <!-- <div class="mb-2">
         <label class="form-label text-light">Speed</label>
         <input
           @change=${this.updateSpeed}
@@ -62,7 +62,7 @@ export class OptionVideo extends LitElement {
           min="0.5"
           max="2"
         />
-      </div>
+      </div> -->
     `;
   }
 

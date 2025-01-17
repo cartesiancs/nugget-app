@@ -2,6 +2,10 @@ import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
+import {
+  IRenderOptionStore,
+  renderOptionStore,
+} from "../../states/renderOptionStore";
 
 @customElement("element-timeline-bottom-scroll")
 export class ElementTimelineBottomScroll extends LitElement {
@@ -16,6 +20,12 @@ export class ElementTimelineBottomScroll extends LitElement {
 
   @property()
   uiState: IUIStore = uiStore.getInitialState();
+
+  @property()
+  renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
+
+  @property()
+  renderOption = this.renderOptionStore.options;
 
   @property()
   resize = this.uiState.resize;
@@ -34,6 +44,10 @@ export class ElementTimelineBottomScroll extends LitElement {
 
     uiStore.subscribe((state) => {
       this.resize = state.resize;
+    });
+
+    renderOptionStore.subscribe((state) => {
+      this.renderOption = state.options;
     });
 
     return this;
@@ -91,7 +105,8 @@ export class ElementTimelineBottomScroll extends LitElement {
       const timelineCanvas = document.querySelector(
         "#elementTimelineCanvasRef",
       );
-      const projectDuration = document.querySelector("#projectDuration").value;
+
+      const projectDuration = this.renderOption.duration;
       const timelineRange = this.timelineRange;
       const timeMagnification = timelineRange / 4;
 

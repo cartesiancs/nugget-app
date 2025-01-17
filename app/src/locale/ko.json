@@ -8,6 +8,7 @@
     "video_duration": "영상 길이",
     "seconds": "초단위",
     "seconds_unit": "초",
+    "minute_unit": "분",
     "frame": "프레임",
     "resolution": "해상도",
     "save_project": "프로젝트 저장",

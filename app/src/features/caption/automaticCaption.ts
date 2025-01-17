@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import mime from "../../functions/mime";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 
 @customElement("automatic-caption")
 export class AutomaticCaption extends LitElement {
@@ -22,7 +23,7 @@ export class AutomaticCaption extends LitElement {
 
     window.electronAPI.res.ffmpeg.extractAudioFromVideoProgress(
       (event, progress) => {
-        this.processingVideoModal.show();
+        //this.processingVideoModal.show();
         console.log(progress);
       },
     );
@@ -30,8 +31,12 @@ export class AutomaticCaption extends LitElement {
     window.electronAPI.res.ffmpeg.extractAudioFromVideoFinish(
       (event, outputWav) => {
         this.isProgressProcessing = true;
-        this.processingVideoModal.hide();
-        this.analyzingVideoModal.show();
+        setTimeout(() => {
+          this.processingVideoModal.hide();
+          this.analyzingVideoModal.show();
+        }, 500);
+
+        this.analyzeAudioToText(outputWav);
         this.requestUpdate();
 
         console.log(outputWav);
@@ -41,6 +46,30 @@ export class AutomaticCaption extends LitElement {
 
   createRenderRoot() {
     return this;
+  }
+
+  async analyzeAudioToText(audioPath) {
+    const serverUrl = document.querySelector("#NuggetAutoServer").value;
+    const response = await fetch(audioPath);
+
+    console.log("AAAA");
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+    }
+
+    const audioBlob = await response.blob();
+
+    const formData = new FormData();
+    formData.append("file", audioBlob, "audio.wav");
+
+    const request = await axios.post(`${serverUrl}/audio`, formData);
+
+    const result = request.data.result;
+
+    this.analyzingVideoModal.hide();
+
+    console.log("RESULT", result);
   }
 
   async handleClickLoadVideo() {
@@ -64,6 +93,7 @@ export class AutomaticCaption extends LitElement {
       if (fileType == "video") {
         this.isLoadVideo = true;
         this.videoPath = filePath;
+        this.processingVideoModal.show();
 
         const tempPath = await window.electronAPI.req.app.getTempPath();
         const outputAudio = tempPath.path + `${uuidv4()}.wav`;
@@ -74,8 +104,6 @@ export class AutomaticCaption extends LitElement {
           outputAudio,
           filePath,
         );
-
-        this.processingVideoModal.show();
 
         this.requestUpdate();
         // pass
@@ -92,7 +120,27 @@ export class AutomaticCaption extends LitElement {
     align-items: center;
     gap: 1rem;"
       >
-        <video width="200" src=${this.videoPath}></video>
+        <video
+          width="200"
+          class="${!this.isLoadVideo ? "d-none" : ""}"
+          src=${this.videoPath}
+        ></video>
+
+        <div class="input-group">
+          <span class="input-group-text bg-default text-light" id="basic-addon2"
+            >NuggetAutoServer</span
+          >
+          <input
+            id="NuggetAutoServer"
+            type="text"
+            class="form-control bg-default text-light ${this.isLoadVideo
+              ? "d-none"
+              : ""}"
+            placeholder="http(s)://custom.domain:port"
+            value="http://127.0.0.1:8000"
+          />
+        </div>
+
         <button
           class="btn btn-sm btn-default text-light mt-1 ${this.isLoadVideo
             ? "d-none"

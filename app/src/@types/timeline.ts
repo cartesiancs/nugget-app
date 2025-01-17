@@ -116,6 +116,10 @@ export type TextElementType = {
     isItalic?: boolean;
     align?: "left" | "center" | "right";
   };
+  background?: {
+    enable?: boolean;
+    color?: string;
+  };
   location?: { x: number; y: number };
   rotation?: number;
   localpath?: string;

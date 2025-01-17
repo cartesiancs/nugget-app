@@ -469,6 +469,13 @@ export class PreviewCanvas extends LitElement {
                 this.timeline[elementId].text as string,
               ).width;
 
+              if (this.timeline[elementId].background.enable) {
+                ctx.fillStyle = this.timeline[elementId].background.color;
+                ctx.fillRect(x, y, w, h);
+              }
+
+              ctx.fillStyle = this.timeline[elementId].textcolor as string;
+
               if (this.timeline[elementId].options.align == "left") {
                 ctx.fillText(
                   this.timeline[elementId].text as string,

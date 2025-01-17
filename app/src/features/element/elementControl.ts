@@ -532,6 +532,10 @@ export class ElementControl extends LitElement {
         isItalic: false,
         align: "left",
       },
+      background: {
+        enable: false,
+        color: "#000000",
+      },
       location: { x: 0, y: 0 },
       rotation: 0,
       localpath: "/TEXTELEMENT",
@@ -578,6 +582,10 @@ export class ElementControl extends LitElement {
         isBold: false,
         isItalic: false,
         align: "left",
+      },
+      background: {
+        enable: false,
+        color: "#000000",
       },
       location: { x: 0, y: 0 },
       rotation: 0,

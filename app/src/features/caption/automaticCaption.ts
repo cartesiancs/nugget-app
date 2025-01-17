@@ -190,11 +190,22 @@ export class AutomaticCaption extends LitElement {
     for (let index = 0; index < this.analyzedText.length; index++) {
       const element = this.analyzedText[index];
       analyzedTextMap.push(
-        html`<span class="text-light">${element.text}</span>`,
+        html`<span class="text-light caption">${element.text}</span>`,
       );
     }
 
     return html`
+      <style>
+        .caption {
+          background-color: #19181a;
+          color: #ffffff;
+          padding: 0.5rem;
+          border: 1px solid #26262b;
+          border-radius: 8px;
+          height: fit-content;
+          width: fit-content;
+        }
+      </style>
       <div
         class="d-flex"
         style="flex-direction: column;
@@ -339,11 +350,13 @@ export class AutomaticCaption extends LitElement {
                   class="${!this.isLoadVideo ? "d-none" : ""} col-3"
                   src=${this.videoPath}
                 ></video>
-                <div class="col-9">${analyzedTextMap}</div>
+                <div class="col-9">
+                  <div class="d-flex row gap-2">${analyzedTextMap}</div>
+                </div>
               </div>
             </div>
             <div class="modal-footer">
-              <div class="flex row gap-2">
+              <div class="flex row gap-2 w-100">
                 <button
                   type="button"
                   class="col btn btn-secondary"

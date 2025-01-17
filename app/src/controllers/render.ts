@@ -238,6 +238,18 @@ const prerender: any = {
 
     const fontBoxWidth = context.measureText(elements.text).width;
 
+    if (elements.background.enable) {
+      context.fillStyle = elements.background.color;
+      context.fillRect(
+        elements.location.x,
+        elements.location.y,
+        elements.width,
+        elements.height,
+      );
+    }
+
+    context.fillStyle = elements.textcolor;
+
     if (elements.options.align == "left") {
       context.fillText(
         elements.text,

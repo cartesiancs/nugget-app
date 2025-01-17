@@ -9,13 +9,16 @@ export class OptionText extends LitElement {
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
+  backgroundEnable: boolean;
 
   constructor() {
     super();
 
     this.elementId = "";
     this.fontList = [];
+    this.backgroundEnable = false;
     this.insertFontLists();
+    this.hide();
   }
 
   createRenderRoot() {
@@ -23,8 +26,6 @@ export class OptionText extends LitElement {
   }
 
   render() {
-    this.hide();
-
     const fontListTemplate: any = [];
 
     for (let index = 0; index < this.fontList.length; index++) {
@@ -153,6 +154,28 @@ export class OptionText extends LitElement {
           </button>
         </div>
       </div>
+
+      <div class="mb-2">
+        <div class="gap-2 ">
+          <button
+            type="button"
+            class="btn btn-sm ${this.backgroundEnable
+              ? "btn-primary"
+              : "btn-default"}  text-light"
+            @click=${this.handleClickEnableBackground}
+          >
+            Background
+          </button>
+          <input
+            @input=${this.handleChangeBackgroundColor}
+            aria-event="background-color"
+            type="color"
+            class="form-control bg-default form-control-color"
+            value="#000000"
+            title="Choose your color"
+          />
+        </div>
+      </div>
     `;
   }
 
@@ -194,6 +217,34 @@ export class OptionText extends LitElement {
 
     fontColor.value = timeline[this.elementId].textcolor;
     fontSize.value = timeline[this.elementId].fontsize;
+
+    this.backgroundEnable = timeline[this.elementId].background.enable;
+  }
+
+  handleChangeBackgroundColor() {
+    const backgroundColor: any = this.querySelector(
+      "input[aria-event='background-color'",
+    );
+    const color = backgroundColor.value;
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["background", "color"],
+      color,
+    );
+  }
+
+  handleClickEnableBackground() {
+    const state = useTimelineStore.getState();
+    const enableBackground = state.timeline[this.elementId].background?.enable;
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["background", "enable"],
+      !enableBackground,
+    );
+
+    this.backgroundEnable = !enableBackground;
+
+    this.requestUpdate();
   }
 
   handleClickAlign(align) {

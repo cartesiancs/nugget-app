@@ -26,6 +26,7 @@ export class AutomaticCaption extends LitElement {
   private _animationFrameId: any;
   progress: number;
   previousProgress: number;
+  splitCursor: number[];
 
   constructor() {
     super();
@@ -50,6 +51,10 @@ export class AutomaticCaption extends LitElement {
     this._previousTimeStamp = undefined;
     this._done = false;
     this._animationFrameId = null;
+
+    this.splitCursor = [0, 0];
+
+    window.addEventListener("keydown", this._handleKeydown.bind(this));
 
     window.electronAPI.res.ffmpeg.extractAudioFromVideoProgress(
       (event, progress) => {
@@ -107,7 +112,12 @@ export class AutomaticCaption extends LitElement {
 
     this.analyzingVideoModal.hide();
 
-    this.analyzedText = result;
+    this.analyzedText = [];
+
+    for (let index = 0; index < result.length; index++) {
+      const element = result[index];
+      this.analyzedText.push(element.words);
+    }
 
     this.requestUpdate();
 
@@ -215,6 +225,27 @@ export class AutomaticCaption extends LitElement {
     const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     ctx.drawImage(video, 0, 0, 1920, 1080);
 
+    let nowCaptionIndex = 0;
+
+    for (let index = 0; index < this.analyzedText.length; index++) {
+      const element: any = this.analyzedText[index];
+      let partText: any = [];
+
+      for (let indexpart = 0; indexpart < element.length; indexpart++) {
+        const partElement = element[indexpart];
+        const isNow =
+          this.progress / 1000 > partElement.start &&
+          this.progress / 1000 < partElement.end + 1;
+
+        if (isNow) {
+          nowCaptionIndex = index;
+          break;
+        }
+      }
+    }
+
+    this.drawCaption(nowCaptionIndex);
+
     this.requestUpdate();
 
     if (!this._done) {
@@ -222,6 +253,39 @@ export class AutomaticCaption extends LitElement {
         this._step(ts),
       );
     }
+  }
+
+  drawCaption(index) {
+    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+    const fontSize = 52;
+    const fontName = "notosanskr";
+    const text = this.analyzedText[index]
+      .map((item) => {
+        return item.word;
+      })
+      .join(" ");
+
+    const screenWidth = 1920;
+    const screenHeight = 1080;
+    const xPadding = 100;
+    const yPadding = 100;
+
+    const x = xPadding;
+    const y = screenHeight - yPadding - fontSize;
+    const w = screenWidth - xPadding * 2;
+    const h = fontSize;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.lineWidth = 0;
+    ctx.letterSpacing = `0px`;
+
+    ctx.font = `${fontSize}px ${fontName}`;
+
+    const fontBoxWidth = ctx.measureText(text).width;
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.fillText(text, x + w / 2 - fontBoxWidth / 2, y);
   }
 
   playVideo() {
@@ -279,6 +343,52 @@ export class AutomaticCaption extends LitElement {
     this.requestUpdate();
   }
 
+  clickCaptionText(index, indexPart, time) {
+    this.stopVideo();
+    if (time != -1) {
+      this.progress = time * 1000;
+      this.previousProgress = time * 1000;
+
+      const video: HTMLVideoElement = document.querySelector(
+        "#captionPreviewVideo",
+      );
+      video.currentTime = time;
+
+      const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+      ctx.drawImage(video, 0, 0, 1920, 1080);
+    }
+
+    this.splitCursor = [index, indexPart];
+    this.requestUpdate();
+  }
+
+  splitCaption() {
+    const index = this.splitCursor[0];
+    const indexPart = this.splitCursor[1] + 1;
+
+    if (index < 0 || index > this.analyzedText.length) {
+      throw new Error("Invalid index");
+    }
+
+    const prevValue = this.analyzedText[index].slice(0, indexPart);
+    const nextValue = this.analyzedText[index].slice(indexPart);
+
+    console.log(prevValue, nextValue);
+
+    this.analyzedText.splice(index, 1, prevValue);
+
+    this.analyzedText.splice(index + 1, 0, nextValue);
+
+    this.requestUpdate();
+  }
+
+  _handleKeydown(event) {
+    if (event.keyCode == 13) {
+      // enter
+      this.splitCaption();
+    }
+  }
+
   render() {
     let analyzedTextMap: any = [];
 
@@ -286,22 +396,31 @@ export class AutomaticCaption extends LitElement {
       const element: any = this.analyzedText[index];
       let partText: any = [];
 
-      for (let index = 0; index < element.words.length; index++) {
-        const partElement = element.words[index];
+      for (let indexPart = 0; indexPart < element.length; indexPart++) {
+        const partElement = element[indexPart];
         const isNow =
           this.progress / 1000 > partElement.start &&
           this.progress / 1000 < partElement.end;
 
+        const isNowCursor =
+          this.splitCursor[0] == index && this.splitCursor[1] == indexPart;
+
         partText.push(
-          html`<span class="${isNow ? "caption-part active" : "caption-part"}"
-            >${partElement.word}</span
-          >`,
+          html`<span
+              @click=${() =>
+                this.clickCaptionText(
+                  index,
+                  indexPart,
+                  partElement.start || -1,
+                )}
+              class="${isNow ? "caption-part active" : "caption-part"}"
+              >${partElement.word}</span
+            >
+            <div class="${isNowCursor ? "caption-split" : "d-none"}"></div>`,
         );
       }
       analyzedTextMap.push(
-        html`<span class="text-light caption"
-          >${partText} - (${element.start}s -${element.end}s)</span
-        >`,
+        html`<span class="text-light caption">${partText} </span>`,
       );
     }
 
@@ -315,6 +434,7 @@ export class AutomaticCaption extends LitElement {
           border-radius: 8px;
           height: fit-content;
           width: fit-content;
+          cursor: text;
         }
 
         .caption-part {
@@ -322,7 +442,6 @@ export class AutomaticCaption extends LitElement {
           color: #ffffff;
           padding: 0.125rem 0.2rem;
           margin-bottom: 0.1rem;
-          margin-left: 0.5rem;
           border: 2px solid #26262b;
           border-radius: 8px;
           height: fit-content;
@@ -335,11 +454,17 @@ export class AutomaticCaption extends LitElement {
           color: #ffffff;
           padding: 0.125rem 0.2rem;
           margin-bottom: 0.1rem;
-          margin-left: 0.5rem;
           border: 2px solid #3838d3;
           border-radius: 8px;
           height: fit-content;
           width: fit-content;
+          display: inline-block;
+        }
+
+        .caption-split {
+          width: 2px;
+          background-color: #3838d3;
+          height: 1rem;
           display: inline-block;
         }
       </style>
@@ -482,14 +607,13 @@ export class AutomaticCaption extends LitElement {
           <div class="modal-content bg-dark">
             <div class="modal-body">
               <div class="d-flex col gap-2 mt-4">
-                <div class="col-3"></div>
                 <div
                   class="d-flex row gap-2"
-                  style="width: 200px;position: fixed;"
+                  style="width: 400px;position: fixed;"
                 >
                   <canvas
                     id="previewCanvasCaption"
-                    style="width: 200px;"
+                    style="width: 400px;"
                     width="1920"
                     height="1080"
                   ></canvas>
@@ -505,16 +629,25 @@ export class AutomaticCaption extends LitElement {
                   >
 
                   <div class="d-flex col gap-2">
-                    <button @click=${this.resetVideo}>reset</button>
                     <button
-                      class="${this.isPlay ? "d-none" : ""}"
+                      class=" btn btn-sm btn-secondary"
+                      @click=${this.resetVideo}
+                    >
+                      reset
+                    </button>
+                    <button
+                      class="${this.isPlay
+                        ? "d-none"
+                        : ""} btn btn-sm btn-secondary"
                       @click=${this.playVideo}
                     >
                       play
                     </button>
 
                     <button
-                      class="${!this.isPlay ? "d-none" : ""}"
+                      class="${!this.isPlay
+                        ? "d-none"
+                        : ""}  btn btn-sm btn-danger"
                       @click=${this.stopVideo}
                     >
                       stop
@@ -522,7 +655,11 @@ export class AutomaticCaption extends LitElement {
                   </div>
                 </div>
 
-                <div class="col-9">
+                <div
+                  class="col-6"
+                  style="position: absolute;
+    right: 20px;"
+                >
                   <div class="d-flex row gap-2">${analyzedTextMap}</div>
                 </div>
               </div>
@@ -542,7 +679,7 @@ export class AutomaticCaption extends LitElement {
                   data-bs-dismiss="modal"
                   @click=${this.handleClickComplate}
                 >
-                  편집 완료
+                  Complate Edit
                 </button>
               </div>
             </div>

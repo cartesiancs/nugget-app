@@ -521,7 +521,7 @@ export class ElementControl extends LitElement {
     backgroundEnable = false,
     locationX = 0,
     locationY = 0,
-    height = 56,
+    height = 66,
     width = 500,
     startTime = 0,
     duration = 1000,
@@ -585,6 +585,7 @@ export class ElementControl extends LitElement {
   // NOTE: 삭제 필요
   addCustomText(font: { path: string; name: string }) {
     const elementId = this.generateUUID();
+    const fontSize = 52;
 
     this.timeline[elementId] = {
       priority: this.getNowPriority(),
@@ -592,7 +593,7 @@ export class ElementControl extends LitElement {
       duration: 1000,
       text: "TITLE",
       textcolor: "#ffffff",
-      fontsize: 52,
+      fontsize: fontSize,
       fontpath: font.path,
       fontname: font.name,
       fontweight: "medium",
@@ -616,7 +617,7 @@ export class ElementControl extends LitElement {
       rotation: 0,
       localpath: "/TEXTELEMENT",
       filetype: "text",
-      height: 56,
+      height: fontSize + 16,
       width: 500,
       widthInner: 200,
       animation: {
@@ -912,7 +913,7 @@ export class ElementControl extends LitElement {
       elementBody.style.height = `${textSize}px`;
 
       this.timeline[elementId].fontsize = Number(size);
-      this.timeline[elementId].height = Number(size);
+      this.timeline[elementId].height = Number(size) + 16;
       this.timelineState.patchTimeline(this.timeline);
     } catch (error) {
       console.log(error);

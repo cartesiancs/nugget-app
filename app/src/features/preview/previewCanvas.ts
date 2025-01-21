@@ -184,7 +184,6 @@ export class PreviewCanvas extends LitElement {
   }
 
   drawTextStroke(ctx, elementId, x, y) {
-    console.log("AAA", "FC");
     if (this.timeline[elementId].options.outline.enable) {
       ctx.font = `${
         this.timeline[elementId].options.isItalic ? "italic" : ""
@@ -498,8 +497,23 @@ export class PreviewCanvas extends LitElement {
               ).width;
 
               if (this.timeline[elementId].background.enable) {
+                const backgroundPadding = 12;
+                let backgroundX = x;
+                let backgroundW = w;
+                if (this.timeline[elementId].options.align == "left") {
+                  backgroundX = x - backgroundPadding;
+                  backgroundW = fontBoxWidth + backgroundPadding * 2;
+                } else if (this.timeline[elementId].options.align == "center") {
+                  backgroundX =
+                    x + w / 2 - fontBoxWidth / 2 - backgroundPadding;
+                  backgroundW = fontBoxWidth + backgroundPadding * 2;
+                } else if (this.timeline[elementId].options.align == "right") {
+                  backgroundX = x + w - fontBoxWidth - backgroundPadding;
+                  backgroundW = fontBoxWidth + backgroundPadding * 2;
+                }
+
                 ctx.fillStyle = this.timeline[elementId].background.color;
-                ctx.fillRect(x, y, w, h);
+                ctx.fillRect(backgroundX, y, backgroundW, h);
               }
 
               ctx.fillStyle = this.timeline[elementId].textcolor as string;

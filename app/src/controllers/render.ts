@@ -257,11 +257,34 @@ const prerender: any = {
     const fontBoxWidth = context.measureText(elements.text).width;
 
     if (elements.background.enable) {
+      const backgroundPadding = 12;
+      let backgroundX = elements.location.x;
+      let backgroundW = elements.width;
+
+      if (elements.options.align == "left") {
+        backgroundX = elements.location.x - backgroundPadding;
+        backgroundW = fontBoxWidth + backgroundPadding * 2;
+      } else if (elements.options.align == "center") {
+        backgroundX =
+          elements.location.x +
+          elements.width / 2 -
+          fontBoxWidth / 2 -
+          backgroundPadding;
+        backgroundW = fontBoxWidth + backgroundPadding * 2;
+      } else if (elements.options.align == "right") {
+        backgroundX =
+          elements.location.x +
+          elements.width -
+          fontBoxWidth -
+          backgroundPadding;
+        backgroundW = fontBoxWidth + backgroundPadding * 2;
+      }
+
       context.fillStyle = elements.background.color;
       context.fillRect(
-        elements.location.x,
+        backgroundX,
         elements.location.y,
-        elements.width,
+        backgroundW,
         elements.height,
       );
     }

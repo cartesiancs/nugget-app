@@ -385,17 +385,19 @@ export class elementTimelineCanvas extends LitElement {
               }
             }
 
+            const finalLeft = left + additionalLeft;
+
             ctx.fillStyle = this.timelineColor[elementId];
             ctx.strokeStyle = this.timelineColor[elementId];
             ctx.lineWidth = 0;
 
             ctx.beginPath();
-            ctx.rect(left + additionalLeft, top, width, height);
+            ctx.rect(finalLeft, top, width, height);
             ctx.fill();
             ctx.stroke();
 
             if (this.targetId == elementId) {
-              this.drawActive(ctx, elementId, left, top, width, height);
+              this.drawActive(ctx, elementId, finalLeft, top, width, height);
             }
           } else if (elementType == "dynamic") {
             const width = this.millisecondsToPx(
@@ -730,11 +732,23 @@ export class elementTimelineCanvas extends LitElement {
         const defaultWidth = this.millisecondsToPx(
           this.timeline[elementId].duration,
         );
+
+        let additionalLeft = 0;
+
+        if (this.timeline[elementId].filetype == "text") {
+          if (this.timeline[elementId].parentKey != "standalone") {
+            const parentStartTime =
+              this.timeline[this.timeline[elementId].parentKey].startTime;
+            additionalLeft = this.millisecondsToPx(parentStartTime);
+          }
+        }
+
         const defaultHeight = 30;
         const startY = index * defaultHeight * 1.2 - this.canvasVerticalScroll;
         const startX =
           this.millisecondsToPx(this.timeline[elementId].startTime) -
-          this.timelineScroll;
+          this.timelineScroll +
+          additionalLeft;
 
         const endX = startX + defaultWidth;
         const endY = startY + defaultHeight;

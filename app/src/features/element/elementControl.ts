@@ -513,6 +513,7 @@ export class ElementControl extends LitElement {
   }
 
   addText({
+    parentKey = "standalone",
     text = "TITLE",
     textcolor = "#ffffff",
     fontsize = 52,
@@ -528,6 +529,7 @@ export class ElementControl extends LitElement {
     const elementId = this.generateUUID();
 
     this.timeline[elementId] = {
+      parentKey: parentKey,
       priority: this.getNowPriority(),
       startTime: startTime,
       duration: duration,

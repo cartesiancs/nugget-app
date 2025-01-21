@@ -12,6 +12,7 @@ import { KeyframeController } from "../../controllers/keyframe";
 import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
 import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element";
+import { millisecondsToPx } from "../../utils/time";
 
 type ImageTempType = {
   elementId: string;
@@ -208,7 +209,19 @@ export class PreviewCanvas extends LitElement {
           const w = this.timeline[elementId].width as number;
           const h = this.timeline[elementId].height as number;
           const fileType = this.timeline[elementId].filetype;
-          const startTime = this.timeline[elementId].startTime as number;
+          let additionalStartTime = 0;
+
+          if (fileType == "text") {
+            if (this.timeline[elementId].parentKey != "standalone") {
+              const parentStartTime =
+                this.timeline[this.timeline[elementId].parentKey].startTime;
+              additionalStartTime = parentStartTime;
+            }
+          }
+
+          const startTime =
+            (this.timeline[elementId].startTime as number) +
+            additionalStartTime;
           const duration = this.timeline[elementId].duration as number;
 
           const elementType = elementUtils.getElementType(fileType);
@@ -944,7 +957,7 @@ export class PreviewCanvas extends LitElement {
   _handleMouseDown(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
-    const padding = 40;
+    const padding = 20;
     let isMoveTemp = false;
     let isStretchTemp = false;
     let activeElementTemp = "";
@@ -1116,7 +1129,7 @@ export class PreviewCanvas extends LitElement {
   _handleMouseMove(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
-    const padding = 40;
+    const padding = 20;
 
     let isCollide = false;
 

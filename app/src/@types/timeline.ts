@@ -96,8 +96,10 @@ export type VideoElementType = {
   speed?: number;
 };
 
+// parentKey must be 1 top depth
 export type TextElementType = {
   key?: string;
+  parentKey?: string | "standalone";
   blob?: string;
 
   priority?: number;

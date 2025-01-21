@@ -42,6 +42,24 @@ export class RenderController implements ReactiveController {
         ),
       );
 
+      // parent 타임라인 starttime 반영. 나중에 수정 필요.
+      for (const key in timeline) {
+        if (Object.prototype.hasOwnProperty.call(timeline, key)) {
+          const element = timeline[key];
+          let additionalStartTime = 0;
+
+          if (element.filetype == "text") {
+            if (element.parentKey != "standalone") {
+              const parentStartTime =
+                timeline[timeline[key].parentKey].startTime;
+              additionalStartTime = parentStartTime;
+
+              element.startTime += additionalStartTime;
+            }
+          }
+        }
+      }
+
       let options = {
         videoDuration: projectDuration,
         videoDestination: result || `${projectFolder}/result.mp4`,

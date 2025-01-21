@@ -27,6 +27,7 @@ export class AutomaticCaption extends LitElement {
   progress: number;
   previousProgress: number;
   splitCursor: number[];
+  selectedKey: null;
 
   constructor() {
     super();
@@ -40,6 +41,7 @@ export class AutomaticCaption extends LitElement {
     this.analyzingVideoModal = undefined;
 
     this.selectedRow = null;
+    this.selectedKey = null;
 
     this.hasUpdatedOnce = false;
 
@@ -87,9 +89,10 @@ export class AutomaticCaption extends LitElement {
     return this;
   }
 
-  handleRowSelection(rowId) {
+  handleRowSelection(rowId, key) {
     this.selectedRow = rowId;
-    console.log("Selected Row:", this.selectedRow);
+    this.selectedKey = key;
+    console.log("Selected Row:", this.selectedRow, key);
     this.requestUpdate();
   }
 
@@ -202,6 +205,7 @@ export class AutomaticCaption extends LitElement {
         (element[element.length - 1].end - element[0].start) * 1000 || 1000;
 
       control.addText({
+        parentKey: this.selectedKey,
         text: text,
         textcolor: "#ffffff",
         fontsize: 52,
@@ -209,12 +213,16 @@ export class AutomaticCaption extends LitElement {
         backgroundEnable: true,
         locationX: x,
         locationY: y - fontSize,
-        height: h + 8,
+        height: h + 12,
         width: w,
         startTime: startTime,
         duration: duration,
       });
     }
+
+    this.isLoadVideo = false;
+
+    this.requestUpdate();
   }
 
   updated() {
@@ -721,6 +729,11 @@ export class AutomaticCaption extends LitElement {
                   type="button"
                   class="col btn btn-secondary"
                   data-bs-dismiss="modal"
+                  @click=${() => {
+                    this.isLoadVideo = false;
+                    this.analyzingVideoModal.hide();
+                    this.requestUpdate();
+                  }}
                 >
                   ${this.lc.t("modal.close")}
                 </button>
@@ -740,9 +753,9 @@ export class AutomaticCaption extends LitElement {
     `;
   }
 
-  timelineMap(): any {
+  timelineMap(): { id: number; video?: string; key: string }[] {
     const timeline = useTimelineStore.getState().timeline;
-    const timelineArray: any = [];
+    const timelineArray: { id: number; video?: string; key: string }[] = [];
     let index = 1;
 
     for (const key in timeline) {
@@ -750,7 +763,7 @@ export class AutomaticCaption extends LitElement {
         const element = timeline[key];
 
         if (element.filetype == "video") {
-          timelineArray.push({ id: index, video: element.localpath });
+          timelineArray.push({ id: index, video: element.localpath, key: key });
           index += 1;
         }
       }
@@ -765,7 +778,7 @@ export class AutomaticCaption extends LitElement {
     try {
       return this.videoRows.map(
         (row) => html`
-          <tr @click="${() => this.handleRowSelection(row.video)}">
+          <tr @click="${() => this.handleRowSelection(row.video, row.key)}">
             <th scope="row">${row.id}</th>
             <td>${row.video}</td>
             <td>

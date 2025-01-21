@@ -329,13 +329,20 @@ export class ElementTimelineLeftOption extends LitElement {
             >
               <span class="element-left-option-text">${text}</span>
 
-              <div
-                class="gap-1 justify-content-end ${element.filetype == "image"
-                  ? ""
-                  : "d-none"}"
-              >
+              <div class="gap-1 justify-content-end">
                 <button
-                  class="btn btn-xxs btn-default text-light mr-2"
+                  class="btn btn-xxs btn-default text-light mr-2 ${element.filetype ==
+                    "text" && element.parentKey != "standalone"
+                    ? ""
+                    : "d-none"}"
+                >
+                  <span class="material-symbols-outlined icon-xs"> lock </span>
+                </button>
+                <button
+                  class="btn btn-xxs btn-default text-light mr-2 ${element.filetype ==
+                  "image"
+                    ? ""
+                    : "d-none"}"
                   @click=${() => this.switchActiveAnimationPanel(key)}
                 >
                   <span class="material-symbols-outlined icon-xs">

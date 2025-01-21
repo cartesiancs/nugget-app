@@ -375,12 +375,22 @@ export class elementTimelineCanvas extends LitElement {
               this.timeline[elementId].duration,
             );
 
+            let additionalLeft = 0;
+
+            if (filetype == "text") {
+              if (this.timeline[elementId].parentKey != "standalone") {
+                const parentStartTime =
+                  this.timeline[this.timeline[elementId].parentKey].startTime;
+                additionalLeft = this.millisecondsToPx(parentStartTime);
+              }
+            }
+
             ctx.fillStyle = this.timelineColor[elementId];
             ctx.strokeStyle = this.timelineColor[elementId];
             ctx.lineWidth = 0;
 
             ctx.beginPath();
-            ctx.rect(left, top, width, height);
+            ctx.rect(left + additionalLeft, top, width, height);
             ctx.fill();
             ctx.stroke();
 

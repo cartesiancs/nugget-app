@@ -189,6 +189,7 @@ export class OptionText extends LitElement {
 
   setElementId({ elementId }) {
     this.elementId = elementId;
+
     this.resetValue();
   }
 
@@ -214,10 +215,15 @@ export class OptionText extends LitElement {
     const timeline = document.querySelector("element-timeline").timeline;
     const fontColor: any = this.querySelector("input[aria-event='font-color'");
     const fontSize: any = this.querySelector("input[aria-event='font-size'");
+    const text: any = this.querySelector("input[aria-event='text'");
+    const letterSpacing: any = this.querySelector(
+      "input[aria-event='letter-spacing'",
+    );
 
     fontColor.value = timeline[this.elementId].textcolor;
     fontSize.value = timeline[this.elementId].fontsize;
-
+    text.value = timeline[this.elementId].text;
+    letterSpacing.value = timeline[this.elementId].letterSpacing;
     this.backgroundEnable = timeline[this.elementId].background.enable;
   }
 

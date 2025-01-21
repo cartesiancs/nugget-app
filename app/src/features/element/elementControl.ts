@@ -545,6 +545,11 @@ export class ElementControl extends LitElement {
         isBold: false,
         isItalic: false,
         align: optionsAlign,
+        outline: {
+          enable: false,
+          size: 1,
+          color: "#000000",
+        },
       },
       background: {
         enable: backgroundEnable,
@@ -577,6 +582,7 @@ export class ElementControl extends LitElement {
     // this.elementTimeline.addElementBar(elementId);
   }
 
+  // NOTE: 삭제 필요
   addCustomText(font: { path: string; name: string }) {
     const elementId = this.generateUUID();
 
@@ -596,6 +602,11 @@ export class ElementControl extends LitElement {
         isBold: false,
         isItalic: false,
         align: "left",
+        outline: {
+          enable: false,
+          size: 1,
+          color: "#000000",
+        },
       },
       background: {
         enable: false,

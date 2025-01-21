@@ -183,6 +183,21 @@ export class PreviewCanvas extends LitElement {
     return closestY;
   }
 
+  drawTextStroke(ctx, elementId, x, y) {
+    console.log("AAA", "FC");
+    if (this.timeline[elementId].options.outline.enable) {
+      ctx.font = `${
+        this.timeline[elementId].options.isItalic ? "italic" : ""
+      } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
+        this.timeline[elementId].fontsize
+      }px ${this.timeline[elementId].fontname}`;
+
+      ctx.lineWidth = parseInt(this.timeline[elementId].options.outline.size);
+      ctx.strokeStyle = this.timeline[elementId].options.outline.color;
+      ctx.strokeText(this.timeline[elementId].text as string, x, y);
+    }
+  }
+
   drawCanvas() {
     let index = 1;
 
@@ -490,18 +505,37 @@ export class PreviewCanvas extends LitElement {
               ctx.fillStyle = this.timeline[elementId].textcolor as string;
 
               if (this.timeline[elementId].options.align == "left") {
+                this.drawTextStroke(
+                  ctx,
+                  elementId,
+                  x,
+                  y + (this.timeline[elementId].fontsize || 0),
+                );
+
                 ctx.fillText(
                   this.timeline[elementId].text as string,
                   x,
                   y + (this.timeline[elementId].fontsize || 0),
                 );
               } else if (this.timeline[elementId].options.align == "center") {
+                this.drawTextStroke(
+                  ctx,
+                  elementId,
+                  x + w / 2 - fontBoxWidth / 2,
+                  y + (this.timeline[elementId].fontsize || 0),
+                );
                 ctx.fillText(
                   this.timeline[elementId].text as string,
                   x + w / 2 - fontBoxWidth / 2,
                   y + (this.timeline[elementId].fontsize || 0),
                 );
               } else if (this.timeline[elementId].options.align == "right") {
+                this.drawTextStroke(
+                  ctx,
+                  elementId,
+                  x + w - fontBoxWidth,
+                  y + (this.timeline[elementId].fontsize || 0),
+                );
                 ctx.fillText(
                   this.timeline[elementId].text as string,
                   x + w - fontBoxWidth,

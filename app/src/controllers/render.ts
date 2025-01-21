@@ -269,18 +269,45 @@ const prerender: any = {
     context.fillStyle = elements.textcolor;
 
     if (elements.options.align == "left") {
+      if (elements.options.outline.enable) {
+        context.lineWidth = parseInt(elements.options.outline.size);
+        context.strokeStyle = elements.options.outline.color;
+        context.strokeText(
+          elements.text,
+          elements.location.x,
+          elements.location.y + elements.fontsize,
+        );
+      }
       context.fillText(
         elements.text,
         elements.location.x,
         elements.location.y + elements.fontsize,
       );
     } else if (elements.options.align == "center") {
+      if (elements.options.outline.enable) {
+        context.lineWidth = parseInt(elements.options.outline.size);
+        context.strokeStyle = elements.options.outline.color;
+        context.strokeText(
+          elements.text,
+          elements.location.x + elements.width / 2 - fontBoxWidth / 2,
+          elements.location.y + elements.fontsize,
+        );
+      }
       context.fillText(
         elements.text,
         elements.location.x + elements.width / 2 - fontBoxWidth / 2,
         elements.location.y + elements.fontsize,
       );
     } else if (elements.options.align == "right") {
+      if (elements.options.outline.enable) {
+        context.lineWidth = parseInt(elements.options.outline.size);
+        context.strokeStyle = elements.options.outline.color;
+        context.strokeText(
+          elements.text,
+          elements.location.x + elements.width - fontBoxWidth,
+          elements.location.y + elements.fontsize,
+        );
+      }
       context.fillText(
         elements.text,
         elements.location.x + elements.width - fontBoxWidth,

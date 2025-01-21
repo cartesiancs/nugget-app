@@ -117,6 +117,11 @@ export type TextElementType = {
     isBold?: boolean;
     isItalic?: boolean;
     align?: "left" | "center" | "right";
+    outline?: {
+      enable?: boolean;
+      size?: number;
+      color?: string;
+    };
   };
   background?: {
     enable?: boolean;

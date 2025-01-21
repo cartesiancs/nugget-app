@@ -10,6 +10,7 @@ export class OptionText extends LitElement {
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
   backgroundEnable: boolean;
+  outlineEnable: any;
 
   constructor() {
     super();
@@ -17,6 +18,7 @@ export class OptionText extends LitElement {
     this.elementId = "";
     this.fontList = [];
     this.backgroundEnable = false;
+    this.outlineEnable = false;
     this.insertFontLists();
     this.hide();
   }
@@ -155,17 +157,18 @@ export class OptionText extends LitElement {
         </div>
       </div>
 
-      <div class="mb-2">
+      <button
+        type="button"
+        class="btn btn-sm mb-2 ${this.backgroundEnable
+          ? "btn-primary"
+          : "btn-default"}  text-light"
+        @click=${this.handleClickEnableBackground}
+      >
+        ${!this.backgroundEnable ? "Enable" : "Disable"} Background
+      </button>
+
+      <div class="mb-2 ${this.backgroundEnable ? "" : "d-none"}">
         <div class="gap-2 ">
-          <button
-            type="button"
-            class="btn btn-sm ${this.backgroundEnable
-              ? "btn-primary"
-              : "btn-default"}  text-light"
-            @click=${this.handleClickEnableBackground}
-          >
-            Background
-          </button>
           <input
             @input=${this.handleChangeBackgroundColor}
             aria-event="background-color"
@@ -175,6 +178,39 @@ export class OptionText extends LitElement {
             title="Choose your color"
           />
         </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-sm mb-2 ${this.outlineEnable
+          ? "btn-primary"
+          : "btn-default"}  text-light"
+        @click=${this.handleClickEnableOutline}
+      >
+        ${!this.outlineEnable ? "Enable" : "Disable"} Outline
+      </button>
+
+      <div class="mb-2 ${this.outlineEnable ? "" : "d-none"}">
+        <label class="form-label text-light">Outline Size</label>
+        <input
+          @change=${this.handleChangeOutlineSize}
+          aria-event="outline-size"
+          type="number"
+          class="form-control bg-default text-light"
+          value="1"
+        />
+      </div>
+
+      <div class="mb-2 ${this.outlineEnable ? "" : "d-none"}">
+        <label class="form-label text-light">Outline Color</label>
+        <input
+          @input=${this.handleChangeOutlineColor}
+          aria-event="outline-color"
+          type="color"
+          class="form-control bg-default form-control-color"
+          value="#000000"
+          title="Choose your color"
+        />
       </div>
     `;
   }
@@ -225,6 +261,31 @@ export class OptionText extends LitElement {
     text.value = timeline[this.elementId].text;
     letterSpacing.value = timeline[this.elementId].letterSpacing;
     this.backgroundEnable = timeline[this.elementId].background.enable;
+    this.outlineEnable = timeline[this.elementId].options.outline.enable;
+  }
+
+  handleChangeOutlineSize() {
+    const outlineSize: any = this.querySelector(
+      "input[aria-event='outline-size'",
+    );
+    const size = outlineSize.value;
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["options", "outline", "size"],
+      size,
+    );
+  }
+
+  handleChangeOutlineColor() {
+    const outlineColor: any = this.querySelector(
+      "input[aria-event='outline-color'",
+    );
+    const color = outlineColor.value;
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["options", "outline", "color"],
+      color,
+    );
   }
 
   handleChangeBackgroundColor() {
@@ -237,6 +298,22 @@ export class OptionText extends LitElement {
       ["background", "color"],
       color,
     );
+  }
+
+  handleClickEnableOutline() {
+    const state = useTimelineStore.getState();
+    const enableOutline =
+      state.timeline[this.elementId].options?.outline?.enable;
+
+    this.outlineEnable = !enableOutline;
+
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["options", "outline", "enable"],
+      !enableOutline,
+    );
+
+    this.requestUpdate();
   }
 
   handleClickEnableBackground() {

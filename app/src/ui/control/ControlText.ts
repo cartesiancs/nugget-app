@@ -51,7 +51,7 @@ export class ControlText extends LitElement {
 
   _handleClickAddFont() {
     const elementControlComponent = document.querySelector("element-control");
-    elementControlComponent.addText();
+    elementControlComponent.addText({});
   }
 
   render() {

@@ -175,7 +175,47 @@ export class AutomaticCaption extends LitElement {
     this.requestUpdate();
   }
 
-  handleClickComplate() {}
+  handleClickComplate() {
+    this.analyzingVideoModal.hide();
+
+    const screenWidth = 1920;
+    const screenHeight = 1080;
+    const xPadding = 100;
+    const yPadding = 100;
+    const fontSize = 52;
+
+    const control = document.querySelector("element-control");
+    for (let index = 0; index < this.analyzedText.length; index++) {
+      const element = this.analyzedText[index];
+      const text = element
+        .map((item) => {
+          return item.word;
+        })
+        .join(" ");
+      const x = xPadding;
+      const y = screenHeight - yPadding - fontSize;
+      const w = screenWidth - xPadding * 2;
+      const h = fontSize;
+
+      const startTime = element[0].start * 1000;
+      const duration =
+        (element[element.length - 1].end - element[0].start) * 1000 || 1000;
+
+      control.addText({
+        text: text,
+        textcolor: "#ffffff",
+        fontsize: 52,
+        optionsAlign: "center",
+        backgroundEnable: true,
+        locationX: x,
+        locationY: y - fontSize,
+        height: h + 8,
+        width: w,
+        startTime: startTime,
+        duration: duration,
+      });
+    }
+  }
 
   updated() {
     if (this.hasUpdatedOnce == false) {
@@ -225,26 +265,7 @@ export class AutomaticCaption extends LitElement {
     const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     ctx.drawImage(video, 0, 0, 1920, 1080);
 
-    let nowCaptionIndex = 0;
-
-    for (let index = 0; index < this.analyzedText.length; index++) {
-      const element: any = this.analyzedText[index];
-      let partText: any = [];
-
-      for (let indexpart = 0; indexpart < element.length; indexpart++) {
-        const partElement = element[indexpart];
-        const isNow =
-          this.progress / 1000 > partElement.start &&
-          this.progress / 1000 < partElement.end + 1;
-
-        if (isNow) {
-          nowCaptionIndex = index;
-          break;
-        }
-      }
-    }
-
-    this.drawCaption(nowCaptionIndex);
+    this.showRightIndexCaption();
 
     this.requestUpdate();
 
@@ -285,7 +306,35 @@ export class AutomaticCaption extends LitElement {
 
     ctx.fillStyle = "#ffffff";
 
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(x, y - fontSize, w, h + 6);
+
+    ctx.fillStyle = "#ffffff";
+
     ctx.fillText(text, x + w / 2 - fontBoxWidth / 2, y);
+  }
+
+  showRightIndexCaption() {
+    let nowCaptionIndex = 0;
+
+    for (let index = 0; index < this.analyzedText.length; index++) {
+      const element: any = this.analyzedText[index];
+      let partText: any = [];
+
+      for (let indexpart = 0; indexpart < element.length; indexpart++) {
+        const partElement = element[indexpart];
+        const isNow =
+          this.progress / 1000 > partElement.start &&
+          this.progress / 1000 < partElement.end + 1;
+
+        if (isNow) {
+          nowCaptionIndex = index;
+          break;
+        }
+      }
+    }
+
+    this.drawCaption(nowCaptionIndex);
   }
 
   playVideo() {
@@ -348,6 +397,8 @@ export class AutomaticCaption extends LitElement {
     if (time != -1) {
       this.progress = time * 1000;
       this.previousProgress = time * 1000;
+
+      this.showRightIndexCaption();
 
       const video: HTMLVideoElement = document.querySelector(
         "#captionPreviewVideo",
@@ -511,10 +562,10 @@ export class AutomaticCaption extends LitElement {
           <div class="modal-content bg-dark">
             <div class="modal-body">
               <h5 class="modal-title text-white font-weight-lg">
-                영상 오디오 추출중...
+                Extracting audio from video...
               </h5>
 
-              <b class="text-secondary">영상 처리중 </b>
+              <b class="text-secondary">Processing video... </b>
             </div>
           </div>
         </div>
@@ -531,10 +582,10 @@ export class AutomaticCaption extends LitElement {
           <div class="modal-content bg-dark">
             <div class="modal-body">
               <h5 class="modal-title text-white font-weight-lg">
-                영상 캡션 분석중...
+                Analyzing video captions...
               </h5>
 
-              <b class="text-secondary">영상 처리중 </b>
+              <b class="text-secondary">Processing</b>
             </div>
           </div>
         </div>
@@ -555,7 +606,7 @@ export class AutomaticCaption extends LitElement {
               </h5>
 
               <b class="text-secondary"
-                >타임라인에 기입한 영상 레이어를 선택합니다.</b
+                >Selecting the video layer entered on the timeline</b
               >
 
               <table class="table table-striped ">
@@ -587,7 +638,7 @@ export class AutomaticCaption extends LitElement {
                     data-bs-dismiss="modal"
                     @click=${this.handleClickSelectVideo}
                   >
-                    선택 완료
+                    Select
                   </button>
                 </div>
               </div>

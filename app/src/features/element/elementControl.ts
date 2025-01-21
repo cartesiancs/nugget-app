@@ -512,16 +512,28 @@ export class ElementControl extends LitElement {
     };
   }
 
-  addText() {
+  addText({
+    text = "TITLE",
+    textcolor = "#ffffff",
+    fontsize = 52,
+    optionsAlign = "left",
+    backgroundEnable = false,
+    locationX = 0,
+    locationY = 0,
+    height = 56,
+    width = 500,
+    startTime = 0,
+    duration = 1000,
+  }) {
     const elementId = this.generateUUID();
 
     this.timeline[elementId] = {
       priority: this.getNowPriority(),
-      startTime: 0,
-      duration: 1000,
-      text: "TITLE",
-      textcolor: "#ffffff",
-      fontsize: 52,
+      startTime: startTime,
+      duration: duration,
+      text: text,
+      textcolor: textcolor,
+      fontsize: fontsize,
       fontpath: "default",
       fontname: "notosanskr",
       fontweight: "medium",
@@ -530,18 +542,18 @@ export class ElementControl extends LitElement {
       options: {
         isBold: false,
         isItalic: false,
-        align: "left",
+        align: optionsAlign,
       },
       background: {
-        enable: false,
+        enable: backgroundEnable,
         color: "#000000",
       },
-      location: { x: 0, y: 0 },
+      location: { x: locationX, y: locationY },
       rotation: 0,
       localpath: "/TEXTELEMENT",
       filetype: "text",
-      height: 56,
-      width: 500,
+      height: height,
+      width: width,
       widthInner: 200,
       animation: {
         position: {

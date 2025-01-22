@@ -17,18 +17,29 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 
+interface ObjectClassType {
+  [elementId: string]: number;
+}
+
+interface ObjectClassTrimType {
+  [elementId: string]: {
+    startTime: number;
+    endTime: number;
+  };
+}
+
 @customElement("element-timeline-canvas")
 export class elementTimelineCanvas extends LitElement {
-  targetId: string;
+  targetId: string[];
   isDrag: boolean;
   firstClickPosition: { x: number; y: number };
   targetLastPosition: { x: number; y: number } | undefined;
-  targetStartTime: number;
-  targetDuration: number;
+  targetStartTime: ObjectClassType;
+  targetDuration: ObjectClassType;
   targetMediaType: "static" | "dynamic" | undefined;
   cursorType: "none" | "move" | "stretchStart" | "stretchEnd";
   cursorNow: number;
-  targetTrim: { startTime: number; endTime: number };
+  targetTrim: ObjectClassTrimType;
   timelineColor: {};
   canvasVerticalScroll: number;
   copyedTimelineData: {};
@@ -37,13 +48,10 @@ export class elementTimelineCanvas extends LitElement {
   constructor() {
     super();
 
-    this.targetId = "";
-    this.targetStartTime = 0;
-    this.targetDuration = 1000;
-    this.targetTrim = {
-      startTime: 0,
-      endTime: 1000,
-    };
+    this.targetId = [];
+    this.targetStartTime = {};
+    this.targetDuration = {};
+    this.targetTrim = {};
 
     this.isDrag = false;
     this.isGuide = false;
@@ -136,7 +144,7 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleDocumentClick(e) {
     if (e.target.id != "elementTimelineCanvasRef") {
-      this.targetId = "";
+      this.targetId = [];
       this.drawCanvas();
     }
   }
@@ -225,19 +233,19 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   private copySeletedElement() {
-    if (this.targetId != "") {
+    if (this.targetId.length == 1) {
       let selected = {};
 
       let changedUUID = uuidv4();
 
-      selected[changedUUID] = this.deepCopy(this.timeline[this.targetId]);
+      selected[changedUUID] = this.deepCopy(this.timeline[this.targetId[0]]);
 
       this.copyedTimelineData = selected;
     }
   }
 
   private splitSeletedElement() {
-    if (this.targetId == "") {
+    if (this.targetId.length == 1) {
       return false;
     }
 
@@ -249,10 +257,10 @@ export class elementTimelineCanvas extends LitElement {
     let curserLeft = this.timelineCursor;
 
     let changedUUID = uuidv4();
-    selected[changedUUID] = this.deepCopy(this.timeline[this.targetId]);
+    selected[changedUUID] = this.deepCopy(this.timeline[this.targetId[0]]);
 
     if (
-      elementUtils.getElementType(this.timeline[this.targetId].filetype) ==
+      elementUtils.getElementType(this.timeline[this.targetId[0]].filetype) ==
       "dynamic"
     ) {
       let targetElementTrimStartTime =
@@ -261,10 +269,10 @@ export class elementTimelineCanvas extends LitElement {
           selected[changedUUID].startTime);
       selected[changedUUID].trim.startTime += targetElementTrimStartTime;
 
-      this.timeline[this.targetId].trim.endTime =
+      this.timeline[this.targetId[0]].trim.endTime =
         selected[changedUUID].trim.startTime;
     } else if (
-      elementUtils.getElementType(this.timeline[this.targetId].filetype) ==
+      elementUtils.getElementType(this.timeline[this.targetId[0]].filetype) ==
       "static"
     ) {
       let targetElementStartTime = curserLeft - selected[changedUUID].startTime;
@@ -274,9 +282,10 @@ export class elementTimelineCanvas extends LitElement {
         selected[changedUUID].duration - targetElementStartTime;
 
       let originElementDuration =
-        this.timeline[this.targetId].duration - selected[changedUUID].duration;
+        this.timeline[this.targetId[0]].duration -
+        selected[changedUUID].duration;
 
-      this.timeline[this.targetId].duration = originElementDuration;
+      this.timeline[this.targetId[0]].duration = originElementDuration;
     }
 
     this.copyedTimelineData = selected;
@@ -396,7 +405,8 @@ export class elementTimelineCanvas extends LitElement {
             ctx.fill();
             ctx.stroke();
 
-            if (this.targetId == elementId) {
+            if (this.targetId.includes(elementId)) {
+              console.log("AA", this.targetId, elementId);
               this.drawActive(ctx, elementId, finalLeft, top, width, height);
             }
           } else if (elementType == "dynamic") {
@@ -424,7 +434,7 @@ export class elementTimelineCanvas extends LitElement {
             ctx.rect(left, top, width, height);
             ctx.fill();
 
-            if (this.targetId == elementId) {
+            if (this.targetId.includes(elementId)) {
               this.drawActive(ctx, elementId, left, top, width, height);
             }
 
@@ -654,7 +664,7 @@ export class elementTimelineCanvas extends LitElement {
 
   updateTargetPosition({ targetId, dx }: { targetId: string; dx: number }) {
     this.timeline[targetId].startTime =
-      this.targetStartTime + this.pxToMilliseconds(dx);
+      this.targetStartTime[targetId] + this.pxToMilliseconds(dx);
   }
 
   updateTargetStartStretch({ targetId, dx }: { targetId: string; dx: number }) {
@@ -665,21 +675,24 @@ export class elementTimelineCanvas extends LitElement {
     const minDuration = 10;
 
     if (elementType == "static") {
-      if (this.targetDuration - this.pxToMilliseconds(dx) <= minDuration) {
+      if (
+        this.targetDuration[targetId] - this.pxToMilliseconds(dx) <=
+        minDuration
+      ) {
         return false;
       }
 
       this.timeline[targetId].startTime =
-        this.targetStartTime + this.pxToMilliseconds(dx);
+        this.targetStartTime[targetId] + this.pxToMilliseconds(dx);
       this.timeline[targetId].duration =
-        this.targetDuration - this.pxToMilliseconds(dx);
+        this.targetDuration[targetId] - this.pxToMilliseconds(dx);
     }
 
     if (elementType == "dynamic") {
-      if (this.targetTrim.startTime + this.pxToMilliseconds(dx) > 0) {
-        this.timeline[targetId].startTime = this.targetStartTime;
+      if (this.targetTrim[targetId].startTime + this.pxToMilliseconds(dx) > 0) {
+        this.timeline[targetId].startTime = this.targetStartTime[targetId];
         this.timeline[targetId].trim.startTime =
-          this.targetTrim.startTime + this.pxToMilliseconds(dx);
+          this.targetTrim[targetId].startTime + this.pxToMilliseconds(dx);
       }
     }
   }
@@ -692,23 +705,26 @@ export class elementTimelineCanvas extends LitElement {
     const minDuration = 10;
 
     if (elementType == "static") {
-      if (this.targetDuration + this.pxToMilliseconds(dx) <= minDuration) {
+      if (
+        this.targetDuration[targetId] + this.pxToMilliseconds(dx) <=
+        minDuration
+      ) {
         return false;
       }
 
-      this.timeline[targetId].startTime = this.targetStartTime;
+      this.timeline[targetId].startTime = this.targetStartTime[targetId];
       this.timeline[targetId].duration =
-        this.targetDuration + this.pxToMilliseconds(dx);
+        this.targetDuration[targetId] + this.pxToMilliseconds(dx);
     }
 
     if (elementType == "dynamic") {
       if (
-        this.targetTrim.endTime + this.pxToMilliseconds(dx) <
-        this.targetDuration / this.timeline[targetId].speed
+        this.targetTrim[targetId].endTime + this.pxToMilliseconds(dx) <
+        this.targetDuration[targetId] / this.timeline[targetId].speed
       ) {
-        this.timeline[targetId].startTime = this.targetStartTime;
+        this.timeline[targetId].startTime = this.targetStartTime[targetId];
         this.timeline[targetId].trim.endTime =
-          this.targetTrim.endTime + this.pxToMilliseconds(dx);
+          this.targetTrim[targetId].endTime + this.pxToMilliseconds(dx);
       }
     }
   }
@@ -837,10 +853,14 @@ export class elementTimelineCanvas extends LitElement {
   animationPanelDropdownTemplate() {
     // NOTE: 영상 애니메이션은 아직 지원 안함
 
+    if (this.targetId.length != 1) {
+      return false;
+    }
+
     if (
-      elementUtils.getElementType(this.timeline[this.targetId].filetype) ==
+      elementUtils.getElementType(this.timeline[this.targetId[0]].filetype) ==
         "dynamic" ||
-      this.timeline[this.targetId].filetype == "text"
+      this.timeline[this.targetId[0]].filetype == "text"
     ) {
       return "";
     }
@@ -858,7 +878,7 @@ export class elementTimelineCanvas extends LitElement {
 
   isShowAnimationPanel() {
     const index = this.isOpenAnimationPanelId.findIndex((item) => {
-      return item == this.targetId;
+      return this.targetId.includes(item);
     });
 
     return index != -1;
@@ -945,7 +965,12 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   public removeSeletedElements() {
-    this.timelineState.removeTimeline(this.targetId);
+    for (const key in this.targetId) {
+      if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
+        const element = this.targetId[key];
+        this.timelineState.removeTimeline(element);
+      }
+    }
   }
 
   _handleMouseWheel(e) {
@@ -980,16 +1005,21 @@ export class elementTimelineCanvas extends LitElement {
     if (this.isDrag) {
       const dx = x - this.firstClickPosition.x;
 
-      if (this.cursorType == "move") {
-        this.updateTargetPosition({ targetId: this.targetId, dx: dx });
-        this.magnet({ targetId: this.targetId, px: dx });
-      } else if (this.cursorType == "stretchStart") {
-        this.updateTargetStartStretch({ targetId: this.targetId, dx: dx });
-      } else if (this.cursorType == "stretchEnd") {
-        this.updateTargetEndStretch({ targetId: this.targetId, dx: dx });
-      }
+      for (const key in this.targetId) {
+        if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
+          const target = this.targetId[key];
+          if (this.cursorType == "move") {
+            this.updateTargetPosition({ targetId: target, dx: dx });
+            this.magnet({ targetId: target, px: dx });
+          } else if (this.cursorType == "stretchStart") {
+            this.updateTargetStartStretch({ targetId: target, dx: dx });
+          } else if (this.cursorType == "stretchEnd") {
+            this.updateTargetEndStretch({ targetId: target, dx: dx });
+          }
 
-      this.timelineState.patchTimeline(this.timeline);
+          this.timelineState.patchTimeline(this.timeline);
+        }
+      }
     }
   }
 
@@ -1001,22 +1031,43 @@ export class elementTimelineCanvas extends LitElement {
       const y = e.offsetY;
 
       const target = this.findTarget({ x: x, y: y });
-      this.targetId = target.targetId;
-      this.cursorType = target.cursorType;
+
+      if (e.shiftKey && target.targetId != "") {
+        this.targetId.push(target.targetId);
+        this.cursorType = target.cursorType;
+      } else {
+        if (target.targetId == "") {
+          this.targetId = [];
+          this.cursorType = target.cursorType;
+        } else {
+          this.targetId = [target.targetId];
+          this.cursorType = target.cursorType;
+        }
+      }
+
+      console.log("SSS", e.shiftKey, target.targetId, this.targetId);
 
       this.firstClickPosition.x = e.offsetX;
       this.firstClickPosition.y = e.offsetY;
 
-      this.targetStartTime = this.timeline[this.targetId].startTime;
-      this.targetDuration = this.timeline[this.targetId].duration;
+      for (let index = 0; index < this.targetId.length; index++) {
+        const elementId = this.targetId[index];
+        this.targetStartTime[elementId] = this.timeline[elementId].startTime;
+        this.targetDuration[elementId] = this.timeline[elementId].duration;
 
-      let elementType = elementUtils.getElementType(
-        this.timeline[this.targetId].filetype,
-      );
+        let elementType = elementUtils.getElementType(
+          this.timeline[elementId].filetype,
+        );
 
-      if (elementType == "dynamic") {
-        this.targetTrim.startTime = this.timeline[this.targetId].trim.startTime;
-        this.targetTrim.endTime = this.timeline[this.targetId].trim.endTime;
+        if (elementType == "dynamic") {
+          this.targetTrim[elementId] = {
+            startTime: this.timeline[elementId].trim.startTime,
+            endTime: this.timeline[elementId].trim.endTime,
+          };
+          // this.targetTrim.startTime =
+          //   this.timeline[this.targetId[0]].trim.startTime;
+          // this.targetTrim.endTime = this.timeline[this.targetId[0]].trim.endTime;
+        }
       }
 
       this.drawCanvas();
@@ -1077,7 +1128,12 @@ export class elementTimelineCanvas extends LitElement {
     if (event.keyCode == 8) {
       // backspace
       // event.preventDefault();
-      this.timelineState.removeTimeline(this.targetId);
+      for (const key in this.targetId) {
+        if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
+          const element = this.targetId[key];
+          this.timelineState.removeTimeline(element);
+        }
+      }
     }
 
     if (event.ctrlKey && event.keyCode == 86) {
@@ -1103,7 +1159,13 @@ export class elementTimelineCanvas extends LitElement {
       //CTL x
 
       this.copySeletedElement();
-      this.timelineState.removeTimeline(this.targetId);
+
+      for (const key in this.targetId) {
+        if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
+          const element = this.targetId[key];
+          this.timelineState.removeTimeline(element);
+        }
+      }
     }
 
     if (event.ctrlKey && event.keyCode == 68) {

@@ -29,6 +29,7 @@ export class AutomaticCaption extends LitElement {
   splitCursor: number[];
   selectedKey: null;
   analyzedEditCaption: any[];
+  mediaType: string;
 
   constructor() {
     super();
@@ -36,6 +37,7 @@ export class AutomaticCaption extends LitElement {
     this.isLoadVideo = false;
     this.isProgressProcessing = false;
     this.videoPath = "";
+    this.mediaType = "";
     this.analyzedText = [];
     this.analyzedEditCaption = [];
 
@@ -94,9 +96,10 @@ export class AutomaticCaption extends LitElement {
     return this;
   }
 
-  handleRowSelection(rowId, key) {
+  handleRowSelection(rowId, key, mediaType) {
     this.selectedRow = rowId;
     this.selectedKey = key;
+    this.mediaType = mediaType;
     console.log("Selected Row:", this.selectedRow, key);
     this.requestUpdate();
   }
@@ -116,7 +119,7 @@ export class AutomaticCaption extends LitElement {
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/audio/test`, formData);
+    const request = await axios.post(`${serverUrl}/audio`, formData);
 
     const result = request.data.result;
 
@@ -185,15 +188,28 @@ export class AutomaticCaption extends LitElement {
     this.videoPath = this.selectedRow;
     this.processingVideoModal.show();
 
-    const tempPath = await window.electronAPI.req.app.getTempPath();
-    const outputAudio = tempPath.path + `${uuidv4()}.wav`;
+    if (this.mediaType == "video") {
+      const tempPath = await window.electronAPI.req.app.getTempPath();
+      const outputAudio = tempPath.path + `${uuidv4()}.wav`;
 
-    console.log(tempPath, outputAudio);
+      console.log(tempPath, outputAudio);
 
-    window.electronAPI.req.ffmpeg.extractAudioFromVideo(
-      outputAudio,
-      this.selectedRow,
-    );
+      window.electronAPI.req.ffmpeg.extractAudioFromVideo(
+        outputAudio,
+        this.selectedRow,
+      );
+    }
+
+    if (this.mediaType == "audio") {
+      this.isProgressProcessing = true;
+      setTimeout(() => {
+        this.processingVideoModal.hide();
+        this.analyzingVideoModal.show();
+      }, 500);
+
+      this.analyzeAudioToText(this.videoPath);
+      this.requestUpdate();
+    }
 
     this.requestUpdate();
   }
@@ -283,12 +299,14 @@ export class AutomaticCaption extends LitElement {
     const elapsed = timestamp - this._start;
     this.progress = this.previousProgress + elapsed;
 
-    const video: HTMLVideoElement = document.querySelector(
-      "#captionPreviewVideo",
-    );
+    if (this.mediaType == "video") {
+      const video: HTMLVideoElement = document.querySelector(
+        "#captionPreviewVideo",
+      );
 
-    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-    ctx.drawImage(video, 0, 0, 1920, 1080);
+      const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+      ctx.drawImage(video, 0, 0, 1920, 1080);
+    }
 
     this.showRightIndexCaption();
 
@@ -373,10 +391,19 @@ export class AutomaticCaption extends LitElement {
       this._step(ts),
     );
 
-    const video: HTMLVideoElement = document.querySelector(
-      "#captionPreviewVideo",
-    );
-    video.play();
+    if (this.mediaType == "video") {
+      const video: HTMLVideoElement = document.querySelector(
+        "#captionPreviewVideo",
+      );
+      video.play();
+    }
+
+    if (this.mediaType == "audio") {
+      const audio: HTMLAudioElement = document.querySelector(
+        "#captionPreviewAudio",
+      );
+      audio.play();
+    }
 
     this.requestUpdate();
   }
@@ -384,10 +411,20 @@ export class AutomaticCaption extends LitElement {
   stopVideo() {
     this.isPlay = false;
     this.previousProgress = this.progress;
-    const video: HTMLVideoElement = document.querySelector(
-      "#captionPreviewVideo",
-    );
-    video.pause();
+
+    if (this.mediaType == "video") {
+      const video: HTMLVideoElement = document.querySelector(
+        "#captionPreviewVideo",
+      );
+      video.pause();
+    }
+
+    if (this.mediaType == "audio") {
+      const audio: HTMLAudioElement = document.querySelector(
+        "#captionPreviewAudio",
+      );
+      audio.pause();
+    }
 
     if (this._animationFrameId) {
       window.cancelAnimationFrame(this._animationFrameId);
@@ -403,13 +440,22 @@ export class AutomaticCaption extends LitElement {
     this.progress = 0;
     this.previousProgress = 0;
 
-    const video: HTMLVideoElement = document.querySelector(
-      "#captionPreviewVideo",
-    );
-    video.currentTime = 0;
+    if (this.mediaType == "video") {
+      const video: HTMLVideoElement = document.querySelector(
+        "#captionPreviewVideo",
+      );
+      video.currentTime = 0;
 
-    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-    ctx.drawImage(video, 0, 0, 1920, 1080);
+      const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+      ctx.drawImage(video, 0, 0, 1920, 1080);
+    }
+
+    if (this.mediaType == "audio") {
+      const audio: HTMLAudioElement = document.querySelector(
+        "#captionPreviewAudio",
+      );
+      audio.currentTime = 0;
+    }
 
     this.requestUpdate();
   }
@@ -422,13 +468,22 @@ export class AutomaticCaption extends LitElement {
 
       this.showRightIndexCaption();
 
-      const video: HTMLVideoElement = document.querySelector(
-        "#captionPreviewVideo",
-      );
-      video.currentTime = time;
+      if (this.mediaType == "video") {
+        const video: HTMLVideoElement = document.querySelector(
+          "#captionPreviewVideo",
+        );
+        video.currentTime = time;
 
-      const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-      ctx.drawImage(video, 0, 0, 1920, 1080);
+        const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+        ctx.drawImage(video, 0, 0, 1920, 1080);
+      }
+
+      if (this.mediaType == "audio") {
+        const audio: HTMLAudioElement = document.querySelector(
+          "#captionPreviewAudio",
+        );
+        audio.currentTime = time;
+      }
     }
 
     this.splitCursor = [index, indexPart];
@@ -446,22 +501,26 @@ export class AutomaticCaption extends LitElement {
     const prevValue = this.analyzedText[index].slice(0, indexPart);
     const nextValue = this.analyzedText[index].slice(indexPart);
 
-    console.log(prevValue, nextValue);
-
     this.analyzedText.splice(index, 1, prevValue);
 
     this.analyzedText.splice(index + 1, 0, nextValue);
 
+    let copyEditCaption = [...this.analyzedEditCaption];
     this.analyzedEditCaption = [];
-    for (let index = 0; index < this.analyzedText.length; index++) {
-      const element = this.analyzedText[index];
-      this.analyzedEditCaption.push(
-        this.analyzedText[index]
-          .map((item: any) => {
-            return item.word;
-          })
-          .join(" "),
-      );
+
+    for (let itr = 0; itr < this.analyzedText.length; itr++) {
+      const element = this.analyzedText[itr];
+      let text = this.analyzedText[itr]
+        .map((item: any) => {
+          return item.word;
+        })
+        .join(" ");
+
+      if (index == itr) {
+        text = copyEditCaption[itr];
+      }
+
+      this.analyzedEditCaption.push(text);
     }
 
     this.requestUpdate();
@@ -724,6 +783,12 @@ export class AutomaticCaption extends LitElement {
                     src=${this.videoPath}
                   ></video>
 
+                  <audio
+                    class="d-none col-3"
+                    id="captionPreviewAudio"
+                    src=${this.videoPath}
+                  ></audio>
+
                   <span class="text-light"
                     >${Math.round(this.progress / 1000)}s</span
                   >
@@ -794,9 +859,19 @@ export class AutomaticCaption extends LitElement {
     `;
   }
 
-  timelineMap(): { id: number; video?: string; key: string }[] {
+  timelineMap(): {
+    id: number;
+    video?: string;
+    key: string;
+    filetype: string;
+  }[] {
     const timeline = useTimelineStore.getState().timeline;
-    const timelineArray: { id: number; video?: string; key: string }[] = [];
+    const timelineArray: {
+      id: number;
+      video?: string;
+      key: string;
+      filetype: string;
+    }[] = [];
     let index = 1;
 
     for (const key in timeline) {
@@ -804,7 +879,22 @@ export class AutomaticCaption extends LitElement {
         const element = timeline[key];
 
         if (element.filetype == "video") {
-          timelineArray.push({ id: index, video: element.localpath, key: key });
+          timelineArray.push({
+            id: index,
+            video: element.localpath,
+            key: key,
+            filetype: element.filetype,
+          });
+          index += 1;
+        }
+
+        if (element.filetype == "audio") {
+          timelineArray.push({
+            id: index,
+            video: element.localpath,
+            key: key,
+            filetype: element.filetype,
+          });
           index += 1;
         }
       }
@@ -819,7 +909,10 @@ export class AutomaticCaption extends LitElement {
     try {
       return this.videoRows.map(
         (row) => html`
-          <tr @click="${() => this.handleRowSelection(row.video, row.key)}">
+          <tr
+            @click="${() =>
+              this.handleRowSelection(row.video, row.key, row.filetype)}"
+          >
             <th scope="row">${row.id}</th>
             <td>${row.video}</td>
             <td>

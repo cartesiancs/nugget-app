@@ -28,6 +28,7 @@ export class AutomaticCaption extends LitElement {
   previousProgress: number;
   splitCursor: number[];
   selectedKey: null;
+  analyzedEditCaption: any[];
 
   constructor() {
     super();
@@ -36,6 +37,7 @@ export class AutomaticCaption extends LitElement {
     this.isProgressProcessing = false;
     this.videoPath = "";
     this.analyzedText = [];
+    this.analyzedEditCaption = [];
 
     this.processingVideoModal = undefined;
     this.analyzingVideoModal = undefined;
@@ -115,11 +117,22 @@ export class AutomaticCaption extends LitElement {
 
     this.analyzingVideoModal.hide();
 
+    setTimeout(() => {
+      this.analyzingVideoModal.hide();
+    }, 1000);
+
     this.analyzedText = [];
 
     for (let index = 0; index < result.length; index++) {
-      const element = result[index];
+      const element = result[index] as any;
       this.analyzedText.push(element.words);
+      this.analyzedEditCaption.push(
+        element.words
+          .map((item: any) => {
+            return item.word;
+          })
+          .join(" "),
+      );
     }
 
     this.requestUpdate();
@@ -190,11 +203,7 @@ export class AutomaticCaption extends LitElement {
     const control = document.querySelector("element-control");
     for (let index = 0; index < this.analyzedText.length; index++) {
       const element = this.analyzedText[index];
-      const text = element
-        .map((item) => {
-          return item.word;
-        })
-        .join(" ");
+      const text = this.analyzedEditCaption[index];
       const x = xPadding;
       const y = screenHeight - yPadding - fontSize;
       const w = screenWidth - xPadding * 2;
@@ -288,11 +297,8 @@ export class AutomaticCaption extends LitElement {
     const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     const fontSize = 52;
     const fontName = "notosanskr";
-    const text = this.analyzedText[index]
-      .map((item) => {
-        return item.word;
-      })
-      .join(" ");
+
+    const text = this.analyzedEditCaption[index];
 
     const screenWidth = 1920;
     const screenHeight = 1080;
@@ -438,6 +444,18 @@ export class AutomaticCaption extends LitElement {
 
     this.analyzedText.splice(index + 1, 0, nextValue);
 
+    this.analyzedEditCaption = [];
+    for (let index = 0; index < this.analyzedText.length; index++) {
+      const element = this.analyzedText[index];
+      this.analyzedEditCaption.push(
+        this.analyzedText[index]
+          .map((item: any) => {
+            return item.word;
+          })
+          .join(" "),
+      );
+    }
+
     this.requestUpdate();
   }
 
@@ -448,12 +466,19 @@ export class AutomaticCaption extends LitElement {
     }
   }
 
+  _handleChangeInput(event, index) {
+    console.log(event, index);
+    this.analyzedEditCaption[index] = event.target.value;
+    this.requestUpdate();
+  }
+
   render() {
     let analyzedTextMap: any = [];
 
     for (let index = 0; index < this.analyzedText.length; index++) {
       const element: any = this.analyzedText[index];
       let partText: any = [];
+      let analyzedText = "";
 
       for (let indexPart = 0; indexPart < element.length; indexPart++) {
         const partElement = element[indexPart];
@@ -463,6 +488,8 @@ export class AutomaticCaption extends LitElement {
 
         const isNowCursor =
           this.splitCursor[0] == index && this.splitCursor[1] == indexPart;
+
+        analyzedText += partElement.word + " ";
 
         partText.push(
           html`<span
@@ -479,7 +506,15 @@ export class AutomaticCaption extends LitElement {
         );
       }
       analyzedTextMap.push(
-        html`<span class="text-light caption">${partText} </span>`,
+        html`<span class="text-light caption"
+          >${partText}
+          <input
+            @input=${(e) => this._handleChangeInput(e, index)}
+            class="form-control bg-default text-light mt-2"
+            type="text"
+            value=${this.analyzedEditCaption[index]}
+          />
+        </span>`,
       );
     }
 
@@ -491,8 +526,6 @@ export class AutomaticCaption extends LitElement {
           padding: 0.5rem;
           border: 1px solid #26262b;
           border-radius: 8px;
-          height: fit-content;
-          width: fit-content;
           cursor: text;
         }
 

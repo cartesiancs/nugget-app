@@ -11,13 +11,35 @@ export class OptionGroup extends LitElement {
     //this.hideAllOptions()
   }
 
-  showOption({ filetype, elementId }) {
+  showOption({ filetype, elementId }: { filetype: string; elementId: string }) {
     try {
       this.hideAllOptions();
       const fileTypeOption: any = this.querySelector(`option-${filetype}`);
       fileTypeOption.show();
       fileTypeOption.setElementId({
         elementId: elementId,
+      });
+    } catch (error) {}
+  }
+
+  // NOTE: only same filetypes
+  showOptions({
+    filetype,
+    elementIds,
+  }: {
+    filetype: string;
+    elementIds: string[];
+  }) {
+    if (filetype != "text") {
+      return false;
+    }
+
+    try {
+      this.hideAllOptions();
+      const fileTypeOption: any = this.querySelector(`option-${filetype}`);
+      fileTypeOption.show();
+      fileTypeOption.setElementIds({
+        elementIds: elementIds,
       });
     } catch (error) {}
   }

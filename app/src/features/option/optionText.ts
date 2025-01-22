@@ -4,7 +4,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("option-text")
 export class OptionText extends LitElement {
-  elementId: string;
+  elementId: string[];
   fontList: any[];
 
   @property()
@@ -15,7 +15,7 @@ export class OptionText extends LitElement {
   constructor() {
     super();
 
-    this.elementId = "";
+    this.elementId = [];
     this.fontList = [];
     this.backgroundEnable = false;
     this.outlineEnable = false;
@@ -224,7 +224,13 @@ export class OptionText extends LitElement {
   }
 
   setElementId({ elementId }) {
-    this.elementId = elementId;
+    this.elementId = [elementId];
+
+    this.resetValue();
+  }
+
+  setElementIds({ elementIds }) {
+    this.elementId = elementIds;
 
     this.resetValue();
   }
@@ -256,12 +262,12 @@ export class OptionText extends LitElement {
       "input[aria-event='letter-spacing'",
     );
 
-    fontColor.value = timeline[this.elementId].textcolor;
-    fontSize.value = timeline[this.elementId].fontsize;
-    text.value = timeline[this.elementId].text;
-    letterSpacing.value = timeline[this.elementId].letterSpacing;
-    this.backgroundEnable = timeline[this.elementId].background.enable;
-    this.outlineEnable = timeline[this.elementId].options.outline.enable;
+    fontColor.value = timeline[this.elementId[0]].textcolor;
+    fontSize.value = timeline[this.elementId[0]].fontsize;
+    text.value = timeline[this.elementId[0]].text;
+    letterSpacing.value = timeline[this.elementId[0]].letterSpacing;
+    this.backgroundEnable = timeline[this.elementId[0]].background.enable;
+    this.outlineEnable = timeline[this.elementId[0]].options.outline.enable;
   }
 
   handleChangeOutlineSize() {
@@ -303,7 +309,7 @@ export class OptionText extends LitElement {
   handleClickEnableOutline() {
     const state = useTimelineStore.getState();
     const enableOutline =
-      state.timeline[this.elementId].options?.outline?.enable;
+      state.timeline[this.elementId[0]].options?.outline?.enable;
 
     this.outlineEnable = !enableOutline;
 
@@ -318,7 +324,8 @@ export class OptionText extends LitElement {
 
   handleClickEnableBackground() {
     const state = useTimelineStore.getState();
-    const enableBackground = state.timeline[this.elementId].background?.enable;
+    const enableBackground =
+      state.timeline[this.elementId[0]].background?.enable;
     this.timelineState.updateTimeline(
       this.elementId,
       ["background", "enable"],
@@ -343,7 +350,7 @@ export class OptionText extends LitElement {
     this.timelineState.updateTimeline(
       this.elementId,
       ["options", "isBold"],
-      !state.timeline[this.elementId].options?.isBold,
+      !state.timeline[this.elementId[0]].options?.isBold,
     );
   }
 
@@ -352,7 +359,7 @@ export class OptionText extends LitElement {
     this.timelineState.updateTimeline(
       this.elementId,
       ["options", "isItalic"],
-      !state.timeline[this.elementId].options?.isItalic,
+      !state.timeline[this.elementId[0]].options?.isItalic,
     );
   }
 

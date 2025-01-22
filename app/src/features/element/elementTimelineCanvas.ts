@@ -406,7 +406,6 @@ export class elementTimelineCanvas extends LitElement {
             ctx.stroke();
 
             if (this.targetId.includes(elementId)) {
-              console.log("AA", this.targetId, elementId);
               this.drawActive(ctx, elementId, finalLeft, top, width, height);
             }
           } else if (elementType == "dynamic") {
@@ -893,6 +892,34 @@ export class elementTimelineCanvas extends LitElement {
         </menu-dropdown-body>`;
   }
 
+  showSideOption(elementId: string) {
+    const optionGroup = document.querySelector("option-group");
+    const fileType = this.timeline[elementId].filetype;
+    let isAllText = true;
+
+    for (let index = 0; index < this.targetId.length; index++) {
+      const element = this.targetId[index];
+      const itrFileType = this.timeline[elementId].filetype;
+      if (itrFileType != "text") {
+        isAllText = false;
+      }
+    }
+
+    if (fileType == "text" && isAllText) {
+      optionGroup.showOptions({
+        filetype: fileType,
+        elementId: this.targetId,
+      });
+
+      return false;
+    }
+
+    optionGroup.showOption({
+      filetype: fileType,
+      elementId: elementId,
+    });
+  }
+
   whenRightClick(e) {
     const isRightClick = e.which == 3 || e.button == 2;
 
@@ -964,11 +991,33 @@ export class elementTimelineCanvas extends LitElement {
     return lastPriority + 1;
   }
 
+  searchChildrenKey(searchKey) {
+    let hasChild = false;
+
+    for (const key in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
+        const element = this.timeline[key];
+        if (element.filetype == "text") {
+          if (element.parentKey == searchKey) {
+            hasChild = true;
+          }
+        }
+      }
+    }
+
+    return hasChild;
+  }
+
   public removeSeletedElements() {
+    let isAbleRemove = true;
+
     for (const key in this.targetId) {
       if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
         const element = this.targetId[key];
-        this.timelineState.removeTimeline(element);
+        const hasChild = this.searchChildrenKey(element);
+        if (!hasChild) {
+          this.timelineState.removeTimeline(element);
+        }
       }
     }
   }
@@ -1044,6 +1093,8 @@ export class elementTimelineCanvas extends LitElement {
           this.cursorType = target.cursorType;
         }
       }
+
+      this.showSideOption(this.targetId[0]);
 
       console.log("SSS", e.shiftKey, target.targetId, this.targetId);
 
@@ -1131,7 +1182,10 @@ export class elementTimelineCanvas extends LitElement {
       for (const key in this.targetId) {
         if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
           const element = this.targetId[key];
-          this.timelineState.removeTimeline(element);
+          const hasChild = this.searchChildrenKey(element);
+          if (!hasChild) {
+            this.timelineState.removeTimeline(element);
+          }
         }
       }
     }
@@ -1163,7 +1217,10 @@ export class elementTimelineCanvas extends LitElement {
       for (const key in this.targetId) {
         if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
           const element = this.targetId[key];
-          this.timelineState.removeTimeline(element);
+          const hasChild = this.searchChildrenKey(element);
+          if (!hasChild) {
+            this.timelineState.removeTimeline(element);
+          }
         }
       }
     }

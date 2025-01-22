@@ -42,6 +42,9 @@ export class OptionText extends LitElement {
     }
 
     return html`
+      <span class="text-light ${this.elementId.length > 1 ? "" : "d-none"}"
+        >${this.elementId.length} selected</span
+      >
       <div class="mb-2">
         <label class="form-label text-light">Text</label>
         <input
@@ -233,6 +236,8 @@ export class OptionText extends LitElement {
     this.elementId = elementIds;
 
     this.resetValue();
+
+    this.requestUpdate();
   }
 
   insertFontLists() {
@@ -276,7 +281,7 @@ export class OptionText extends LitElement {
     );
     const size = outlineSize.value;
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["options", "outline", "size"],
       size,
     );
@@ -288,7 +293,7 @@ export class OptionText extends LitElement {
     );
     const color = outlineColor.value;
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["options", "outline", "color"],
       color,
     );
@@ -300,7 +305,7 @@ export class OptionText extends LitElement {
     );
     const color = backgroundColor.value;
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["background", "color"],
       color,
     );
@@ -314,7 +319,7 @@ export class OptionText extends LitElement {
     this.outlineEnable = !enableOutline;
 
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["options", "outline", "enable"],
       !enableOutline,
     );
@@ -327,7 +332,7 @@ export class OptionText extends LitElement {
     const enableBackground =
       state.timeline[this.elementId[0]].background?.enable;
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["background", "enable"],
       !enableBackground,
     );
@@ -339,7 +344,7 @@ export class OptionText extends LitElement {
 
   handleClickAlign(align) {
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["options", "align"],
       align,
     );
@@ -347,17 +352,21 @@ export class OptionText extends LitElement {
 
   handleClickEnableBold() {
     const state = useTimelineStore.getState();
-    this.timelineState.updateTimeline(
-      this.elementId,
-      ["options", "isBold"],
-      !state.timeline[this.elementId[0]].options?.isBold,
-    );
+
+    for (let index = 0; index < this.elementId.length; index++) {
+      const element = this.elementId[index];
+      this.timelineState.updateTimeline(
+        element,
+        ["options", "isBold"],
+        !state.timeline[this.elementId[0]].options?.isBold,
+      );
+    }
   }
 
   handleClickEnableItalic() {
     const state = useTimelineStore.getState();
     this.timelineState.updateTimeline(
-      this.elementId,
+      this.elementId[0],
       ["options", "isItalic"],
       !state.timeline[this.elementId[0]].options?.isItalic,
     );
@@ -372,18 +381,24 @@ export class OptionText extends LitElement {
       "input[aria-event='letter-spacing'",
     );
 
-    this.timelineState.updateTimeline(
-      this.elementId,
-      ["letterSpacing"],
-      parseInt(letterSpacing.value),
-    );
+    for (let index = 0; index < this.elementId.length; index++) {
+      const element = this.elementId[index];
+      this.timelineState.updateTimeline(
+        element,
+        ["letterSpacing"],
+        parseInt(letterSpacing.value),
+      );
+    }
   }
 
   handleChangeTextColor() {
     const elementControl = document.querySelector("element-control");
     const fontColor: any = this.querySelector("input[aria-event='font-color'");
     const color = fontColor.value;
-    elementControl.changeTextColor({ elementId: this.elementId, color: color });
+    for (let index = 0; index < this.elementId.length; index++) {
+      const element = this.elementId[index];
+      elementControl.changeTextColor({ elementId: element, color: color });
+    }
   }
 
   handleChangeText(e) {
@@ -394,9 +409,8 @@ export class OptionText extends LitElement {
     const text: any = this.querySelector("input[aria-event='text'");
 
     const textValue = text.value;
-    console.log(textValue);
     elementControl.changeTextValue({
-      elementId: this.elementId,
+      elementId: this.elementId[0],
       value: textValue,
     });
   }
@@ -404,9 +418,11 @@ export class OptionText extends LitElement {
   handleChangeTextSize() {
     const elementControl = document.querySelector("element-control");
     const fontSize: any = this.querySelector("input[aria-event='font-size'");
-
     const size = fontSize.value;
-    elementControl.changeTextSize({ elementId: this.elementId, size: size });
+    for (let index = 0; index < this.elementId.length; index++) {
+      const element = this.elementId[index];
+      elementControl.changeTextSize({ elementId: element, size: size });
+    }
   }
 
   handleChangeTextFont(e) {
@@ -428,7 +444,7 @@ export class OptionText extends LitElement {
     console.log(value, selectedText, type);
 
     elementControl.changeTextFont({
-      elementId: this.elementId,
+      elementId: this.elementId[0],
       fontPath: value,
       fontType: type,
       fontName: selectedText,

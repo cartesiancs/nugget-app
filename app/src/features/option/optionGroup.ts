@@ -34,6 +34,8 @@ export class OptionGroup extends LitElement {
       return false;
     }
 
+    console.log("ERRRRRRR");
+
     try {
       this.hideAllOptions();
       const fileTypeOption: any = this.querySelector(`option-${filetype}`);

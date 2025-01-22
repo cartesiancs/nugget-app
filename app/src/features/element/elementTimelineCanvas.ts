@@ -905,10 +905,12 @@ export class elementTimelineCanvas extends LitElement {
       }
     }
 
+    console.log(fileType == "text", isAllText);
+
     if (fileType == "text" && isAllText) {
       optionGroup.showOptions({
         filetype: fileType,
-        elementId: this.targetId,
+        elementIds: this.targetId,
       });
 
       return false;
@@ -1094,9 +1096,11 @@ export class elementTimelineCanvas extends LitElement {
         }
       }
 
+      // NOTE: 중복 제거 필요.
+
       this.showSideOption(this.targetId[0]);
 
-      console.log("SSS", e.shiftKey, target.targetId, this.targetId);
+      this.targetId = [...new Set(this.targetId)];
 
       this.firstClickPosition.x = e.offsetX;
       this.firstClickPosition.y = e.offsetY;

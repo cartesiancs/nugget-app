@@ -4,7 +4,7 @@ import mime from "../../functions/mime";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { LocaleController } from "../../controllers/locale";
-import { useTimelineStore } from "../../states/timelineStore";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("automatic-caption")
 export class AutomaticCaption extends LitElement {
@@ -83,6 +83,9 @@ export class AutomaticCaption extends LitElement {
     );
   }
 
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
   @query("#previewCanvasCaption") canvas!: HTMLCanvasElement;
 
   private lc = new LocaleController(this);
@@ -99,6 +102,8 @@ export class AutomaticCaption extends LitElement {
   }
 
   async analyzeAudioToText(audioPath) {
+    this.timelineState.setCursorType("lockKeyboard");
+
     const serverUrl = document.querySelector("#NuggetAutoServer").value;
     const response = await fetch(audioPath);
 
@@ -173,6 +178,8 @@ export class AutomaticCaption extends LitElement {
   }
 
   async handleClickSelectVideo() {
+    this.timelineState.setCursorType("lockKeyboard");
+
     this.selectVideoModal.hide();
     this.isLoadVideo = true;
     this.videoPath = this.selectedRow;
@@ -193,6 +200,7 @@ export class AutomaticCaption extends LitElement {
 
   handleClickComplate() {
     this.analyzingVideoModal.hide();
+    this.timelineState.setCursorType("pointer");
 
     const screenWidth = 1920;
     const screenHeight = 1080;

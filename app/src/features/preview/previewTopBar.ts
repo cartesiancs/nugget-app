@@ -140,6 +140,14 @@ export class PreviewTopBar extends LitElement {
           >
             <span class="material-symbols-outlined icon-xs"> square </span>
           </button>
+          <button
+            @click=${() => this._handleClickButton("lockKeyboard")}
+            class="btn btn-xxs ${this.control.cursorType == "lockKeyboard"
+              ? "btn-primary"
+              : "btn-default"} text-light m-0"
+          >
+            <span class="material-symbols-outlined icon-xs"> lock </span>
+          </button>
         </div>
       </div>
     `;

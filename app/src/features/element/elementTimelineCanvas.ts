@@ -1096,8 +1096,6 @@ export class elementTimelineCanvas extends LitElement {
         }
       }
 
-      // NOTE: 중복 제거 필요.
-
       this.showSideOption(this.targetId[0]);
 
       this.targetId = [...new Set(this.targetId)];

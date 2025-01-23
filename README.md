@@ -6,9 +6,9 @@
 
 <a href="#"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/cartesiancs/nugget-app?style=for-the-badge" /></a>
 &nbsp;
-<a href="https://discord.gg/SvBypMTF8j"><img alt="GitHub Repo stars" src="https://img.shields.io/github/license/cartesiancs/nugget-app?style=for-the-badge" /></a>
+<a href="#"><img alt="GitHub Repo stars" src="https://img.shields.io/github/license/cartesiancs/nugget-app?style=for-the-badge" /></a>
 &nbsp;
-<a href="https://discord.gg/SvBypMTF8j"><img alt="GitHub Repo stars" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
+<img alt="GitHub Release" src="https://img.shields.io/github/v/release/cartesiancs/nugget-app?style=for-the-badge">
 
 </p>
 

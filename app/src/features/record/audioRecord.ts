@@ -6,7 +6,7 @@ import { Buffer } from "buffer";
 import { AssetController } from "../../controllers/asset";
 
 @customElement("audio-record-panel")
-export class ScreenRecordPanel extends LitElement {
+export class AudioRecordPanel extends LitElement {
   canvasMaxHeight: any;
   video: HTMLVideoElement;
   isRecord: boolean;
@@ -14,6 +14,7 @@ export class ScreenRecordPanel extends LitElement {
   recordedChunks: any;
   startTime: number;
   endTime: number;
+  stream: MediaStream | any;
   constructor() {
     super();
 
@@ -37,24 +38,28 @@ export class ScreenRecordPanel extends LitElement {
   stop() {
     this.isRecord = false;
     this.mediaRecorder.stop();
+    this.mediaRecorder = null;
+
+    if (this.stream) {
+      this.stream.getTracks().forEach((track) => track.stop());
+      this.stream = null;
+    }
     this.requestUpdate();
   }
 
   async startRecording() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      this.stream = await navigator.mediaDevices.getUserMedia({
         video: false,
         audio: true,
       });
 
-      this.mediaRecorder = new MediaRecorder(stream);
+      this.mediaRecorder = new MediaRecorder(this.stream);
       this.recordedChunks = [];
       this.startTime = Date.now();
 
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          console.log("AAAAf");
-
           this.recordedChunks.push(event.data);
         }
       };
@@ -68,15 +73,18 @@ export class ScreenRecordPanel extends LitElement {
         const buffer = Buffer.from(arrayBuffer);
 
         window.electronAPI.req.stream.saveBufferToAudio(buffer).then((path) => {
-          console.log(path, duration);
           this.recordedChunks = [];
 
           if (path.status) {
             this.assetControl.addAudioWithDuration(path.path, duration);
+            this.recordedChunks = [];
+            this.mediaRecorder = undefined;
+            this.startTime = 0;
+            this.endTime = 0;
+            this.requestUpdate();
           }
         });
       };
-      console.log("AAAAd", stream);
 
       this.mediaRecorder.start();
       this.isRecord = true;

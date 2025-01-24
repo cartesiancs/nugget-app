@@ -29,12 +29,12 @@ export class ControlExtension extends LitElement {
         class="btn btn-sm btn-default text-light mt-1"
         @click=${this.extTest}
       >
-        익스텐션 폴더 불러오기
+        Load Ext Folder (dev)
         <span class="material-symbols-outlined icon-xs"> developer_mode </span>
       </button>
 
       <button class="btn btn-sm btn-default text-light mt-1" @click=${this.ext}>
-        익스텐션 파일 불러오기
+        Load Ext
       </button>
       <br />
 

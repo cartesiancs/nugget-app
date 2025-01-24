@@ -245,7 +245,7 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   private splitSeletedElement() {
-    if (this.targetId.length == 1) {
+    if (this.targetId.length != 1) {
       return false;
     }
 

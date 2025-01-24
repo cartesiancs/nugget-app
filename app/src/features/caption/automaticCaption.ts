@@ -30,6 +30,7 @@ export class AutomaticCaption extends LitElement {
   selectedKey: null;
   analyzedEditCaption: any[];
   mediaType: string;
+  captionLocationY: number;
 
   constructor() {
     super();
@@ -57,6 +58,12 @@ export class AutomaticCaption extends LitElement {
     this._previousTimeStamp = undefined;
     this._done = false;
     this._animationFrameId = null;
+
+    const fontSize = 52;
+    const screenHeight = 1080;
+    const yPadding = 100;
+
+    this.captionLocationY = screenHeight - yPadding - fontSize;
 
     this.splitCursor = [0, 0];
 
@@ -119,7 +126,7 @@ export class AutomaticCaption extends LitElement {
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/audio`, formData);
+    const request = await axios.post(`${serverUrl}/audio/test`, formData);
 
     const result = request.data.result;
 
@@ -229,7 +236,7 @@ export class AutomaticCaption extends LitElement {
       const element = this.analyzedText[index];
       const text = this.analyzedEditCaption[index];
       const x = xPadding;
-      const y = screenHeight - yPadding - fontSize;
+      const y = this.captionLocationY;
       const w = screenWidth - xPadding * 2;
       const h = fontSize;
 
@@ -256,6 +263,25 @@ export class AutomaticCaption extends LitElement {
     this.isLoadVideo = false;
 
     this.requestUpdate();
+  }
+
+  handleClickAlignCaptionButton(position: "center" | "bottom") {
+    const fontSize = 52 + 12;
+    const screenHeight = 1080;
+    const yPadding = 100;
+
+    switch (position) {
+      case "center":
+        this.captionLocationY = screenHeight / 2;
+        break;
+
+      case "bottom":
+        this.captionLocationY = screenHeight - yPadding - fontSize;
+
+        break;
+      default:
+        break;
+    }
   }
 
   updated() {
@@ -332,7 +358,7 @@ export class AutomaticCaption extends LitElement {
     const yPadding = 100;
 
     const x = xPadding;
-    const y = screenHeight - yPadding - fontSize;
+    const y = this.captionLocationY;
     const w = screenWidth - xPadding * 2;
     const h = fontSize;
 
@@ -431,6 +457,8 @@ export class AutomaticCaption extends LitElement {
     }
     this._done = true;
 
+    this.showRightIndexCaption();
+
     this.requestUpdate();
   }
 
@@ -456,6 +484,8 @@ export class AutomaticCaption extends LitElement {
       );
       audio.currentTime = 0;
     }
+
+    this.showRightIndexCaption();
 
     this.requestUpdate();
   }
@@ -816,6 +846,22 @@ export class AutomaticCaption extends LitElement {
                       @click=${this.stopVideo}
                     >
                       stop
+                    </button>
+                  </div>
+                  <div class="d-flex col gap-2">
+                    <button
+                      class=" btn btn-sm btn-secondary"
+                      @click=${() =>
+                        this.handleClickAlignCaptionButton("center")}
+                    >
+                      align center
+                    </button>
+                    <button
+                      class=" btn btn-sm btn-secondary"
+                      @click=${() =>
+                        this.handleClickAlignCaptionButton("bottom")}
+                    >
+                      align bottom
                     </button>
                   </div>
                 </div>

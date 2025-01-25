@@ -67,7 +67,12 @@ export class ScreenRecordPanel extends LitElement {
   async startRecording() {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 60, displaySurface: "monitor" },
+        video: {
+          width: 1920,
+          height: 1080,
+          frameRate: 60,
+          displaySurface: "monitor",
+        },
       });
       this.video.srcObject = stream;
       this.video.onloadedmetadata = () => this.video.play();

@@ -148,6 +148,8 @@ export class PreviewCanvas extends LitElement {
 
     renderOptionStore.subscribe((state) => {
       this.renderOption = state.options;
+      this.canvasMaxHeight =
+        document.querySelector("#split_col_2").clientHeight;
       this.setPreviewRatio();
       this.drawCanvas();
     });

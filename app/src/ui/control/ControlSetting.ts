@@ -69,6 +69,12 @@ export class ControlSetting extends LitElement {
     }
   }
 
+  _handleClickResolution(w, h) {
+    this.renderOption.previewSize.w = w;
+    this.renderOption.previewSize.h = h;
+    this.renderOptionStore.updateOptions(this.renderOption);
+  }
+
   render() {
     return html` <p class="text-secondary" ref="appVersion">
         ${this.appVersion}
@@ -104,6 +110,7 @@ export class ControlSetting extends LitElement {
             placeholder="m"
             @change=${this._handleUpdateDurationMinute}
             value="0"
+            min="0"
           />
           <span class="input-group-text bg-default text-light" id="basic-addon2"
             >${this.lc.t("setting.minute_unit")}</span
@@ -118,6 +125,7 @@ export class ControlSetting extends LitElement {
             placeholder="${this.lc.t("setting.seconds")} e.g) 0"
             @change=${this._handleUpdateDurationSecond}
             value="10"
+            min="0"
           />
           <span class="input-group-text bg-default text-light" id="basic-addon2"
             >${this.lc.t("setting.seconds_unit")}</span
@@ -159,6 +167,27 @@ export class ControlSetting extends LitElement {
           @change=${this._handleUpdatePreviewSizeW}
         />
       </div>
+
+      <button
+        class="btn btn-sm btn-default text-light mt-1"
+        @click=${() => this._handleClickResolution(1920, 1080)}
+      >
+        1920x1080 (desktop)
+      </button>
+
+      <button
+        class="btn btn-sm btn-default text-light mt-1"
+        @click=${() => this._handleClickResolution(1080, 1080)}
+      >
+        1080x1080 (square)
+      </button>
+
+      <button
+        class="btn btn-sm btn-default text-light mt-1"
+        @click=${() => this._handleClickResolution(1080, 1920)}
+      >
+        1080x1920 (mobile)
+      </button>
 
       <button
         class="btn btn-sm btn-default text-light mt-1"

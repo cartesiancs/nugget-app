@@ -31,7 +31,7 @@ export class ControlText extends LitElement {
   }
 
   render() {
-    return html` <p class="text-light">Utilities</p>
+    return html` <p class="text-secondary">Utilities</p>
       <div class="row px-2">
         <div
           class="col-4 d-flex flex-column bd-highlight overflow-hidden mt-1 asset"

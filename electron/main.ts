@@ -46,6 +46,7 @@ import { ipcDialog } from "./ipc/ipcDialog.js";
 import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
 import { downloadFfmpeg, validateFFmpeg } from "./validate.js";
 import { ipcStream } from "./ipc/ipcStream.js";
+import { ipcDesktopCapturer } from "./ipc/ipcDesktopCapturer.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -132,6 +133,8 @@ ipcMain.handle("app:getTempPath", ipcApp.getTempPath);
 ipcMain.handle("app:getAppInfo", ipcApp.getAppInfo);
 ipcMain.handle("font:getLists", fontLib.getFontList);
 ipcMain.handle("font:getLocalFontLists", fontLib.getLocalFontList);
+
+ipcMain.handle("desktopCapturer:getSources", ipcDesktopCapturer.getSources);
 
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);

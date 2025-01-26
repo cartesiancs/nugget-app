@@ -28,18 +28,24 @@ export class ElementTimelineRange extends LitElement {
 
   render() {
     this.style.padding = "0px";
-    return html`<input
-      ref="range"
-      type="range"
-      class="form-range"
-      min="-8"
-      max="5"
-      step="0.01"
-      id="timelineRange"
-      value="-2"
-      @change=${this.updateRange}
-      @input=${this.updateRange}
-    />`;
+    return html`
+      <div class="d-flex col align-items-center gap-2">
+        <span class="material-symbols-outlined icon-sm"> zoom_out </span>
+        <input
+          ref="range"
+          type="range"
+          class="form-range"
+          min="-8"
+          max="5"
+          step="0.01"
+          id="timelineRange"
+          value="-2"
+          @change=${this.updateRange}
+          @input=${this.updateRange}
+        />
+        <span class="material-symbols-outlined icon-sm"> zoom_in </span>
+      </div>
+    `;
   }
 
   updateValue() {

@@ -25,6 +25,9 @@ const request = {
   project: {
     save: () => ipcRenderer.invoke("dialog:saveProject"),
   },
+  desktopCapturer: {
+    getSources: () => ipcRenderer.invoke("desktopCapturer:getSources"),
+  },
   filesystem: {
     getDirectory: (dir) => ipcRenderer.invoke("filesystem:getDirectory", dir),
     openDirectory: (path) => ipcRenderer.send("OPEN_PATH", path),

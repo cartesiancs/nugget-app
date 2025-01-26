@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { uiStore } from "../../states/uiStore";
@@ -14,6 +14,10 @@ export class ScreenRecordPanel extends LitElement {
   recordedChunks: any;
   startTime: number;
   endTime: number;
+  hasUpdatedOnce: boolean;
+  screenSources: never[];
+  selectedValue: string;
+  selectedText: string;
   constructor() {
     super();
 
@@ -24,6 +28,10 @@ export class ScreenRecordPanel extends LitElement {
     this.recordedChunks = undefined;
     this.startTime = 0;
     this.endTime = 0;
+    this.hasUpdatedOnce = false;
+    this.screenSources = [];
+    this.selectedValue = "";
+    this.selectedText = "";
   }
 
   private assetControl = new AssetController();
@@ -72,8 +80,10 @@ export class ScreenRecordPanel extends LitElement {
           height: 1080,
           frameRate: 60,
           displaySurface: "monitor",
+          deviceId: this.selectedValue,
         },
       });
+
       this.video.srcObject = stream;
       this.video.onloadedmetadata = () => this.video.play();
 
@@ -105,7 +115,6 @@ export class ScreenRecordPanel extends LitElement {
           }
         });
       };
-      console.log("AAAAd", stream);
 
       this.mediaRecorder.start();
       this.isRecord = true;
@@ -133,7 +142,37 @@ export class ScreenRecordPanel extends LitElement {
     return this;
   }
 
+  protected updated(changedProperties: PropertyValues): void {
+    if (this.hasUpdatedOnce == false) {
+      window.electronAPI.req.desktopCapturer.getSources().then((result) => {
+        if (result.status == 0) {
+          return 0;
+        }
+
+        console.log(result);
+        this.screenSources = result.sources;
+        this.requestUpdate();
+      });
+    }
+
+    this.hasUpdatedOnce = true;
+  }
+
+  handleChangeSelect(event) {
+    const selectElement = event.target;
+    this.selectedValue = selectElement.value;
+    this.selectedText = selectElement.options[selectElement.selectedIndex].text;
+  }
+
   render() {
+    const selectMap: any = [];
+
+    for (let index = 0; index < this.screenSources.length; index++) {
+      const element = this.screenSources[index] as any;
+      selectMap.push(
+        html`<option value="${element.display_id}">${element.name}</option>`,
+      );
+    }
     return html`
       <div
         class="d-flex"
@@ -150,18 +189,28 @@ export class ScreenRecordPanel extends LitElement {
           height="1080"
         ></canvas>
 
-        <button
-          class="btn btn-primary ${this.isRecord ? "d-none" : ""}"
-          @click=${this._handleClickRecord}
-        >
-          record
-        </button>
-        <button
-          class="btn btn-danger ${this.isRecord ? "" : "d-none"}"
-          @click=${this.stop}
-        >
-          stop
-        </button>
+        <div class="d-flex col gap-2">
+          <select
+            class="form-select bg-dark text-light form-select-sm"
+            aria-label="select screen"
+            @change=${this.handleChangeSelect}
+          >
+            ${selectMap}
+          </select>
+
+          <button
+            class="btn btn-primary ${this.isRecord ? "d-none" : ""}"
+            @click=${this._handleClickRecord}
+          >
+            record
+          </button>
+          <button
+            class="btn btn-danger ${this.isRecord ? "" : "d-none"}"
+            @click=${this.stop}
+          >
+            stop
+          </button>
+        </div>
       </div>
     `;
   }

@@ -103,6 +103,10 @@ export type VideoElementType = {
     enable?: boolean;
     list?: VideoFilterType[];
   };
+  origin?: {
+    width?: number;
+    height?: number;
+  };
 };
 
 // parentKey must be 1 top depth

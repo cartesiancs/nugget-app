@@ -322,6 +322,8 @@ export class PreviewCanvas extends LitElement {
               };
               img.src = imageElement.localpath;
             }
+
+            ctx.globalAlpha = 1;
           }
 
           if (fileType == "gif") {
@@ -449,14 +451,55 @@ export class PreviewCanvas extends LitElement {
 
               video.object.muted = false;
 
-              ctx.drawImage(video.object, x, y, w, h);
+              if (this.timeline[elementId].filter.enable) {
+                const ctxCopy = video.canvas.getContext("2d");
+                video.canvas.width = w;
+                video.canvas.height = h;
+                ctxCopy.drawImage(video.object, 0, 0, w, h);
+                let frame = ctxCopy.getImageData(0, 0, w, h);
+                let mainFrame = ctx.getImageData(x, y, w, h);
+                let l = frame.data.length / 4;
+
+                for (let i = 0; i < l; i++) {
+                  let r = frame.data[i * 4 + 0];
+                  let g = frame.data[i * 4 + 1];
+                  let b = frame.data[i * 4 + 2];
+                  if (this.timeline[elementId].filter.list.length > 0) {
+                    const targetRgb =
+                      this.timeline[elementId].filter.list[0].value;
+                    const parsedRgb = this.parseRGBString(targetRgb);
+                    const range = 30; // NOTE: Range 설정은 조만간 필요
+                    if (
+                      g > parsedRgb.g - range &&
+                      g < parsedRgb.g + range &&
+                      r > parsedRgb.r - range &&
+                      r < parsedRgb.r + range &&
+                      b > parsedRgb.b - range &&
+                      b < parsedRgb.b + range
+                    ) {
+                      frame.data[i * 4 + 0] = mainFrame.data[i * 4 + 0];
+                      frame.data[i * 4 + 1] = mainFrame.data[i * 4 + 1];
+                      frame.data[i * 4 + 2] = mainFrame.data[i * 4 + 2];
+                    }
+                  }
+                }
+
+                ctx.putImageData(frame, x, y);
+              } else {
+                ctx.drawImage(video.object, x, y, w, h);
+              }
             } else {
               const video = document.createElement("video");
               video.playbackRate = this.timeline[elementId].speed;
 
+              const canvas = document.createElement("canvas");
+              canvas.width = w;
+              canvas.height = h;
+
               this.loadedVideos.push({
                 elementId: elementId,
                 path: this.timeline[elementId].localpath,
+                canvas: canvas,
                 object: video,
                 isPlay: false,
               });
@@ -683,6 +726,35 @@ export class PreviewCanvas extends LitElement {
       );
       ctx.stroke();
     }
+  }
+
+  parseRGBString(str) {
+    const parts = str.split(":");
+
+    let r = 0,
+      g = 0,
+      b = 0;
+
+    parts.forEach((item) => {
+      const [key, value] = item.split("=");
+      const numValue = parseInt(value, 10);
+
+      switch (key) {
+        case "r":
+          r = numValue;
+          break;
+        case "g":
+          g = numValue;
+          break;
+        case "b":
+          b = numValue;
+          break;
+        default:
+          break;
+      }
+    });
+
+    return { r, g, b };
   }
 
   isAlign({ x, y, w, h }) {

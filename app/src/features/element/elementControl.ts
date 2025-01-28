@@ -440,6 +440,10 @@ export class ElementControl extends LitElement {
             enable: false,
             list: [],
           },
+          origin: {
+            width: width,
+            height: height,
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -511,6 +515,10 @@ export class ElementControl extends LitElement {
           filter: {
             enable: false,
             list: [],
+          },
+          origin: {
+            width: width,
+            height: height,
           },
         };
 

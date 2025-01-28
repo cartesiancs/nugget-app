@@ -47,8 +47,7 @@ export class OptionVideo extends LitElement {
         </select>
 
         <input
-          @change=${this.updateSpeed}
-          aria-event="speed"
+          @change=${(e) => this.handleChangeUpdateColor(e, index)}
           type="color"
           class="form-control bg-default text-light"
           value="#000000"
@@ -150,6 +149,27 @@ export class OptionVideo extends LitElement {
       ["speed"],
       parseFloat(speed.value),
     );
+  }
+
+  hexToRgb(hex) {
+    hex = hex.replace(/^#/, "");
+
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+
+    return { r, g, b };
+  }
+
+  handleChangeUpdateColor(e, index) {
+    const rgb = this.hexToRgb(e.target.value);
+    const valueArray = [`r=${rgb.r}`, `g=${rgb.g}`, `b=${rgb.b}`];
+    this.filterList[index].value = valueArray.join(":");
+    this.requestUpdate();
   }
 
   handleClickAddFilter() {

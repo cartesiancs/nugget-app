@@ -6,10 +6,14 @@ import { LocaleController } from "../../controllers/locale";
 @customElement("option-video")
 export class OptionVideo extends LitElement {
   elementId: string;
+  enableFilter: boolean;
+  filterList: any[];
   constructor() {
     super();
 
     this.elementId = "";
+    this.enableFilter = false;
+    this.filterList = [];
     this.hide();
   }
 
@@ -30,6 +34,28 @@ export class OptionVideo extends LitElement {
   }
 
   render() {
+    const filterListRender: any = [];
+
+    for (let index = 0; index < this.filterList.length; index++) {
+      const element = this.filterList[index];
+      filterListRender.push(html`<div class="d-flex col-12">
+        <select
+          class="form-select bg-dark text-light form-select-sm"
+          aria-label="select screen"
+        >
+          <option value="chromakey">Chroma Key</option>
+        </select>
+
+        <input
+          @change=${this.updateSpeed}
+          aria-event="speed"
+          type="color"
+          class="form-control bg-default text-light"
+          value="#000000"
+        />
+      </div>`);
+    }
+
     return html`
       <label class="form-label text-light"
         >${this.lc.t("setting.position")}</label
@@ -49,6 +75,29 @@ export class OptionVideo extends LitElement {
           value="0"
           @change=${this.handleLocation}
         />
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-sm mb-2 ${this.enableFilter
+          ? "btn-primary"
+          : "btn-default"}  text-light"
+        @click=${this.handleClickEnableFilter}
+      >
+        ${!this.enableFilter ? "Enable" : "Disable"} Filter
+      </button>
+
+      <div class="mb-2 ${this.enableFilter ? "" : "d-none"}">
+        <label class="form-label text-light">Filter List</label>
+        <div class="d-flex row gap-2">${filterListRender}</div>
+
+        <button
+          type="button"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light"
+          @click=${this.handleClickAddFilter}
+        >
+          Add Filter
+        </button>
       </div>
 
       <!-- <div class="mb-2">
@@ -75,7 +124,14 @@ export class OptionVideo extends LitElement {
   }
 
   setElementId({ elementId }) {
+    const state = useTimelineStore.getState();
+    const timeline = state.timeline as any;
+
     this.elementId = elementId;
+    this.enableFilter = timeline[this.elementId].filter.enable;
+    this.filterList = timeline[this.elementId].filter.list;
+
+    this.requestUpdate();
     this.updateValue();
   }
 
@@ -94,6 +150,41 @@ export class OptionVideo extends LitElement {
       ["speed"],
       parseFloat(speed.value),
     );
+  }
+
+  handleClickAddFilter() {
+    const state = useTimelineStore.getState();
+    const filterList = state.timeline[this.elementId].filter?.list;
+
+    filterList?.push({
+      name: "chromakey",
+      value: "r=0:g=0:b=0",
+    });
+
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["filter", "list"],
+      filterList,
+    );
+
+    this.filterList = filterList as any;
+
+    this.requestUpdate();
+  }
+
+  handleClickEnableFilter() {
+    const state = useTimelineStore.getState();
+    const enableFilter = state.timeline[this.elementId].filter?.enable;
+
+    this.enableFilter = !enableFilter;
+
+    this.timelineState.updateTimeline(
+      this.elementId,
+      ["filter", "enable"],
+      !enableFilter,
+    );
+
+    this.requestUpdate();
   }
 
   handleLocation() {

@@ -7,6 +7,11 @@ export type CubicKeyframeType = {
   ce: number[];
 };
 
+export type VideoFilterType = {
+  name: "chromakey";
+  value: string; // if chromakey => r=0:g=0:b=0. 구분자는 : 로 구분합니다.
+};
+
 export type ImageElementType = {
   key?: string;
   priority?: number;
@@ -94,6 +99,10 @@ export type VideoElementType = {
   codec?: { video: string; audio: string };
   ratio?: number;
   speed?: number;
+  filter?: {
+    enable?: boolean;
+    list?: VideoFilterType[];
+  };
 };
 
 // parentKey must be 1 top depth

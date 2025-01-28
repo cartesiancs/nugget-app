@@ -436,6 +436,10 @@ export class ElementControl extends LitElement {
           filetype: "video",
           codec: { video: "default", audio: "default" },
           speed: 1,
+          filter: {
+            enable: false,
+            list: [],
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -504,6 +508,10 @@ export class ElementControl extends LitElement {
           filetype: "video",
           codec: { video: "default", audio: "default" },
           speed: 1,
+          filter: {
+            enable: false,
+            list: [],
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);

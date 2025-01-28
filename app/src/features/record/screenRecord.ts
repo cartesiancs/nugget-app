@@ -79,7 +79,6 @@ export class ScreenRecordPanel extends LitElement {
           width: 1920,
           height: 1080,
           frameRate: 60,
-          displaySurface: "monitor",
           deviceId: this.selectedValue,
         },
       });
@@ -170,7 +169,7 @@ export class ScreenRecordPanel extends LitElement {
     for (let index = 0; index < this.screenSources.length; index++) {
       const element = this.screenSources[index] as any;
       selectMap.push(
-        html`<option value="${element.display_id}">${element.name}</option>`,
+        html`<option value="${element.id}">${element.name}</option>`,
       );
     }
     return html`

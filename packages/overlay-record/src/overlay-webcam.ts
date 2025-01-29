@@ -3,23 +3,46 @@ import { customElement } from "lit/decorators.js";
 
 @customElement("overlay-webcam")
 export class OverlayWebcam extends LitElement {
-  render() {
-    return html` <div class="overlay"></div> `;
-  }
-
   static styles = css`
     .overlay {
       position: absolute;
       bottom: 1rem;
       left: 1rem;
-      width: 200px;
-      height: 200px;
-      background-color: #ffffff;
-      border-radius: 100px;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   `;
-}
 
+  render() {
+    return html`
+      <div class="overlay">
+        <video autoplay muted playsinline></video>
+      </div>
+    `;
+  }
+
+  firstUpdated() {
+    const videoElement = this.shadowRoot?.querySelector(
+      "video",
+    ) as HTMLVideoElement;
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: false })
+      .then((stream) => {
+        videoElement.srcObject = stream;
+      })
+      .catch((error) => {
+        console.error("error: ", error);
+      });
+  }
+}
 declare global {
   interface HTMLElementTagNameMap {
     "overlay-webcam": OverlayWebcam;

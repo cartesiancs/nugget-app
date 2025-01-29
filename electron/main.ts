@@ -47,6 +47,7 @@ import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
 import { downloadFfmpeg, validateFFmpeg } from "./validate.js";
 import { ipcStream } from "./ipc/ipcStream.js";
 import { ipcDesktopCapturer } from "./ipc/ipcDesktopCapturer.js";
+import { ipcOverlayRecord } from "./ipc/ipcOverlayRecord.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -135,6 +136,7 @@ ipcMain.handle("font:getLists", fontLib.getFontList);
 ipcMain.handle("font:getLocalFontLists", fontLib.getLocalFontList);
 
 ipcMain.handle("desktopCapturer:getSources", ipcDesktopCapturer.getSources);
+ipcMain.handle("overlayRecord:show", ipcOverlayRecord.show);
 
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
@@ -170,8 +172,6 @@ if (!gotTheLock) {
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow();
     validateFFmpeg();
-
-    window.createOverlayRecordWindow();
 
     mainWindow.on("close", function (e) {
       e.preventDefault();

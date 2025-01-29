@@ -30,6 +30,10 @@ export class ControlText extends LitElement {
     this.controlPanel.updatePanel([...this.activePanel, name]);
   }
 
+  _handleClickOverlayRecord() {
+    window.electronAPI.req.overlayRecord.show();
+  }
+
   render() {
     return html` <p class="text-secondary">Utilities</p>
       <div class="row px-2">
@@ -63,6 +67,16 @@ export class ControlText extends LitElement {
           <b class="align-self-center text-light text-center"
             >Automatic Caption</b
           >
+        </div>
+
+        <div
+          class="col-4 d-flex flex-column bd-highlight overflow-hidden mt-1 asset"
+          @click=${() => this._handleClickOverlayRecord()}
+        >
+          <span class="material-symbols-outlined icon-lg align-self-center">
+            radio_button_checked
+          </span>
+          <b class="align-self-center text-light text-center">Overlay Record</b>
         </div>
       </div>`;
   }

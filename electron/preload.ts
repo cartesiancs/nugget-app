@@ -28,6 +28,9 @@ const request = {
   desktopCapturer: {
     getSources: () => ipcRenderer.invoke("desktopCapturer:getSources"),
   },
+  overlayRecord: {
+    show: () => ipcRenderer.invoke("overlayRecord:show"),
+  },
   filesystem: {
     getDirectory: (dir) => ipcRenderer.invoke("filesystem:getDirectory", dir),
     openDirectory: (path) => ipcRenderer.send("OPEN_PATH", path),

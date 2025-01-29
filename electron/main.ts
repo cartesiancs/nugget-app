@@ -171,6 +171,8 @@ if (!gotTheLock) {
     mainWindow = window.createMainWindow();
     validateFFmpeg();
 
+    window.createOverlayRecordWindow();
+
     mainWindow.on("close", function (e) {
       e.preventDefault();
       mainWindow.webContents.send("WHEN_CLOSE_EVENT", "message");

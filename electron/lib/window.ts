@@ -1,4 +1,10 @@
-import { BrowserWindow, desktopCapturer, Menu, session } from "electron";
+import {
+  BrowserWindow,
+  desktopCapturer,
+  Menu,
+  session,
+  screen,
+} from "electron";
 import { menu } from "./menu.js";
 import { autoUpdater } from "electron-updater";
 
@@ -87,6 +93,39 @@ const window = {
     newWindow.loadFile(indexFile);
 
     return newWindow;
+  },
+
+  createOverlayRecordWindow: () => {
+    const indexFile = "packages/overlay-record/dist/index.html";
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height } = primaryDisplay.workAreaSize as any;
+
+    const overlayWindow = new BrowserWindow({
+      width: width,
+      height: height,
+      webPreferences: {
+        backgroundThrottling: false,
+        preload: path.join(__dirname, "preload.js"),
+      },
+      resizable: false,
+      transparent: true,
+      skipTaskbar: true,
+      maximizable: false,
+      fullscreenable: false,
+      frame: false,
+      movable: false,
+      show: false,
+    });
+
+    overlayWindow.setAlwaysOnTop(true, "screen-saver");
+    overlayWindow.setVisibleOnAllWorkspaces(true);
+    overlayWindow.setPosition(0, 0, false);
+    overlayWindow.show();
+    overlayWindow.setIgnoreMouseEvents(true);
+
+    overlayWindow.loadFile(indexFile);
+
+    return overlayWindow;
   },
 };
 

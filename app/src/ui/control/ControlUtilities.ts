@@ -74,9 +74,9 @@ export class ControlText extends LitElement {
           @click=${() => this._handleClickOverlayRecord()}
         >
           <span class="material-symbols-outlined icon-lg align-self-center">
-            radio_button_checked
+            videocam
           </span>
-          <b class="align-self-center text-light text-center">Overlay Record</b>
+          <b class="align-self-center text-light text-center">Overlay Webcam</b>
         </div>
       </div>`;
   }

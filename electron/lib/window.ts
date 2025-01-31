@@ -151,7 +151,9 @@ const createOverlayWindowTray = (overlayWindow) => {
       checked: false,
       click: (menuItem) => {
         overlayWindow.webContents.send("overlayRecord:stop:res", "");
-        console.log("Stop Record 클릭! 체크 상태sdvsdv:", menuItem.checked);
+        overlayWindow.close();
+        tray.destroy();
+        console.log("Stop Record:", menuItem.checked);
       },
     },
   ]);

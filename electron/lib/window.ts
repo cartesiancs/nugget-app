@@ -4,12 +4,19 @@ import {
   Menu,
   session,
   screen,
+  Tray,
+  nativeImage,
 } from "electron";
 import { menu } from "./menu.js";
 import { autoUpdater } from "electron-updater";
 
 import isDev from "electron-is-dev";
 import path from "path";
+import { ipcOverlayRecord } from "../../main/ipc/ipcOverlayRecord.js";
+
+const trayIcon = nativeImage.createFromPath(
+  path.join("assets/icons/png/tray.png"),
+);
 
 let mainWindow;
 const WINDOW_BACKGROUND_COLOR = "#252729";
@@ -105,7 +112,7 @@ const window = {
       height: height,
       webPreferences: {
         backgroundThrottling: false,
-        preload: path.join(__dirname, "preload.js"),
+        preload: path.join(__dirname, "..", "preload.js"),
       },
       resizable: false,
       transparent: true,
@@ -125,8 +132,30 @@ const window = {
 
     overlayWindow.loadFile(indexFile);
 
+    // setInterval(() => {
+    //   overlayWindow.webContents.send("overlayRecord:stop:res", {
+    //     msg: "Hello Renderer!",
+    //   });
+    // }, 1000);
+
     return overlayWindow;
   },
 };
 
-export { window, mainWindow };
+const createOverlayWindowTray = (overlayWindow) => {
+  const tray = new Tray(trayIcon);
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Stop Record",
+      type: "checkbox",
+      checked: false,
+      click: (menuItem) => {
+        overlayWindow.webContents.send("overlayRecord:stop:res", "");
+        console.log("Stop Record 클릭! 체크 상태sdvsdv:", menuItem.checked);
+      },
+    },
+  ]);
+  tray.setContextMenu(contextMenu);
+};
+
+export { window, mainWindow, createOverlayWindowTray };

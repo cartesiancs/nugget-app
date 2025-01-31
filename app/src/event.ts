@@ -30,6 +30,11 @@ window.electronAPI.res.render.error((evt, errormsg) => {
   document.querySelector("#progressErrorMsg").innerHTML = `${errormsg}`;
 });
 
+window.electronAPI.res.overlayRecord.stop((event: any) => {
+  console.log("AA", event);
+  rendererModal.progressModal.hide();
+});
+
 window.electronAPI.res.app.forceClose((evt) => {
   let isTimelineChange = document
     .querySelector("element-timeline")

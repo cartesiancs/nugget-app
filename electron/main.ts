@@ -10,7 +10,7 @@ import {
 } from "electron";
 import { autoUpdater } from "electron-updater";
 import { renderMain, renderFilter } from "./lib/render.js";
-import { window } from "./lib/window.js";
+import { createOverlayWindowTray, window } from "./lib/window.js";
 import { menu } from "./lib/menu.js";
 import { ffmpegConfig } from "./lib/ffmpeg.js";
 import { updater } from "./lib/autoUpdater.js";
@@ -140,6 +140,10 @@ ipcMain.handle("overlayRecord:show", ipcOverlayRecord.show);
 
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
+
+// ipcMain.on("overlayRecord:stop:res", async (evt) => {
+//   mainWindow.webContents.send("overlayRecord:stop:res", "");
+// });
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

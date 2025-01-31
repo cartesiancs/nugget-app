@@ -30,6 +30,7 @@ const request = {
   },
   overlayRecord: {
     show: () => ipcRenderer.invoke("overlayRecord:show"),
+    stop: () => ipcRenderer.invoke("overlayRecord:stop"),
   },
   filesystem: {
     getDirectory: (dir) => ipcRenderer.invoke("filesystem:getDirectory", dir),
@@ -98,6 +99,9 @@ const response = {
     error: (callback) => ipcRenderer.on("PROCESSING_ERROR", callback),
     finishCombineFrame: (callback) =>
       ipcRenderer.on("FINISH_COMBINE_FRAME", callback),
+  },
+  overlayRecord: {
+    stop: (callback) => ipcRenderer.on("overlayRecord:stop:res", callback),
   },
   ffmpeg: {
     getMetadata: (callback) => ipcRenderer.on("GET_METADATA", callback),

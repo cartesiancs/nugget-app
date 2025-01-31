@@ -1,11 +1,12 @@
 import { app } from "electron";
 import isDev from "electron-is-dev";
 import { desktopCapturer } from "electron/main";
-import { window } from "../lib/window.js";
+import { createOverlayWindowTray, window } from "../lib/window.js";
 
 export const ipcOverlayRecord = {
   show: async (event) => {
-    window.createOverlayRecordWindow();
+    const overlayRecordWindow = window.createOverlayRecordWindow();
+    createOverlayWindowTray(overlayRecordWindow);
 
     return { status: 1 };
   },

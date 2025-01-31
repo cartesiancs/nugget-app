@@ -292,49 +292,140 @@ const prerender: any = {
     context.fillStyle = elements.textcolor;
 
     if (elements.options.align == "left") {
+      const textSplited = elements.text.split(" ");
+      let line = "";
+      let textY = elements.location.y + elements.fontsize;
+      let lineHeight = elements.height;
+
+      for (let index = 0; index < textSplited.length; index++) {
+        const testLine = line + textSplited[index] + " ";
+        const metrics = context.measureText(testLine);
+        const testWidth = metrics.width;
+
+        if (testWidth < elements.width) {
+          line = testLine;
+        } else {
+          if (elements.options.outline.enable) {
+            context.lineWidth = parseInt(elements.options.outline.size);
+            context.strokeStyle = elements.options.outline.color;
+            context.strokeText(line, elements.location.x, textY);
+          }
+          context.fillText(line, elements.location.x, textY);
+
+          line = textSplited[index] + " ";
+          textY += lineHeight;
+        }
+      }
+
       if (elements.options.outline.enable) {
         context.lineWidth = parseInt(elements.options.outline.size);
         context.strokeStyle = elements.options.outline.color;
-        context.strokeText(
-          elements.text,
-          elements.location.x,
-          elements.location.y + elements.fontsize,
-        );
+        context.strokeText(line, elements.location.x, textY);
       }
-      context.fillText(
-        elements.text,
-        elements.location.x,
-        elements.location.y + elements.fontsize,
-      );
+      context.fillText(line, elements.location.x, textY);
     } else if (elements.options.align == "center") {
+      const textSplited = elements.text.split(" ");
+      let line = "";
+      let textY = elements.location.y + elements.fontsize;
+      let lineHeight = elements.height;
+
+      for (let index = 0; index < textSplited.length; index++) {
+        const testLine = line + textSplited[index] + " ";
+        const metrics = context.measureText(testLine);
+        const testWidth = metrics.width;
+
+        if (testWidth < elements.width) {
+          line = testLine;
+        } else {
+          const wordWidth = context.measureText(line).width;
+
+          if (elements.options.outline.enable) {
+            context.lineWidth = parseInt(elements.options.outline.size);
+            context.strokeStyle = elements.options.outline.color;
+            context.strokeText(
+              line,
+              elements.location.x + elements.width / 2 - wordWidth / 2,
+              textY,
+            );
+          }
+          context.fillText(
+            line,
+            elements.location.x + elements.width / 2 - wordWidth / 2,
+            textY,
+          );
+
+          line = textSplited[index] + " ";
+          textY += lineHeight;
+        }
+      }
+
+      const lastWordWidth = context.measureText(line).width;
+
       if (elements.options.outline.enable) {
         context.lineWidth = parseInt(elements.options.outline.size);
         context.strokeStyle = elements.options.outline.color;
         context.strokeText(
-          elements.text,
-          elements.location.x + elements.width / 2 - fontBoxWidth / 2,
-          elements.location.y + elements.fontsize,
+          line,
+          elements.location.x + elements.width / 2 - lastWordWidth / 2,
+          textY,
         );
       }
       context.fillText(
-        elements.text,
-        elements.location.x + elements.width / 2 - fontBoxWidth / 2,
-        elements.location.y + elements.fontsize,
+        line,
+        elements.location.x + elements.width / 2 - lastWordWidth / 2,
+        textY,
       );
     } else if (elements.options.align == "right") {
+      const textSplited = elements.text.split(" ");
+      let line = "";
+      let textY = elements.location.y + elements.fontsize;
+      let lineHeight = elements.height;
+
+      for (let index = 0; index < textSplited.length; index++) {
+        const testLine = line + textSplited[index] + " ";
+        const metrics = context.measureText(testLine);
+        const testWidth = metrics.width;
+
+        if (testWidth < elements.width) {
+          line = testLine;
+        } else {
+          const wordWidth = context.measureText(line).width;
+
+          if (elements.options.outline.enable) {
+            context.lineWidth = parseInt(elements.options.outline.size);
+            context.strokeStyle = elements.options.outline.color;
+            context.strokeText(
+              line,
+              elements.location.x + elements.width - wordWidth,
+              textY,
+            );
+          }
+          context.fillText(
+            line,
+            elements.location.x + elements.width - wordWidth,
+            textY,
+          );
+
+          line = textSplited[index] + " ";
+          textY += lineHeight;
+        }
+      }
+
+      const lastWordWidth = context.measureText(line).width;
+
       if (elements.options.outline.enable) {
         context.lineWidth = parseInt(elements.options.outline.size);
         context.strokeStyle = elements.options.outline.color;
         context.strokeText(
-          elements.text,
-          elements.location.x + elements.width - fontBoxWidth,
-          elements.location.y + elements.fontsize,
+          line,
+          elements.location.x + elements.width - lastWordWidth,
+          textY,
         );
       }
       context.fillText(
-        elements.text,
-        elements.location.x + elements.width - fontBoxWidth,
-        elements.location.y + elements.fontsize,
+        line,
+        elements.location.x + elements.width - lastWordWidth,
+        textY,
       );
     }
 

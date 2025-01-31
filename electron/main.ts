@@ -1,42 +1,19 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  dialog,
-  net,
-  Menu,
-  shell,
-  crashReporter,
-} from "electron";
+import { app, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
-import { renderMain, renderFilter } from "./lib/render.js";
-import { createOverlayWindowTray, window } from "./lib/window.js";
-import { menu } from "./lib/menu.js";
-import { ffmpegConfig } from "./lib/ffmpeg.js";
+import { renderMain } from "./lib/render.js";
+import { window } from "./lib/window.js";
 import { updater } from "./lib/autoUpdater.js";
-import { Extension } from "./lib/extension.js";
 
 import config from "./config.json";
 
 import ffmpeg from "fluent-ffmpeg";
 
-import { v4 as uuidv4 } from "uuid";
-
 import path from "path";
 import isDev from "electron-is-dev";
 import log from "electron-log";
-import axios from "axios";
-
-import fs from "fs";
-import * as fsp from "fs/promises";
-import fse from "fs-extra";
-
-import ProgressBar from "electron-progressbar";
-import getSystemFonts from "get-system-fonts";
 
 import { shellLib } from "./lib/shell.js";
 import { electronInit } from "./lib/init.js";
-import { ffprobeUtil } from "./lib/ffprobe.js";
 import { fontLib } from "./lib/font.js";
 import { ipcExtension } from "./ipc/ipcExtension.js";
 import { ipcStore } from "./ipc/ipcStore.js";
@@ -61,9 +38,9 @@ if (isDev) {
   log.info("Running in production");
 }
 
-const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH;
-const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH;
-const FFPROBE_PATH = ffmpegConfig.FFPROBE_PATH;
+// const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH;
+// const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH;
+// const FFPROBE_PATH = ffmpegConfig.FFPROBE_PATH;
 
 autoUpdater.on("checking-for-update", updater.checkingForUpdate);
 autoUpdater.on("update-available", updater.updateAvailable);
@@ -72,11 +49,11 @@ autoUpdater.on("error", updater.error);
 autoUpdater.on("download-progress", updater.downloadProgress);
 autoUpdater.on("update-downloaded", updater.updateDownloaded);
 
-const createFfmpegDir = async () => {
-  let mkdir = await fsp.mkdir(FFMPEG_BIN_PATH, { recursive: true });
-  let status = mkdir == null ? false : true;
-  return { status: status };
-};
+// const createFfmpegDir = async () => {
+//   let mkdir = await fsp.mkdir(FFMPEG_BIN_PATH, { recursive: true });
+//   let status = mkdir == null ? false : true;
+//   return { status: status };
+// };
 
 ipcMain.on("DOWNLOAD_FFMPEG", async (evt) => {
   downloadFfmpeg("ffmpeg");

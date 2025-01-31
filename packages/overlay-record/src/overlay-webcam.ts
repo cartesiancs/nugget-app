@@ -8,9 +8,7 @@ export class OverlayWebcam extends LitElement {
     super();
 
     this.isRecord = true;
-    console.log("BBBBBBBB", window);
     window.electronAPI.res.overlayRecord.stop((event: any) => {
-      console.log("AA", event);
       this.stopRecord();
     });
   }

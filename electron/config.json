@@ -2,21 +2,21 @@
   "ffmpegBin": {
     "darwin": {
       "ffmpeg": {
-        "url": "https://cdn.nugget.studio/ffmpeg",
+        "url": "https://cdn.nugget.cartesiancs.com/ffmpeg",
         "filename": "ffmpeg"
       },
       "ffprobe": {
-        "url": "https://cdn.nugget.studio/ffprobe",
+        "url": "https://cdn.nugget.cartesiancs.com/ffprobe",
         "filename": "ffprobe"
       }
     },
     "win32": {
       "ffmpeg": {
-        "url": "https://cdn.nugget.studio/ffmpeg.exe",
+        "url": "https://cdn.nugget.cartesiancs.com/ffmpeg.exe",
         "filename": "ffmpeg.exe"
       },
       "ffprobe": {
-        "url": "https://cdn.nugget.studio/ffprobe.exe",
+        "url": "https://cdn.nugget.cartesiancs.com/ffprobe.exe",
         "filename": "ffprobe.exe"
       }
     }

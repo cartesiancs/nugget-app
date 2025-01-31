@@ -1,8 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IUIStore, uiStore } from "./states/uiStore";
-import { timelineContext } from "./context/timelineContext";
-import { provide } from "@lit/context";
 
 @customElement("app-root")
 export class App extends LitElement {

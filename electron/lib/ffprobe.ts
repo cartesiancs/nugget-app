@@ -1,10 +1,9 @@
-import { log } from "electron-log";
 import ffmpeg from "fluent-ffmpeg";
 import { mainWindow } from "../main";
 import { ffmpegConfig } from "./ffmpeg";
 
-const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH;
-const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH;
+// const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH;
+// const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH;
 const FFPROBE_PATH = ffmpegConfig.FFPROBE_PATH;
 
 ffmpeg.setFfprobePath(FFPROBE_PATH);

@@ -30,11 +30,6 @@ window.electronAPI.res.render.error((evt, errormsg) => {
   document.querySelector("#progressErrorMsg").innerHTML = `${errormsg}`;
 });
 
-window.electronAPI.res.overlayRecord.stop((event: any) => {
-  console.log("AA", event);
-  rendererModal.progressModal.hide();
-});
-
 window.electronAPI.res.app.forceClose((evt) => {
   let isTimelineChange = document
     .querySelector("element-timeline")
@@ -79,7 +74,7 @@ window.electronAPI.res.timeline.add(async (event, timeline) => {
 
 window.addEventListener("load", (event) => {
   let toastElList = [].slice.call(document.querySelectorAll(".toast"));
-  let toastList = toastElList.map(function (toastEl) {
+  toastElList.map(function (toastEl) {
     return new bootstrap.Toast(toastEl);
   });
 });

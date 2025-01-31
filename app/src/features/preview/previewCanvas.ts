@@ -185,7 +185,7 @@ export class PreviewCanvas extends LitElement {
     return closestY;
   }
 
-  drawTextStroke(ctx, elementId, x, y) {
+  drawTextStroke(ctx, elementId, text, x, y) {
     if (this.timeline[elementId].options.outline.enable) {
       ctx.font = `${
         this.timeline[elementId].options.isItalic ? "italic" : ""
@@ -195,7 +195,114 @@ export class PreviewCanvas extends LitElement {
 
       ctx.lineWidth = parseInt(this.timeline[elementId].options.outline.size);
       ctx.strokeStyle = this.timeline[elementId].options.outline.color;
-      ctx.strokeText(this.timeline[elementId].text as string, x, y);
+      ctx.strokeText(text, x, y);
+    }
+  }
+
+  drawTextBackground(ctx, elementId, x, y, w, h) {
+    if (this.timeline[elementId].background.enable) {
+      const backgroundPadding = 12;
+      let backgroundX = x;
+      let backgroundW = w;
+      if (this.timeline[elementId].options.align == "left") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = this.timeline[elementId].background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = this.timeline[elementId].background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      } else if (this.timeline[elementId].options.align == "center") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = this.timeline[elementId].background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = this.timeline[elementId].background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      } else if (this.timeline[elementId].options.align == "right") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x + w - wordWidth - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = this.timeline[elementId].background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundX = x + w - wordWidth - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = this.timeline[elementId].background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      }
     }
   }
 
@@ -541,65 +648,109 @@ export class PreviewCanvas extends LitElement {
                 this.timeline[elementId].text as string,
               ).width;
 
-              if (this.timeline[elementId].background.enable) {
-                const backgroundPadding = 12;
-                let backgroundX = x;
-                let backgroundW = w;
-                if (this.timeline[elementId].options.align == "left") {
-                  backgroundX = x - backgroundPadding;
-                  backgroundW = fontBoxWidth + backgroundPadding * 2;
-                } else if (this.timeline[elementId].options.align == "center") {
-                  backgroundX =
-                    x + w / 2 - fontBoxWidth / 2 - backgroundPadding;
-                  backgroundW = fontBoxWidth + backgroundPadding * 2;
-                } else if (this.timeline[elementId].options.align == "right") {
-                  backgroundX = x + w - fontBoxWidth - backgroundPadding;
-                  backgroundW = fontBoxWidth + backgroundPadding * 2;
-                }
-
-                ctx.fillStyle = this.timeline[elementId].background.color;
-                ctx.fillRect(backgroundX, y, backgroundW, h);
-              }
+              this.drawTextBackground(ctx, elementId, x, y, w, h);
 
               ctx.fillStyle = this.timeline[elementId].textcolor as string;
 
               if (this.timeline[elementId].options.align == "left") {
-                this.drawTextStroke(
-                  ctx,
-                  elementId,
-                  x,
-                  y + (this.timeline[elementId].fontsize || 0),
-                );
+                const textSplited = this.timeline[elementId].text.split(" ");
+                let line = "";
+                let textY = y + (this.timeline[elementId].fontsize || 0);
+                let lineHeight = h;
 
-                ctx.fillText(
-                  this.timeline[elementId].text as string,
-                  x,
-                  y + (this.timeline[elementId].fontsize || 0),
-                );
+                for (let index = 0; index < textSplited.length; index++) {
+                  const testLine = line + textSplited[index] + " ";
+                  const metrics = ctx.measureText(testLine);
+                  const testWidth = metrics.width;
+
+                  if (testWidth < w) {
+                    line = testLine;
+                  } else {
+                    this.drawTextStroke(ctx, elementId, line, x, textY);
+                    ctx.fillText(line, x, textY);
+                    line = textSplited[index] + " ";
+                    textY += lineHeight;
+                  }
+                }
+
+                this.drawTextStroke(ctx, elementId, line, x, textY);
+                ctx.fillText(line, x, textY);
               } else if (this.timeline[elementId].options.align == "center") {
+                const textSplited = this.timeline[elementId].text.split(" ");
+                let line = "";
+                let textY = y + (this.timeline[elementId].fontsize || 0);
+                let lineHeight = h;
+
+                for (let index = 0; index < textSplited.length; index++) {
+                  const testLine = line + textSplited[index] + " ";
+                  const metrics = ctx.measureText(testLine);
+                  const testWidth = metrics.width;
+
+                  if (testWidth < w) {
+                    line = testLine;
+                  } else {
+                    const wordWidth = ctx.measureText(line).width;
+                    this.drawTextStroke(
+                      ctx,
+                      elementId,
+                      line,
+                      x + w / 2 - wordWidth / 2,
+                      textY,
+                    );
+                    ctx.fillText(line, x + w / 2 - wordWidth / 2, textY);
+                    line = textSplited[index] + " ";
+                    textY += lineHeight;
+                  }
+                }
+
+                const lastWordWidth = ctx.measureText(line).width;
+
                 this.drawTextStroke(
                   ctx,
                   elementId,
-                  x + w / 2 - fontBoxWidth / 2,
-                  y + (this.timeline[elementId].fontsize || 0),
+                  line,
+                  x + w / 2 - lastWordWidth / 2,
+                  textY,
                 );
-                ctx.fillText(
-                  this.timeline[elementId].text as string,
-                  x + w / 2 - fontBoxWidth / 2,
-                  y + (this.timeline[elementId].fontsize || 0),
-                );
+                ctx.fillText(line, x + w / 2 - lastWordWidth / 2, textY);
               } else if (this.timeline[elementId].options.align == "right") {
+                const textSplited = this.timeline[elementId].text.split(" ");
+                let line = "";
+                let textY = y + (this.timeline[elementId].fontsize || 0);
+                let lineHeight = h;
+
+                for (let index = 0; index < textSplited.length; index++) {
+                  const testLine = line + textSplited[index] + " ";
+                  const metrics = ctx.measureText(testLine);
+                  const testWidth = metrics.width;
+
+                  if (testWidth < w) {
+                    line = testLine;
+                  } else {
+                    const wordWidth = ctx.measureText(line).width;
+                    this.drawTextStroke(
+                      ctx,
+                      elementId,
+                      line,
+                      x + w - wordWidth,
+                      textY,
+                    );
+                    ctx.fillText(line, x + w - wordWidth, textY);
+                    line = textSplited[index] + " ";
+                    textY += lineHeight;
+                  }
+                }
+
+                const lastWordWidth = ctx.measureText(line).width;
+
                 this.drawTextStroke(
                   ctx,
                   elementId,
-                  x + w - fontBoxWidth,
-                  y + (this.timeline[elementId].fontsize || 0),
+                  line,
+                  x + w - lastWordWidth,
+                  textY,
                 );
-                ctx.fillText(
-                  this.timeline[elementId].text as string,
-                  x + w - fontBoxWidth,
-                  y + (this.timeline[elementId].fontsize || 0),
-                );
+                ctx.fillText(line, x + w - lastWordWidth, textY);
               }
             } catch (error) {}
           }

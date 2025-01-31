@@ -1,10 +1,7 @@
 import ffmpeg from "fluent-ffmpeg";
 import isDev from "electron-is-dev";
 import log from "electron-log";
-import fs from "fs";
 import { ffmpegConfig } from "../lib/ffmpeg";
-
-import config from "../config.json";
 
 let resourcesPath = "";
 let elementCounts = {
@@ -56,7 +53,7 @@ export const renderMain = {
     elementCounts.video = 1;
     elementCounts.audio = 0;
 
-    let resizeRatio = options.previewRatio;
+    // let resizeRatio = options.previewRatio;
     let mediaFileLists = ["image", "video", "gif"];
     let textFileLists = ["text"];
     let audioFileLists = ["audio"];

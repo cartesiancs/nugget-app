@@ -1,8 +1,4 @@
 import ffmpeg from "fluent-ffmpeg";
-import isDev from "electron-is-dev";
-import log from "electron-log";
-import fs from "fs";
-import { ffmpegConfig } from "../lib/ffmpeg";
 
 export const renderUtil = {
   getMediaMetadata: (mediaPath) => {

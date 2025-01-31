@@ -1,40 +1,18 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  dialog,
-  net,
-  Menu,
-  shell,
-  crashReporter,
-} from "electron";
-import { autoUpdater } from "electron-updater";
-import { renderMain, renderFilter } from "./lib/render.js";
-import { window } from "./lib/window.js";
-import { menu } from "./lib/menu.js";
+import { net } from "electron";
+
 import { ffmpegConfig } from "./lib/ffmpeg.js";
-import { updater } from "./lib/autoUpdater.js";
-import { Extension } from "./lib/extension.js";
 
 import config from "./config.json";
 
 import ffmpeg from "fluent-ffmpeg";
 
-import { v4 as uuidv4 } from "uuid";
-
-import path from "path";
-import isDev from "electron-is-dev";
 import log from "electron-log";
-import axios from "axios";
 
 import fs from "fs";
-import * as fsp from "fs/promises";
-import fse from "fs-extra";
 
 import ProgressBar from "electron-progressbar";
-import getSystemFonts from "get-system-fonts";
 
-const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH;
+// const FFMPEG_BIN_PATH = ffmpegConfig.FFMPEG_BIN_PATH;
 const FFMPEG_PATH = ffmpegConfig.FFMPEG_PATH;
 const FFPROBE_PATH = ffmpegConfig.FFPROBE_PATH;
 

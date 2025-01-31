@@ -1,11 +1,10 @@
-import { app, dialog } from "electron";
-import isDev from "electron-is-dev";
+import { dialog } from "electron";
 import fs from "fs";
 import { mainWindow } from "../lib/window";
 
 export const ipcStream = {
   saveBufferToVideo: async (event, arrayBuffer) => {
-    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    const { filePath } = await dialog.showSaveDialog(mainWindow, {
       title: "Save Video",
       buttonLabel: "Export",
       filters: [
@@ -40,7 +39,7 @@ export const ipcStream = {
   },
 
   saveBufferToAudio: async (event, arrayBuffer) => {
-    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    const { filePath } = await dialog.showSaveDialog(mainWindow, {
       title: "Save Audio",
       buttonLabel: "Export",
       filters: [

@@ -12,7 +12,6 @@ import { autoUpdater } from "electron-updater";
 
 import isDev from "electron-is-dev";
 import path from "path";
-import { ipcOverlayRecord } from "../../main/ipc/ipcOverlayRecord.js";
 
 const trayIcon = nativeImage.createFromPath(
   path.join("assets/icons/png/tray.png"),

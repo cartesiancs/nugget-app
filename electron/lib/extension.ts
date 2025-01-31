@@ -2,10 +2,7 @@ import { window } from "./window.js";
 import { app } from "electron";
 
 import path from "path";
-import fs from "fs";
 import * as fsp from "fs/promises";
-import fse from "fs-extra";
-import JSZip from "jszip";
 import isDev from "electron-is-dev";
 import DecompressZip from "decompress-zip";
 
@@ -144,7 +141,7 @@ class Extension {
   async isExistManifest() {
     try {
       const manifestfilepath = path.join(this.directory, manifestFilename);
-      const filestat = await fsp.stat(manifestfilepath);
+      await fsp.stat(manifestfilepath);
       return true;
     } catch (error) {
       return false;

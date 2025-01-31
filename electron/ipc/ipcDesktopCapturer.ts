@@ -1,5 +1,3 @@
-import { app } from "electron";
-import isDev from "electron-is-dev";
 import { desktopCapturer } from "electron/main";
 
 export const ipcDesktopCapturer = {

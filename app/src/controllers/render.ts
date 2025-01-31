@@ -238,6 +238,113 @@ const prerender: any = {
     return closestY;
   },
 
+  drawTextBackground(ctx, elements, x, y, w, h) {
+    if (elements.background.enable) {
+      const backgroundPadding = 12;
+      let backgroundX = x;
+      let backgroundW = w;
+      if (elements.options.align == "left") {
+        const textSplited = elements.text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = elements.background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = elements.background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      } else if (elements.options.align == "center") {
+        const textSplited = elements.text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = elements.background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = elements.background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      } else if (elements.options.align == "right") {
+        const textSplited = elements.text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x + w - wordWidth - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = elements.background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundX = x + w - wordWidth - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = elements.background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      }
+    }
+  },
+
   renderText: function ({ elementId, elements }) {
     let canvas = prerender.state.animateElements[elementId].canvas;
     let context = prerender.state.animateElements[elementId].context;
@@ -256,38 +363,47 @@ const prerender: any = {
 
     const fontBoxWidth = context.measureText(elements.text).width;
 
-    if (elements.background.enable) {
-      const backgroundPadding = 12;
-      let backgroundX = elements.location.x;
-      let backgroundW = elements.width;
+    prerender.drawTextBackground(
+      context,
+      elements,
+      elements.location.x,
+      elements.location.y,
+      elements.width,
+      elements.height,
+    );
 
-      if (elements.options.align == "left") {
-        backgroundX = elements.location.x - backgroundPadding;
-        backgroundW = fontBoxWidth + backgroundPadding * 2;
-      } else if (elements.options.align == "center") {
-        backgroundX =
-          elements.location.x +
-          elements.width / 2 -
-          fontBoxWidth / 2 -
-          backgroundPadding;
-        backgroundW = fontBoxWidth + backgroundPadding * 2;
-      } else if (elements.options.align == "right") {
-        backgroundX =
-          elements.location.x +
-          elements.width -
-          fontBoxWidth -
-          backgroundPadding;
-        backgroundW = fontBoxWidth + backgroundPadding * 2;
-      }
+    // if (elements.background.enable) {
+    //   const backgroundPadding = 12;
+    //   let backgroundX = elements.location.x;
+    //   let backgroundW = elements.width;
 
-      context.fillStyle = elements.background.color;
-      context.fillRect(
-        backgroundX,
-        elements.location.y,
-        backgroundW,
-        elements.height,
-      );
-    }
+    //   if (elements.options.align == "left") {
+    //     backgroundX = elements.location.x - backgroundPadding;
+    //     backgroundW = fontBoxWidth + backgroundPadding * 2;
+    //   } else if (elements.options.align == "center") {
+    //     backgroundX =
+    //       elements.location.x +
+    //       elements.width / 2 -
+    //       fontBoxWidth / 2 -
+    //       backgroundPadding;
+    //     backgroundW = fontBoxWidth + backgroundPadding * 2;
+    //   } else if (elements.options.align == "right") {
+    //     backgroundX =
+    //       elements.location.x +
+    //       elements.width -
+    //       fontBoxWidth -
+    //       backgroundPadding;
+    //     backgroundW = fontBoxWidth + backgroundPadding * 2;
+    //   }
+
+    //   context.fillStyle = elements.background.color;
+    //   context.fillRect(
+    //     backgroundX,
+    //     elements.location.y,
+    //     backgroundW,
+    //     elements.height,
+    //   );
+    // }
 
     context.fillStyle = elements.textcolor;
 

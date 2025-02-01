@@ -31,6 +31,7 @@ export class AutomaticCaption extends LitElement {
   analyzedEditCaption: any[];
   mediaType: string;
   captionLocationY: number;
+  targetTranslateLang: any;
 
   constructor() {
     super();
@@ -58,6 +59,8 @@ export class AutomaticCaption extends LitElement {
     this._previousTimeStamp = undefined;
     this._done = false;
     this._animationFrameId = null;
+
+    this.targetTranslateLang = "en";
 
     const fontSize = 52;
     const screenHeight = 1080;
@@ -126,7 +129,7 @@ export class AutomaticCaption extends LitElement {
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/audio`, formData);
+    const request = await axios.post(`${serverUrl}/api/audio/test`, formData);
 
     const result = request.data.result;
 
@@ -155,6 +158,36 @@ export class AutomaticCaption extends LitElement {
     this.panelVideoModal.show();
 
     console.log("RESULT", result);
+  }
+
+  async translateText() {
+    try {
+      const serverUrl = document.querySelector("#NuggetAutoServer").value;
+      const formData = new FormData();
+      formData.append("contents", JSON.stringify(this.analyzedEditCaption));
+      formData.append("target_lang", this.targetTranslateLang);
+
+      const request = await axios.post(`${serverUrl}/api/translate`, formData);
+
+      const result = JSON.parse(request.data.result.content);
+
+      console.log(result);
+
+      this.analyzedEditCaption = [...result];
+      this.appendAnalyzedEditCaption();
+      this.requestUpdate();
+    } catch (error) {
+      // NOTE: alert 띄우기
+    }
+  }
+
+  appendAnalyzedEditCaption() {
+    for (let index = 0; index < this.analyzedEditCaption.length; index++) {
+      try {
+        document.querySelector(`#analyzedEditCaption_${index}`).value =
+          this.analyzedEditCaption[index];
+      } catch (error) {}
+    }
   }
 
   async handleClickLoadVideo() {
@@ -546,13 +579,13 @@ export class AutomaticCaption extends LitElement {
         })
         .join(" ");
 
-      if (index == itr) {
-        text = copyEditCaption[itr];
-      }
+      //   if (index == itr) {
+      //     text = copyEditCaption[itr];
+      //   }
 
       this.analyzedEditCaption.push(text);
     }
-
+    this.appendAnalyzedEditCaption();
     this.requestUpdate();
   }
 
@@ -567,6 +600,11 @@ export class AutomaticCaption extends LitElement {
     console.log(event, index);
     this.analyzedEditCaption[index] = event.target.value;
     this.requestUpdate();
+  }
+
+  _handleChangeTargetLang(event) {
+    console.log(event.target.value);
+    this.targetTranslateLang = event.target.value;
   }
 
   render() {
@@ -609,6 +647,7 @@ export class AutomaticCaption extends LitElement {
             @input=${(e) => this._handleChangeInput(e, index)}
             class="form-control bg-default text-light mt-2"
             type="text"
+            id="analyzedEditCaption_${index}"
             value=${this.analyzedEditCaption[index]}
           />
         </span>`,
@@ -864,6 +903,15 @@ export class AutomaticCaption extends LitElement {
                       align bottom
                     </button>
                   </div>
+
+                  <button
+                    type="button"
+                    class="btn btn-primary  btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#TranslateText"
+                  >
+                    Translate
+                  </button>
                 </div>
 
                 <div
@@ -898,6 +946,40 @@ export class AutomaticCaption extends LitElement {
                   Complate Edit
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="TranslateText" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content bg-dark">
+            <div class="modal-body">
+              <h5 class="modal-title text-white font-weight-lg">
+                Translate Text...
+              </h5>
+
+              <b class="text-secondary">Select target language</b>
+
+              <select
+                @change=${this._handleChangeTargetLang}
+                ref="lists"
+                id="fontSelect"
+                class="form-select form-control bg-default text-light"
+                aria-label="Select target lang"
+              >
+                <option value="en" selected>English</option>
+                <option value="ko" selected>Korean</option>
+              </select>
+
+              <button
+                type="button"
+                @click=${this.translateText}
+                class="btn btn-primary  btn-sm"
+                data-bs-dismiss="modal"
+              >
+                Translate
+              </button>
             </div>
           </div>
         </div>

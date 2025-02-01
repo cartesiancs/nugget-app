@@ -604,6 +604,7 @@ export class ElementControl extends LitElement {
     const fontSize = 52;
 
     this.timeline[elementId] = {
+      parentKey: "standalone",
       priority: this.getNowPriority(),
       startTime: 0,
       duration: 1000,

@@ -219,8 +219,38 @@ export class RenderController implements ReactiveController {
 
         if (fileType == "image") {
           const imageElement = this.timeline[elementId] as any;
-
           ctx.globalAlpha = imageElement.opacity / 100;
+
+          let animationType = "position";
+
+          if (imageElement.animation[animationType].isActivate == true) {
+            let index = Math.round(((frame / fps) * 1000) / 16);
+            let indexToMs = index * 20;
+            let startTime = Number(this.timeline[elementId].startTime);
+            let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+            try {
+              if (indexPoint < 0) {
+                return false;
+              }
+
+              const ax = this.findNearestY(
+                imageElement.animation[animationType].ax,
+                (frame / fps) * 1000 - imageElement.startTime,
+              ) as any;
+
+              const ay = this.findNearestY(
+                imageElement.animation[animationType].ay,
+                (frame / fps) * 1000 - imageElement.startTime,
+              ) as any;
+
+              ctx.drawImage(loaded[elementId], ax, ay, w, h);
+
+              drawLayer(layerIndex + 1);
+              return;
+            } catch (error) {}
+          }
+
           ctx.drawImage(loaded[elementId], x, y, w, h);
 
           ctx.globalAlpha = 1;
@@ -506,6 +536,21 @@ export class RenderController implements ReactiveController {
         }
       }
     }
+  }
+
+  findNearestY(pairs, a): number | null {
+    let closestY = null;
+    let closestDiff = Infinity;
+
+    for (const [x, y] of pairs) {
+      const diff = Math.abs(x - a);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestY = y;
+      }
+    }
+
+    return closestY;
   }
 
   drawTextStroke(ctx, elementId, text, x, y) {

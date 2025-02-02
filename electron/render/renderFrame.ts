@@ -72,6 +72,8 @@ export function startFFmpegProcess(options, timeline) {
     "libx264",
     `-t`,
     `${options.videoDuration}`,
+    "-b:v",
+    `${options.videoBitrate}k`,
     "-pix_fmt",
     "yuv420p",
     options.videoDestination,

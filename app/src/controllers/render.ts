@@ -263,84 +263,34 @@ export class RenderController implements ReactiveController {
         if (fileType == "gif") {
           const imageElement = this.timeline[elementId] as any;
 
-          if (
-            this.gifFrames.findIndex((item) => {
-              return item.key == elementId;
-            }) != -1
-          ) {
-            const imageIndex = this.gifFrames.findIndex((item) => {
-              return item.key == elementId;
-            });
-            const delay = this.gifFrames[imageIndex].frames[0].delay;
+          const gifTempCanvas = document.createElement("canvas");
+          const gifTempCanvasCtx = gifTempCanvas.getContext("2d") as any;
 
-            const index =
-              Math.round(((frame / fps) * 1000) / delay) %
-              this.gifFrames[imageIndex].frames.length;
-            const firstFrame = this.gifFrames[imageIndex].frames[index];
+          const imageIndex = loaded[elementId].findIndex((item) => {
+            return item.key == elementId;
+          });
+          const delay = loaded[elementId][0].delay;
 
-            let dims = firstFrame.dims;
+          const index =
+            Math.round(((frame / fps) * 1000) / delay) %
+            loaded[elementId].length;
+          const firstFrame = loaded[elementId][index];
 
-            if (
-              !this.gifCanvas.frameImageData ||
-              dims.width != this.gifCanvas.frameImageData.width ||
-              dims.height != this.gifCanvas.frameImageData.height
-            ) {
-              this.gifTempCanvas.width = dims.width;
-              this.gifTempCanvas.height = dims.height;
-              this.gifCanvas.frameImageData =
-                this.gifCanvas.tempCtx.createImageData(dims.width, dims.height);
-            }
+          let dims = firstFrame.dims;
+          let frameImageData: any = null;
+          gifTempCanvas.width = dims.width;
+          gifTempCanvas.height = dims.height;
 
-            this.gifCanvas.frameImageData.data.set(firstFrame.patch);
+          frameImageData = gifTempCanvasCtx.createImageData(
+            dims.width,
+            dims.height,
+          );
 
-            this.gifCanvas.tempCtx.putImageData(
-              this.gifCanvas.frameImageData,
-              0,
-              0,
-            );
+          frameImageData.data.set(firstFrame.patch);
 
-            ctx.drawImage(this.gifTempCanvas, x, y, w, h);
-          } else {
-            fetch(imageElement.localpath)
-              .then((resp) => resp.arrayBuffer())
-              .then((buff) => {
-                let gif = parseGIF(buff);
-                let frames = decompressFrames(gif, true);
+          gifTempCanvasCtx.putImageData(frameImageData, 0, 0);
 
-                const firstFrame = frames[0];
-
-                let dims = firstFrame.dims;
-
-                if (
-                  !this.gifCanvas.frameImageData ||
-                  dims.width != this.gifCanvas.frameImageData.width ||
-                  dims.height != this.gifCanvas.frameImageData.height
-                ) {
-                  this.gifTempCanvas.width = dims.width;
-                  this.gifTempCanvas.height = dims.height;
-                  this.gifCanvas.frameImageData =
-                    this.gifCanvas.tempCtx.createImageData(
-                      dims.width,
-                      dims.height,
-                    );
-                }
-
-                this.gifCanvas.frameImageData.data.set(firstFrame.patch);
-
-                this.gifCanvas.tempCtx.putImageData(
-                  this.gifCanvas.frameImageData,
-                  0,
-                  0,
-                );
-
-                ctx.drawImage(this.gifTempCanvas, x, y, w, h);
-
-                this.gifFrames.push({
-                  key: elementId,
-                  frames: frames,
-                });
-              });
-          }
+          ctx.drawImage(gifTempCanvas, x, y, w, h);
 
           drawLayer(layerIndex + 1);
           return;
@@ -533,6 +483,17 @@ export class RenderController implements ReactiveController {
             video.currentTime = 0;
             loaded[key] = video;
           });
+        }
+
+        if (element.filetype == "gif") {
+          fetch(this.timeline[key].localpath)
+            .then((resp) => resp.arrayBuffer())
+            .then((buff) => {
+              let gif = parseGIF(buff);
+              let frames = decompressFrames(gif, true);
+
+              loaded[key] = frames;
+            });
         }
       }
     }

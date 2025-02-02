@@ -277,7 +277,7 @@ export const renderFilter = {
     };
 
     if (checkStaticCondition) {
-      log.info("[render gif] ", object.element.filetype);
+      log.info("[render] ", object.element.filetype);
 
       if (object.element.filetype == "gif") {
         log.info("[render gif] ", object.element.filetype);
@@ -349,9 +349,9 @@ export const renderFilter = {
     // }
 
     // NOTE: 회전시 사분면 사이드 잘림
-    object.filter.push(
-      `[image${elementCounts.video}]rotate=${options.rotationRadian}:c=none[image${elementCounts.video}]`,
-    );
+    // object.filter.push(
+    //   `[image${elementCounts.video}]rotate=${options.rotationRadian}:c=none[image${elementCounts.video}]`,
+    // );
 
     if (checkStaticCondition) {
       object.filter.push(

@@ -8,7 +8,7 @@ export class OverlayWebcam extends LitElement {
     super();
 
     this.isRecord = true;
-    window.electronAPI.res.overlayRecord.stop((event: any) => {
+    window.electronAPI.res.overlayRecord.stop(() => {
       this.stopRecord();
     });
   }
@@ -28,6 +28,7 @@ export class OverlayWebcam extends LitElement {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transform: scaleX(-1);
     }
 
     .d-none {

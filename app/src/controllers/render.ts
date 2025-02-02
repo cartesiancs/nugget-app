@@ -1,9 +1,686 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
 import { rendererModal } from "../utils/modal";
 import { renderOptionStore } from "../states/renderOptionStore";
+import { useTimelineStore } from "../states/timelineStore";
+import { elementUtils } from "../utils/element";
+import { decompressFrames, parseGIF } from "gifuct-js";
+
+let loaded = {};
 
 export class RenderController implements ReactiveController {
   private host: ReactiveControllerHost | undefined;
+  timeline: any;
+  loadedObjects: any;
+  gifFrames: any;
+  gifCanvas: any;
+  gifTempCanvas: any;
+  loadedVideos: any;
+  nowShapeId: any;
+
+  public requestRenderV2() {
+    const renderOptionState = renderOptionStore.getState().options;
+    const elementControlComponent = document.querySelector("element-control");
+
+    const projectDuration = renderOptionState.duration;
+    const projectFolder = document.querySelector("#projectFolder").value;
+    const projectRatio = elementControlComponent.previewRatio;
+    const previewSizeH = renderOptionState.previewSize.h;
+    const previewSizeW = renderOptionState.previewSize.w;
+
+    const videoBitrate = Number(document.querySelector("#videoBitrate").value);
+
+    if (projectFolder == "") {
+      document
+        .querySelector("toast-box")
+        .showToast({ message: "Select a project folder", delay: "4000" });
+
+      return 0;
+    }
+
+    this.timeline = useTimelineStore.getState().timeline;
+    this.loadMedia();
+
+    window.electronAPI.req.dialog.exportVideo().then((result) => {
+      let videoDestination = result || `nonefile`;
+      if (videoDestination == `nonefile`) {
+        return 0;
+      }
+
+      let options = {
+        videoDuration: projectDuration,
+        videoDestination: result || `${projectFolder}/result.mp4`,
+        videoDestinationFolder: projectFolder,
+        videoBitrate: videoBitrate,
+        previewRatio: projectRatio,
+        previewSize: {
+          w: previewSizeW,
+          h: previewSizeH,
+        },
+      };
+
+      window.electronAPI.req.render.v2.start(options, this.timeline);
+
+      const fps = 60;
+      const imageCount = fps * projectDuration;
+
+      this.nextFrameRender(options, 0, imageCount);
+    });
+  }
+
+  nextFrameRender(options, frame, totalFrame) {
+    rendererModal.progressModal.show();
+    document.querySelector("#progress").style.width = `${
+      (frame / totalFrame) * 100
+    }%`;
+    document.querySelector("#progress").innerHTML = `${Math.round(
+      (frame / totalFrame) * 100,
+    )}%`;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = options.previewSize.w;
+    canvas.height = options.previewSize.h;
+
+    const fps = 60;
+    let needsToDelay = 0;
+    let delayCount = 0; // Video와 같은 개체의 경우 프레임 정확성을 보장하기 위해 이벤트 리스너를 사용합니다.
+    // 이때 이벤트가 달린 딜레이가 필요한 개체를 카운트 해주고 해당 카운트가 needsToDelay와 같아질때 랜더링합니다.
+
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      const sortedTimeline = Object.fromEntries(
+        Object.entries(this.timeline).sort(
+          ([, valueA]: any, [, valueB]: any) =>
+            valueA.priority - valueB.priority,
+        ),
+      );
+
+      const layers: string[] = [];
+
+      for (const key in sortedTimeline) {
+        if (Object.prototype.hasOwnProperty.call(sortedTimeline, key)) {
+          layers.push(key);
+          const fileType = this.timeline[key].filetype;
+          let additionalStartTime = 0;
+
+          if (fileType == "text") {
+            if (this.timeline[key].parentKey != "standalone") {
+              const parentStartTime =
+                this.timeline[this.timeline[key].parentKey].startTime;
+              additionalStartTime = parentStartTime;
+            }
+          }
+
+          const startTime =
+            (this.timeline[key].startTime as number) + additionalStartTime;
+          const duration = this.timeline[key].duration as number;
+
+          const elementType = elementUtils.getElementType(fileType);
+
+          if (elementType == "static") {
+            if (
+              !(
+                (frame / fps) * 1000 >= startTime &&
+                (frame / fps) * 1000 < startTime + duration
+              )
+            ) {
+              continue;
+            }
+          } else {
+            if (
+              !(
+                (frame / fps) * 1000 >= startTime &&
+                (frame / fps) * 1000 <
+                  startTime + duration / this.timeline[key].speed
+              )
+            ) {
+              continue;
+            }
+          }
+
+          const element = sortedTimeline[key] as any;
+          if (element.filetype == "video") {
+            if (
+              !(
+                (frame / fps) * 1000 >=
+                  startTime + this.timeline[key].trim.startTime &&
+                (frame / fps) * 1000 <
+                  startTime + this.timeline[key].trim.endTime
+              )
+            ) {
+              continue;
+            }
+
+            needsToDelay += 1; // 영상은 딜레이가 필요합니다.
+          }
+        }
+      }
+
+      const drawLayer = async (layerIndex) => {
+        if (layers.length <= layerIndex) {
+          // 마지막 레이어 다음
+          canvas.toBlob(async (blob) => {
+            if (blob) {
+              const arrayBuffer = await blob.arrayBuffer();
+              window.electronAPI.req.render.v2.sendFrame(arrayBuffer);
+              if (frame == totalFrame - 1) {
+                window.electronAPI.req.render.v2.finishStream();
+              } else {
+                this.nextFrameRender(options, frame + 1, totalFrame);
+              }
+            }
+          }, "image/png");
+          return;
+        }
+        const elementId = layers[layerIndex];
+
+        const x = this.timeline[elementId].location?.x as number;
+        const y = this.timeline[elementId].location?.y as number;
+        const w = this.timeline[elementId].width as number;
+        const h = this.timeline[elementId].height as number;
+        const fileType = this.timeline[elementId].filetype;
+        let additionalStartTime = 0;
+
+        if (fileType == "text") {
+          if (this.timeline[elementId].parentKey != "standalone") {
+            const parentStartTime =
+              this.timeline[this.timeline[elementId].parentKey].startTime;
+            additionalStartTime = parentStartTime;
+          }
+        }
+
+        const startTime =
+          (this.timeline[elementId].startTime as number) + additionalStartTime;
+        const duration = this.timeline[elementId].duration as number;
+
+        const elementType = elementUtils.getElementType(fileType);
+
+        if (elementType == "static") {
+          if (
+            !(
+              (frame / fps) * 1000 >= startTime &&
+              (frame / fps) * 1000 < startTime + duration
+            )
+          ) {
+            drawLayer(layerIndex + 1);
+            return;
+          }
+        } else {
+          if (
+            !(
+              (frame / fps) * 1000 >= startTime &&
+              (frame / fps) * 1000 <
+                startTime + duration / this.timeline[elementId].speed
+            )
+          ) {
+            drawLayer(layerIndex + 1);
+            return;
+          }
+        }
+
+        if (fileType == "image") {
+          const imageElement = this.timeline[elementId] as any;
+
+          ctx.globalAlpha = imageElement.opacity / 100;
+          ctx.drawImage(loaded[elementId], x, y, w, h);
+
+          ctx.globalAlpha = 1;
+
+          drawLayer(layerIndex + 1);
+          return;
+        }
+
+        // NOTE: gif 랜더링 구현 필요
+        if (fileType == "gif") {
+          const imageElement = this.timeline[elementId] as any;
+
+          if (
+            this.gifFrames.findIndex((item) => {
+              return item.key == elementId;
+            }) != -1
+          ) {
+            const imageIndex = this.gifFrames.findIndex((item) => {
+              return item.key == elementId;
+            });
+            const delay = this.gifFrames[imageIndex].frames[0].delay;
+
+            const index =
+              Math.round(((frame / fps) * 1000) / delay) %
+              this.gifFrames[imageIndex].frames.length;
+            const firstFrame = this.gifFrames[imageIndex].frames[index];
+
+            let dims = firstFrame.dims;
+
+            if (
+              !this.gifCanvas.frameImageData ||
+              dims.width != this.gifCanvas.frameImageData.width ||
+              dims.height != this.gifCanvas.frameImageData.height
+            ) {
+              this.gifTempCanvas.width = dims.width;
+              this.gifTempCanvas.height = dims.height;
+              this.gifCanvas.frameImageData =
+                this.gifCanvas.tempCtx.createImageData(dims.width, dims.height);
+            }
+
+            this.gifCanvas.frameImageData.data.set(firstFrame.patch);
+
+            this.gifCanvas.tempCtx.putImageData(
+              this.gifCanvas.frameImageData,
+              0,
+              0,
+            );
+
+            ctx.drawImage(this.gifTempCanvas, x, y, w, h);
+          } else {
+            fetch(imageElement.localpath)
+              .then((resp) => resp.arrayBuffer())
+              .then((buff) => {
+                let gif = parseGIF(buff);
+                let frames = decompressFrames(gif, true);
+
+                const firstFrame = frames[0];
+
+                let dims = firstFrame.dims;
+
+                if (
+                  !this.gifCanvas.frameImageData ||
+                  dims.width != this.gifCanvas.frameImageData.width ||
+                  dims.height != this.gifCanvas.frameImageData.height
+                ) {
+                  this.gifTempCanvas.width = dims.width;
+                  this.gifTempCanvas.height = dims.height;
+                  this.gifCanvas.frameImageData =
+                    this.gifCanvas.tempCtx.createImageData(
+                      dims.width,
+                      dims.height,
+                    );
+                }
+
+                this.gifCanvas.frameImageData.data.set(firstFrame.patch);
+
+                this.gifCanvas.tempCtx.putImageData(
+                  this.gifCanvas.frameImageData,
+                  0,
+                  0,
+                );
+
+                ctx.drawImage(this.gifTempCanvas, x, y, w, h);
+
+                this.gifFrames.push({
+                  key: elementId,
+                  frames: frames,
+                });
+              });
+          }
+
+          drawLayer(layerIndex + 1);
+          return;
+        }
+
+        if (fileType == "text") {
+          try {
+            ctx.fillStyle = this.timeline[elementId].textcolor as string;
+            ctx.lineWidth = 0;
+            ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
+
+            ctx.font = `${
+              this.timeline[elementId].options.isItalic ? "italic" : ""
+            } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
+              this.timeline[elementId].fontsize
+            }px ${this.timeline[elementId].fontname}`;
+
+            const fontBoxWidth = ctx.measureText(
+              this.timeline[elementId].text as string,
+            ).width;
+
+            this.drawTextBackground(ctx, elementId, x, y, w, h);
+
+            ctx.fillStyle = this.timeline[elementId].textcolor as string;
+
+            if (this.timeline[elementId].options.align == "left") {
+              const textSplited = this.timeline[elementId].text.split(" ");
+              let line = "";
+              let textY = y + (this.timeline[elementId].fontsize || 0);
+              let lineHeight = h;
+
+              for (let index = 0; index < textSplited.length; index++) {
+                const testLine = line + textSplited[index] + " ";
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+
+                if (testWidth < w) {
+                  line = testLine;
+                } else {
+                  this.drawTextStroke(ctx, elementId, line, x, textY);
+                  ctx.fillText(line, x, textY);
+                  line = textSplited[index] + " ";
+                  textY += lineHeight;
+                }
+              }
+
+              this.drawTextStroke(ctx, elementId, line, x, textY);
+              ctx.fillText(line, x, textY);
+            } else if (this.timeline[elementId].options.align == "center") {
+              const textSplited = this.timeline[elementId].text.split(" ");
+              let line = "";
+              let textY = y + (this.timeline[elementId].fontsize || 0);
+              let lineHeight = h;
+
+              for (let index = 0; index < textSplited.length; index++) {
+                const testLine = line + textSplited[index] + " ";
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+
+                if (testWidth < w) {
+                  line = testLine;
+                } else {
+                  const wordWidth = ctx.measureText(line).width;
+                  this.drawTextStroke(
+                    ctx,
+                    elementId,
+                    line,
+                    x + w / 2 - wordWidth / 2,
+                    textY,
+                  );
+                  ctx.fillText(line, x + w / 2 - wordWidth / 2, textY);
+                  line = textSplited[index] + " ";
+                  textY += lineHeight;
+                }
+              }
+
+              const lastWordWidth = ctx.measureText(line).width;
+
+              this.drawTextStroke(
+                ctx,
+                elementId,
+                line,
+                x + w / 2 - lastWordWidth / 2,
+                textY,
+              );
+              ctx.fillText(line, x + w / 2 - lastWordWidth / 2, textY);
+            } else if (this.timeline[elementId].options.align == "right") {
+              const textSplited = this.timeline[elementId].text.split(" ");
+              let line = "";
+              let textY = y + (this.timeline[elementId].fontsize || 0);
+              let lineHeight = h;
+
+              for (let index = 0; index < textSplited.length; index++) {
+                const testLine = line + textSplited[index] + " ";
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+
+                if (testWidth < w) {
+                  line = testLine;
+                } else {
+                  const wordWidth = ctx.measureText(line).width;
+                  this.drawTextStroke(
+                    ctx,
+                    elementId,
+                    line,
+                    x + w - wordWidth,
+                    textY,
+                  );
+                  ctx.fillText(line, x + w - wordWidth, textY);
+                  line = textSplited[index] + " ";
+                  textY += lineHeight;
+                }
+              }
+
+              const lastWordWidth = ctx.measureText(line).width;
+
+              this.drawTextStroke(
+                ctx,
+                elementId,
+                line,
+                x + w - lastWordWidth,
+                textY,
+              );
+              ctx.fillText(line, x + w - lastWordWidth, textY);
+            }
+
+            drawLayer(layerIndex + 1);
+            return;
+          } catch (error) {}
+        }
+
+        if (fileType == "shape") {
+          this.drawShape(canvas, elementId);
+          drawLayer(layerIndex + 1);
+          return;
+        }
+
+        if (fileType == "video") {
+          if (
+            !(
+              (frame / fps) * 1000 >=
+                startTime + this.timeline[elementId].trim.startTime &&
+              (frame / fps) * 1000 <
+                startTime + this.timeline[elementId].trim.endTime
+            )
+          ) {
+            drawLayer(layerIndex + 1);
+            return;
+          }
+
+          const onSeeked = () => {
+            loaded[elementId].removeEventListener("seeked", onSeeked);
+            ctx.drawImage(loaded[elementId], x, y, w, h);
+            delayCount += 1;
+
+            drawLayer(layerIndex + 1);
+          };
+
+          loaded[elementId].addEventListener("seeked", onSeeked);
+
+          loaded[elementId].currentTime = frame / fps;
+        }
+      };
+
+      drawLayer(0);
+    }
+  }
+
+  loadMedia() {
+    this.timeline = useTimelineStore.getState().timeline;
+
+    for (const key in this.timeline) {
+      if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
+        const element = this.timeline[key];
+
+        if (element.filetype == "image") {
+          let img = new Image();
+          img.onload = () => {
+            loaded[key] = img;
+          };
+          img.src = element.localpath;
+        }
+
+        if (element.filetype == "video") {
+          const video = document.createElement("video");
+          video.playbackRate = this.timeline[key].speed;
+          video.src = this.timeline[key].localpath;
+
+          video.addEventListener("loadeddata", () => {
+            video.currentTime = 0;
+            loaded[key] = video;
+          });
+        }
+      }
+    }
+  }
+
+  drawTextStroke(ctx, elementId, text, x, y) {
+    if (this.timeline[elementId].options.outline.enable) {
+      ctx.font = `${
+        this.timeline[elementId].options.isItalic ? "italic" : ""
+      } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
+        this.timeline[elementId].fontsize
+      }px ${this.timeline[elementId].fontname}`;
+
+      ctx.lineWidth = parseInt(this.timeline[elementId].options.outline.size);
+      ctx.strokeStyle = this.timeline[elementId].options.outline.color;
+      ctx.strokeText(text, x, y);
+    }
+  }
+
+  drawTextBackground(ctx, elementId, x, y, w, h) {
+    if (this.timeline[elementId].background.enable) {
+      const backgroundPadding = 12;
+      let backgroundX = x;
+      let backgroundW = w;
+      if (this.timeline[elementId].options.align == "left") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = this.timeline[elementId].background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = this.timeline[elementId].background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      } else if (this.timeline[elementId].options.align == "center") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = this.timeline[elementId].background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = this.timeline[elementId].background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      } else if (this.timeline[elementId].options.align == "right") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = y;
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+
+            backgroundX = x + w - wordWidth - backgroundPadding;
+            backgroundW = wordWidth + backgroundPadding;
+
+            ctx.fillStyle = this.timeline[elementId].background.color;
+            ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const wordWidth = ctx.measureText(line).width;
+        backgroundX = x + w - wordWidth - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = this.timeline[elementId].background.color;
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+      }
+    }
+  }
+
+  drawShape(canvas, elementId) {
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+    const target = this.timeline[elementId];
+
+    ctx.beginPath();
+
+    const ratio = target.oWidth / target.width;
+
+    for (let index = 0; index < target.shape.length; index++) {
+      const element = target.shape[index];
+      const x = element[0] / ratio + target.location.x;
+      const y = element[1] / ratio + target.location.y;
+
+      ctx.fillStyle = target.option.fillColor;
+
+      ctx.lineTo(x, y);
+    }
+
+    ctx.closePath();
+
+    ctx.fill();
+  }
+
+  parseRGBString(str) {
+    const parts = str.split(":");
+
+    let r = 0,
+      g = 0,
+      b = 0;
+
+    parts.forEach((item) => {
+      const [key, value] = item.split("=");
+      const numValue = parseInt(value, 10);
+
+      switch (key) {
+        case "r":
+          r = numValue;
+          break;
+        case "g":
+          g = numValue;
+          break;
+        case "b":
+          b = numValue;
+          break;
+        default:
+          break;
+      }
+    });
+
+    return { r, g, b };
+  }
 
   public requestRender() {
     const renderOptionState = renderOptionStore.getState().options;
@@ -138,7 +815,6 @@ const prerender: any = {
   },
 
   render: function (elements, options) {
-    console.log(elements);
     prerender.state.elements = elements;
     prerender.state.options = options;
     prerender.state.numberOfRenderingRequired = 0;
@@ -371,39 +1047,6 @@ const prerender: any = {
       elements.width,
       elements.height,
     );
-
-    // if (elements.background.enable) {
-    //   const backgroundPadding = 12;
-    //   let backgroundX = elements.location.x;
-    //   let backgroundW = elements.width;
-
-    //   if (elements.options.align == "left") {
-    //     backgroundX = elements.location.x - backgroundPadding;
-    //     backgroundW = fontBoxWidth + backgroundPadding * 2;
-    //   } else if (elements.options.align == "center") {
-    //     backgroundX =
-    //       elements.location.x +
-    //       elements.width / 2 -
-    //       fontBoxWidth / 2 -
-    //       backgroundPadding;
-    //     backgroundW = fontBoxWidth + backgroundPadding * 2;
-    //   } else if (elements.options.align == "right") {
-    //     backgroundX =
-    //       elements.location.x +
-    //       elements.width -
-    //       fontBoxWidth -
-    //       backgroundPadding;
-    //     backgroundW = fontBoxWidth + backgroundPadding * 2;
-    //   }
-
-    //   context.fillStyle = elements.background.color;
-    //   context.fillRect(
-    //     backgroundX,
-    //     elements.location.y,
-    //     backgroundW,
-    //     elements.height,
-    //   );
-    // }
 
     context.fillStyle = elements.textcolor;
 

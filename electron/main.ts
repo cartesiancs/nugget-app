@@ -26,6 +26,9 @@ import { ipcStream } from "./ipc/ipcStream.js";
 import { ipcDesktopCapturer } from "./ipc/ipcDesktopCapturer.js";
 import { ipcOverlayRecord } from "./ipc/ipcOverlayRecord.js";
 
+import "./render/renderFrame.js";
+import { ipcRenderV2 } from "./render/renderFrame.js";
+
 let resourcesPath = "";
 export let mainWindow;
 
@@ -117,6 +120,10 @@ ipcMain.handle("overlayRecord:show", ipcOverlayRecord.show);
 
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
+
+ipcMain.on("render:v2:start", ipcRenderV2.start);
+ipcMain.on("render:v2:sendFrame", ipcRenderV2.sendFrame);
+ipcMain.on("render:v2:finishStream", ipcRenderV2.finishStream);
 
 // ipcMain.on("overlayRecord:stop:res", async (evt) => {
 //   mainWindow.webContents.send("overlayRecord:stop:res", "");

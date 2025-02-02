@@ -32,8 +32,13 @@ export class ControlRender extends LitElement {
     this.renderControl.requestRender();
   }
 
+  handleClickRenderV2Button() {
+    this.renderControl.requestRenderV2();
+  }
+
   render() {
-    return html` <label class="form-label text-light"
+    return html`
+      <label class="form-label text-light"
         >${this.lc.t("setting.bitrate")}</label
       >
       <div class="input-group mb-3">
@@ -75,8 +80,17 @@ export class ControlRender extends LitElement {
         </div>
       </div> -->
 
-      <button class="btn btn-blue-fill" @click=${this.handleClickRenderButton}>
+      <!-- <button class="btn btn-blue-fill" @click=${this
+        .handleClickRenderButton}>
         ${this.lc.t("setting.export")}
-      </button>`;
+      </button> -->
+
+      <button
+        class="btn btn-blue-fill"
+        @click=${this.handleClickRenderV2Button}
+      >
+        Render
+      </button>
+    `;
   }
 }

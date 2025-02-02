@@ -129,7 +129,7 @@ export class AutomaticCaption extends LitElement {
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/api/audio/test`, formData);
+    const request = await axios.post(`${serverUrl}/api/audio`, formData);
 
     const result = request.data.result;
 
@@ -969,7 +969,7 @@ export class AutomaticCaption extends LitElement {
                 aria-label="Select target lang"
               >
                 <option value="en" selected>English</option>
-                <option value="ko" selected>Korean</option>
+                <option value="ko">Korean</option>
               </select>
 
               <button

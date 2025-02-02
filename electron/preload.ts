@@ -65,6 +65,13 @@ const request = {
   render: {
     outputVideo: (elements, options) =>
       ipcRenderer.send("RENDER", elements, options),
+    v2: {
+      sendFrame: (base64Data) =>
+        ipcRenderer.send("render:v2:sendFrame", base64Data),
+      finishStream: () => ipcRenderer.send("render:v2:finishStream"),
+      start: (options, timeline) =>
+        ipcRenderer.send("render:v2:start", options, timeline),
+    },
   },
   url: {
     openUrl: (url) => ipcRenderer.send("OPEN_URL", url),

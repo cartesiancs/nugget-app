@@ -134,7 +134,7 @@ export class PreviewCanvas extends LitElement {
 
       // this.setTimelineColor();
       this.setPreviewRatio();
-      this.drawCanvas();
+      this.drawCanvas(this.canvas);
     });
 
     uiStore.subscribe((state) => {
@@ -143,7 +143,7 @@ export class PreviewCanvas extends LitElement {
         document.querySelector("#split_col_2").clientHeight;
 
       this.setPreviewRatio();
-      this.drawCanvas();
+      this.drawCanvas(this.canvas);
     });
 
     renderOptionStore.subscribe((state) => {
@@ -151,7 +151,7 @@ export class PreviewCanvas extends LitElement {
       this.canvasMaxHeight =
         document.querySelector("#split_col_2").clientHeight;
       this.setPreviewRatio();
-      this.drawCanvas();
+      this.drawCanvas(this.canvas);
     });
 
     return this;
@@ -306,17 +306,15 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  drawCanvas() {
+  drawCanvas(canvas) {
     let index = 1;
 
-    const ctx = this.canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
     if (ctx) {
-      const dpr = window.devicePixelRatio;
+      canvas.width = this.renderOption.previewSize.w;
+      canvas.height = this.renderOption.previewSize.h;
 
-      this.canvas.width = this.renderOption.previewSize.w;
-      this.canvas.height = this.renderOption.previewSize.h;
-
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const sortedTimeline = Object.fromEntries(
         Object.entries(this.timeline).sort(
@@ -1155,7 +1153,7 @@ export class PreviewCanvas extends LitElement {
             this.timeline[element.elementId].speed) /
           1000;
 
-        this.drawCanvas();
+        this.drawCanvas(this.canvas);
       } catch (error) {}
     }
   }
@@ -1716,7 +1714,7 @@ export class PreviewCanvas extends LitElement {
       );
       this.isMove = false;
       this.isStretch = false;
-      this.drawCanvas();
+      this.drawCanvas(this.canvas);
     } catch (error) {}
   }
 
@@ -1752,7 +1750,7 @@ export class PreviewCanvas extends LitElement {
 
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           this.isEditText = true;
-          this.drawCanvas();
+          this.drawCanvas(this.canvas);
         } else {
           this.cursorType = "default";
         }

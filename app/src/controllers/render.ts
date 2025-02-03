@@ -6,6 +6,7 @@ import { elementUtils } from "../utils/element";
 import { decompressFrames, parseGIF } from "gifuct-js";
 
 let loaded = {};
+let canvas = document.createElement("canvas");
 
 export class RenderController implements ReactiveController {
   private host: ReactiveControllerHost | undefined;
@@ -37,7 +38,11 @@ export class RenderController implements ReactiveController {
       return 0;
     }
 
-    this.timeline = useTimelineStore.getState().timeline;
+    this.timeline = Object.fromEntries(
+      Object.entries(useTimelineStore.getState().timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
     this.loadMedia();
 
     window.electronAPI.req.dialog.exportVideo().then((result) => {
@@ -58,6 +63,10 @@ export class RenderController implements ReactiveController {
         },
       };
 
+      canvas = document.createElement("canvas");
+      canvas.width = options.previewSize.w;
+      canvas.height = options.previewSize.h;
+
       window.electronAPI.req.render.v2.start(options, this.timeline);
 
       const fps = 60;
@@ -76,10 +85,6 @@ export class RenderController implements ReactiveController {
       (frame / totalFrame) * 100,
     )}%`;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = options.previewSize.w;
-    canvas.height = options.previewSize.h;
-
     const fps = 60;
     let needsToDelay = 0;
     let delayCount = 0; // Video와 같은 개체의 경우 프레임 정확성을 보장하기 위해 이벤트 리스너를 사용합니다.
@@ -87,12 +92,11 @@ export class RenderController implements ReactiveController {
 
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      const sortedTimeline = Object.fromEntries(
-        Object.entries(this.timeline).sort(
-          ([, valueA]: any, [, valueB]: any) =>
-            valueA.priority - valueB.priority,
-        ),
-      );
+      canvas.width = options.previewSize.w;
+      canvas.height = options.previewSize.h;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const sortedTimeline = this.timeline;
 
       const layers: string[] = [];
 

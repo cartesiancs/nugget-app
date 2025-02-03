@@ -224,6 +224,22 @@ export class ElementTimelineLeftOption extends LitElement {
       .openAnimationPanel(elementId);
   }
 
+  setActiveAnimation(elementId, animationType: "position" | "opacity") {
+    this.timeline[elementId].animation[animationType].isActivate = true;
+    console.log(this.timeline[elementId]);
+    this.timelineState.patchTimeline(this.timeline);
+    this.requestUpdate();
+  }
+
+  setDeactiveAnimation(elementId, animationType: "position" | "opacity") {
+    console.log(this.timeline[elementId], animationType);
+
+    this.timeline[elementId].animation[animationType].isActivate = false;
+    this.timelineState.patchTimeline(this.timeline);
+
+    this.requestUpdate();
+  }
+
   _handleMouseMove(e) {
     const elementControlComponent = document.querySelector("element-control");
 
@@ -364,6 +380,30 @@ export class ElementTimelineLeftOption extends LitElement {
               <span class="element-left-option-text">POSITION</span>
 
               <div class="gap-1 justify-content-end">
+                <button
+                  class="btn btn-xxs ${this.timeline[key].animation.position
+                    .isActivate
+                    ? ""
+                    : "d-none"} text-light mr-2"
+                  @click=${() => this.setDeactiveAnimation(key, "position")}
+                >
+                  <span class="material-symbols-outlined icon-xs text-light">
+                    lock_open
+                  </span>
+                </button>
+
+                <button
+                  class="btn btn-xxs ${this.timeline[key].animation.position
+                    .isActivate == false
+                    ? ""
+                    : "d-none"} text-light mr-2"
+                  @click=${() => this.setActiveAnimation(key, "position")}
+                >
+                  <span class="material-symbols-outlined icon-xs text-dark">
+                    lock
+                  </span>
+                </button>
+
                 <button
                   class="btn btn-xxs  text-light mr-2"
                   @click=${() => this.activePositionAnimation(key)}

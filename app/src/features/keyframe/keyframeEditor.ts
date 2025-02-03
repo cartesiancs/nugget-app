@@ -151,9 +151,6 @@ export class KeyframeEditor extends LitElement {
           "overflow-hidden",
         );
 
-        this.timeline[this.elementId].animation[this.animationType].isActivate =
-          true;
-
         return html` <div>
           <div class="btn-group p-2" role="group" id="timelineOptionLineEditor">
             <button

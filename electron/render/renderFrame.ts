@@ -21,17 +21,30 @@ export function startFFmpegProcess(options, timeline) {
     if (Object.prototype.hasOwnProperty.call(timeline, key)) {
       const element = timeline[key];
       if (element.filetype == "video" || element.filetype == "audio") {
-        args.push(
-          "-ss",
-          `${(element.trim.startTime / 1000) * (element.speed || 1)}`,
-        );
-        args.push(
-          "-t",
-          `${element.trim.endTime / 1000 - element.trim.startTime / 1000}`,
-        );
+        let inStartTime = element.trim.startTime * (element.speed || 1);
+        let inDuration = element.trim.endTime - element.trim.startTime;
+        let trackDelay = element.startTime;
+
+        if (inStartTime >= 0 && trackDelay >= 0) {
+          trackDelay = element.startTime + inStartTime;
+        } else if (trackDelay < 0) {
+          let d = inStartTime - Math.abs(trackDelay);
+          if (d >= 0) {
+            trackDelay = d;
+          } else {
+            trackDelay = 0;
+            inStartTime =
+              element.trim.startTime * (element.speed || 1) + Math.abs(d);
+          }
+        }
+
+        console.log(inStartTime, inDuration, trackDelay);
+
+        args.push("-ss", `${inStartTime / 1000}`);
+        args.push("-t", `${inDuration / 1000}`);
         args.push("-i", element.localpath);
 
-        const delayMs = Math.round(element.startTime);
+        const delayMs = Math.round(trackDelay);
         const label = `audio${index}`;
         filterComplexArray.push(
           `[${index + 1}:a]adelay=${delayMs}|${delayMs}[${label}]`,
@@ -98,7 +111,6 @@ export const ipcRenderV2 = {
   },
   sendFrame: (event, arrayBuffer) => {
     const buffer = Buffer.from(arrayBuffer);
-    console.log("render", new Date());
     if (ffmpegProcess && ffmpegProcess.stdin.writable) {
       ffmpegProcess.stdin.write(buffer);
     }

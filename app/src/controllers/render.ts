@@ -451,7 +451,10 @@ export class RenderController implements ReactiveController {
 
           loaded[elementId].addEventListener("seeked", onSeeked);
 
-          loaded[elementId].currentTime = frame / fps;
+          loaded[elementId].currentTime =
+            (-(this.timeline[elementId].startTime - (frame / fps) * 1000) *
+              this.timeline[elementId].speed) /
+            1000;
         }
       };
 

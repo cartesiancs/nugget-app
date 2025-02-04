@@ -352,6 +352,18 @@ export class ElementControl extends LitElement {
             ],
             ax: [[], []],
           },
+          scale: {
+            isActivate: false,
+            x: [
+              {
+                type: "cubic",
+                p: [0, 1],
+                cs: [0, 1],
+                ce: [0, 1],
+              },
+            ],
+            ax: [[], []],
+          },
         },
       };
 
@@ -483,6 +495,18 @@ export class ElementControl extends LitElement {
                   p: [0, 100],
                   cs: [0, 100],
                   ce: [0, 100],
+                },
+              ],
+              ax: [[], []],
+            },
+            scale: {
+              isActivate: false,
+              x: [
+                {
+                  type: "cubic",
+                  p: [0, 1],
+                  cs: [0, 1],
+                  ce: [0, 1],
                 },
               ],
               ax: [[], []],
@@ -660,6 +684,18 @@ export class ElementControl extends LitElement {
           ],
           ax: [[], []],
         },
+        scale: {
+          isActivate: false,
+          x: [
+            {
+              type: "cubic",
+              p: [0, 1],
+              cs: [0, 1],
+              ce: [0, 1],
+            },
+          ],
+          ax: [[], []],
+        },
       },
     };
 
@@ -739,6 +775,18 @@ export class ElementControl extends LitElement {
               p: [0, 100],
               cs: [0, 100],
               ce: [0, 100],
+            },
+          ],
+          ax: [[], []],
+        },
+        scale: {
+          isActivate: false,
+          x: [
+            {
+              type: "cubic",
+              p: [0, 1],
+              cs: [0, 1],
+              ce: [0, 1],
             },
           ],
           ax: [[], []],

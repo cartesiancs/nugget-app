@@ -226,6 +226,12 @@ export class RenderController implements ReactiveController {
 
         if (fileType == "image") {
           const imageElement = this.timeline[elementId] as any;
+          let scaleW = w;
+          let scaleH = h;
+          let scaleX = x;
+          let scaleY = y;
+          let compare = 1;
+
           ctx.globalAlpha = imageElement.opacity / 100;
 
           if (imageElement.animation["opacity"].isActivate == true) {
@@ -247,6 +253,31 @@ export class RenderController implements ReactiveController {
               console.log("EEERRR", ax / 100);
 
               ctx.globalAlpha = ax / 100;
+            } catch (error) {}
+          }
+
+          if (imageElement.animation["scale"].isActivate == true) {
+            let index = Math.round(((frame / fps) * 1000) / 16);
+            let indexToMs = index * 20;
+            let startTime = Number(this.timeline[elementId].startTime);
+            let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+            try {
+              if (indexPoint < 0) {
+                return false;
+              }
+
+              const ax = this.findNearestY(
+                imageElement.animation["scale"].ax,
+                (frame / fps) * 1000 - imageElement.startTime,
+              ) as any;
+
+              scaleW = w * ax;
+              scaleH = h * ax;
+              compare = scaleW - w;
+
+              scaleX = x - compare / 2;
+              scaleY = y - compare / 2;
             } catch (error) {}
           }
 
@@ -273,14 +304,20 @@ export class RenderController implements ReactiveController {
                 (frame / fps) * 1000 - imageElement.startTime,
               ) as any;
 
-              ctx.drawImage(loaded[elementId], ax, ay, w, h);
+              ctx.drawImage(
+                loaded[elementId],
+                ax - compare / 2,
+                ay - compare / 2,
+                scaleW,
+                scaleH,
+              );
 
               drawLayer(layerIndex + 1);
               return;
             } catch (error) {}
           }
 
-          ctx.drawImage(loaded[elementId], x, y, w, h);
+          ctx.drawImage(loaded[elementId], scaleX, scaleY, scaleW, scaleH);
 
           ctx.globalAlpha = 1;
 

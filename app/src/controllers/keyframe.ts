@@ -40,7 +40,7 @@ export class KeyframeController implements ReactiveController {
 
     console.log(this.timeline[elementId], elementId);
 
-    if (animationType == "opacity") {
+    if (["opacity", "scale"].includes(animationType)) {
       if (
         this.timeline[elementId].animation[animationType]["x"].length - 1 ==
         0

@@ -370,6 +370,11 @@ export class PreviewCanvas extends LitElement {
 
           if (fileType == "image") {
             const imageElement = this.timeline[elementId] as any;
+            let scaleW = w;
+            let scaleH = h;
+            let scaleX = x;
+            let scaleY = y;
+            let compare = 1;
 
             if (
               this.loadedObjects.findIndex((item: ImageTempType) => {
@@ -401,6 +406,31 @@ export class PreviewCanvas extends LitElement {
                 } catch (error) {}
               }
 
+              if (imageElement.animation["scale"].isActivate == true) {
+                let index = Math.round(this.timelineCursor / 16);
+                let indexToMs = index * 20;
+                let startTime = Number(this.timeline[elementId].startTime);
+                let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                try {
+                  if (indexPoint < 0) {
+                    return false;
+                  }
+
+                  const ax = this.findNearestY(
+                    imageElement.animation["scale"].ax,
+                    this.timelineCursor - imageElement.startTime,
+                  ) as any;
+
+                  scaleW = w * ax;
+                  scaleH = h * ax;
+                  compare = scaleW - w;
+
+                  scaleX = x - compare / 2;
+                  scaleY = y - compare / 2;
+                } catch (error) {}
+              }
+
               let animationType = "position";
 
               if (imageElement.animation[animationType].isActivate == true) {
@@ -427,14 +457,20 @@ export class PreviewCanvas extends LitElement {
                       this.timelineCursor - imageElement.startTime,
                     ) as any;
 
-                    ctx.drawImage(img.object, ax, ay, w, h);
+                    ctx.drawImage(
+                      img.object,
+                      ax - compare / 2,
+                      ay - compare / 2,
+                      scaleW,
+                      scaleH,
+                    );
 
                     continue;
                   } catch (error) {}
                 }
               }
 
-              ctx.drawImage(img.object, x, y, w, h);
+              ctx.drawImage(img.object, scaleX, scaleY, scaleW, scaleH);
             } else {
               let img = new Image();
               img.onload = () => {
@@ -611,6 +647,8 @@ export class PreviewCanvas extends LitElement {
                     }
                   }
                 }
+
+                // NOTE: 애니메이션 추가 필요
 
                 ctx.putImageData(frame, x, y);
               } else {

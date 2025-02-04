@@ -198,7 +198,10 @@ export class ElementTimelineLeftOption extends LitElement {
     this.drawRequestTimelineCanvas();
   }
 
-  getAnimationActive(elementId, animationType: "position" | "opacity") {
+  getAnimationActive(
+    elementId,
+    animationType: "position" | "opacity" | "scale",
+  ) {
     try {
       return this.timeline[elementId].animation[animationType].isActivate;
     } catch (error) {
@@ -226,20 +229,29 @@ export class ElementTimelineLeftOption extends LitElement {
     this.requestUpdate();
   }
 
-  activeAnimationPanel(elementId, animationType: "position" | "opacity") {
+  activeAnimationPanel(
+    elementId,
+    animationType: "position" | "opacity" | "scale",
+  ) {
     document
       .querySelector("element-timeline-canvas")
       .openAnimationPanel(elementId, animationType);
   }
 
-  setActiveAnimation(elementId, animationType: "position" | "opacity") {
+  setActiveAnimation(
+    elementId,
+    animationType: "position" | "opacity" | "scale",
+  ) {
     this.timeline[elementId].animation[animationType].isActivate = true;
     console.log(this.timeline[elementId]);
     this.timelineState.patchTimeline(this.timeline);
     this.requestUpdate();
   }
 
-  setDeactiveAnimation(elementId, animationType: "position" | "opacity") {
+  setDeactiveAnimation(
+    elementId,
+    animationType: "position" | "opacity" | "scale",
+  ) {
     console.log(this.timeline[elementId], animationType);
 
     this.timeline[elementId].animation[animationType].isActivate = false;
@@ -467,6 +479,52 @@ export class ElementTimelineLeftOption extends LitElement {
                 <button
                   class="btn btn-xxs  text-light mr-2"
                   @click=${() => this.activeAnimationPanel(key, "opacity")}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    chevron_right
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              style="position: relative; top: -${this.timelineOptions
+                .canvasVerticalScroll}px;"
+              class="element-left-option-panel ${this.isActiveAnimationPanel(
+                key,
+              )
+                ? ""
+                : "d-none"}"
+            >
+              <span class="element-left-option-text">SCALE</span>
+
+              <div class="gap-1 justify-content-end">
+                <button
+                  class="btn btn-xxs ${this.getAnimationActive(key, "scale")
+                    ? ""
+                    : "d-none"} text-light mr-2"
+                  @click=${() => this.setDeactiveAnimation(key, "scale")}
+                >
+                  <span class="material-symbols-outlined icon-xs text-light">
+                    lock_open
+                  </span>
+                </button>
+
+                <button
+                  class="btn btn-xxs ${this.getAnimationActive(key, "scale") ==
+                  false
+                    ? ""
+                    : "d-none"} text-light mr-2"
+                  @click=${() => this.setActiveAnimation(key, "scale")}
+                >
+                  <span class="material-symbols-outlined icon-xs text-dark">
+                    lock
+                  </span>
+                </button>
+
+                <button
+                  class="btn btn-xxs  text-light mr-2"
+                  @click=${() => this.activeAnimationPanel(key, "scale")}
                 >
                   <span class="material-symbols-outlined icon-xs">
                     chevron_right

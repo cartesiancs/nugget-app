@@ -451,6 +451,41 @@ export class ElementControl extends LitElement {
             width: width,
             height: height,
           },
+          animation: {
+            position: {
+              isActivate: false,
+              x: [
+                {
+                  type: "cubic",
+                  p: [0, 0],
+                  cs: [0, 0],
+                  ce: [0, 0],
+                },
+              ],
+              y: [
+                {
+                  type: "cubic",
+                  p: [0, 0],
+                  cs: [0, 0],
+                  ce: [0, 0],
+                },
+              ],
+              ax: [[], []],
+              ay: [[], []],
+            },
+            opacity: {
+              isActivate: false,
+              x: [
+                {
+                  type: "cubic",
+                  p: [0, 100],
+                  cs: [0, 100],
+                  ce: [0, 100],
+                },
+              ],
+              ax: [[], []],
+            },
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);

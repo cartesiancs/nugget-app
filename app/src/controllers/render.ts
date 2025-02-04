@@ -458,6 +458,8 @@ export class RenderController implements ReactiveController {
         }
 
         if (fileType == "video") {
+          const videoElement = this.timeline[elementId] as any;
+
           if (
             !(
               (frame / fps) * 1000 >=
@@ -472,7 +474,60 @@ export class RenderController implements ReactiveController {
 
           const onSeeked = () => {
             loaded[elementId].removeEventListener("seeked", onSeeked);
+
+            if (videoElement.animation["opacity"].isActivate == true) {
+              let index = Math.round(((frame / fps) * 1000) / 16);
+              let indexToMs = index * 20;
+              let startTime = Number(this.timeline[elementId].startTime);
+              let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+              try {
+                if (indexPoint < 0) {
+                  return false;
+                }
+
+                const ax = this.findNearestY(
+                  videoElement.animation["opacity"].ax,
+                  (frame / fps) * 1000 - videoElement.startTime,
+                ) as any;
+
+                ctx.globalAlpha = ax / 100;
+              } catch (error) {}
+            }
+
+            let animationType = "position";
+
+            if (videoElement.animation[animationType].isActivate == true) {
+              let index = Math.round(((frame / fps) * 1000) / 16);
+              let indexToMs = index * 20;
+              let startTime = Number(this.timeline[elementId].startTime);
+              let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+              try {
+                if (indexPoint < 0) {
+                  return false;
+                }
+
+                const ax = this.findNearestY(
+                  videoElement.animation[animationType].ax,
+                  (frame / fps) * 1000 - videoElement.startTime,
+                ) as any;
+
+                const ay = this.findNearestY(
+                  videoElement.animation[animationType].ay,
+                  (frame / fps) * 1000 - videoElement.startTime,
+                ) as any;
+
+                ctx.drawImage(loaded[elementId], ax, ay, w, h);
+
+                drawLayer(layerIndex + 1);
+                return;
+              } catch (error) {}
+            }
+
             ctx.drawImage(loaded[elementId], x, y, w, h);
+            ctx.globalAlpha = 1;
+
             delayCount += 1;
 
             drawLayer(layerIndex + 1);

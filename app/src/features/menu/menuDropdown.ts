@@ -3,8 +3,8 @@ import { customElement, property } from "lit/decorators.js";
 
 @customElement("menu-dropdown-body")
 export class MenuDropdownBody extends LitElement {
-  x: string;
-  y: string;
+  x: any;
+  y: any;
   constructor() {
     super();
     this.x = this.getAttribute("top");
@@ -17,7 +17,8 @@ export class MenuDropdownBody extends LitElement {
 
     this.innerHTML = template;
     this.style.display = "inline-block";
-    this.querySelector("ul").innerHTML = innerElements;
+    const ul = this.querySelector("ul") as any;
+    ul.innerHTML = innerElements;
   }
 
   template() {

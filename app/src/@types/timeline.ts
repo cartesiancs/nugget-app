@@ -107,6 +107,21 @@ export type VideoElementType = {
     width?: number;
     height?: number;
   };
+  animation?: {
+    position?: {
+      isActivate?: boolean;
+      x?: CubicKeyframeType[];
+      y?: CubicKeyframeType[];
+
+      ax?: number[][];
+      ay?: number[][];
+    };
+    opacity?: {
+      isActivate?: boolean;
+      x?: CubicKeyframeType[];
+      ax?: number[][];
+    };
+  };
 };
 
 // parentKey must be 1 top depth

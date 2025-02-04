@@ -539,6 +539,8 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "video") {
+            const videoElement = this.timeline[elementId] as any;
+
             if (
               !(
                 this.timelineCursor >=
@@ -612,6 +614,59 @@ export class PreviewCanvas extends LitElement {
 
                 ctx.putImageData(frame, x, y);
               } else {
+                if (videoElement.animation["opacity"].isActivate == true) {
+                  let index = Math.round(this.timelineCursor / 16);
+                  let indexToMs = index * 20;
+                  let startTime = Number(this.timeline[elementId].startTime);
+                  let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                  try {
+                    if (indexPoint < 0) {
+                      return false;
+                    }
+
+                    const ax = this.findNearestY(
+                      videoElement.animation["opacity"].ax,
+                      this.timelineCursor - videoElement.startTime,
+                    ) as any;
+
+                    ctx.globalAlpha = ax / 100;
+                  } catch (error) {}
+                }
+
+                let animationType = "position";
+
+                if (videoElement.animation[animationType].isActivate == true) {
+                  if (this.isMove && this.activeElementId == elementId) {
+                    ctx.drawImage(video.object, x, y, w, h);
+                  } else {
+                    let index = Math.round(this.timelineCursor / 16);
+                    let indexToMs = index * 20;
+                    let startTime = Number(this.timeline[elementId].startTime);
+                    let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                    try {
+                      if (indexPoint < 0) {
+                        return false;
+                      }
+
+                      const ax = this.findNearestY(
+                        videoElement.animation[animationType].ax,
+                        this.timelineCursor - videoElement.startTime,
+                      ) as any;
+
+                      const ay = this.findNearestY(
+                        videoElement.animation[animationType].ay,
+                        this.timelineCursor - videoElement.startTime,
+                      ) as any;
+
+                      ctx.drawImage(video.object, ax, ay, w, h);
+
+                      continue;
+                    } catch (error) {}
+                  }
+                }
+
                 ctx.drawImage(video.object, x, y, w, h);
               }
             } else {
@@ -639,12 +694,7 @@ export class PreviewCanvas extends LitElement {
               });
             }
 
-            // try {
-            //   const video = document.querySelector(
-            //     `element-control-asset[elementid='${elementId}'] > video`,
-            //   );
-            //   ctx.drawImage(video, x, y, w, h);
-            // } catch (error) {}
+            ctx.globalAlpha = 1;
           }
 
           if (fileType == "text") {
@@ -1106,7 +1156,7 @@ export class PreviewCanvas extends LitElement {
     const startTime = this.timeline[this.activeElementId].startTime;
 
     const animationType = "position";
-    if (fileType != "image") return false;
+    if (!["image", "video"].includes(fileType)) return false;
 
     if (
       this.timeline[this.activeElementId].animation["position"].isActivate !=

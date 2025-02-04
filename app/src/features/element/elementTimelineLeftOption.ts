@@ -363,8 +363,10 @@ export class ElementTimelineLeftOption extends LitElement {
                   <span class="material-symbols-outlined icon-xs"> lock </span>
                 </button>
                 <button
-                  class="btn btn-xxs btn-default text-light mr-2 ${element.filetype ==
-                  "image"
+                  class="btn btn-xxs btn-default text-light mr-2 ${[
+                    "image",
+                    "video",
+                  ].includes(element.filetype)
                     ? ""
                     : "d-none"}"
                   @click=${() => this.switchActiveAnimationPanel(key)}

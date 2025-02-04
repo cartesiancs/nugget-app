@@ -101,7 +101,7 @@ const project = {
           console.log("saved!");
           document
             .querySelector("toast-box")
-            .showToast({ message: "프로젝트 저장 완료", delay: "2000" });
+            .showToast({ message: "Saved", delay: "2000" });
 
           elementTimeline.appendCheckpointInHashTable();
           project.changeProjectFileValue({

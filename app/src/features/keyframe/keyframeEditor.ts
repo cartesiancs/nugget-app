@@ -205,6 +205,26 @@ export class KeyframeEditor extends LitElement {
     } catch (error) {}
   }
 
+  drawRuler() {
+    const ctx = this.canvas.getContext("2d") as any;
+
+    const height = 1000;
+    const width = 50;
+    const step = 50;
+    const iStep = step * 40;
+    const center = this.verticalScroll;
+
+    ctx.fillStyle = "#55585e";
+    ctx.textAlign = "center";
+    ctx.font = "12px Arial";
+
+    for (let i = -iStep; i <= iStep; i += step) {
+      const pos = center + i;
+      ctx.fillText(i, width / 2, pos);
+      ctx.fillRect(10, pos, 30, 1);
+    }
+  }
+
   private drawDots(ctx) {
     const points = this.timeline[this.elementId].animation[this.animationType];
 
@@ -406,6 +426,7 @@ export class KeyframeEditor extends LitElement {
 
         this.drawLeftPadding(ctx);
         this.drawRightPadding(ctx);
+        this.drawRuler();
         this.drawCursor(ctx);
         this.drawDots(ctx);
         this.drawLines(ctx);

@@ -88,6 +88,9 @@ export class elementTimelineCanvas extends LitElement {
   timelineCursor = this.timelineState.cursor;
 
   @property()
+  timelineHistory = this.timelineState.history;
+
+  @property()
   isOpenAnimationPanelId: string[] = [];
 
   @property()
@@ -121,6 +124,7 @@ export class elementTimelineCanvas extends LitElement {
       this.timelineRange = state.range;
       this.timelineCursor = state.cursor;
       this.timelineScroll = state.scroll;
+      this.timelineHistory = state.history;
 
       this.setTimelineColor();
       this.drawCanvas();
@@ -1209,6 +1213,11 @@ export class elementTimelineCanvas extends LitElement {
       this.timelineState.decreaseCursor(1000 / 60);
     }
 
+    if (event.keyCode == 49) {
+      // 1
+      console.log(this.timelineHistory);
+    }
+
     if (event.keyCode == 8) {
       // backspace
       // event.preventDefault();
@@ -1221,6 +1230,36 @@ export class elementTimelineCanvas extends LitElement {
           }
         }
       }
+
+      this.timelineState.checkPointTimeline();
+    }
+
+    if (!event.shiftKey && event.ctrlKey && event.keyCode == 90) {
+      //CTL z
+      console.log(this.timelineHistory.timelineHistory, "EE");
+      if (
+        this.timelineHistory.historyNow - 1 == -1 ||
+        this.timelineHistory.timelineHistory.length <
+          this.timelineHistory.historyNow
+      ) {
+        return;
+      }
+      this.timelineState.rollbackTimelineFromCheckPoint(-1);
+    }
+
+    if (event.shiftKey && event.ctrlKey && event.keyCode == 90) {
+      //CTL z
+      console.log(
+        this.timelineHistory.timelineHistory.length,
+        this.timelineHistory.historyNow,
+      );
+      if (
+        this.timelineHistory.timelineHistory.length <=
+        this.timelineHistory.historyNow + 1
+      ) {
+        return;
+      }
+      this.timelineState.rollbackTimelineFromCheckPoint(1);
     }
 
     if (event.ctrlKey && event.keyCode == 86) {

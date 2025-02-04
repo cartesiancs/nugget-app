@@ -75,9 +75,11 @@ export class ElementControlAsset extends LitElement {
       template = html`${this.templateImage()} ${this.templateResize()}`; //+ this.templateRotate()
     } else if (this.elementFiletype == "video") {
       template = html`${this.templateVideo()} ${this.templateResize()}`;
-    } else if (this.elementFiletype == "text") {
-      template = html`${this.templateText()} ${this.templateResize("horizon")}`;
-    } else if (this.elementFiletype == "audio") {
+    }
+    // else if (this.elementFiletype == "text") {
+    //   template = html`${this.templateText()} ${this.templateResize("horizon")}`;
+    // }
+    else if (this.elementFiletype == "audio") {
       template = html`${this.templateAudio()}`;
     }
 
@@ -181,13 +183,13 @@ export class ElementControlAsset extends LitElement {
     ></audio>`;
   }
 
-  templateText() {
-    return html`<input-text
-      elementId="${this.elementId}"
-      initValue="${this.timeline[this.elementId].text || ""}"
-      initColor="${this.timeline[this.elementId].textcolor || ""}"
-    ></input-text>`;
-  }
+  // templateText() {
+  //   return html`<input-text
+  //     elementId="${this.elementId}"
+  //     initValue="${this.timeline[this.elementId].text || ""}"
+  //     initColor="${this.timeline[this.elementId].textcolor || ""}"
+  //   ></input-text>`;
+  // }
 
   templateResize(type = "full") {
     // full horizon vertical

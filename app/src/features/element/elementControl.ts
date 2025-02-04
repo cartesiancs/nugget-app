@@ -356,6 +356,7 @@ export class ElementControl extends LitElement {
       };
 
       this.timelineState.patchTimeline(this.timeline);
+      this.timelineState.checkPointTimeline();
     };
   }
 
@@ -384,6 +385,7 @@ export class ElementControl extends LitElement {
         };
 
         this.timelineState.patchTimeline(this.timeline);
+        this.timelineState.checkPointTimeline();
       });
   }
 
@@ -489,6 +491,8 @@ export class ElementControl extends LitElement {
         };
 
         this.timelineState.patchTimeline(this.timeline);
+        this.timelineState.checkPointTimeline();
+
         this.showVideo(elementId);
       });
 
@@ -565,6 +569,8 @@ export class ElementControl extends LitElement {
         };
 
         this.timelineState.patchTimeline(this.timeline);
+        this.timelineState.checkPointTimeline();
+
         this.showVideo(elementId);
       });
     };
@@ -658,6 +664,7 @@ export class ElementControl extends LitElement {
     };
 
     this.timelineState.patchTimeline(this.timeline);
+    this.timelineState.checkPointTimeline();
 
     // this.showText(elementId);
     // this.elementTimeline.addElementBar(elementId);
@@ -740,6 +747,7 @@ export class ElementControl extends LitElement {
     };
 
     this.timelineState.patchTimeline(this.timeline);
+    this.timelineState.checkPointTimeline();
 
     // this.showText(elementId);
     // this.elementTimeline.addElementBar(elementId);
@@ -767,6 +775,7 @@ export class ElementControl extends LitElement {
       };
 
       this.timelineState.patchTimeline(this.timeline);
+      this.timelineState.checkPointTimeline();
 
       // this.showAudio(elementId);
       // this.elementTimeline.addElementBar(elementId);
@@ -790,6 +799,7 @@ export class ElementControl extends LitElement {
     };
 
     this.timelineState.patchTimeline(this.timeline);
+    this.timelineState.checkPointTimeline();
   }
 
   findNearestY(pairs, a) {
@@ -976,47 +986,21 @@ export class ElementControl extends LitElement {
   // }
 
   changeText(elementId) {
-    let elementBody = document.querySelector(`#element-${elementId}`);
-
-    let inputTarget = elementBody.querySelector("input-text");
-    let inputTargetSpan = inputTarget.querySelector("span");
-
-    let inputValue = inputTarget.value;
-
-    this.timeline[elementId].text = inputValue;
-
-    elementBody.style.width = `${inputTarget.offsetWidth}px`;
+    //this.timeline[elementId].text = inputValue;
   }
 
   changeTextValue({ elementId, value }) {
-    let elementBody = document.querySelector(`#element-${elementId}`);
-
-    let inputTarget = elementBody.querySelector("input-text");
-
     this.timeline[elementId].text = value;
     this.timelineState.patchTimeline(this.timeline);
   }
 
   changeTextColor({ elementId, color }) {
-    let elementBody = document.querySelector(`#element-${elementId}`);
-    let inputTarget = elementBody.querySelector("input-text");
-
-    inputTarget.style.color = color;
     this.timeline[elementId].textcolor = color;
     this.timelineState.patchTimeline(this.timeline);
   }
 
   changeTextSize({ elementId, size }) {
     try {
-      let elementBody = document.querySelector(`#element-${elementId}`);
-      let inputTarget = elementBody.querySelector("input-text");
-
-      inputTarget.setWidthInner();
-
-      let textSize = Number(size) / this.previewRatio;
-      elementBody.style.fontSize = `${textSize}px`;
-      elementBody.style.height = `${textSize}px`;
-
       this.timeline[elementId].fontsize = Number(size);
       this.timeline[elementId].height = Number(size) + 16;
       this.timelineState.patchTimeline(this.timeline);
@@ -1026,11 +1010,6 @@ export class ElementControl extends LitElement {
   }
 
   changeTextFont({ elementId, fontPath, fontType, fontName }) {
-    let elementBody = document.querySelector(`#element-${elementId}`);
-    let inputTarget = elementBody.querySelector("input-text");
-
-    elementBody.style.fontFamily = fontName;
-
     this.timeline[elementId].fontpath = fontPath;
     this.timeline[elementId].fontname = fontName;
     this.timelineState.patchTimeline(this.timeline);

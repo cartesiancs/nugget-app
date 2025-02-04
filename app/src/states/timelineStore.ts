@@ -13,11 +13,17 @@ export interface ITimelineStore {
     isPlay: boolean;
     cursorType: TimelineCursorType;
   };
+  history: {
+    timelineHistory: Timeline[];
+    historyNow: number;
+  };
 
   addTimeline: (key: string, timeline: any) => void;
   clearTimeline: () => void;
   removeTimeline: (targetId: string) => void;
   patchTimeline: (timeline: any) => void;
+  checkPointTimeline: () => void;
+  rollbackTimelineFromCheckPoint: (cursor: number) => void;
   setRange: (range: number) => void;
   setScroll: (scroll: number) => void;
   setCursor: (cursor: number) => void;
@@ -41,6 +47,10 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     isPlay: false,
     cursorType: "pointer",
   },
+  history: {
+    timelineHistory: [],
+    historyNow: 0,
+  },
 
   addTimeline: (key: string, timeline: any) =>
     set((state) => ({ timeline: { ...state.timeline, [key]: timeline } })),
@@ -57,7 +67,38 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     }),
 
   patchTimeline: (timeline: any) =>
-    set((state) => ({ timeline: { ...timeline } })),
+    set((state) => {
+      return { timeline: { ...timeline } };
+    }),
+
+  checkPointTimeline: () =>
+    set((state) => {
+      state.history.timelineHistory.push({ ...state.timeline });
+      if (state.history.timelineHistory.length > 10) {
+        state.history.timelineHistory.shift();
+      }
+
+      return {
+        history: {
+          timelineHistory: [...state.history.timelineHistory],
+          historyNow: state.history.timelineHistory.length - 1,
+        },
+      };
+    }),
+
+  rollbackTimelineFromCheckPoint: (cursor: number) =>
+    set((state) => {
+      const historyNow = state.history.historyNow + cursor;
+      const prevTimeline = state.history.timelineHistory[historyNow];
+
+      return {
+        timeline: { ...prevTimeline },
+        history: {
+          historyNow: state.history.historyNow + cursor,
+          timelineHistory: [...state.history.timelineHistory],
+        },
+      };
+    }),
 
   updateTimeline: (targetId: any, targetArray: string[], value: any) =>
     set((state) => {

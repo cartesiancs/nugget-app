@@ -55,18 +55,18 @@ export class KeyframeEditor extends LitElement {
 
     this.addEventListener("scroll", this.handleScroll.bind(this));
 
-    try {
-      // position이면 2개 나머지는 1개
-      this.lineCount = 2;
+    // try {
+    //   // position이면 2개 나머지는 1개
+    //   this.lineCount = 2;
 
-      this.clearLineEditorGroup();
+    //   this.clearLineEditorGroup();
 
-      for (let line = 0; line < this.lineCount; line++) {
-        this.addLineEditor(line);
-      }
+    //   for (let line = 0; line < this.lineCount; line++) {
+    //     this.addLineEditor(line);
+    //   }
 
-      this.changeLineEditor(0);
-    } catch (error) {}
+    //   this.changeLineEditor(0);
+    // } catch (error) {}
   }
 
   private keyframeControl = new KeyframeController(this);
@@ -125,6 +125,15 @@ export class KeyframeEditor extends LitElement {
   render() {
     try {
       if (this.isShow) {
+        if (this.animationType == "position") {
+          this.lineCount = 2;
+        }
+        if (this.animationType == "opacity") {
+          this.lineCount = 1;
+        }
+
+        console.log(this.animationType);
+
         if (this.prevElementId != this.elementId) {
           if (
             this.timeline[this.elementId].animation[this.animationType]
@@ -170,7 +179,9 @@ export class KeyframeEditor extends LitElement {
               type="button"
               class="btn ${this.selectLine == 1
                 ? "btn-primary"
-                : "btn-secondary"} btn-sm"
+                : "btn-secondary"} btn-sm ${this.lineCount == 1
+                ? "d-none"
+                : ""}"
             >
               y
             </button>
@@ -192,22 +203,31 @@ export class KeyframeEditor extends LitElement {
   }
 
   private drawDots(ctx) {
-    const pointsX = this.timeline[this.elementId].animation.position.x;
-    const pointsY = this.timeline[this.elementId].animation.position.y;
+    const points = this.timeline[this.elementId].animation[this.animationType];
 
-    this.drawDotsLoop({
-      ctx: ctx,
-      dots: pointsX,
-      color: "#403af0",
-      subColor: "#b7bcf7",
-    });
-
-    this.drawDotsLoop({
-      ctx: ctx,
-      dots: pointsY,
-      color: "#e83535",
-      subColor: "#ed7979",
-    });
+    for (const key in points) {
+      if (Object.prototype.hasOwnProperty.call(points, key)) {
+        if (["x", "y"].includes(key)) {
+          const point =
+            this.timeline[this.elementId].animation[this.animationType][key];
+          if (key == "x") {
+            this.drawDotsLoop({
+              ctx: ctx,
+              dots: point,
+              color: "#403af0",
+              subColor: "#b7bcf7",
+            });
+          } else {
+            this.drawDotsLoop({
+              ctx: ctx,
+              dots: point,
+              color: "#e83535",
+              subColor: "#ed7979",
+            });
+          }
+        }
+      }
+    }
   }
 
   drawDotsLoop({ ctx, dots, color, subColor }) {
@@ -266,34 +286,48 @@ export class KeyframeEditor extends LitElement {
   }
 
   private drawLines(ctx) {
-    const pointsX = this.timeline[this.elementId].animation.position.ax;
-    const pointsY = this.timeline[this.elementId].animation.position.ay;
+    const points = this.timeline[this.elementId].animation[this.animationType];
 
-    ctx.strokeStyle = "#403af0";
-    ctx.beginPath();
-    for (let index = 0; index < pointsX.length; index++) {
-      const element = pointsX[index];
-      const x =
-        millisecondsToPx(
-          element[0] + this.timeline[this.elementId].startTime,
-          this.timelineRange,
-        ) - this.timelineScroll;
-      ctx.lineTo(x, element[1] + this.verticalScroll);
+    for (const key in points) {
+      if (Object.prototype.hasOwnProperty.call(points, key)) {
+        if (["ax", "ay"].includes(key)) {
+          const point =
+            this.timeline[this.elementId].animation[this.animationType][key];
+          ctx.strokeStyle = "#403af0";
+          if (key == "ay") {
+            ctx.strokeStyle = "#e83535";
+          }
+          ctx.beginPath();
+          for (let index = 0; index < point.length; index++) {
+            const element = point[index];
+            const x =
+              millisecondsToPx(
+                element[0] + this.timeline[this.elementId].startTime,
+                this.timelineRange,
+              ) - this.timelineScroll;
+            ctx.lineTo(x, element[1] + this.verticalScroll);
+          }
+          ctx.stroke();
+        }
+      }
     }
-    ctx.stroke();
 
-    ctx.strokeStyle = "#e83535";
-    ctx.beginPath();
-    for (let index = 0; index < pointsY.length; index++) {
-      const element = pointsY[index];
-      const x =
-        millisecondsToPx(
-          element[0] + this.timeline[this.elementId].startTime,
-          this.timelineRange,
-        ) - this.timelineScroll;
-      ctx.lineTo(x, element[1] + this.verticalScroll);
-    }
-    ctx.stroke();
+    // const pointsX =
+    //   this.timeline[this.elementId].animation[this.animationType].ax;
+    // const pointsY = this.timeline[this.elementId].animation.position.ay;
+
+    // ctx.strokeStyle = "#e83535";
+    // ctx.beginPath();
+    // for (let index = 0; index < pointsY.length; index++) {
+    //   const element = pointsY[index];
+    //   const x =
+    //     millisecondsToPx(
+    //       element[0] + this.timeline[this.elementId].startTime,
+    //       this.timelineRange,
+    //     ) - this.timelineScroll;
+    //   ctx.lineTo(x, element[1] + this.verticalScroll);
+    // }
+    // ctx.stroke();
   }
 
   private drawCursor(ctx) {
@@ -478,17 +512,17 @@ export class KeyframeEditor extends LitElement {
     //console.log(px);
 
     if (this.isDrag) {
-      this.timeline[this.elementId].animation.position[lineToAlpha][
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha][
         this.clickIndex
       ][this.clickDot][0] = px;
-      this.timeline[this.elementId].animation.position[lineToAlpha][
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha][
         this.clickIndex
       ][this.clickDot][1] = py;
 
       this.keyframeControl.interpolate(
         this.selectLine,
         this.elementId,
-        "position",
+        this.animationType,
       );
 
       this.drawCanvas();
@@ -508,11 +542,14 @@ export class KeyframeEditor extends LitElement {
     for (
       let index = 0;
       index <
-      this.timeline[this.elementId].animation.position[lineToAlpha].length;
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
+        .length;
       index++
     ) {
       const element =
-        this.timeline[this.elementId].animation.position[lineToAlpha][index];
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][index];
 
       if (
         element.cs[0] > px - padding &&

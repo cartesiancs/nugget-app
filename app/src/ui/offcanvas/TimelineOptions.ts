@@ -81,7 +81,7 @@ export class OffcanvasList extends LitElement {
             <keyframe-editor
               elementId="${this.target.elementId}"
               isShow="${this.target.isShow}"
-              animationType="${"position"}"
+              animationType="${this.target.animationType}"
             ></keyframe-editor>
           </div>
         </div>

@@ -461,6 +461,7 @@ export class elementTimelineCanvas extends LitElement {
 
           if (isActive) {
             index += 1;
+
             const panelTop =
               index * height * 1.2 - this.timelineOptions.canvasVerticalScroll;
             ctx.fillStyle = "#24252b";
@@ -470,12 +471,12 @@ export class elementTimelineCanvas extends LitElement {
             ctx.fill();
 
             for (
-              let index = 0;
-              index < this.timeline[elementId].animation.position.x.length;
-              index++
+              let indexX = 0;
+              indexX < this.timeline[elementId].animation.position.x.length;
+              indexX++
             ) {
               const element =
-                this.timeline[elementId].animation.position.x[index];
+                this.timeline[elementId].animation.position.x[indexX];
 
               const p =
                 this.millisecondsToPx(
@@ -489,12 +490,12 @@ export class elementTimelineCanvas extends LitElement {
             }
 
             for (
-              let index = 0;
-              index < this.timeline[elementId].animation.position.y.length;
-              index++
+              let indexY = 0;
+              indexY < this.timeline[elementId].animation.position.y.length;
+              indexY++
             ) {
               const element =
-                this.timeline[elementId].animation.position.y[index];
+                this.timeline[elementId].animation.position.y[indexY];
 
               const p =
                 this.millisecondsToPx(
@@ -504,6 +505,35 @@ export class elementTimelineCanvas extends LitElement {
               ctx.fillStyle = "#ffffff";
               ctx.beginPath();
               ctx.arc(p, panelTop + height / 2, 4, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+
+            index += 1;
+
+            const panelOpacityTop =
+              index * height * 1.2 - this.timelineOptions.canvasVerticalScroll;
+            ctx.fillStyle = "#24252b";
+
+            ctx.beginPath();
+            ctx.rect(0, panelOpacityTop, this.canvas.width, height);
+            ctx.fill();
+
+            for (
+              let indexX = 0;
+              indexX < this.timeline[elementId].animation.opacity.x.length;
+              indexX++
+            ) {
+              const element =
+                this.timeline[elementId].animation.opacity.x[indexX];
+
+              const p =
+                this.millisecondsToPx(
+                  this.timeline[elementId].startTime + element.p[0],
+                ) - this.timelineScroll;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(p, panelOpacityTop + height / 2, 4, 0, 2 * Math.PI);
               ctx.fill();
             }
           }
@@ -814,7 +844,7 @@ export class elementTimelineCanvas extends LitElement {
         const isActive = this.isActiveAnimationPanel(elementId);
 
         if (isActive) {
-          index += 1;
+          index += 2;
         }
 
         index += 1;
@@ -824,7 +854,7 @@ export class elementTimelineCanvas extends LitElement {
     return { targetId: "", cursorType: "none" };
   }
 
-  public openAnimationPanel(targetId: string) {
+  public openAnimationPanel(targetId: string, animationType) {
     this.isOpenAnimationPanelId.push(targetId);
 
     let timelineOptionOffcanvas = new bootstrap.Offcanvas(
@@ -836,6 +866,7 @@ export class elementTimelineCanvas extends LitElement {
 
     this.keyframeState.update({
       elementId: targetId,
+      animationType: animationType,
       isShow: true,
     });
 

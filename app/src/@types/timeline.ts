@@ -38,7 +38,7 @@ export type ImageElementType = {
     opacity?: {
       isActivate?: boolean;
       x?: CubicKeyframeType[];
-      allpoints?: number[][];
+      ax?: number[][];
     };
   };
 };

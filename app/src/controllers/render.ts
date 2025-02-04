@@ -96,6 +96,9 @@ export class RenderController implements ReactiveController {
       canvas.height = options.previewSize.h;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       const sortedTimeline = this.timeline;
 
       const layers: string[] = [];
@@ -224,6 +227,28 @@ export class RenderController implements ReactiveController {
         if (fileType == "image") {
           const imageElement = this.timeline[elementId] as any;
           ctx.globalAlpha = imageElement.opacity / 100;
+
+          if (imageElement.animation["opacity"].isActivate == true) {
+            let index = Math.round(((frame / fps) * 1000) / 16);
+            let indexToMs = index * 20;
+            let startTime = Number(this.timeline[elementId].startTime);
+            let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+            try {
+              if (indexPoint < 0) {
+                return false;
+              }
+
+              const ax = this.findNearestY(
+                imageElement.animation["opacity"].ax,
+                (frame / fps) * 1000 - imageElement.startTime,
+              ) as any;
+
+              console.log("EEERRR", ax / 100);
+
+              ctx.globalAlpha = ax / 100;
+            } catch (error) {}
+          }
 
           let animationType = "position";
 

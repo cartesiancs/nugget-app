@@ -198,6 +198,14 @@ export class ElementTimelineLeftOption extends LitElement {
     this.drawRequestTimelineCanvas();
   }
 
+  getAnimationActive(elementId, animationType: "position" | "opacity") {
+    try {
+      return this.timeline[elementId].animation[animationType].isActivate;
+    } catch (error) {
+      return false;
+    }
+  }
+
   isActiveAnimationPanel(elementId) {
     return (
       this.timelineOptions.panelOptions.findIndex((item) => {
@@ -218,10 +226,10 @@ export class ElementTimelineLeftOption extends LitElement {
     this.requestUpdate();
   }
 
-  activePositionAnimation(elementId) {
+  activeAnimationPanel(elementId, animationType: "position" | "opacity") {
     document
       .querySelector("element-timeline-canvas")
-      .openAnimationPanel(elementId);
+      .openAnimationPanel(elementId, animationType);
   }
 
   setActiveAnimation(elementId, animationType: "position" | "opacity") {
@@ -381,8 +389,7 @@ export class ElementTimelineLeftOption extends LitElement {
 
               <div class="gap-1 justify-content-end">
                 <button
-                  class="btn btn-xxs ${this.timeline[key].animation.position
-                    .isActivate
+                  class="btn btn-xxs ${this.getAnimationActive(key, "position")
                     ? ""
                     : "d-none"} text-light mr-2"
                   @click=${() => this.setDeactiveAnimation(key, "position")}
@@ -393,8 +400,10 @@ export class ElementTimelineLeftOption extends LitElement {
                 </button>
 
                 <button
-                  class="btn btn-xxs ${this.timeline[key].animation.position
-                    .isActivate == false
+                  class="btn btn-xxs ${this.getAnimationActive(
+                    key,
+                    "position",
+                  ) == false
                     ? ""
                     : "d-none"} text-light mr-2"
                   @click=${() => this.setActiveAnimation(key, "position")}
@@ -406,7 +415,55 @@ export class ElementTimelineLeftOption extends LitElement {
 
                 <button
                   class="btn btn-xxs  text-light mr-2"
-                  @click=${() => this.activePositionAnimation(key)}
+                  @click=${() => this.activeAnimationPanel(key, "position")}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    chevron_right
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              style="position: relative; top: -${this.timelineOptions
+                .canvasVerticalScroll}px;"
+              class="element-left-option-panel ${this.isActiveAnimationPanel(
+                key,
+              )
+                ? ""
+                : "d-none"}"
+            >
+              <span class="element-left-option-text">OPACITY</span>
+
+              <div class="gap-1 justify-content-end">
+                <button
+                  class="btn btn-xxs ${this.getAnimationActive(key, "opacity")
+                    ? ""
+                    : "d-none"} text-light mr-2"
+                  @click=${() => this.setDeactiveAnimation(key, "opacity")}
+                >
+                  <span class="material-symbols-outlined icon-xs text-light">
+                    lock_open
+                  </span>
+                </button>
+
+                <button
+                  class="btn btn-xxs ${this.getAnimationActive(
+                    key,
+                    "opacity",
+                  ) == false
+                    ? ""
+                    : "d-none"} text-light mr-2"
+                  @click=${() => this.setActiveAnimation(key, "opacity")}
+                >
+                  <span class="material-symbols-outlined icon-xs text-dark">
+                    lock
+                  </span>
+                </button>
+
+                <button
+                  class="btn btn-xxs  text-light mr-2"
+                  @click=${() => this.activeAnimationPanel(key, "opacity")}
                 >
                   <span class="material-symbols-outlined icon-xs">
                     chevron_right

@@ -381,6 +381,26 @@ export class PreviewCanvas extends LitElement {
               })[0];
 
               ctx.globalAlpha = imageElement.opacity / 100;
+              if (imageElement.animation["opacity"].isActivate == true) {
+                let index = Math.round(this.timelineCursor / 16);
+                let indexToMs = index * 20;
+                let startTime = Number(this.timeline[elementId].startTime);
+                let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                try {
+                  if (indexPoint < 0) {
+                    return false;
+                  }
+
+                  const ax = this.findNearestY(
+                    imageElement.animation["opacity"].ax,
+                    this.timelineCursor - imageElement.startTime,
+                  ) as any;
+
+                  ctx.globalAlpha = ax / 100;
+                } catch (error) {}
+              }
+
               let animationType = "position";
 
               if (imageElement.animation[animationType].isActivate == true) {
@@ -413,6 +433,7 @@ export class PreviewCanvas extends LitElement {
                   } catch (error) {}
                 }
               }
+
               ctx.drawImage(img.object, x, y, w, h);
             } else {
               let img = new Image();

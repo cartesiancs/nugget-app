@@ -40,40 +40,60 @@ export class KeyframeController implements ReactiveController {
 
     console.log(this.timeline[elementId], elementId);
 
-    if (
-      this.timeline[elementId].animation[animationType]["x"].length - 1 ==
-      0
-    ) {
-      this.timeline[elementId].animation[animationType].x[0].p = [
-        0,
-        this.timeline[elementId].location.x,
-      ];
-      this.timeline[elementId].animation[animationType].x[0].cs = [
-        0,
-        this.timeline[elementId].location.x,
-      ];
-      this.timeline[elementId].animation[animationType].x[0].ce = [
-        0,
-        this.timeline[elementId].location.x,
-      ];
-    }
+    if (animationType == "opacity") {
+      if (
+        this.timeline[elementId].animation[animationType]["x"].length - 1 ==
+        0
+      ) {
+        this.timeline[elementId].animation[animationType].x[0].p = [
+          0,
+          this.timeline[elementId].location.x,
+        ];
+        this.timeline[elementId].animation[animationType].x[0].cs = [
+          0,
+          this.timeline[elementId].location.x,
+        ];
+        this.timeline[elementId].animation[animationType].x[0].ce = [
+          0,
+          this.timeline[elementId].location.x,
+        ];
+      }
+    } else {
+      if (
+        this.timeline[elementId].animation[animationType]["x"].length - 1 ==
+        0
+      ) {
+        this.timeline[elementId].animation[animationType].x[0].p = [
+          0,
+          this.timeline[elementId].location.x,
+        ];
+        this.timeline[elementId].animation[animationType].x[0].cs = [
+          0,
+          this.timeline[elementId].location.x,
+        ];
+        this.timeline[elementId].animation[animationType].x[0].ce = [
+          0,
+          this.timeline[elementId].location.x,
+        ];
+      }
 
-    if (
-      this.timeline[elementId].animation[animationType]["y"].length - 1 ==
-      0
-    ) {
-      this.timeline[elementId].animation[animationType].y[0].p = [
-        0,
-        this.timeline[elementId].location.y,
-      ];
-      this.timeline[elementId].animation[animationType].y[0].cs = [
-        0,
-        this.timeline[elementId].location.y,
-      ];
-      this.timeline[elementId].animation[animationType].y[0].ce = [
-        0,
-        this.timeline[elementId].location.y,
-      ];
+      if (
+        this.timeline[elementId].animation[animationType]["y"].length - 1 ==
+        0
+      ) {
+        this.timeline[elementId].animation[animationType].y[0].p = [
+          0,
+          this.timeline[elementId].location.y,
+        ];
+        this.timeline[elementId].animation[animationType].y[0].cs = [
+          0,
+          this.timeline[elementId].location.y,
+        ];
+        this.timeline[elementId].animation[animationType].y[0].ce = [
+          0,
+          this.timeline[elementId].location.y,
+        ];
+      }
     }
 
     if (

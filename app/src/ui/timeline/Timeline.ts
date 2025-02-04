@@ -91,6 +91,7 @@ export class Timeline extends LitElement {
 
     this.keyframeState.update({
       elementId: "",
+      animationType: "position",
       isShow: false,
     });
   }
@@ -183,7 +184,7 @@ export class Timeline extends LitElement {
           @click=${this._handleClickClosedKeyframe}
           aria-label="close"
         >
-          키프레임 에디터 닫기
+          Close Keyframe
         </button>
       `;
     }

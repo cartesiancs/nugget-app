@@ -2,6 +2,7 @@ import { createStore } from "zustand/vanilla";
 
 type TargetObjectType = {
   elementId: string;
+  animationType: string;
   isShow: boolean;
 };
 
@@ -13,6 +14,7 @@ export interface IKeyframeStore {
 export const keyframeStore = createStore<IKeyframeStore>((set) => ({
   target: {
     elementId: "",
+    animationType: "position",
     isShow: false,
   },
 

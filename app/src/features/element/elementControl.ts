@@ -342,8 +342,15 @@ export class ElementControl extends LitElement {
           },
           opacity: {
             isActivate: false,
-            x: [],
-            allpoints: [[]],
+            x: [
+              {
+                type: "cubic",
+                p: [0, 100],
+                cs: [0, 100],
+                ce: [0, 100],
+              },
+            ],
+            ax: [[], []],
           },
         },
       };

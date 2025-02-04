@@ -703,6 +703,8 @@ export class PreviewCanvas extends LitElement {
                 continue;
               }
 
+              ctx.globalAlpha = 1;
+
               ctx.fillStyle = this.timeline[elementId].textcolor as string;
               ctx.lineWidth = 0;
               ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
@@ -713,18 +715,70 @@ export class PreviewCanvas extends LitElement {
                 this.timeline[elementId].fontsize
               }px ${this.timeline[elementId].fontname}`;
 
-              const fontBoxWidth = ctx.measureText(
-                this.timeline[elementId].text as string,
-              ).width;
+              let tx = x;
+              let ty = y;
 
-              this.drawTextBackground(ctx, elementId, x, y, w, h);
+              if (
+                this.timeline[elementId].animation["opacity"].isActivate == true
+              ) {
+                let index = Math.round(this.timelineCursor / 16);
+                let indexToMs = index * 20;
+                let startTime = Number(this.timeline[elementId].startTime);
+                let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                try {
+                  if (indexPoint < 0) {
+                    return false;
+                  }
+
+                  const ax = this.findNearestY(
+                    this.timeline[elementId].animation["opacity"].ax,
+                    this.timelineCursor - this.timeline[elementId].startTime,
+                  ) as any;
+
+                  ctx.globalAlpha = ax / 100;
+                } catch (error) {}
+              }
+
+              let animationType = "position";
+
+              if (
+                this.timeline[elementId].animation[animationType].isActivate ==
+                true
+              ) {
+                let index = Math.round(this.timelineCursor / 16);
+                let indexToMs = index * 20;
+                let startTime = Number(this.timeline[elementId].startTime);
+                let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                try {
+                  if (indexPoint < 0) {
+                    return false;
+                  }
+
+                  const ax = this.findNearestY(
+                    this.timeline[elementId].animation[animationType].ax,
+                    this.timelineCursor - this.timeline[elementId].startTime,
+                  ) as any;
+
+                  const ay = this.findNearestY(
+                    this.timeline[elementId].animation[animationType].ay,
+                    this.timelineCursor - this.timeline[elementId].startTime,
+                  ) as any;
+
+                  tx = ax;
+                  ty = ay;
+                } catch (error) {}
+              }
+
+              this.drawTextBackground(ctx, elementId, tx, ty, w, h);
 
               ctx.fillStyle = this.timeline[elementId].textcolor as string;
 
               if (this.timeline[elementId].options.align == "left") {
                 const textSplited = this.timeline[elementId].text.split(" ");
                 let line = "";
-                let textY = y + (this.timeline[elementId].fontsize || 0);
+                let textY = ty + (this.timeline[elementId].fontsize || 0);
                 let lineHeight = h;
 
                 for (let index = 0; index < textSplited.length; index++) {
@@ -735,19 +789,19 @@ export class PreviewCanvas extends LitElement {
                   if (testWidth < w) {
                     line = testLine;
                   } else {
-                    this.drawTextStroke(ctx, elementId, line, x, textY);
-                    ctx.fillText(line, x, textY);
+                    this.drawTextStroke(ctx, elementId, line, tx, textY);
+                    ctx.fillText(line, tx, textY);
                     line = textSplited[index] + " ";
                     textY += lineHeight;
                   }
                 }
 
-                this.drawTextStroke(ctx, elementId, line, x, textY);
-                ctx.fillText(line, x, textY);
+                this.drawTextStroke(ctx, elementId, line, tx, textY);
+                ctx.fillText(line, tx, textY);
               } else if (this.timeline[elementId].options.align == "center") {
                 const textSplited = this.timeline[elementId].text.split(" ");
                 let line = "";
-                let textY = y + (this.timeline[elementId].fontsize || 0);
+                let textY = ty + (this.timeline[elementId].fontsize || 0);
                 let lineHeight = h;
 
                 for (let index = 0; index < textSplited.length; index++) {
@@ -763,10 +817,10 @@ export class PreviewCanvas extends LitElement {
                       ctx,
                       elementId,
                       line,
-                      x + w / 2 - wordWidth / 2,
+                      tx + w / 2 - wordWidth / 2,
                       textY,
                     );
-                    ctx.fillText(line, x + w / 2 - wordWidth / 2, textY);
+                    ctx.fillText(line, tx + w / 2 - wordWidth / 2, textY);
                     line = textSplited[index] + " ";
                     textY += lineHeight;
                   }
@@ -778,14 +832,14 @@ export class PreviewCanvas extends LitElement {
                   ctx,
                   elementId,
                   line,
-                  x + w / 2 - lastWordWidth / 2,
+                  tx + w / 2 - lastWordWidth / 2,
                   textY,
                 );
                 ctx.fillText(line, x + w / 2 - lastWordWidth / 2, textY);
               } else if (this.timeline[elementId].options.align == "right") {
                 const textSplited = this.timeline[elementId].text.split(" ");
                 let line = "";
-                let textY = y + (this.timeline[elementId].fontsize || 0);
+                let textY = ty + (this.timeline[elementId].fontsize || 0);
                 let lineHeight = h;
 
                 for (let index = 0; index < textSplited.length; index++) {
@@ -801,10 +855,10 @@ export class PreviewCanvas extends LitElement {
                       ctx,
                       elementId,
                       line,
-                      x + w - wordWidth,
+                      tx + w - wordWidth,
                       textY,
                     );
-                    ctx.fillText(line, x + w - wordWidth, textY);
+                    ctx.fillText(line, tx + w - wordWidth, textY);
                     line = textSplited[index] + " ";
                     textY += lineHeight;
                   }
@@ -816,11 +870,13 @@ export class PreviewCanvas extends LitElement {
                   ctx,
                   elementId,
                   line,
-                  x + w - lastWordWidth,
+                  tx + w - lastWordWidth,
                   textY,
                 );
-                ctx.fillText(line, x + w - lastWordWidth, textY);
+                ctx.fillText(line, tx + w - lastWordWidth, textY);
               }
+
+              ctx.globalAlpha = 1;
             } catch (error) {}
           }
 
@@ -1156,7 +1212,7 @@ export class PreviewCanvas extends LitElement {
     const startTime = this.timeline[this.activeElementId].startTime;
 
     const animationType = "position";
-    if (!["image", "video"].includes(fileType)) return false;
+    if (!["image", "video", "text"].includes(fileType)) return false;
 
     if (
       this.timeline[this.activeElementId].animation["position"].isActivate !=

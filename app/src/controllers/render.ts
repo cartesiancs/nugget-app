@@ -327,6 +327,8 @@ export class RenderController implements ReactiveController {
 
         if (fileType == "text") {
           try {
+            ctx.globalAlpha = 1;
+
             ctx.fillStyle = this.timeline[elementId].textcolor as string;
             ctx.lineWidth = 0;
             ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
@@ -337,9 +339,61 @@ export class RenderController implements ReactiveController {
               this.timeline[elementId].fontsize
             }px ${this.timeline[elementId].fontname}`;
 
-            const fontBoxWidth = ctx.measureText(
-              this.timeline[elementId].text as string,
-            ).width;
+            let tx = x;
+            let ty = y;
+
+            if (
+              this.timeline[elementId].animation["opacity"].isActivate == true
+            ) {
+              let index = Math.round(((frame / fps) * 1000) / 16);
+              let indexToMs = index * 20;
+              let startTime = Number(this.timeline[elementId].startTime);
+              let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+              try {
+                if (indexPoint < 0) {
+                  return false;
+                }
+
+                const ax = this.findNearestY(
+                  this.timeline[elementId].animation["opacity"].ax,
+                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
+                ) as any;
+
+                ctx.globalAlpha = ax / 100;
+              } catch (error) {}
+            }
+
+            let animationType = "position";
+
+            if (
+              this.timeline[elementId].animation[animationType].isActivate ==
+              true
+            ) {
+              let index = Math.round(((frame / fps) * 1000) / 16);
+              let indexToMs = index * 20;
+              let startTime = Number(this.timeline[elementId].startTime);
+              let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+              try {
+                if (indexPoint < 0) {
+                  return false;
+                }
+
+                const ax = this.findNearestY(
+                  this.timeline[elementId].animation[animationType].ax,
+                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
+                ) as any;
+
+                const ay = this.findNearestY(
+                  this.timeline[elementId].animation[animationType].ay,
+                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
+                ) as any;
+
+                tx = ax;
+                ty = ay;
+              } catch (error) {}
+            }
 
             this.drawTextBackground(ctx, elementId, x, y, w, h);
 
@@ -445,6 +499,8 @@ export class RenderController implements ReactiveController {
               );
               ctx.fillText(line, x + w - lastWordWidth, textY);
             }
+
+            ctx.globalAlpha = 1;
 
             drawLayer(layerIndex + 1);
             return;

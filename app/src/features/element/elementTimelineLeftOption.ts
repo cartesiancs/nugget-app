@@ -366,6 +366,7 @@ export class ElementTimelineLeftOption extends LitElement {
                   class="btn btn-xxs btn-default text-light mr-2 ${[
                     "image",
                     "video",
+                    "text",
                   ].includes(element.filetype)
                     ? ""
                     : "d-none"}"

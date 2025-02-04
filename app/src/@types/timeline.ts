@@ -167,13 +167,16 @@ export type TextElementType = {
   animation?: {
     position?: {
       isActivate?: boolean;
-      points?: number[][];
-      allpoints?: number[][];
+      x?: CubicKeyframeType[];
+      y?: CubicKeyframeType[];
+
+      ax?: number[][];
+      ay?: number[][];
     };
     opacity?: {
       isActivate?: boolean;
-      points?: number[][];
-      allpoints?: number[][];
+      x?: CubicKeyframeType[];
+      ax?: number[][];
     };
   };
 };

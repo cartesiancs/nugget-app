@@ -623,13 +623,36 @@ export class ElementControl extends LitElement {
       animation: {
         position: {
           isActivate: false,
-          points: [],
-          allpoints: [[], []],
+          x: [
+            {
+              type: "cubic",
+              p: [0, 0],
+              cs: [0, 0],
+              ce: [0, 0],
+            },
+          ],
+          y: [
+            {
+              type: "cubic",
+              p: [0, 0],
+              cs: [0, 0],
+              ce: [0, 0],
+            },
+          ],
+          ax: [[], []],
+          ay: [[], []],
         },
         opacity: {
           isActivate: false,
-          points: [],
-          allpoints: [[]],
+          x: [
+            {
+              type: "cubic",
+              p: [0, 100],
+              cs: [0, 100],
+              ce: [0, 100],
+            },
+          ],
+          ax: [[], []],
         },
       },
     };
@@ -682,13 +705,36 @@ export class ElementControl extends LitElement {
       animation: {
         position: {
           isActivate: false,
-          points: [],
-          allpoints: [[], []],
+          x: [
+            {
+              type: "cubic",
+              p: [0, 0],
+              cs: [0, 0],
+              ce: [0, 0],
+            },
+          ],
+          y: [
+            {
+              type: "cubic",
+              p: [0, 0],
+              cs: [0, 0],
+              ce: [0, 0],
+            },
+          ],
+          ax: [[], []],
+          ay: [[], []],
         },
         opacity: {
           isActivate: false,
-          points: [],
-          allpoints: [[]],
+          x: [
+            {
+              type: "cubic",
+              p: [0, 100],
+              cs: [0, 100],
+              ce: [0, 100],
+            },
+          ],
+          ax: [[], []],
         },
       },
     };

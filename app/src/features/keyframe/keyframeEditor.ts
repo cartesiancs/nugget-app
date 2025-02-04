@@ -24,6 +24,7 @@ export class KeyframeEditor extends LitElement {
   clickDot: string;
   clickIndex: number;
   verticalScroll: number;
+  cursor: string;
 
   constructor() {
     super();
@@ -50,6 +51,8 @@ export class KeyframeEditor extends LitElement {
     this.clickIndex = -1;
     this.clickDot = "";
     this.isDrag = false;
+
+    this.cursor = "default";
 
     this.verticalScroll = 0;
 
@@ -189,7 +192,7 @@ export class KeyframeEditor extends LitElement {
           <canvas
             id="keyframeEditerCanvasRef"
             style="width: 100%; left: ${this.resize.timelineVertical
-              .leftOption}px; position: absolute;"
+              .leftOption}px; position: absolute; cursor: ${this.cursor};"
             @mousewheel=${this._handleMouseWheel}
             @mousedown=${this._handleMouseDown}
             @mousemove=${this._handleMouseMove}
@@ -211,18 +214,24 @@ export class KeyframeEditor extends LitElement {
           const point =
             this.timeline[this.elementId].animation[this.animationType][key];
           if (key == "x") {
+            let color = this.selectLine == 0 ? "#403af0" : "#3d3e45";
+            let subcolor = this.selectLine == 0 ? "#b7bcf7" : "#3d3e45";
+
             this.drawDotsLoop({
               ctx: ctx,
               dots: point,
-              color: "#403af0",
-              subColor: "#b7bcf7",
+              color: color,
+              subColor: subcolor,
             });
           } else {
+            let color = this.selectLine == 1 ? "#e83535" : "#3d3e45";
+            let subcolor = this.selectLine == 1 ? "#ed7979" : "#3d3e45";
+
             this.drawDotsLoop({
               ctx: ctx,
               dots: point,
-              color: "#e83535",
-              subColor: "#ed7979",
+              color: color,
+              subColor: subcolor,
             });
           }
         }
@@ -293,10 +302,11 @@ export class KeyframeEditor extends LitElement {
         if (["ax", "ay"].includes(key)) {
           const point =
             this.timeline[this.elementId].animation[this.animationType][key];
-          ctx.strokeStyle = "#403af0";
+          ctx.strokeStyle = this.selectLine == 0 ? "#403af0" : "#3d3e45";
           if (key == "ay") {
-            ctx.strokeStyle = "#e83535";
+            ctx.strokeStyle = this.selectLine == 1 ? "#e83535" : "#3d3e45";
           }
+
           ctx.beginPath();
           for (let index = 0; index < point.length; index++) {
             const element = point[index];
@@ -508,6 +518,47 @@ export class KeyframeEditor extends LitElement {
       this.timeline[this.elementId].startTime;
     const py = e.offsetY - this.verticalScroll;
     const lineToAlpha = this.selectLine == 0 ? "x" : "y";
+    const padding = 100;
+    const paddingY = 25;
+
+    let isCursorChange = false;
+
+    for (
+      let index = 0;
+      index <
+      this.timeline[this.elementId].animation[this.animationType][lineToAlpha]
+        .length;
+      index++
+    ) {
+      const element =
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][index];
+
+      if (
+        element.cs[0] > px - padding &&
+        element.cs[0] < px + padding &&
+        element.cs[1] > py - paddingY &&
+        element.cs[1] < py + paddingY
+      ) {
+        this.cursor = "pointer";
+        isCursorChange = true;
+      }
+
+      if (
+        element.ce[0] > px - padding &&
+        element.ce[0] < px + padding &&
+        element.ce[1] > py - paddingY &&
+        element.ce[1] < py + paddingY
+      ) {
+        this.cursor = "pointer";
+        isCursorChange = true;
+      }
+    }
+
+    if (isCursorChange == false) {
+      this.cursor = "default";
+    }
 
     //console.log(px);
 
@@ -527,6 +578,8 @@ export class KeyframeEditor extends LitElement {
 
       this.drawCanvas();
     }
+
+    this.requestUpdate();
   }
 
   _handleMouseDown(e) {

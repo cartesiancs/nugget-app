@@ -872,8 +872,8 @@ export class PreviewCanvas extends LitElement {
                     this.timelineCursor - this.timeline[elementId].startTime,
                   ) as any;
 
-                  tx = ax + tx;
-                  ty = ay + ty;
+                  tx = ax;
+                  ty = ay;
                 } catch (error) {}
               }
 
@@ -950,7 +950,7 @@ export class PreviewCanvas extends LitElement {
                   textY,
                   fontSize,
                 );
-                ctx.fillText(line, x + w / 2 - lastWordWidth / 2, textY);
+                ctx.fillText(line, tx + w / 2 - lastWordWidth / 2, textY);
               } else if (this.timeline[elementId].options.align == "right") {
                 const textSplited = this.timeline[elementId].text.split(" ");
                 let line = "";

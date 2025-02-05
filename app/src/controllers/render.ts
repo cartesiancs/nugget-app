@@ -457,8 +457,8 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - this.timeline[elementId].startTime,
                 ) as any;
 
-                tx = ax + tx;
-                ty = ay + ty;
+                tx = ax;
+                ty = ay;
               } catch (error) {}
             }
 
@@ -469,7 +469,7 @@ export class RenderController implements ReactiveController {
             if (this.timeline[elementId].options.align == "left") {
               const textSplited = this.timeline[elementId].text.split(" ");
               let line = "";
-              let textY = y + (this.timeline[elementId].fontsize || 0);
+              let textY = ty + (this.timeline[elementId].fontsize || 0);
               let lineHeight = h;
 
               for (let index = 0; index < textSplited.length; index++) {
@@ -480,19 +480,26 @@ export class RenderController implements ReactiveController {
                 if (testWidth < w) {
                   line = testLine;
                 } else {
-                  this.drawTextStroke(ctx, elementId, line, x, textY, fontSize);
-                  ctx.fillText(line, x, textY);
+                  this.drawTextStroke(
+                    ctx,
+                    elementId,
+                    line,
+                    tx,
+                    textY,
+                    fontSize,
+                  );
+                  ctx.fillText(line, tx, textY);
                   line = textSplited[index] + " ";
                   textY += lineHeight;
                 }
               }
 
-              this.drawTextStroke(ctx, elementId, line, x, textY, fontSize);
-              ctx.fillText(line, x, textY);
+              this.drawTextStroke(ctx, elementId, line, tx, textY, fontSize);
+              ctx.fillText(line, tx, textY);
             } else if (this.timeline[elementId].options.align == "center") {
               const textSplited = this.timeline[elementId].text.split(" ");
               let line = "";
-              let textY = y + (this.timeline[elementId].fontsize || 0);
+              let textY = ty + (this.timeline[elementId].fontsize || 0);
               let lineHeight = h;
 
               for (let index = 0; index < textSplited.length; index++) {
@@ -508,11 +515,11 @@ export class RenderController implements ReactiveController {
                     ctx,
                     elementId,
                     line,
-                    x + w / 2 - wordWidth / 2,
+                    tx + w / 2 - wordWidth / 2,
                     textY,
                     fontSize,
                   );
-                  ctx.fillText(line, x + w / 2 - wordWidth / 2, textY);
+                  ctx.fillText(line, tx + w / 2 - wordWidth / 2, textY);
                   line = textSplited[index] + " ";
                   textY += lineHeight;
                 }
@@ -524,15 +531,15 @@ export class RenderController implements ReactiveController {
                 ctx,
                 elementId,
                 line,
-                x + w / 2 - lastWordWidth / 2,
+                tx + w / 2 - lastWordWidth / 2,
                 textY,
                 fontSize,
               );
-              ctx.fillText(line, x + w / 2 - lastWordWidth / 2, textY);
+              ctx.fillText(line, tx + w / 2 - lastWordWidth / 2, textY);
             } else if (this.timeline[elementId].options.align == "right") {
               const textSplited = this.timeline[elementId].text.split(" ");
               let line = "";
-              let textY = y + (this.timeline[elementId].fontsize || 0);
+              let textY = ty + (this.timeline[elementId].fontsize || 0);
               let lineHeight = h;
 
               for (let index = 0; index < textSplited.length; index++) {
@@ -548,11 +555,11 @@ export class RenderController implements ReactiveController {
                     ctx,
                     elementId,
                     line,
-                    x + w - wordWidth,
+                    tx + w - wordWidth,
                     textY,
                     fontSize,
                   );
-                  ctx.fillText(line, x + w - wordWidth, textY);
+                  ctx.fillText(line, tx + w - wordWidth, textY);
                   line = textSplited[index] + " ";
                   textY += lineHeight;
                 }
@@ -564,11 +571,11 @@ export class RenderController implements ReactiveController {
                 ctx,
                 elementId,
                 line,
-                x + w - lastWordWidth,
+                tx + w - lastWordWidth,
                 textY,
                 fontSize,
               );
-              ctx.fillText(line, x + w - lastWordWidth, textY);
+              ctx.fillText(line, tx + w - lastWordWidth, textY);
             }
 
             ctx.globalAlpha = 1;

@@ -110,7 +110,7 @@ export class ModalList extends LitElement {
           button-color="btn-light"
           button-text-color="text-dark"
           is-dismiss="true"
-          >닫기</dds-modal-button
+          >Close</dds-modal-button
         >
       </dds-modal>
 
@@ -197,53 +197,49 @@ export class ModalList extends LitElement {
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content bg-dark">
             <div class="modal-body">
-              <h5 class="modal-title text-white font-weight-lg">단축키</h5>
+              <h5 class="modal-title text-white font-weight-lg">Shortcut</h5>
               <div class="mb-3">
                 <table class="table table-dark ">
                   <tbody>
                     <tr>
                       <th scope="row">Control C</th>
-                      <td class="text-secondary">
-                        타임라인에서 선택된 엘리먼트를 복사합니다
-                      </td>
+                      <td class="text-secondary">Copy Element on Timeline</td>
                     </tr>
                     <tr>
                       <th scope="row">Control V</th>
-                      <td class="text-secondary">
-                        복사한 엘리먼트를 타임라인에 붙혀넣습니다
-                      </td>
+                      <td class="text-secondary">Paste Element on Timeline</td>
                     </tr>
                     <tr>
                       <th scope="row">Control X</th>
-                      <td class="text-secondary">
-                        선택된 엘리먼트를 복사하고 삭제합니다
-                      </td>
+                      <td class="text-secondary">Copy & Delete on Timeline</td>
                     </tr>
                     <tr>
                       <th scope="row">Control D</th>
-                      <td class="text-secondary">
-                        선택된 엘리먼트를 커서를 기준으로 분할합니다
-                      </td>
+                      <td class="text-secondary">Split Element</td>
                     </tr>
                     <tr>
                       <th scope="row">Control O</th>
-                      <td class="text-secondary">
-                        프로젝트 파일 .ngt 를 불러옵니다
-                      </td>
+                      <td class="text-secondary">Load Project File</td>
                     </tr>
                     <tr>
                       <th scope="row">Control S</th>
-                      <td class="text-secondary">프로젝트를 저장합니다</td>
+                      <td class="text-secondary">Save Project File</td>
                     </tr>
                     <tr>
                       <th scope="row">Backspace</th>
-                      <td class="text-secondary">엘리먼트를 제거합니다</td>
+                      <td class="text-secondary">Remove Element</td>
                     </tr>
                     <tr>
                       <th scope="row">Space</th>
-                      <td class="text-secondary">
-                        프리뷰를 재생하거나 중지합니다
-                      </td>
+                      <td class="text-secondary">Play & Pasue</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Left & Right Arrow</th>
+                      <td class="text-secondary">Move Next & Prev Frame</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Top & Bottom Arrow</th>
+                      <td class="text-secondary">Move Element Top or Bottom</td>
                     </tr>
                   </tbody>
                 </table>

@@ -76,11 +76,11 @@ export class OptionVideo extends LitElement {
         />
       </div>
 
-      <button
+      <!-- <button
         type="button"
         class="btn btn-sm mb-2 ${this.enableFilter
-          ? "btn-primary"
-          : "btn-default"}  text-light"
+        ? "btn-primary"
+        : "btn-default"}  text-light"
         @click=${this.handleClickEnableFilter}
       >
         ${!this.enableFilter ? "Enable" : "Disable"} Filter
@@ -97,7 +97,7 @@ export class OptionVideo extends LitElement {
         >
           Add Filter
         </button>
-      </div>
+      </div> -->
 
       <!-- <div class="mb-2">
         <label class="form-label text-light">Speed</label>

@@ -367,21 +367,15 @@ export class RenderController implements ReactiveController {
         }
 
         if (fileType == "text") {
+          let scaleW = w;
+          let scaleH = h;
+          let tx = x;
+          let ty = y;
+          let fontSize = this.timeline[elementId].fontsize;
+          let compare = 1;
+
           try {
             ctx.globalAlpha = 1;
-
-            ctx.fillStyle = this.timeline[elementId].textcolor as string;
-            ctx.lineWidth = 0;
-            ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
-
-            ctx.font = `${
-              this.timeline[elementId].options.isItalic ? "italic" : ""
-            } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
-              this.timeline[elementId].fontsize
-            }px ${this.timeline[elementId].fontname}`;
-
-            let tx = x;
-            let ty = y;
 
             if (
               this.timeline[elementId].animation["opacity"].isActivate == true
@@ -404,6 +398,38 @@ export class RenderController implements ReactiveController {
                 ctx.globalAlpha = ax / 100;
               } catch (error) {}
             }
+
+            if (
+              this.timeline[elementId].animation["scale"].isActivate == true
+            ) {
+              let index = Math.round(((frame / fps) * 1000) / 16);
+              let indexToMs = index * 20;
+              let startTime = Number(this.timeline[elementId].startTime);
+              let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+              try {
+                if (indexPoint < 0) {
+                  return false;
+                }
+
+                const ax = this.findNearestY(
+                  this.timeline[elementId].animation["scale"].ax,
+                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
+                ) as any;
+
+                fontSize = this.timeline[elementId].fontsize * (ax / 10);
+              } catch (error) {}
+            }
+
+            ctx.fillStyle = this.timeline[elementId].textcolor as string;
+            ctx.lineWidth = 0;
+            ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
+
+            ctx.font = `${
+              this.timeline[elementId].options.isItalic ? "italic" : ""
+            } ${
+              this.timeline[elementId].options.isBold ? "bold" : ""
+            } ${fontSize}px ${this.timeline[elementId].fontname}`;
 
             let animationType = "position";
 
@@ -431,12 +457,12 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - this.timeline[elementId].startTime,
                 ) as any;
 
-                tx = ax;
-                ty = ay;
+                tx = ax + tx;
+                ty = ay + ty;
               } catch (error) {}
             }
 
-            this.drawTextBackground(ctx, elementId, x, y, w, h);
+            this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
 
             ctx.fillStyle = this.timeline[elementId].textcolor as string;
 
@@ -454,14 +480,14 @@ export class RenderController implements ReactiveController {
                 if (testWidth < w) {
                   line = testLine;
                 } else {
-                  this.drawTextStroke(ctx, elementId, line, x, textY);
+                  this.drawTextStroke(ctx, elementId, line, x, textY, fontSize);
                   ctx.fillText(line, x, textY);
                   line = textSplited[index] + " ";
                   textY += lineHeight;
                 }
               }
 
-              this.drawTextStroke(ctx, elementId, line, x, textY);
+              this.drawTextStroke(ctx, elementId, line, x, textY, fontSize);
               ctx.fillText(line, x, textY);
             } else if (this.timeline[elementId].options.align == "center") {
               const textSplited = this.timeline[elementId].text.split(" ");
@@ -484,6 +510,7 @@ export class RenderController implements ReactiveController {
                     line,
                     x + w / 2 - wordWidth / 2,
                     textY,
+                    fontSize,
                   );
                   ctx.fillText(line, x + w / 2 - wordWidth / 2, textY);
                   line = textSplited[index] + " ";
@@ -499,6 +526,7 @@ export class RenderController implements ReactiveController {
                 line,
                 x + w / 2 - lastWordWidth / 2,
                 textY,
+                fontSize,
               );
               ctx.fillText(line, x + w / 2 - lastWordWidth / 2, textY);
             } else if (this.timeline[elementId].options.align == "right") {
@@ -522,6 +550,7 @@ export class RenderController implements ReactiveController {
                     line,
                     x + w - wordWidth,
                     textY,
+                    fontSize,
                   );
                   ctx.fillText(line, x + w - wordWidth, textY);
                   line = textSplited[index] + " ";
@@ -537,6 +566,7 @@ export class RenderController implements ReactiveController {
                 line,
                 x + w - lastWordWidth,
                 textY,
+                fontSize,
               );
               ctx.fillText(line, x + w - lastWordWidth, textY);
             }
@@ -734,13 +764,13 @@ export class RenderController implements ReactiveController {
     return closestY;
   }
 
-  drawTextStroke(ctx, elementId, text, x, y) {
+  drawTextStroke(ctx, elementId, text, x, y, fontSize) {
     if (this.timeline[elementId].options.outline.enable) {
       ctx.font = `${
         this.timeline[elementId].options.isItalic ? "italic" : ""
-      } ${this.timeline[elementId].options.isBold ? "bold" : ""} ${
-        this.timeline[elementId].fontsize
-      }px ${this.timeline[elementId].fontname}`;
+      } ${
+        this.timeline[elementId].options.isBold ? "bold" : ""
+      } ${fontSize}px ${this.timeline[elementId].fontname}`;
 
       ctx.lineWidth = parseInt(this.timeline[elementId].options.outline.size);
       ctx.strokeStyle = this.timeline[elementId].options.outline.color;

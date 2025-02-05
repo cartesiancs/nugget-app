@@ -1,6 +1,6 @@
-# nugget-app
+# Nugget
 
-![plot](./assets/images/screenshot.png)
+![plot](./.github/screenshotv1.png)
 
 <p align='center'>
 
@@ -12,9 +12,17 @@
 
 </p>
 
-English | [한국어](./docs/README.ko.md)
+#
 
-<hr/>
+<p align='center'>
+English | <a href="./docs/README.ko.md">한국어</a>
+</p>
+
+<p align='center'>
+<a href="https://www.youtube.com/watch?v=Bh06VOYSMIM">View Demo</a> · <a href="https://github.com/cartesiancs/nugget-app/issues">Report Bugs</a> · <a href="https://github.com/cartesiancs/nugget-app/releases"><b>Download</b></a> · <a href="https://github.com/cartesiancs/nugget-app/issues/new">Suggest Features </a>
+</p>
+
+#
 
 Video editing software designed for motion effects and versatility.
 
@@ -24,6 +32,8 @@ It also supports layer-based editing, which differs from traditional track-based
 
 > [!IMPORTANT]
 > 📢 <strong>Currently, the 0.4.1 version is being refactored.</strong> It can be a little unstable.
+
+## About The Project
 
 ## Features
 

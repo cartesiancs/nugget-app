@@ -21,6 +21,12 @@ export function startFFmpegProcess(options, timeline) {
     if (Object.prototype.hasOwnProperty.call(timeline, key)) {
       const element = timeline[key];
       if (element.filetype == "video" || element.filetype == "audio") {
+        if (
+          element.filetype == "video" &&
+          (element.isExistAudio || false) == false
+        ) {
+          continue;
+        }
         let inStartTime = element.trim.startTime * (element.speed || 1);
         let inDuration = element.trim.endTime - element.trim.startTime;
         let trackDelay = element.startTime;

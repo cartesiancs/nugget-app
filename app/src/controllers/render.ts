@@ -77,6 +77,7 @@ export class RenderController implements ReactiveController {
   }
 
   nextFrameRender(options, frame, totalFrame) {
+    console.log("RENDER");
     rendererModal.progressModal.show();
     document.querySelector("#progress").style.width = `${
       (frame / totalFrame) * 100
@@ -105,9 +106,12 @@ export class RenderController implements ReactiveController {
 
       for (const key in sortedTimeline) {
         if (Object.prototype.hasOwnProperty.call(sortedTimeline, key)) {
-          layers.push(key);
           const fileType = this.timeline[key].filetype;
           let additionalStartTime = 0;
+
+          if (fileType != "audio") {
+            layers.push(key);
+          }
 
           if (fileType == "text") {
             if (this.timeline[key].parentKey != "standalone") {
@@ -552,6 +556,11 @@ export class RenderController implements ReactiveController {
 
         if (fileType == "video") {
           const videoElement = this.timeline[elementId] as any;
+          let scaleW = w;
+          let scaleH = h;
+          let scaleX = x;
+          let scaleY = y;
+          let compare = 1;
 
           if (
             !(
@@ -588,6 +597,31 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
+            if (videoElement.animation["scale"].isActivate == true) {
+              let index = Math.round(((frame / fps) * 1000) / 16);
+              let indexToMs = index * 20;
+              let startTime = Number(this.timeline[elementId].startTime);
+              let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+              try {
+                if (indexPoint < 0) {
+                  return false;
+                }
+
+                const ax = this.findNearestY(
+                  videoElement.animation["scale"].ax,
+                  (frame / fps) * 1000 - videoElement.startTime,
+                ) as any;
+
+                scaleW = w * ax;
+                scaleH = h * ax;
+                compare = scaleW - w;
+
+                scaleX = x - compare / 2;
+                scaleY = y - compare / 2;
+              } catch (error) {}
+            }
+
             let animationType = "position";
 
             if (videoElement.animation[animationType].isActivate == true) {
@@ -611,14 +645,20 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - videoElement.startTime,
                 ) as any;
 
-                ctx.drawImage(loaded[elementId], ax, ay, w, h);
+                ctx.drawImage(
+                  loaded[elementId],
+                  ax - compare / 2,
+                  ay - compare / 2,
+                  scaleW,
+                  scaleH,
+                );
 
                 drawLayer(layerIndex + 1);
                 return;
               } catch (error) {}
             }
 
-            ctx.drawImage(loaded[elementId], x, y, w, h);
+            ctx.drawImage(loaded[elementId], scaleX, scaleY, scaleW, scaleH);
             ctx.globalAlpha = 1;
 
             delayCount += 1;

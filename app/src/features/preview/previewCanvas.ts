@@ -576,7 +576,11 @@ export class PreviewCanvas extends LitElement {
 
           if (fileType == "video") {
             const videoElement = this.timeline[elementId] as any;
-
+            let scaleW = w;
+            let scaleH = h;
+            let scaleX = x;
+            let scaleY = y;
+            let compare = 1;
             if (
               !(
                 this.timelineCursor >=
@@ -672,6 +676,31 @@ export class PreviewCanvas extends LitElement {
                   } catch (error) {}
                 }
 
+                if (videoElement.animation["scale"].isActivate == true) {
+                  let index = Math.round(this.timelineCursor / 16);
+                  let indexToMs = index * 20;
+                  let startTime = Number(this.timeline[elementId].startTime);
+                  let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+                  try {
+                    if (indexPoint < 0) {
+                      return false;
+                    }
+
+                    const ax = this.findNearestY(
+                      videoElement.animation["scale"].ax,
+                      this.timelineCursor - videoElement.startTime,
+                    ) as any;
+
+                    scaleW = w * ax;
+                    scaleH = h * ax;
+                    compare = scaleW - w;
+
+                    scaleX = x - compare / 2;
+                    scaleY = y - compare / 2;
+                  } catch (error) {}
+                }
+
                 let animationType = "position";
 
                 if (videoElement.animation[animationType].isActivate == true) {
@@ -698,14 +727,20 @@ export class PreviewCanvas extends LitElement {
                         this.timelineCursor - videoElement.startTime,
                       ) as any;
 
-                      ctx.drawImage(video.object, ax, ay, w, h);
+                      ctx.drawImage(
+                        video.object,
+                        ax - compare / 2,
+                        ay - compare / 2,
+                        scaleW,
+                        scaleH,
+                      );
 
                       continue;
                     } catch (error) {}
                   }
                 }
 
-                ctx.drawImage(video.object, x, y, w, h);
+                ctx.drawImage(video.object, scaleX, scaleY, scaleW, scaleH);
               }
             } else {
               const video = document.createElement("video");

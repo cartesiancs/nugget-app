@@ -69,18 +69,18 @@ export class ElementTimelineBottomScroll extends LitElement {
     return html` <style>
         .timeline-bottom-scroll {
           width: 100%;
-          height: 12px;
-          background-color: #181a1c39;
+          height: 10px;
+          background-color: #181a1cb5;
           backdrop-filter: blur(8px);
           position: fixed;
-          bottom: 0;
+          bottom: 20px;
           left: ${this.resize.timelineVertical.leftOption}px;
           cursor: pointer;
         }
 
         .timeline-bottom-scroll-thumb {
           width: 20px;
-          height: 12px;
+          height: 10px;
           position: relative;
           background-color: #202225;
           backdrop-filter: blur(8px);

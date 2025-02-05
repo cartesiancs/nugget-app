@@ -4,6 +4,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { IKeyframeStore, keyframeStore } from "../../states/keyframeStore";
 import "../../features/element/elementTimelineScroll";
+import "../../features/element/elementTimelineBottom";
 
 @customElement("timeline-ui")
 export class Timeline extends LitElement {
@@ -228,6 +229,7 @@ export class Timeline extends LitElement {
       <element-timeline-ruler></element-timeline-ruler>
       <element-timeline id="split_inner_bottom"></element-timeline>
       <element-timeline-bottom-scroll></element-timeline-bottom-scroll>
+      <element-timeline-bottom></element-timeline-bottom>
     `;
   }
 }

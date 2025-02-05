@@ -25,6 +25,7 @@ export class KeyframeEditor extends LitElement {
   clickIndex: number;
   verticalScroll: number;
   cursor: string;
+  verticalRange: number;
 
   constructor() {
     super();
@@ -55,6 +56,7 @@ export class KeyframeEditor extends LitElement {
     this.cursor = "default";
 
     this.verticalScroll = 0;
+    this.verticalRange = 1;
 
     this.addEventListener("scroll", this.handleScroll.bind(this));
 
@@ -163,32 +165,56 @@ export class KeyframeEditor extends LitElement {
           "overflow-hidden",
         );
 
-        return html` <div>
-          <div class="btn-group p-2" role="group" id="timelineOptionLineEditor">
-            <button
-              line="0"
-              @click=${() => this.changeLineEditor("0")}
-              type="button"
-              class="btn ${this.selectLine == 0
-                ? "btn-primary"
-                : "btn-secondary"} btn-sm"
+        return html` <div style="display: flex;">
+          <div
+            class="d-flex row gap-2 p-2"
+            style="width: ${this.resize.timelineVertical.leftOption}px"
+          >
+            <span class="text-secondary">Line</span>
+            <div
+              class="btn-group p-2"
+              role="group"
+              id="timelineOptionLineEditor"
             >
-              x
-            </button>
+              <button
+                line="0"
+                @click=${() => this.changeLineEditor("0")}
+                type="button"
+                class="btn ${this.selectLine == 0
+                  ? "btn-primary"
+                  : "btn-secondary"} btn-sm"
+              >
+                x
+              </button>
 
-            <button
-              line="1"
-              @click=${() => this.changeLineEditor("1")}
-              type="button"
-              class="btn ${this.selectLine == 1
-                ? "btn-primary"
-                : "btn-secondary"} btn-sm ${this.lineCount == 1
-                ? "d-none"
-                : ""}"
-            >
-              y
-            </button>
+              <button
+                line="1"
+                @click=${() => this.changeLineEditor("1")}
+                type="button"
+                class="btn ${this.selectLine == 1
+                  ? "btn-primary"
+                  : "btn-secondary"} btn-sm ${this.lineCount == 1
+                  ? "d-none"
+                  : ""}"
+              >
+                y
+              </button>
+            </div>
+
+            <span class="text-secondary">Range</span>
+            <input
+              type="range"
+              class="form-range"
+              min="0.1"
+              max="10"
+              step="0.1"
+              value="1"
+              id="verticalRange"
+              @change=${this.handleChangeVerticalRange}
+              @input=${this.handleChangeVerticalRange}
+            />
           </div>
+
           <canvas
             id="keyframeEditerCanvasRef"
             style="width: 100%; left: ${this.resize.timelineVertical
@@ -205,6 +231,11 @@ export class KeyframeEditor extends LitElement {
     } catch (error) {}
   }
 
+  handleChangeVerticalRange(e) {
+    this.verticalRange = parseFloat(e.target.value);
+    this.requestUpdate();
+  }
+
   drawRuler() {
     const ctx = this.canvas.getContext("2d") as any;
 
@@ -216,12 +247,12 @@ export class KeyframeEditor extends LitElement {
 
     ctx.fillStyle = "#55585e";
     ctx.textAlign = "center";
-    ctx.font = "12px Arial";
+    ctx.font = "9px Arial";
 
     for (let i = -iStep; i <= iStep; i += step) {
       const pos = center + i;
-      ctx.fillText(i, width / 2, pos);
-      ctx.fillRect(10, pos, 30, 1);
+      ctx.fillText(i, width / 2, pos / this.verticalRange);
+      ctx.fillRect(10, pos / this.verticalRange, 30, 0.5);
     }
   }
 
@@ -273,7 +304,7 @@ export class KeyframeEditor extends LitElement {
         ) - this.timelineScroll;
 
       const y = element.p[1] + this.verticalScroll;
-      ctx.arc(x, y, 4, 0, 2 * Math.PI);
+      ctx.arc(x, y / this.verticalRange, 4, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.fillStyle = subColor;
@@ -285,7 +316,7 @@ export class KeyframeEditor extends LitElement {
           this.timelineRange,
         ) - this.timelineScroll;
       const sy = element.cs[1] + this.verticalScroll;
-      ctx.arc(sx, sy, 4, 0, 2 * Math.PI);
+      ctx.arc(sx, sy / this.verticalRange, 4, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.beginPath();
@@ -295,21 +326,21 @@ export class KeyframeEditor extends LitElement {
           this.timelineRange,
         ) - this.timelineScroll;
       const ey = element.ce[1] + this.verticalScroll;
-      ctx.arc(ex, ey, 4, 0, 2 * Math.PI);
+      ctx.arc(ex, ey / this.verticalRange, 4, 0, 2 * Math.PI);
       ctx.fill();
 
       ctx.strokeStyle = subColor;
 
       ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(sx, sy);
+      ctx.moveTo(x, y / this.verticalRange);
+      ctx.lineTo(sx, sy / this.verticalRange);
       ctx.stroke();
 
       ctx.strokeStyle = subColor;
 
       ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(ex, ey);
+      ctx.moveTo(x, y / this.verticalRange);
+      ctx.lineTo(ex, ey / this.verticalRange);
       ctx.stroke();
     }
   }
@@ -335,29 +366,15 @@ export class KeyframeEditor extends LitElement {
                 element[0] + this.timeline[this.elementId].startTime,
                 this.timelineRange,
               ) - this.timelineScroll;
-            ctx.lineTo(x, element[1] + this.verticalScroll);
+            ctx.lineTo(
+              x,
+              (element[1] + this.verticalScroll) / this.verticalRange,
+            );
           }
           ctx.stroke();
         }
       }
     }
-
-    // const pointsX =
-    //   this.timeline[this.elementId].animation[this.animationType].ax;
-    // const pointsY = this.timeline[this.elementId].animation.position.ay;
-
-    // ctx.strokeStyle = "#e83535";
-    // ctx.beginPath();
-    // for (let index = 0; index < pointsY.length; index++) {
-    //   const element = pointsY[index];
-    //   const x =
-    //     millisecondsToPx(
-    //       element[0] + this.timeline[this.elementId].startTime,
-    //       this.timelineRange,
-    //     ) - this.timelineScroll;
-    //   ctx.lineTo(x, element[1] + this.verticalScroll);
-    // }
-    // ctx.stroke();
   }
 
   private drawCursor(ctx) {
@@ -522,7 +539,7 @@ export class KeyframeEditor extends LitElement {
 
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
-    this.verticalScroll -= e.deltaY;
+    this.verticalScroll -= e.deltaY * this.verticalRange;
 
     this.drawCanvas();
 
@@ -537,7 +554,7 @@ export class KeyframeEditor extends LitElement {
       pxToMilliseconds(e.offsetX, this.timelineRange) +
       pxToMilliseconds(this.timelineScroll, this.timelineRange) -
       this.timeline[this.elementId].startTime;
-    const py = e.offsetY - this.verticalScroll;
+    const py = e.offsetY * this.verticalRange - this.verticalScroll;
     const lineToAlpha = this.selectLine == 0 ? "x" : "y";
     const padding = 100;
     const paddingY = 25;
@@ -611,7 +628,7 @@ export class KeyframeEditor extends LitElement {
       pxToMilliseconds(e.offsetX, this.timelineRange) +
       pxToMilliseconds(this.timelineScroll, this.timelineRange) -
       this.timeline[this.elementId].startTime;
-    const py = e.offsetY - this.verticalScroll;
+    const py = e.offsetY * this.verticalRange - this.verticalScroll;
 
     for (
       let index = 0;

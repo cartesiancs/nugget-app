@@ -26,6 +26,7 @@ export class KeyframeEditor extends LitElement {
   verticalScroll: number;
   cursor: string;
   verticalRange: number;
+  activePointIndex: number;
 
   constructor() {
     super();
@@ -58,7 +59,10 @@ export class KeyframeEditor extends LitElement {
     this.verticalScroll = 0;
     this.verticalRange = 1;
 
+    this.activePointIndex = -1;
+
     this.addEventListener("scroll", this.handleScroll.bind(this));
+    window.addEventListener("keydown", this._handleKeydown.bind(this));
 
     // try {
     //   // position이면 2개 나머지는 1개
@@ -167,7 +171,7 @@ export class KeyframeEditor extends LitElement {
 
         return html` <div style="display: flex;">
           <div
-            class="d-flex row gap-2 p-2"
+            class="d-flex row gap-2 p-2 ps-3"
             style="width: ${this.resize.timelineVertical.leftOption}px"
           >
             <span class="text-secondary">Line</span>
@@ -204,7 +208,7 @@ export class KeyframeEditor extends LitElement {
             <span class="text-secondary">Range</span>
             <input
               type="range"
-              class="form-range"
+              class="form-range p-2 ps-3"
               min="0.1"
               max="10"
               step="0.1"
@@ -294,6 +298,10 @@ export class KeyframeEditor extends LitElement {
     for (let index = 0; index < dots.length; index++) {
       const element = dots[index];
       ctx.fillStyle = color;
+
+      if (this.activePointIndex == index && this.activePointIndex != -1) {
+        ctx.fillStyle = "#f7f414"; // yellow color
+      }
 
       ctx.beginPath();
 
@@ -527,6 +535,27 @@ export class KeyframeEditor extends LitElement {
     return tmp;
   }
 
+  removePoint() {
+    if (this.activePointIndex == -1) {
+      return false;
+    }
+    const lineToAlpha = this.selectLine == 0 ? "x" : "y";
+
+    this.timeline[this.elementId].animation[this.animationType][
+      lineToAlpha
+    ].splice(this.activePointIndex, 1);
+
+    this.activePointIndex == -1;
+
+    this.timelineState.patchTimeline(this.timeline);
+    this.keyframeControl.interpolate(
+      this.selectLine,
+      this.elementId,
+      this.animationType,
+    );
+    this.requestUpdate();
+  }
+
   handleScroll(e) {
     let optionBottom = document.querySelector("#option_bottom");
     let isShowOptionBottom = optionBottom.classList.contains("show");
@@ -543,9 +572,13 @@ export class KeyframeEditor extends LitElement {
 
     this.drawCanvas();
 
+    this.activePointIndex == -1;
+
     if (newScroll >= 0) {
       this.timelineState.setScroll(newScroll);
     }
+
+    this.requestUpdate();
   }
 
   _handleMouseMove(e) {
@@ -588,6 +621,16 @@ export class KeyframeEditor extends LitElement {
         element.ce[0] < px + padding &&
         element.ce[1] > py - paddingY &&
         element.ce[1] < py + paddingY
+      ) {
+        this.cursor = "pointer";
+        isCursorChange = true;
+      }
+
+      if (
+        element.p[0] > px - padding &&
+        element.p[0] < px + padding &&
+        element.p[1] > py - paddingY &&
+        element.p[1] < py + paddingY
       ) {
         this.cursor = "pointer";
         isCursorChange = true;
@@ -663,6 +706,18 @@ export class KeyframeEditor extends LitElement {
         this.clickDot = "ce";
         this.isDrag = true;
       }
+
+      if (
+        element.p[0] > px - padding &&
+        element.p[0] < px + padding &&
+        element.p[1] > py - padding &&
+        element.p[1] < py + padding
+      ) {
+        this.clickIndex = index;
+        this.clickDot = "p";
+        this.activePointIndex = index;
+        this.isDrag = true;
+      }
     }
 
     if (!this.isDrag) {
@@ -681,5 +736,16 @@ export class KeyframeEditor extends LitElement {
 
   _handleMouseUp() {
     this.isDrag = false;
+  }
+
+  _handleKeydown(event) {
+    if (event.keyCode == 8) {
+      // backspace
+      console.log("EEE");
+
+      if (this.activePointIndex != -1) {
+        this.removePoint();
+      }
+    }
   }
 }

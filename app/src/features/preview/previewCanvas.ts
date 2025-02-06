@@ -1684,9 +1684,15 @@ export class PreviewCanvas extends LitElement {
       return false;
     }
 
+    const sortedTimeline = Object.fromEntries(
+      Object.entries(this.timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
     if (!this.isMove || !this.isStretch) {
-      for (const elementId in this.timeline) {
-        if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+      for (const elementId in sortedTimeline) {
+        if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
           let x = this.timeline[elementId].location?.x;
           let y = this.timeline[elementId].location?.y;
 

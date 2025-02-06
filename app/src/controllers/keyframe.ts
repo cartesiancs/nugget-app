@@ -42,57 +42,29 @@ export class KeyframeController implements ReactiveController {
 
     if (["opacity", "scale"].includes(animationType)) {
       if (
-        this.timeline[elementId].animation[animationType]["x"].length - 1 ==
+        this.timeline[elementId].animation[animationType][lineToAlpha].length ==
         0
       ) {
-        this.timeline[elementId].animation[animationType].x[0].p = [
-          0,
-          this.timeline[elementId].location.x,
-        ];
-        this.timeline[elementId].animation[animationType].x[0].cs = [
-          0,
-          this.timeline[elementId].location.x,
-        ];
-        this.timeline[elementId].animation[animationType].x[0].ce = [
-          0,
-          this.timeline[elementId].location.x,
-        ];
+        this.timeline[elementId].animation[animationType][lineToAlpha].push({
+          type: "cubic",
+          p: [x, y],
+          cs: [x, y],
+          ce: [x, y],
+        });
+        return 0;
       }
     } else {
       if (
-        this.timeline[elementId].animation[animationType]["x"].length - 1 ==
+        this.timeline[elementId].animation[animationType][lineToAlpha].length ==
         0
       ) {
-        this.timeline[elementId].animation[animationType].x[0].p = [
-          0,
-          this.timeline[elementId].location.x,
-        ];
-        this.timeline[elementId].animation[animationType].x[0].cs = [
-          0,
-          this.timeline[elementId].location.x,
-        ];
-        this.timeline[elementId].animation[animationType].x[0].ce = [
-          0,
-          this.timeline[elementId].location.x,
-        ];
-      }
-
-      if (
-        this.timeline[elementId].animation[animationType]["y"].length - 1 ==
-        0
-      ) {
-        this.timeline[elementId].animation[animationType].y[0].p = [
-          0,
-          this.timeline[elementId].location.y,
-        ];
-        this.timeline[elementId].animation[animationType].y[0].cs = [
-          0,
-          this.timeline[elementId].location.y,
-        ];
-        this.timeline[elementId].animation[animationType].y[0].ce = [
-          0,
-          this.timeline[elementId].location.y,
-        ];
+        this.timeline[elementId].animation[animationType][lineToAlpha].push({
+          type: "cubic",
+          p: [x, y],
+          cs: [x, y],
+          ce: [x, y],
+        });
+        return 0;
       }
     }
 
@@ -110,6 +82,32 @@ export class KeyframeController implements ReactiveController {
       return 0;
     }
 
+    let isFirstPoint = true;
+
+    for (
+      let index = 0;
+      index <
+      this.timeline[elementId].animation[animationType][lineToAlpha].length;
+      index++
+    ) {
+      if (
+        this.timeline[elementId].animation[animationType][lineToAlpha][index]
+          .p[0] < x
+      ) {
+        isFirstPoint = false;
+      }
+    }
+
+    if (isFirstPoint) {
+      this.timeline[elementId].animation[animationType][lineToAlpha].unshift({
+        type: "cubic",
+        p: [x, y],
+        cs: [x - subDots, y],
+        ce: [x + subDots, y],
+      });
+      return false;
+    }
+
     for (
       let index = 0;
       index <
@@ -121,6 +119,7 @@ export class KeyframeController implements ReactiveController {
           1 ==
         index
       ) {
+        // 마지막 index 일때
         this.timeline[elementId].animation[animationType][lineToAlpha].splice(
           index + 1,
           0,

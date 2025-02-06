@@ -321,47 +321,19 @@ export class ElementControl extends LitElement {
         animation: {
           position: {
             isActivate: false,
-            x: [
-              {
-                type: "cubic",
-                p: [0, 0],
-                cs: [0, 0],
-                ce: [0, 0],
-              },
-            ],
-            y: [
-              {
-                type: "cubic",
-                p: [0, 0],
-                cs: [0, 0],
-                ce: [0, 0],
-              },
-            ],
+            x: [],
+            y: [],
             ax: [[], []],
             ay: [[], []],
           },
           opacity: {
             isActivate: false,
-            x: [
-              {
-                type: "cubic",
-                p: [0, 100],
-                cs: [0, 100],
-                ce: [0, 100],
-              },
-            ],
+            x: [],
             ax: [[], []],
           },
           scale: {
             isActivate: false,
-            x: [
-              {
-                type: "cubic",
-                p: [0, 1],
-                cs: [0, 1],
-                ce: [0, 1],
-              },
-            ],
+            x: [],
             ax: [[], []],
           },
         },
@@ -468,47 +440,19 @@ export class ElementControl extends LitElement {
           animation: {
             position: {
               isActivate: false,
-              x: [
-                {
-                  type: "cubic",
-                  p: [0, 0],
-                  cs: [0, 0],
-                  ce: [0, 0],
-                },
-              ],
-              y: [
-                {
-                  type: "cubic",
-                  p: [0, 0],
-                  cs: [0, 0],
-                  ce: [0, 0],
-                },
-              ],
+              x: [],
+              y: [],
               ax: [[], []],
               ay: [[], []],
             },
             opacity: {
               isActivate: false,
-              x: [
-                {
-                  type: "cubic",
-                  p: [0, 100],
-                  cs: [0, 100],
-                  ce: [0, 100],
-                },
-              ],
+              x: [],
               ax: [[], []],
             },
             scale: {
               isActivate: false,
-              x: [
-                {
-                  type: "cubic",
-                  p: [0, 1],
-                  cs: [0, 1],
-                  ce: [0, 1],
-                },
-              ],
+              x: [],
               ax: [[], []],
             },
           },
@@ -653,47 +597,19 @@ export class ElementControl extends LitElement {
       animation: {
         position: {
           isActivate: false,
-          x: [
-            {
-              type: "cubic",
-              p: [0, 0],
-              cs: [0, 0],
-              ce: [0, 0],
-            },
-          ],
-          y: [
-            {
-              type: "cubic",
-              p: [0, 0],
-              cs: [0, 0],
-              ce: [0, 0],
-            },
-          ],
+          x: [],
+          y: [],
           ax: [[], []],
           ay: [[], []],
         },
         opacity: {
           isActivate: false,
-          x: [
-            {
-              type: "cubic",
-              p: [0, 100],
-              cs: [0, 100],
-              ce: [0, 100],
-            },
-          ],
+          x: [],
           ax: [[], []],
         },
         scale: {
           isActivate: false,
-          x: [
-            {
-              type: "cubic",
-              p: [0, 1],
-              cs: [0, 1],
-              ce: [0, 1],
-            },
-          ],
+          x: [],
           ax: [[], []],
         },
       },
@@ -748,47 +664,19 @@ export class ElementControl extends LitElement {
       animation: {
         position: {
           isActivate: false,
-          x: [
-            {
-              type: "cubic",
-              p: [0, 0],
-              cs: [0, 0],
-              ce: [0, 0],
-            },
-          ],
-          y: [
-            {
-              type: "cubic",
-              p: [0, 0],
-              cs: [0, 0],
-              ce: [0, 0],
-            },
-          ],
+          x: [],
+          y: [],
           ax: [[], []],
           ay: [[], []],
         },
         opacity: {
           isActivate: false,
-          x: [
-            {
-              type: "cubic",
-              p: [0, 100],
-              cs: [0, 100],
-              ce: [0, 100],
-            },
-          ],
+          x: [],
           ax: [[], []],
         },
         scale: {
           isActivate: false,
-          x: [
-            {
-              type: "cubic",
-              p: [0, 1],
-              cs: [0, 1],
-              ce: [0, 1],
-            },
-          ],
+          x: [],
           ax: [[], []],
         },
       },

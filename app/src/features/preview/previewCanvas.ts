@@ -52,6 +52,7 @@ export class PreviewCanvas extends LitElement {
   gifFrames: { key: string; frames: ParsedFrame[] }[];
   nowShapeId: string;
   loadedVideos: any[];
+  isChangeFilter: boolean;
   constructor() {
     super();
 
@@ -78,6 +79,8 @@ export class PreviewCanvas extends LitElement {
     this.loadedVideos = [];
 
     this.nowShapeId = "";
+
+    this.isChangeFilter = true;
   }
 
   @query("#elementPreviewCanvasRef") canvas!: HTMLCanvasElement;
@@ -481,40 +484,150 @@ export class PreviewCanvas extends LitElement {
       video.object.muted = false;
 
       if (this.timeline[elementId].filter.enable) {
-        const ctxCopy = video.canvas.getContext("2d");
-        video.canvas.width = w;
-        video.canvas.height = h;
-        ctxCopy.drawImage(video.object, 0, 0, w, h);
-        let frame = ctxCopy.getImageData(0, 0, w, h);
-        let mainFrame = ctx.getImageData(x, y, w, h);
-        let l = frame.data.length / 4;
-
-        for (let i = 0; i < l; i++) {
-          let r = frame.data[i * 4 + 0];
-          let g = frame.data[i * 4 + 1];
-          let b = frame.data[i * 4 + 2];
-          if (this.timeline[elementId].filter.list.length > 0) {
-            const targetRgb = this.timeline[elementId].filter.list[0].value;
-            const parsedRgb = this.parseRGBString(targetRgb);
-            const range = 30; // NOTE: Range 설정은 조만간 필요
-            if (
-              g > parsedRgb.g - range &&
-              g < parsedRgb.g + range &&
-              r > parsedRgb.r - range &&
-              r < parsedRgb.r + range &&
-              b > parsedRgb.b - range &&
-              b < parsedRgb.b + range
-            ) {
-              frame.data[i * 4 + 0] = mainFrame.data[i * 4 + 0];
-              frame.data[i * 4 + 1] = mainFrame.data[i * 4 + 1];
-              frame.data[i * 4 + 2] = mainFrame.data[i * 4 + 2];
-            }
+        if (!video.glCanvas || this.isChangeFilter) {
+          video.glCanvas = document.createElement("canvas");
+          video.glCanvas.width = w;
+          video.glCanvas.height = h;
+          video.gl = video.glCanvas.getContext("webgl", {
+            preserveDrawingBuffer: true,
+            alpha: true,
+          });
+          if (!video.gl) {
+            console.error("WebGL을 지원하지 않습니다.");
+            ctx.drawImage(video.object, scaleX, scaleY, scaleW, scaleH);
+            return;
           }
+          const gl = video.gl;
+
+          function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              console.error("셰이더 컴파일 에러:", gl.getShaderInfoLog(shader));
+              gl.deleteShader(shader);
+              return null;
+            }
+            return shader;
+          }
+
+          const vertexShaderSource = `
+            attribute vec2 a_position;
+            attribute vec2 a_texCoord;
+            varying vec2 v_texCoord;
+            void main() {
+              gl_Position = vec4(a_position, 0.0, 1.0);
+              v_texCoord = a_texCoord;
+            }
+          `;
+          const fragmentShaderSource = `
+            precision mediump float;
+            uniform sampler2D u_video;
+            uniform vec3 u_keyColor;
+            uniform float u_threshold;
+            varying vec2 v_texCoord;
+            void main() {
+              vec4 color = texture2D(u_video, v_texCoord);
+              float diff = distance(color.rgb, u_keyColor);
+              if(diff < u_threshold) {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+              } else {
+                gl_FragColor = color;
+              }
+            }
+          `;
+
+          const vertexShader = createShader(
+            gl,
+            gl.VERTEX_SHADER,
+            vertexShaderSource,
+          );
+          const fragmentShader = createShader(
+            gl,
+            gl.FRAGMENT_SHADER,
+            fragmentShaderSource,
+          );
+          const program = gl.createProgram();
+          gl.attachShader(program, vertexShader);
+          gl.attachShader(program, fragmentShader);
+          gl.linkProgram(program);
+          if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error("R:", gl.getProgramInfoLog(program));
+            return;
+          }
+          gl.useProgram(program);
+          video.glProgram = program;
+
+          const positionBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          const positions = new Float32Array([
+            -1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1,
+          ]);
+          gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+          const a_position = gl.getAttribLocation(program, "a_position");
+          gl.enableVertexAttribArray(a_position);
+          gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
+
+          const texCoordBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+          const texCoords = new Float32Array([
+            0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0,
+          ]);
+          gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
+          const a_texCoord = gl.getAttribLocation(program, "a_texCoord");
+          gl.enableVertexAttribArray(a_texCoord);
+          gl.vertexAttribPointer(a_texCoord, 2, gl.FLOAT, false, 0, 0);
+
+          const videoTexture = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          video.glTexture = videoTexture;
+
+          const u_keyColor = gl.getUniformLocation(program, "u_keyColor");
+          const u_threshold = gl.getUniformLocation(program, "u_threshold");
+          let keyColor = [0.0, 1.0, 0.0]; // Green
+          if (videoElement.filter.list && videoElement.filter.list.length > 0) {
+            const targetRgb = videoElement.filter.list[0].value;
+            const parsedRgb = this.parseRGBString(targetRgb);
+            keyColor = [
+              parsedRgb.r / 255,
+              parsedRgb.g / 255,
+              parsedRgb.b / 255,
+            ];
+          }
+
+          console.log(keyColor);
+          gl.uniform3fv(u_keyColor, keyColor);
+          gl.uniform1f(u_threshold, 0.5);
+
+          const u_video = gl.getUniformLocation(program, "u_video");
+          gl.uniform1i(u_video, 0);
+
+          this.isChangeFilter = false;
         }
 
-        // NOTE: 애니메이션 추가 필요
+        const gl = video.gl;
+        const glCanvas = video.glCanvas;
+        gl.bindTexture(gl.TEXTURE_2D, video.glTexture);
+        try {
+          gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            video.object,
+          );
+        } catch (e) {}
+        gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-        ctx.putImageData(frame, x, y);
+        ctx.drawImage(glCanvas, scaleX, scaleY, scaleW, scaleH);
       } else {
         if (videoElement.animation["opacity"].isActivate == true) {
           let index = Math.round(this.timelineCursor / 16);
@@ -1121,6 +1234,10 @@ export class PreviewCanvas extends LitElement {
       );
       ctx.stroke();
     }
+  }
+
+  setChangeFilter() {
+    this.isChangeFilter = true;
   }
 
   parseRGBString(str) {

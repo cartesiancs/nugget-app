@@ -76,11 +76,11 @@ export class OptionVideo extends LitElement {
         />
       </div>
 
-      <!-- <button
+      <button
         type="button"
         class="btn btn-sm mb-2 ${this.enableFilter
-        ? "btn-primary"
-        : "btn-default"}  text-light"
+          ? "btn-primary"
+          : "btn-default"}  text-light"
         @click=${this.handleClickEnableFilter}
       >
         ${!this.enableFilter ? "Enable" : "Disable"} Filter
@@ -97,7 +97,7 @@ export class OptionVideo extends LitElement {
         >
           Add Filter
         </button>
-      </div> -->
+      </div>
 
       <!-- <div class="mb-2">
         <label class="form-label text-light">Speed</label>
@@ -169,6 +169,8 @@ export class OptionVideo extends LitElement {
     const rgb = this.hexToRgb(e.target.value);
     const valueArray = [`r=${rgb.r}`, `g=${rgb.g}`, `b=${rgb.b}`];
     this.filterList[index].value = valueArray.join(":");
+    document.querySelector("preview-canvas").setChangeFilter();
+
     this.requestUpdate();
   }
 
@@ -188,6 +190,8 @@ export class OptionVideo extends LitElement {
     );
 
     this.filterList = filterList as any;
+
+    document.querySelector("preview-canvas").setChangeFilter();
 
     this.requestUpdate();
   }

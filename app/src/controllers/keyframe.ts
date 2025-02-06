@@ -92,6 +92,19 @@ export class KeyframeController implements ReactiveController {
     ) {
       if (
         this.timeline[elementId].animation[animationType][lineToAlpha][index]
+          .p[0] == x
+      ) {
+        this.timeline[elementId].animation[animationType][lineToAlpha][index] =
+          {
+            type: "cubic",
+            p: [x, y],
+            cs: [x - subDots, y],
+            ce: [x + subDots, y],
+          };
+        return false;
+      }
+      if (
+        this.timeline[elementId].animation[animationType][lineToAlpha][index]
           .p[0] < x
       ) {
         isFirstPoint = false;
@@ -164,18 +177,20 @@ export class KeyframeController implements ReactiveController {
 
     for (let ic = 0; ic < array.length - 1; ic++) {
       const interval = array[ic + 1].p[0] - array[ic].p[0];
-      const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
+      if (interval > 5) {
+        const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
 
-      const interpolation = this.cubic(
-        array[ic],
-        array[ic + 1],
-        intervalFrames,
-      );
+        const interpolation = this.cubic(
+          array[ic],
+          array[ic + 1],
+          intervalFrames,
+        );
 
-      for (let index = 0; index < interpolation.length; index++) {
-        const element = interpolation[index];
+        for (let index = 0; index < interpolation.length; index++) {
+          const element = interpolation[index];
 
-        interpolationArray.push(element);
+          interpolationArray.push(element);
+        }
       }
     }
 

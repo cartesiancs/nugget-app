@@ -98,6 +98,8 @@ ipcMain.handle("filesystem:emptyDirSync", ipcFilesystem.emptyDirectorySync);
 ipcMain.handle("filesystem:writeFile", ipcFilesystem.writeFile);
 ipcMain.handle("filesystem:readFile", ipcFilesystem.readFile);
 ipcMain.handle("filesystem:removeDirectory", ipcFilesystem.removeDirectory);
+ipcMain.handle("filesystem:removeFile", ipcFilesystem.removeFile);
+ipcMain.handle("filesystem:existFile", ipcFilesystem.existFile);
 
 ipcMain.handle("store:set", ipcStore.set);
 ipcMain.handle("store:get", ipcStore.get);

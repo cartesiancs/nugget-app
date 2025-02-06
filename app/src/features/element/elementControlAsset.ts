@@ -70,16 +70,16 @@ export class ElementControlAsset extends LitElement {
 
   render() {
     let template;
-    if (this.elementFiletype == "image") {
-      // NOTE: this.templateRotate() 는 사이드 잘림 문제로 추후 업데이트 필요
-      template = html`${this.templateImage()} ${this.templateResize()}`; //+ this.templateRotate()
-    } else if (this.elementFiletype == "video") {
-      template = html`${this.templateVideo()} ${this.templateResize()}`;
-    }
+    // if (this.elementFiletype == "image") {
+    //   // NOTE: this.templateRotate() 는 사이드 잘림 문제로 추후 업데이트 필요
+    //   template = html`${this.templateImage()} ${this.templateResize()}`; //+ this.templateRotate()
+    // } else if (this.elementFiletype == "video") {
+    //   template = html`${this.templateVideo()} ${this.templateResize()}`;
+    // }
     // else if (this.elementFiletype == "text") {
     //   template = html`${this.templateText()} ${this.templateResize("horizon")}`;
     // }
-    else if (this.elementFiletype == "audio") {
+    if (this.elementFiletype == "audio") {
       template = html`${this.templateAudio()}`;
     }
 
@@ -152,27 +152,6 @@ export class ElementControlAsset extends LitElement {
         this.timeline[this.elementId].priority
       };`,
     );
-  }
-
-  templateImage() {
-    return html`<img
-      src="${this.timeline[this.elementId].localpath || ""}"
-      alt=""
-      style="opacity: ${this.timeline[this.elementId].opacity}%;"
-      class="element-image d-none"
-      draggable="false"
-    />`;
-  }
-
-  templateVideo() {
-    try {
-      return html`<video
-        src="${this.timeline[this.elementId].localpath || ""}"
-        alt=""
-        class="element-video d-none"
-        draggable="false"
-      ></video>`;
-    } catch (error) {}
   }
 
   templateAudio() {

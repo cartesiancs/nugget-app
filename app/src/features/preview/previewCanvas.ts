@@ -170,6 +170,14 @@ export class PreviewCanvas extends LitElement {
     this.canvas.style.cursor = this.cursorType;
   }
 
+  zeroIfNegative(num) {
+    if (num > 0) {
+      return num;
+    } else {
+      return 0;
+    }
+  }
+
   findNearestY(pairs, a): number | null {
     let closestY = null;
     let closestDiff = Infinity;
@@ -402,7 +410,7 @@ export class PreviewCanvas extends LitElement {
                     this.timelineCursor - imageElement.startTime,
                   ) as any;
 
-                  ctx.globalAlpha = ax / 100;
+                  ctx.globalAlpha = this.zeroIfNegative(ax / 100);
                 } catch (error) {}
               }
 
@@ -672,7 +680,7 @@ export class PreviewCanvas extends LitElement {
                       this.timelineCursor - videoElement.startTime,
                     ) as any;
 
-                    ctx.globalAlpha = ax / 100;
+                    ctx.globalAlpha = this.zeroIfNegative(ax / 100);
                   } catch (error) {}
                 }
 
@@ -803,7 +811,7 @@ export class PreviewCanvas extends LitElement {
                     this.timelineCursor - this.timeline[elementId].startTime,
                   ) as any;
 
-                  ctx.globalAlpha = ax / 100;
+                  ctx.globalAlpha = this.zeroIfNegative(ax / 100);
                 } catch (error) {}
               }
 

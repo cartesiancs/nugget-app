@@ -141,8 +141,6 @@ export class KeyframeEditor extends LitElement {
           this.lineCount = 1;
         }
 
-        console.log(this.animationType);
-
         if (this.prevElementId != this.elementId) {
           if (
             this.timeline[this.elementId].animation[this.animationType]
@@ -741,7 +739,6 @@ export class KeyframeEditor extends LitElement {
   _handleKeydown(event) {
     if (event.keyCode == 8) {
       // backspace
-      console.log("EEE");
 
       if (this.activePointIndex != -1) {
         this.removePoint();

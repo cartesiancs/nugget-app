@@ -45,10 +45,18 @@ export class RenderController implements ReactiveController {
     );
     this.loadMedia();
 
-    window.electronAPI.req.dialog.exportVideo().then((result) => {
+    window.electronAPI.req.dialog.exportVideo().then(async (result) => {
       let videoDestination = result || `nonefile`;
       if (videoDestination == `nonefile`) {
         return 0;
+      }
+
+      const isExistFile = await window.electronAPI.req.filesystem.existFile(
+        videoDestination,
+      );
+
+      if (isExistFile) {
+        await window.electronAPI.req.filesystem.removeFile(videoDestination);
       }
 
       let options = {
@@ -77,7 +85,6 @@ export class RenderController implements ReactiveController {
   }
 
   nextFrameRender(options, frame, totalFrame) {
-    console.log("RENDER");
     rendererModal.progressModal.show();
     document.querySelector("#progress").style.width = `${
       (frame / totalFrame) * 100
@@ -254,9 +261,7 @@ export class RenderController implements ReactiveController {
                 (frame / fps) * 1000 - imageElement.startTime,
               ) as any;
 
-              console.log("EEERRR", ax / 100);
-
-              ctx.globalAlpha = ax / 100;
+              ctx.globalAlpha = this.zeroIfNegative(ax / 100);
             } catch (error) {}
           }
 
@@ -395,7 +400,7 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - this.timeline[elementId].startTime,
                 ) as any;
 
-                ctx.globalAlpha = ax / 100;
+                ctx.globalAlpha = this.zeroIfNegative(ax / 100);
               } catch (error) {}
             }
 
@@ -630,7 +635,7 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - videoElement.startTime,
                 ) as any;
 
-                ctx.globalAlpha = ax / 100;
+                ctx.globalAlpha = this.zeroIfNegative(ax / 100);
               } catch (error) {}
             }
 
@@ -753,6 +758,14 @@ export class RenderController implements ReactiveController {
             });
         }
       }
+    }
+  }
+
+  zeroIfNegative(num) {
+    if (num > 0) {
+      return num;
+    } else {
+      return 0;
     }
   }
 

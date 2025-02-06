@@ -1476,6 +1476,7 @@ export class PreviewCanvas extends LitElement {
     let isMoveTemp = false;
     let isStretchTemp = false;
     let activeElementTemp = "";
+    let isClicked = false;
 
     if (this.timelineControl.cursorType == "shape") {
       this.addShapePoint(mx, my);
@@ -1484,8 +1485,14 @@ export class PreviewCanvas extends LitElement {
 
     this.nowShapeId = "";
 
-    for (const elementId in this.timeline) {
-      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
+    const sortedTimeline = Object.fromEntries(
+      Object.entries(this.timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
+    for (const elementId in sortedTimeline) {
+      if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
         const x = this.timeline[elementId].location?.x as number;
         const y = this.timeline[elementId].location?.y as number;
         const w = this.timeline[elementId].width as number;
@@ -1537,6 +1544,7 @@ export class PreviewCanvas extends LitElement {
           this.cursorType = "grabbing";
           isMoveTemp = true;
           isStretchTemp = false;
+          isClicked = true;
           this.showSideOption(elementId);
         } else if (collide.type == "stretchW") {
           activeElementTemp = elementId;
@@ -1547,6 +1555,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "ew-resize";
         } else if (collide.type == "stretchE") {
@@ -1558,6 +1567,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "ew-resize";
         } else if (collide.type == "stretchN") {
@@ -1569,6 +1579,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "ns-resize";
         } else if (collide.type == "stretchS") {
@@ -1580,6 +1591,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "ns-resize";
         } else if (collide.type == "stretchNW") {
@@ -1591,6 +1603,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "nwse-resize";
         } else if (collide.type == "stretchSE") {
@@ -1602,6 +1615,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "nwse-resize";
         } else if (collide.type == "stretchNE") {
@@ -1613,6 +1627,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "nesw-resize";
         } else if (collide.type == "stretchSW") {
@@ -1624,6 +1639,7 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           isStretchTemp = true;
           isMoveTemp = false;
+          isClicked = true;
           this.moveType = collide.type;
           this.cursorType = "nesw-resize";
         } else {
@@ -1639,6 +1655,12 @@ export class PreviewCanvas extends LitElement {
       this.isMove = isMoveTemp;
       this.isStretch = isStretchTemp;
     }
+
+    if (isClicked == false) {
+      this.activeElementId = "";
+    }
+
+    this.drawCanvas(this.canvas);
   }
 
   _handleMouseMove(e) {

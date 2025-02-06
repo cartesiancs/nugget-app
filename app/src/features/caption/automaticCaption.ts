@@ -379,7 +379,7 @@ export class AutomaticCaption extends LitElement {
   }
 
   drawCaption(index) {
-    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+    const ctx = this.canvas.getContext("2d") as any;
     const fontSize = 52;
     const fontName = "notosanskr";
 

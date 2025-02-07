@@ -40,16 +40,31 @@ export class OptionVideo extends LitElement {
       const element = this.filterList[index];
       filterListRender.push(html`<div class="d-flex col-12">
         <select
+          @change=${(e) => this.handleChangeUpdateKey(e, index)}
           class="form-select bg-dark text-light form-select-sm"
           aria-label="select screen"
         >
           <option value="chromakey">Chroma Key</option>
+          <option value="blur">Blur</option>
         </select>
+
+        <input
+          @change=${(e) => this.handleChangeUpdateBlur(e, index)}
+          type="number"
+          class="form-control bg-default text-light ${this.filterList[index]
+            .name == "blur"
+            ? ""
+            : "d-none"}"
+          value="5"
+        />
 
         <input
           @change=${(e) => this.handleChangeUpdateColor(e, index)}
           type="color"
-          class="form-control bg-default text-light"
+          class="form-control bg-default text-light ${this.filterList[index]
+            .name == "chromakey"
+            ? ""
+            : "d-none"}"
           value="#000000"
         />
       </div>`);
@@ -163,6 +178,23 @@ export class OptionVideo extends LitElement {
     const b = parseInt(hex.slice(4, 6), 16);
 
     return { r, g, b };
+  }
+
+  handleChangeUpdateKey(e, index) {
+    console.log(e.target.value);
+    this.filterList[index].name = e.target.value;
+    document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
+  }
+
+  handleChangeUpdateBlur(e, index) {
+    const value = parseFloat(e.target.value);
+    const valueArray = [`f=${value}`];
+    this.filterList[index].value = valueArray.join(":");
+    document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
   }
 
   handleChangeUpdateColor(e, index) {

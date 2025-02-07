@@ -47,6 +47,8 @@ It also supports layer-based editing, which differs from traditional track-based
 - External Extension
 - Save&Load Project as File
 - Multilingual Support
+- 4k Edit & more resolution
+- Screen Record & Audio Record
 - and more...
 
 ## Installation

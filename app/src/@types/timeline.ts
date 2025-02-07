@@ -8,8 +8,8 @@ export type CubicKeyframeType = {
 };
 
 export type VideoFilterType = {
-  name: "chromakey";
-  value: string; // if chromakey => r=0:g=0:b=0. 구분자는 : 로 구분합니다.
+  name: "chromakey" | "blur";
+  value: string; //  if chromakey => r=0:g=0:b=0. 구분자는 : 로 구분합니다.
 };
 
 export type ImageElementType = {

@@ -141,8 +141,6 @@ export class KeyframeEditor extends LitElement {
           this.lineCount = 1;
         }
 
-        console.log(this.animationType);
-
         if (this.prevElementId != this.elementId) {
           if (
             this.timeline[this.elementId].animation[this.animationType]
@@ -644,6 +642,36 @@ export class KeyframeEditor extends LitElement {
     //console.log(px);
 
     if (this.isDrag) {
+      let isApply = true;
+      if (this.clickDot == "p") {
+        for (
+          let index = 0;
+          index <
+          this.timeline[this.elementId].animation[this.animationType][
+            lineToAlpha
+          ].length;
+          index++
+        ) {
+          const element =
+            this.timeline[this.elementId].animation[this.animationType][
+              lineToAlpha
+            ][index];
+          console.log(
+            element.p[0] == px && index != this.clickIndex,
+            element.p[0],
+            px,
+          );
+          if (element.p[0] == px && index != this.clickIndex) {
+            isApply = false;
+          }
+        }
+      }
+
+      if (isApply == false) {
+        this.drawCanvas();
+        return false;
+      }
+
       this.timeline[this.elementId].animation[this.animationType][lineToAlpha][
         this.clickIndex
       ][this.clickDot][0] = px;
@@ -741,7 +769,6 @@ export class KeyframeEditor extends LitElement {
   _handleKeydown(event) {
     if (event.keyCode == 8) {
       // backspace
-      console.log("EEE");
 
       if (this.activePointIndex != -1) {
         this.removePoint();

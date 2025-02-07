@@ -303,8 +303,6 @@ export class ElementControl extends LitElement {
       let width = resize.width;
       let height = resize.height; // /division
 
-      console.log(width, height, img.width, "AAAAA");
-
       this.timeline[elementId] = {
         priority: this.getNowPriority(),
         blob: blob,
@@ -384,8 +382,6 @@ export class ElementControl extends LitElement {
     video.src = blob;
     video.preload = "metadata";
 
-    console.log("CBLOCK", blob);
-
     video.onloadedmetadata = () => {
       let width = video.videoWidth;
       let height = video.videoHeight;
@@ -394,8 +390,6 @@ export class ElementControl extends LitElement {
       window.electronAPI.req.ffmpeg.getMetadata(blob, path);
 
       window.electronAPI.res.ffmpeg.getMetadata((evt, blobdata, metadata) => {
-        console.log(blobdata, metadata);
-
         if (blobdata != blob) {
           return 0;
         }
@@ -461,7 +455,7 @@ export class ElementControl extends LitElement {
         this.timelineState.patchTimeline(this.timeline);
         this.timelineState.checkPointTimeline();
 
-        this.showVideo(elementId);
+        // this.showVideo(elementId);
       });
 
       // ffmpeg.ffprobe(path, (err, metadata) => {
@@ -482,8 +476,6 @@ export class ElementControl extends LitElement {
     video.src = blob;
     video.preload = "metadata";
 
-    console.log("CBLOCK", blob);
-
     video.onloadedmetadata = () => {
       let width = video.videoWidth;
       let height = video.videoHeight;
@@ -491,8 +483,6 @@ export class ElementControl extends LitElement {
       window.electronAPI.req.ffmpeg.getMetadata(blob, path);
 
       window.electronAPI.res.ffmpeg.getMetadata((evt, blobdata, metadata) => {
-        console.log(blobdata, metadata);
-
         if (blobdata != blob) {
           return 0;
         }
@@ -539,7 +529,7 @@ export class ElementControl extends LitElement {
         this.timelineState.patchTimeline(this.timeline);
         this.timelineState.checkPointTimeline();
 
-        this.showVideo(elementId);
+        // this.showVideo(elementId);
       });
     };
   }
@@ -801,60 +791,60 @@ export class ElementControl extends LitElement {
   //   }
   // }
 
-  showVideo(elementId) {
-    const element: any = document.getElementById(`element-${elementId}`);
-    if (element == null) {
-      this.insertAdjacentHTML(
-        "beforeend",
-        `<element-control-asset elementId="${elementId}" elementFiletype="video"></element-control-asset>`,
-      );
+  // showVideo(elementId) {
+  //   const element: any = document.getElementById(`element-${elementId}`);
+  //   if (element == null) {
+  //     this.insertAdjacentHTML(
+  //       "beforeend",
+  //       `<element-control-asset elementId="${elementId}" elementFiletype="video"></element-control-asset>`,
+  //     );
 
-      let video = element.querySelector("video");
-      video.muted = true;
+  //     let video = element.querySelector("video");
+  //     video.muted = true;
 
-      let secondsOfRelativeTime =
-        ((this.timeline[elementId].startTime as number) - this.progressTime) /
-        1000;
+  //     let secondsOfRelativeTime =
+  //       ((this.timeline[elementId].startTime as number) - this.progressTime) /
+  //       1000;
 
-      video.currentTime = secondsOfRelativeTime;
-    } else {
-      const videoElement: any = document.getElementById(`element-${elementId}`);
+  //     video.currentTime = secondsOfRelativeTime;
+  //   } else {
+  //     const videoElement: any = document.getElementById(`element-${elementId}`);
 
-      let video = videoElement.querySelector("video");
-      let secondsOfRelativeTime =
-        -((this.timeline[elementId].startTime as number) - this.progressTime) /
-        1000;
+  //     let video = videoElement.querySelector("video");
+  //     let secondsOfRelativeTime =
+  //       -((this.timeline[elementId].startTime as number) - this.progressTime) /
+  //       1000;
 
-      if (
-        !!(
-          video.currentTime > 0 &&
-          !video.paused &&
-          !video.ended &&
-          video.readyState > 2
-        )
-      ) {
-        if (this.isPaused) {
-          console.log("paused");
-        }
-      } else {
-        if (this.isPaused) {
-          video.pause();
-          this.isPlay[elementId] = false;
-        } else {
-          if (!this.isPlay[elementId]) {
-            video.currentTime = secondsOfRelativeTime;
-            video.muted = true;
-            video.play();
-          }
-          this.isPlay[elementId] = true;
-        }
-      }
+  //     if (
+  //       !!(
+  //         video.currentTime > 0 &&
+  //         !video.paused &&
+  //         !video.ended &&
+  //         video.readyState > 2
+  //       )
+  //     ) {
+  //       if (this.isPaused) {
+  //         console.log("paused");
+  //       }
+  //     } else {
+  //       if (this.isPaused) {
+  //         video.pause();
+  //         this.isPlay[elementId] = false;
+  //       } else {
+  //         if (!this.isPlay[elementId]) {
+  //           video.currentTime = secondsOfRelativeTime;
+  //           video.muted = true;
+  //           video.play();
+  //         }
+  //         this.isPlay[elementId] = true;
+  //       }
+  //     }
 
-      document
-        .querySelector(`#element-${elementId}`)
-        .classList.remove("d-none");
-    }
-  }
+  //     document
+  //       .querySelector(`#element-${elementId}`)
+  //       .classList.remove("d-none");
+  //   }
+  // }
 
   showAudio(elementId) {
     const element: any = document.getElementById(`element-${elementId}`);
@@ -885,10 +875,6 @@ export class ElementControl extends LitElement {
           audio.readyState > 2
         )
       ) {
-        if (this.isPaused) {
-          console.log("paused");
-        }
-        console.log("isPlaying");
       } else {
         audio.currentTime = secondsOfRelativeTime;
 
@@ -1022,36 +1008,36 @@ export class ElementControl extends LitElement {
     return milliseconds;
   }
 
-  adjustAllElementBarWidth(ratio) {
-    const allElementBar = document.querySelectorAll("element-bar");
-    allElementBar.forEach((element: any) => {
-      let elementId = element.getAttribute("element-id");
-      let originalWidth = element.millisecondsToPx(
-        this.timeline[elementId].duration,
-      );
-      let originalLeft = element.millisecondsToPx(
-        this.timeline[elementId].startTime,
-      );
-      let changedWidth = originalWidth;
-      let changedLeft = originalLeft;
+  // adjustAllElementBarWidth(ratio) {
+  //   const allElementBar = document.querySelectorAll("element-bar");
+  //   allElementBar.forEach((element: any) => {
+  //     let elementId = element.getAttribute("element-id");
+  //     let originalWidth = element.millisecondsToPx(
+  //       this.timeline[elementId].duration,
+  //     );
+  //     let originalLeft = element.millisecondsToPx(
+  //       this.timeline[elementId].startTime,
+  //     );
+  //     let changedWidth = originalWidth;
+  //     let changedLeft = originalLeft;
 
-      element.setWidth(changedWidth);
-      element.setLeft(changedLeft);
+  //     element.setWidth(changedWidth);
+  //     element.setLeft(changedLeft);
 
-      if (element.elementBarType == "dynamic") {
-        let trimStart = element.millisecondsToPx(
-          this.timeline[elementId].trim.startTime,
-        );
-        let trimEnd = element.millisecondsToPx(
-          this.timeline[elementId].duration -
-            this.timeline[elementId].trim.endTime,
-        );
+  //     if (element.elementBarType == "dynamic") {
+  //       let trimStart = element.millisecondsToPx(
+  //         this.timeline[elementId].trim.startTime,
+  //       );
+  //       let trimEnd = element.millisecondsToPx(
+  //         this.timeline[elementId].duration -
+  //           this.timeline[elementId].trim.endTime,
+  //       );
 
-        element.setTrimStart(trimStart);
-        element.setTrimEnd(trimEnd);
-      }
-    });
-  }
+  //       element.setTrimStart(trimStart);
+  //       element.setTrimEnd(trimEnd);
+  //     }
+  //   });
+  // }
 
   getMillisecondsToISOTime(milliseconds) {
     let time = new Date(milliseconds).toISOString().slice(11, 22);
@@ -1075,7 +1061,7 @@ export class ElementControl extends LitElement {
     } else if (this.timeline[elementId].filetype == "audio") {
       this.pauseAudio(elementId);
     }
-    document.querySelector(`#element-${elementId}`).classList.add("d-none");
+    // document.querySelector(`#element-${elementId}`).classList.add("d-none");
   }
 
   appearAllElementInTime() {
@@ -1103,7 +1089,7 @@ export class ElementControl extends LitElement {
         if (filetype == "image") {
           //this.showImage(elementId);
         } else if (filetype == "video") {
-          this.showVideo(elementId);
+          // this.showVideo(elementId);
         } else if (filetype == "text") {
           // this.showText(elementId);
         } else if (filetype == "audio") {
@@ -1174,13 +1160,13 @@ export class ElementControl extends LitElement {
   }
 
   pauseVideo(elementId) {
-    const target: any = document.getElementById(`element-${elementId}`);
-    let secondsOfRelativeTime =
-      -((this.timeline[elementId].startTime as number) - this.progressTime) /
-      1000;
-    let video = target.querySelector("video");
-    video.currentTime = secondsOfRelativeTime;
-    video.pause();
+    // const target: any = document.getElementById(`element-${elementId}`);
+    // let secondsOfRelativeTime =
+    //   -((this.timeline[elementId].startTime as number) - this.progressTime) /
+    //   1000;
+    // let video = target.querySelector("video");
+    // video.currentTime = secondsOfRelativeTime;
+    // video.pause();
   }
 
   pauseAudio(elementId) {

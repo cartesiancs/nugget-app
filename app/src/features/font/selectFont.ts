@@ -26,11 +26,11 @@ export class SelectFont extends LitElement {
     return `<select
         ref="lists"
         class="form-select form-control bg-default text-light"
-        aria-label="Default select example"
+        aria-label="Default select examplsse"
       >
         <option selected>Select</option>
       </select>
-      <style ref="fontStyles"></style> `;
+      <style id="fontStyles" ref="fontStyles"></style> `;
   }
 
   insertFontLists() {
@@ -72,17 +72,16 @@ export class SelectFont extends LitElement {
   }
 
   applyFontStyle({ fontName, fontPath, fontType }) {
-    const fontStyle: any = this.querySelector("style[ref='fontStyles']");
-    fontStyle.insertAdjacentHTML(
-      "beforeend",
-      `
-        @font-face {
-            font-family: "${fontName}";
-            src: local("${fontName}"),
-              url("${fontPath}") format("${fontType}");
-        }
-        `,
-    );
+    // fontStyle.insertAdjacentHTML(
+    //   "beforeend",
+    //   `
+    //     @font-face {
+    //         font-family: "${fontName}";
+    //         src: local("${fontName}"),
+    //           url("${fontPath}") format("${fontType}");
+    //     }
+    //     `,
+    // );
   }
 
   connectedCallback() {

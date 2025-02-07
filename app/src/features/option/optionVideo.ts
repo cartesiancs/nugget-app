@@ -2,6 +2,8 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { LocaleController } from "../../controllers/locale";
+import { VideoElementType } from "../../@types/timeline";
+import { KeyframeController } from "../../controllers/keyframe";
 
 @customElement("option-video")
 export class OptionVideo extends LitElement {
@@ -18,6 +20,7 @@ export class OptionVideo extends LitElement {
   }
 
   private lc = new LocaleController(this);
+  private keyframeControl = new KeyframeController(this);
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
@@ -40,16 +43,42 @@ export class OptionVideo extends LitElement {
       const element = this.filterList[index];
       filterListRender.push(html`<div class="d-flex col-12">
         <select
+          @change=${(e) => this.handleChangeUpdateKey(e, index)}
           class="form-select bg-dark text-light form-select-sm"
           aria-label="select screen"
         >
           <option value="chromakey">Chroma Key</option>
+          <option value="blur">Blur</option>
+          <option value="radialblur">Radial Blur</option>
         </select>
+
+        <input
+          @change=${(e) => this.handleChangeUpdateBlur(e, index)}
+          type="number"
+          class="form-control bg-default text-light ${this.filterList[index]
+            .name == "radialblur"
+            ? ""
+            : "d-none"}"
+          value="5"
+        />
+
+        <input
+          @change=${(e) => this.handleChangeUpdateBlur(e, index)}
+          type="number"
+          class="form-control bg-default text-light ${this.filterList[index]
+            .name == "blur"
+            ? ""
+            : "d-none"}"
+          value="5"
+        />
 
         <input
           @change=${(e) => this.handleChangeUpdateColor(e, index)}
           type="color"
-          class="form-control bg-default text-light"
+          class="form-control bg-default text-light ${this.filterList[index]
+            .name == "chromakey"
+            ? ""
+            : "d-none"}"
           value="#000000"
         />
       </div>`);
@@ -76,17 +105,17 @@ export class OptionVideo extends LitElement {
         />
       </div>
 
-      <!-- <button
+      <button
         type="button"
         class="btn btn-sm mb-2 ${this.enableFilter
-        ? "btn-primary"
-        : "btn-default"}  text-light"
+          ? "btn-primary"
+          : "btn-default"}  text-light"
         @click=${this.handleClickEnableFilter}
       >
         ${!this.enableFilter ? "Enable" : "Disable"} Filter
       </button>
 
-      <div class="mb-2 ${this.enableFilter ? "" : "d-none"}">
+      <div class="mb-4 ${this.enableFilter ? "" : "d-none"}">
         <label class="form-label text-light">Filter List</label>
         <div class="d-flex row gap-2">${filterListRender}</div>
 
@@ -97,7 +126,29 @@ export class OptionVideo extends LitElement {
         >
           Add Filter
         </button>
-      </div> -->
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label text-light">Animate Preset</label>
+
+        <button
+          type="button"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light"
+          @click=${() =>
+            this.handleClickAddAnimatePreset(0, 0, 250, 100, "opacity")}
+        >
+          Fade In
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light"
+          @click=${() =>
+            this.handleClickAddAnimatePreset(0, 1, 250, 1.2, "scale")}
+        >
+          Zoom In
+        </button>
+      </div>
 
       <!-- <div class="mb-2">
         <label class="form-label text-light">Speed</label>
@@ -165,10 +216,29 @@ export class OptionVideo extends LitElement {
     return { r, g, b };
   }
 
+  handleChangeUpdateKey(e, index) {
+    console.log(e.target.value);
+    this.filterList[index].name = e.target.value;
+    document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
+  }
+
+  handleChangeUpdateBlur(e, index) {
+    const value = parseFloat(e.target.value);
+    const valueArray = [`f=${value}`];
+    this.filterList[index].value = valueArray.join(":");
+    document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
+  }
+
   handleChangeUpdateColor(e, index) {
     const rgb = this.hexToRgb(e.target.value);
     const valueArray = [`r=${rgb.r}`, `g=${rgb.g}`, `b=${rgb.b}`];
     this.filterList[index].value = valueArray.join(":");
+    document.querySelector("preview-canvas").setChangeFilter();
+
     this.requestUpdate();
   }
 
@@ -188,6 +258,36 @@ export class OptionVideo extends LitElement {
     );
 
     this.filterList = filterList as any;
+
+    document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
+  }
+
+  handleClickAddAnimatePreset(ax, ay, bx, by, type) {
+    const state = useTimelineStore.getState();
+    let element = state.timeline[this.elementId] as any;
+
+    element.animation[type].isActivate = true;
+
+    this.keyframeControl.addPoint({
+      x: ax,
+      y: ay,
+      line: 0,
+      elementId: this.elementId,
+      animationType: type,
+    });
+
+    this.keyframeControl.addPoint({
+      x: bx,
+      y: by,
+      line: 0,
+      elementId: this.elementId,
+      animationType: type,
+    });
+
+    this.timeline[this.elementId] = element;
+    this.timelineState.patchTimeline(this.timeline);
 
     this.requestUpdate();
   }

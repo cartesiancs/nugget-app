@@ -11,6 +11,9 @@ export class OptionText extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
   backgroundEnable: boolean;
   outlineEnable: any;
+  align: "left" | "center" | "right";
+  isBold: boolean;
+  isItalic: boolean;
 
   constructor() {
     super();
@@ -19,6 +22,9 @@ export class OptionText extends LitElement {
     this.fontList = [];
     this.backgroundEnable = false;
     this.outlineEnable = false;
+    this.align = "left";
+    this.isBold = false;
+    this.isItalic = false;
     this.insertFontLists();
     this.hide();
   }
@@ -97,28 +103,32 @@ export class OptionText extends LitElement {
         <select
           @change=${this.handleChangeTextFont}
           ref="lists"
-          id="fontSelect"
+          id="fontSelectStyle"
           class="form-select form-control bg-default text-light"
           aria-label="Default select example"
         >
           <option selected>pretendard</option>
           ${fontListTemplate}
         </select>
-        <style ref="fontStyles"></style>
+        <style id="fontStyles" ref="fontStyles"></style>
       </div>
 
       <div class="mb-2">
         <div class="btn-group" role="group" aria-label="Basic example">
           <button
             type="button"
-            class="btn btn-sm btn-default text-light"
+            class="btn btn-sm ${this.isBold
+              ? "btn-primary"
+              : "btn-default"}  text-light"
             @click=${this.handleClickEnableBold}
           >
             <span class="material-symbols-outlined icon-sm"> format_bold </span>
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-default text-light"
+            class="btn btn-sm ${this.isItalic
+              ? "btn-primary"
+              : "btn-default"} text-light"
             @click=${this.handleClickEnableItalic}
           >
             <span class="material-symbols-outlined icon-sm">
@@ -132,7 +142,9 @@ export class OptionText extends LitElement {
         <div class="btn-group" role="group" aria-label="Basic example">
           <button
             type="button"
-            class="btn btn-sm btn-default text-light"
+            class="btn btn-sm ${this.align == "left"
+              ? "btn-primary"
+              : "btn-default"} text-light"
             @click=${() => this.handleClickAlign("left")}
           >
             <span class="material-symbols-outlined icon-sm">
@@ -141,7 +153,9 @@ export class OptionText extends LitElement {
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-default text-light"
+            class="btn btn-sm ${this.align == "center"
+              ? "btn-primary"
+              : "btn-default"} text-light"
             @click=${() => this.handleClickAlign("center")}
           >
             <span class="material-symbols-outlined icon-sm">
@@ -150,7 +164,9 @@ export class OptionText extends LitElement {
           </button>
           <button
             type="button"
-            class="btn btn-sm btn-default text-light"
+            class="btn btn-sm ${this.align == "right"
+              ? "btn-primary"
+              : "btn-default"} text-light"
             @click=${() => this.handleClickAlign("right")}
           >
             <span class="material-symbols-outlined icon-sm">
@@ -273,6 +289,9 @@ export class OptionText extends LitElement {
     letterSpacing.value = timeline[this.elementId[0]].letterSpacing;
     this.backgroundEnable = timeline[this.elementId[0]].background.enable;
     this.outlineEnable = timeline[this.elementId[0]].options.outline.enable;
+    this.align = timeline[this.elementId[0]].options.align;
+    this.isBold = timeline[this.elementId[0]].options.isBold;
+    this.isItalic = timeline[this.elementId[0]].options.isItalic;
   }
 
   handleChangeOutlineSize() {
@@ -348,6 +367,9 @@ export class OptionText extends LitElement {
       ["options", "align"],
       align,
     );
+
+    this.align = align;
+    this.requestUpdate();
   }
 
   handleClickEnableBold() {
@@ -355,21 +377,29 @@ export class OptionText extends LitElement {
 
     for (let index = 0; index < this.elementId.length; index++) {
       const element = this.elementId[index];
+      this.isBold = !state.timeline[this.elementId[0]].options?.isBold;
+
       this.timelineState.updateTimeline(
         element,
         ["options", "isBold"],
         !state.timeline[this.elementId[0]].options?.isBold,
       );
     }
+
+    this.requestUpdate();
   }
 
   handleClickEnableItalic() {
     const state = useTimelineStore.getState();
+    this.isItalic = !state.timeline[this.elementId[0]].options?.isItalic;
+
     this.timelineState.updateTimeline(
       this.elementId[0],
       ["options", "isItalic"],
       !state.timeline[this.elementId[0]].options?.isItalic,
     );
+
+    this.requestUpdate();
   }
 
   handleClickTextForm() {
@@ -429,7 +459,7 @@ export class OptionText extends LitElement {
     const selectFont: any = this.querySelector("select-font");
     const elementControl = document.querySelector("element-control");
 
-    const selectElement = document.querySelector("#fontSelect");
+    const selectElement = document.querySelector("#fontSelectStyle");
 
     // 선택된 값 가져오기
     const selectedValue = selectElement.value;
@@ -441,7 +471,18 @@ export class OptionText extends LitElement {
 
     const type = value.split("/")[value.split("/").length - 1].split(".")[1];
 
-    console.log(value, selectedText, type);
+    console.log(e.target.value, selectedValue);
+
+    document.querySelector("#fontStyles").insertAdjacentHTML(
+      "beforeend",
+      `
+        @font-face {
+            font-family: "${selectedText}";
+            src: local("${selectedText}"),
+              url("${value}") format("${type}");
+        }
+        `,
+    );
 
     elementControl.changeTextFont({
       elementId: this.elementId[0],

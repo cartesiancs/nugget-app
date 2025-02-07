@@ -20,8 +20,8 @@ export class KeyframeController implements ReactiveController {
   // 가장 처음에 추가할때 0번 point는 새로 추가한 point와 일치해야 함
   addPoint({ x, y, line, elementId, animationType }) {
     this.insertPointInMiddle({
-      x: Math.round(x),
-      y: Math.round(y),
+      x: parseFloat(x),
+      y: parseFloat(y),
       line: line,
       elementId: elementId,
       animationType: animationType,
@@ -90,6 +90,19 @@ export class KeyframeController implements ReactiveController {
       this.timeline[elementId].animation[animationType][lineToAlpha].length;
       index++
     ) {
+      if (
+        this.timeline[elementId].animation[animationType][lineToAlpha][index]
+          .p[0] == x
+      ) {
+        this.timeline[elementId].animation[animationType][lineToAlpha][index] =
+          {
+            type: "cubic",
+            p: [x, y],
+            cs: [x - subDots, y],
+            ce: [x + subDots, y],
+          };
+        return false;
+      }
       if (
         this.timeline[elementId].animation[animationType][lineToAlpha][index]
           .p[0] < x
@@ -164,18 +177,20 @@ export class KeyframeController implements ReactiveController {
 
     for (let ic = 0; ic < array.length - 1; ic++) {
       const interval = array[ic + 1].p[0] - array[ic].p[0];
-      const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
+      if (interval > 5) {
+        const intervalFrames = Math.round(interval / (1000 / 60)); // 60은 fps
 
-      const interpolation = this.cubic(
-        array[ic],
-        array[ic + 1],
-        intervalFrames,
-      );
+        const interpolation = this.cubic(
+          array[ic],
+          array[ic + 1],
+          intervalFrames,
+        );
 
-      for (let index = 0; index < interpolation.length; index++) {
-        const element = interpolation[index];
+        for (let index = 0; index < interpolation.length; index++) {
+          const element = interpolation[index];
 
-        interpolationArray.push(element);
+          interpolationArray.push(element);
+        }
       }
     }
 

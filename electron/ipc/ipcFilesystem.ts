@@ -58,4 +58,22 @@ export const ipcFilesystem = {
     let data = await fsp.readFile(filename);
     return data;
   },
+
+  existFile: async (event, path) => {
+    try {
+      await fsp.access(path);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  },
+
+  removeFile: async (event, path) => {
+    try {
+      await fsp.unlink(path);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  },
 };

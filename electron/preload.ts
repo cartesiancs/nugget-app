@@ -45,6 +45,10 @@ const request = {
     writeFile: (filename, data, options) =>
       ipcRenderer.invoke("filesystem:writeFile", filename, data, options),
     readFile: (filename) => ipcRenderer.invoke("filesystem:readFile", filename),
+    existFile: (filepath) =>
+      ipcRenderer.invoke("filesystem:existFile", filepath),
+    removeFile: (filepath) =>
+      ipcRenderer.invoke("filesystem:removeFile", filepath),
   },
   progressBar: {
     test: () => ipcRenderer.send("PROGRESSBARTEST"),

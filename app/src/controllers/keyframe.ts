@@ -20,8 +20,8 @@ export class KeyframeController implements ReactiveController {
   // 가장 처음에 추가할때 0번 point는 새로 추가한 point와 일치해야 함
   addPoint({ x, y, line, elementId, animationType }) {
     this.insertPointInMiddle({
-      x: Math.round(x),
-      y: Math.round(y),
+      x: parseFloat(x),
+      y: parseFloat(y),
       line: line,
       elementId: elementId,
       animationType: animationType,

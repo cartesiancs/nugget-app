@@ -501,7 +501,6 @@ export class PreviewCanvas extends LitElement {
         this.timeline[elementId].filter.enable &&
         this.timeline[elementId].filter.list.length > 0
       ) {
-        console.log(this.timeline[elementId].filter.list[0]);
         if (this.timeline[elementId].filter.list[0].name == "chromakey") {
           source = this.applyChromaKey(
             ctx,
@@ -1291,7 +1290,6 @@ export class PreviewCanvas extends LitElement {
   }
 
   applyBlur(ctx, video, videoElement, w, h, scaleX, scaleY, scaleW, scaleH) {
-    console.log("BLUR filter");
     if (!video.glCanvas || this.isChangeFilter) {
       video.glCanvas = document.createElement("canvas");
       video.glCanvas.width = w;

@@ -2,6 +2,8 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { LocaleController } from "../../controllers/locale";
+import { VideoElementType } from "../../@types/timeline";
+import { KeyframeController } from "../../controllers/keyframe";
 
 @customElement("option-video")
 export class OptionVideo extends LitElement {
@@ -18,6 +20,7 @@ export class OptionVideo extends LitElement {
   }
 
   private lc = new LocaleController(this);
+  private keyframeControl = new KeyframeController(this);
 
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
@@ -112,7 +115,7 @@ export class OptionVideo extends LitElement {
         ${!this.enableFilter ? "Enable" : "Disable"} Filter
       </button>
 
-      <div class="mb-2 ${this.enableFilter ? "" : "d-none"}">
+      <div class="mb-4 ${this.enableFilter ? "" : "d-none"}">
         <label class="form-label text-light">Filter List</label>
         <div class="d-flex row gap-2">${filterListRender}</div>
 
@@ -122,6 +125,28 @@ export class OptionVideo extends LitElement {
           @click=${this.handleClickAddFilter}
         >
           Add Filter
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label text-light">Animate Preset</label>
+
+        <button
+          type="button"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light"
+          @click=${() =>
+            this.handleClickAddAnimatePreset(0, 0, 250, 100, "opacity")}
+        >
+          Fade In
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light"
+          @click=${() =>
+            this.handleClickAddAnimatePreset(0, 1, 250, 1.2, "scale")}
+        >
+          Zoom In
         </button>
       </div>
 
@@ -235,6 +260,34 @@ export class OptionVideo extends LitElement {
     this.filterList = filterList as any;
 
     document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
+  }
+
+  handleClickAddAnimatePreset(ax, ay, bx, by, type) {
+    const state = useTimelineStore.getState();
+    let element = state.timeline[this.elementId] as any;
+
+    element.animation[type].isActivate = true;
+
+    this.keyframeControl.addPoint({
+      x: ax,
+      y: ay,
+      line: 0,
+      elementId: this.elementId,
+      animationType: type,
+    });
+
+    this.keyframeControl.addPoint({
+      x: bx,
+      y: by,
+      line: 0,
+      elementId: this.elementId,
+      animationType: type,
+    });
+
+    this.timeline[this.elementId] = element;
+    this.timelineState.patchTimeline(this.timeline);
 
     this.requestUpdate();
   }

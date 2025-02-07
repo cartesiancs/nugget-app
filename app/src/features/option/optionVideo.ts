@@ -46,7 +46,18 @@ export class OptionVideo extends LitElement {
         >
           <option value="chromakey">Chroma Key</option>
           <option value="blur">Blur</option>
+          <option value="radialblur">Radial Blur</option>
         </select>
+
+        <input
+          @change=${(e) => this.handleChangeUpdateBlur(e, index)}
+          type="number"
+          class="form-control bg-default text-light ${this.filterList[index]
+            .name == "radialblur"
+            ? ""
+            : "d-none"}"
+          value="5"
+        />
 
         <input
           @change=${(e) => this.handleChangeUpdateBlur(e, index)}

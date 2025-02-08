@@ -1091,14 +1091,30 @@ export class elementTimelineCanvas extends LitElement {
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
 
-    if (this.canvasVerticalScroll + e.deltaY > 0) {
-      this.canvasVerticalScroll += e.deltaY;
-      this.timelineOptions.canvasVerticalScroll += e.deltaY;
-      this.drawCanvas();
-    }
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const dx = parseFloat(e.deltaY) * (this.timelineRange / 75);
+      const x = this.timelineRange - dx;
 
-    if (newScroll >= 0) {
-      this.timelineState.setScroll(newScroll);
+      if (e.deltaY < 0) {
+        if (x < 5) {
+          this.timelineState.setRange(x);
+        }
+      } else {
+        if (x > -8) {
+          this.timelineState.setRange(x);
+        }
+      }
+    } else {
+      if (this.canvasVerticalScroll + e.deltaY > 0) {
+        this.canvasVerticalScroll += e.deltaY;
+        this.timelineOptions.canvasVerticalScroll += e.deltaY;
+        this.drawCanvas();
+      }
+
+      if (newScroll >= 0) {
+        this.timelineState.setScroll(newScroll);
+      }
     }
   }
 

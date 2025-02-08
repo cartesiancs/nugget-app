@@ -703,28 +703,15 @@ export class PreviewCanvas extends LitElement {
       }
 
       if (imageElement.animation["scale"].isActivate == true) {
-        let index = Math.round(this.timelineCursor / 16);
-        let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
-        let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-        try {
-          if (indexPoint < 0) {
-            return false;
-          }
-
-          const ax = this.findNearestY(
-            imageElement.animation["scale"].ax,
-            this.timelineCursor - imageElement.startTime,
-          ) as any;
-
+        const ax = this.getAnimateScale(elementId);
+        if (ax != false) {
           scaleW = w * ax;
           scaleH = h * ax;
           compare = scaleW - w;
 
           scaleX = x - compare / 2;
           scaleY = y - compare / 2;
-        } catch (error) {}
+        }
       }
 
       let animationType = "position";
@@ -733,36 +720,18 @@ export class PreviewCanvas extends LitElement {
         if (this.isMove && this.activeElementId == elementId) {
           ctx.drawImage(img.object, x, y, w, h);
         } else {
-          let index = Math.round(this.timelineCursor / 16);
-          let indexToMs = index * 20;
-          let startTime = Number(this.timeline[elementId].startTime);
-          let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-          try {
-            if (indexPoint < 0) {
-              return false;
-            }
-
-            const ax = this.findNearestY(
-              imageElement.animation[animationType].ax,
-              this.timelineCursor - imageElement.startTime,
-            ) as any;
-
-            const ay = this.findNearestY(
-              imageElement.animation[animationType].ay,
-              this.timelineCursor - imageElement.startTime,
-            ) as any;
-
+          const result = this.getAnimatePosition(elementId) as any;
+          if (result != false) {
             ctx.drawImage(
               img.object,
-              ax - compare / 2,
-              ay - compare / 2,
+              result.ax - compare / 2,
+              result.ay - compare / 2,
               scaleW,
               scaleH,
             );
 
             return false;
-          } catch (error) {}
+          }
         }
       }
 
@@ -1154,6 +1123,62 @@ export class PreviewCanvas extends LitElement {
         this.renderOption.previewSize.h,
       );
       ctx.stroke();
+    }
+  }
+
+  getAnimateScale(elementId) {
+    if (this.timeline[elementId].animation["scale"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["scale"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return ax;
+      } catch (error) {
+        return 1;
+      }
+    }
+  }
+
+  getAnimatePosition(elementId) {
+    if (this.timeline[elementId].animation["position"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["position"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        const ay = this.findNearestY(
+          this.timeline[elementId].animation["position"].ay,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          ax: ax,
+          ay: ay,
+        };
+      } catch (error) {
+        return false;
+      }
     }
   }
 

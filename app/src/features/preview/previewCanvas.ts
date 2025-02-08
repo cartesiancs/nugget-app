@@ -501,46 +501,53 @@ export class PreviewCanvas extends LitElement {
         this.timeline[elementId].filter.enable &&
         this.timeline[elementId].filter.list.length > 0
       ) {
-        if (this.timeline[elementId].filter.list[0].name == "chromakey") {
-          source = this.applyChromaKey(
-            ctx,
-            video,
-            videoElement,
-            w,
-            h,
-            scaleX,
-            scaleY,
-            scaleW,
-            scaleH,
-          );
-        }
+        for (
+          let index = 0;
+          index < this.timeline[elementId].filter.list.length;
+          index++
+        ) {
+          const filter = this.timeline[elementId].filter.list[index];
+          if (filter.name == "chromakey") {
+            source = this.applyChromaKey(
+              ctx,
+              video,
+              videoElement,
+              w,
+              h,
+              scaleX,
+              scaleY,
+              scaleW,
+              scaleH,
+            );
+          }
 
-        if (this.timeline[elementId].filter.list[0].name == "blur") {
-          source = this.applyBlur(
-            ctx,
-            video,
-            videoElement,
-            w,
-            h,
-            scaleX,
-            scaleY,
-            scaleW,
-            scaleH,
-          );
-        }
+          if (filter.name == "blur") {
+            source = this.applyBlur(
+              ctx,
+              video,
+              videoElement,
+              w,
+              h,
+              scaleX,
+              scaleY,
+              scaleW,
+              scaleH,
+            );
+          }
 
-        if (this.timeline[elementId].filter.list[0].name == "radialblur") {
-          source = this.applyRadialBlur(
-            ctx,
-            video,
-            videoElement,
-            w,
-            h,
-            scaleX,
-            scaleY,
-            scaleW,
-            scaleH,
-          );
+          if (filter.name == "radialblur") {
+            source = this.applyRadialBlur(
+              ctx,
+              video,
+              videoElement,
+              w,
+              h,
+              scaleX,
+              scaleY,
+              scaleW,
+              scaleH,
+            );
+          }
         }
       }
 

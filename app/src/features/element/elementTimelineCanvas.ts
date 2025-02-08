@@ -1244,7 +1244,21 @@ export class elementTimelineCanvas extends LitElement {
 
     if (event.keyCode == 49) {
       // 1
-      console.log(this.timelineHistory);
+      console.log(this.timelineHistory, this.timeline);
+
+      const sortd = Object.fromEntries(
+        Object.entries(useTimelineStore.getState().timeline).sort(
+          ([, valueA]: any, [, valueB]: any) =>
+            valueA.priority - valueB.priority,
+        ),
+      );
+
+      for (const key in sortd) {
+        if (Object.prototype.hasOwnProperty.call(sortd, key)) {
+          const element = sortd[key];
+          console.log(key);
+        }
+      }
     }
 
     if (event.keyCode == 8) {

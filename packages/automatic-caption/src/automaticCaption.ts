@@ -1,10 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
-import mime from "../../functions/mime";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { LocaleController } from "../../controllers/locale";
-import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("automatic-caption")
 export class AutomaticCaption extends LitElement {
@@ -95,18 +92,19 @@ export class AutomaticCaption extends LitElement {
     );
   }
 
-  @property()
-  timelineState: ITimelineStore = useTimelineStore.getInitialState();
-
   @query("#previewCanvasCaption") canvas!: HTMLCanvasElement;
 
-  private lc = new LocaleController(this);
+  @property()
+  timeline: any;
+
+  @property()
+  isDev = false;
 
   createRenderRoot() {
     return this;
   }
 
-  handleRowSelection(rowId, key, mediaType) {
+  handleRowSelection(rowId: any, key: any, mediaType: any) {
     this.selectedRow = rowId;
     this.selectedKey = key;
     this.mediaType = mediaType;
@@ -114,8 +112,10 @@ export class AutomaticCaption extends LitElement {
     this.requestUpdate();
   }
 
+  applyCursorEvent(type) {}
+
   async analyzeAudioToText(audioPath) {
-    this.timelineState.setCursorType("lockKeyboard");
+    this.applyCursorEvent("lockKeyboard");
 
     const serverUrl = document.querySelector("#NuggetAutoServer").value;
     const response = await fetch(audioPath);
@@ -191,6 +191,7 @@ export class AutomaticCaption extends LitElement {
   }
 
   async handleClickLoadVideo() {
+    console.log(this.timeline);
     this.videoRows = this.timelineMap();
     this.requestUpdate();
 
@@ -221,10 +222,11 @@ export class AutomaticCaption extends LitElement {
   }
 
   async handleClickSelectVideo() {
-    this.timelineState.setCursorType("lockKeyboard");
+    this.applyCursorEvent("lockKeyboard");
 
     this.selectVideoModal.hide();
     this.isLoadVideo = true;
+
     this.videoPath = this.selectedRow;
     this.processingVideoModal.show();
 
@@ -232,11 +234,9 @@ export class AutomaticCaption extends LitElement {
       const tempPath = await window.electronAPI.req.app.getTempPath();
       const outputAudio = tempPath.path + `${uuidv4()}.wav`;
 
-      console.log(tempPath, outputAudio);
-
       window.electronAPI.req.ffmpeg.extractAudioFromVideo(
         outputAudio,
-        this.selectedRow,
+        this.videoPath,
       );
     }
 
@@ -256,7 +256,7 @@ export class AutomaticCaption extends LitElement {
 
   handleClickComplate() {
     this.analyzingVideoModal.hide();
-    this.timelineState.setCursorType("pointer");
+    this.applyCursorEvent("pointer");
 
     const screenWidth = 1920;
     const screenHeight = 1080;
@@ -264,7 +264,7 @@ export class AutomaticCaption extends LitElement {
     const yPadding = 100;
     const fontSize = 52;
 
-    const control = document.querySelector("element-control");
+    let resultArray: any = [];
     for (let index = 0; index < this.analyzedText.length; index++) {
       const element = this.analyzedText[index];
       const text = this.analyzedEditCaption[index];
@@ -277,7 +277,7 @@ export class AutomaticCaption extends LitElement {
       const duration =
         (element[element.length - 1].end - element[0].start) * 1000 || 1000;
 
-      control.addText({
+      resultArray.push({
         parentKey: this.selectedKey,
         text: text,
         textcolor: "#ffffff",
@@ -292,6 +292,16 @@ export class AutomaticCaption extends LitElement {
         duration: duration,
       });
     }
+
+    this.dispatchEvent(
+      new CustomEvent("editComplate", {
+        detail: {
+          result: resultArray,
+        },
+        bubbles: true,
+        composed: true,
+      }),
+    );
 
     this.isLoadVideo = false;
 
@@ -454,6 +464,7 @@ export class AutomaticCaption extends LitElement {
       const video: HTMLVideoElement = document.querySelector(
         "#captionPreviewVideo",
       );
+      console.log(video);
       video.play();
     }
 
@@ -711,13 +722,13 @@ export class AutomaticCaption extends LitElement {
     gap: 1rem;"
       >
         <div class="input-group">
-          <span class="input-group-text bg-default text-light" id="basic-addon2"
+          <span class="input-group-text bg-dark text-light" id="basic-addon2"
             >NuggetAutoServer</span
           >
           <input
             id="NuggetAutoServer"
             type="text"
-            class="form-control bg-default text-light ${this.isLoadVideo
+            class="form-control bg-default bg-dark text-light ${this.isLoadVideo
               ? "d-none"
               : ""}"
             placeholder="http(s)://custom.domain:port"
@@ -813,7 +824,7 @@ export class AutomaticCaption extends LitElement {
                     class="col btn btn-secondary"
                     data-bs-dismiss="modal"
                   >
-                    ${this.lc.t("modal.close")}
+                    Close
                   </button>
                   <button
                     ?disabled=${this.selectedRow == null}
@@ -856,7 +867,7 @@ export class AutomaticCaption extends LitElement {
                   <video
                     class="d-none col-3"
                     id="captionPreviewVideo"
-                    src=${this.videoPath}
+                    src=${this.isDev ? "/test.MOV" : this.videoPath}
                   ></video>
 
                   <audio
@@ -934,7 +945,7 @@ export class AutomaticCaption extends LitElement {
               <div class="flex row gap-2">
                 <button
                   type="button"
-                  class="col btn btn-secondary btn-nowarp"
+                  class="col btn btn-sm btn-secondary btn-nowarp"
                   data-bs-dismiss="modal"
                   @click=${() => {
                     this.isLoadVideo = false;
@@ -942,11 +953,11 @@ export class AutomaticCaption extends LitElement {
                     this.requestUpdate();
                   }}
                 >
-                  ${this.lc.t("modal.close")}
+                  Close
                 </button>
                 <button
                   type="button"
-                  class="col btn btn-primary btn-nowarp"
+                  class="col btn btn-sm btn-primary btn-nowarp"
                   data-bs-dismiss="modal"
                   @click=${this.handleClickComplate}
                 >
@@ -1000,7 +1011,7 @@ export class AutomaticCaption extends LitElement {
     key: string;
     filetype: string;
   }[] {
-    const timeline = useTimelineStore.getState().timeline;
+    const timeline = this.timeline;
     const timelineArray: {
       id: number;
       video?: string;

@@ -227,10 +227,7 @@ export const renderMain = {
       .audioChannels(2);
 
     const timeInterval = setInterval(() => {
-      mainWindow.webContents.send(
-        "ffmpeg:extractAudioFromVideo:progress",
-        "progress",
-      );
+      event.sender.send("ffmpeg:extractAudioFromVideo:progress", "progress");
     }, 200);
 
     command.format("wav");
@@ -239,10 +236,7 @@ export const renderMain = {
       clearInterval(timeInterval);
 
       log.info("extractAudioFromVideo Finish processing");
-      mainWindow.webContents.send(
-        "ffmpeg:extractAudioFromVideo:finish",
-        outputAudioPath,
-      );
+      event.sender.send("ffmpeg:extractAudioFromVideo:finish", outputAudioPath);
     });
 
     command.on("error", function (err, stdout, stderr) {

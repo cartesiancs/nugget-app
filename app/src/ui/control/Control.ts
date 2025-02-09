@@ -9,7 +9,8 @@ import "./ControlFilter";
 import "../../features/preview/previewTopBar";
 import "../../features/record/screenRecord";
 import "../../features/record/audioRecord";
-import "../../features/caption/automaticCaption";
+
+import "../../../../packages/automatic-caption/src/automaticCaption";
 
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { TimelineController } from "../../controllers/timeline";
@@ -17,9 +18,16 @@ import {
   IControlPanelStore,
   controlPanelStore,
 } from "../../states/controlPanelStore";
+import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
 @customElement("control-ui")
 export class Control extends LitElement {
+  @property()
+  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property()
+  timeline: any = this.timelineState.timeline;
+
   @property()
   uiState: IUIStore = uiStore.getInitialState();
 
@@ -42,6 +50,10 @@ export class Control extends LitElement {
   nowActivePanel = this.controlPanel.nowActive;
 
   createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+    });
+
     uiStore.subscribe((state) => {
       this.resize = state.resize;
     });
@@ -88,6 +100,16 @@ export class Control extends LitElement {
   _handleClickResizePreview() {
     this.targetResize = "preview";
     this.isAbleResize = true;
+  }
+
+  _handleComplateAutoCaption(e) {
+    const result = e.detail.result;
+    const control = document.querySelector("element-control");
+
+    for (let index = 0; index < result.length; index++) {
+      const element = result[index];
+      control.addText(element);
+    }
   }
 
   render() {
@@ -289,7 +311,11 @@ export class Control extends LitElement {
             ? ""
             : "d-none"}"
         >
-          <automatic-caption></automatic-caption>
+          <automatic-caption
+            .timeline=${this.timeline}
+            .isDev=${false}
+            @editComplate=${this._handleComplateAutoCaption}
+          ></automatic-caption>
         </div>
       </div>
 

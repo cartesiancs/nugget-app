@@ -139,6 +139,28 @@ const window = {
 
     return overlayWindow;
   },
+
+  createAutomaticCaptionWindow: () => {
+    const overlayWindow = new BrowserWindow({
+      webPreferences: {
+        backgroundThrottling: false,
+        preload: path.join(__dirname, "..", "preload.js"),
+      },
+      width: 600,
+      height: 500,
+      backgroundColor: WINDOW_BACKGROUND_COLOR,
+    });
+
+    overlayWindow.loadURL("http://localhost:5173/");
+
+    // setInterval(() => {
+    //   overlayWindow.webContents.send("overlayRecord:stop:res", {
+    //     msg: "Hello Renderer!",
+    //   });
+    // }, 1000);
+
+    return overlayWindow;
+  },
 };
 
 const createOverlayWindowTray = (overlayWindow) => {

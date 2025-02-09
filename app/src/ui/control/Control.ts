@@ -168,7 +168,7 @@ export class Control extends LitElement {
                 <span class="material-symbols-outlined"> text_fields</span>
               </button>
 
-              <!-- <button
+              <button
                 class="btn-nav"
                 data-bs-toggle="pill"
                 data-bs-target="#nav-filter"
@@ -177,7 +177,7 @@ export class Control extends LitElement {
                 aria-selected="false"
               >
                 <span class="material-symbols-outlined"> library_books</span>
-              </button> -->
+              </button>
 
               <button
                 class="btn-nav"

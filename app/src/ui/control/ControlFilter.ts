@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { LocaleController } from "../../controllers/locale";
+import "../../features/gif/gifPreset";
 
 @customElement("control-ui-filter")
 export class ControlText extends LitElement {
@@ -27,7 +28,7 @@ export class ControlText extends LitElement {
               aria-expanded="true"
               aria-controls="collapseOne"
             >
-              Overlay Filter
+              GIF
             </button>
           </h2>
           <div
@@ -36,7 +37,9 @@ export class ControlText extends LitElement {
             aria-labelledby="OverlayAccordion"
             data-bs-parent="#accordionExample"
           >
-            <div class="accordion-body">...</div>
+            <div class="accordion-body">
+              <gif-preset></gif-preset>
+            </div>
           </div>
         </div>
 

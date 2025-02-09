@@ -112,6 +112,7 @@ export class AutomaticCaption extends LitElement {
     this.requestUpdate();
   }
 
+  // 이벤트 처리
   applyCursorEvent(type) {}
 
   async analyzeAudioToText(audioPath) {

@@ -110,6 +110,7 @@ ipcMain.on("app:restart", ipcApp.restart);
 
 ipcMain.handle("stream:saveBufferToVideo", ipcStream.saveBufferToVideo);
 ipcMain.handle("stream:saveBufferToAudio", ipcStream.saveBufferToAudio);
+ipcMain.handle("stream:saveBufferToTempFile", ipcStream.saveBufferToTempFile);
 
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getTempPath", ipcApp.getTempPath);

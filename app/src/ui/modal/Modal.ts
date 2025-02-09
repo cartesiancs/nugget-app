@@ -61,6 +61,7 @@ export class ModalList extends LitElement {
       <dds-modal modal-id="progressRender" modal-title="Rendering...">
         <dds-content>
           <div class="mb-3">
+            <span id="remainingTime">-s left</span>
             <div class="progress">
               <div
                 id="progress"

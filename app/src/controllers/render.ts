@@ -29,6 +29,7 @@ export class RenderController implements ReactiveController {
   gifTempCanvas: any;
   loadedVideos: any;
   nowShapeId: any;
+  renderTime: any;
 
   public requestRenderV2() {
     const renderOptionState = renderOptionStore.getState().options;
@@ -92,18 +93,33 @@ export class RenderController implements ReactiveController {
       const fps = 60;
       const imageCount = fps * projectDuration;
 
+      this.renderTime = [];
+
       this.nextFrameRender(options, 0, imageCount);
     });
   }
 
+  formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  }
+
   nextFrameRender(options, frame, totalFrame) {
+    const pers = (frame / totalFrame) * 100;
     rendererModal.progressModal.show();
-    document.querySelector("#progress").style.width = `${
-      (frame / totalFrame) * 100
-    }%`;
-    document.querySelector("#progress").innerHTML = `${Math.round(
-      (frame / totalFrame) * 100,
-    )}%`;
+    document.querySelector("#progress").style.width = `${pers}%`;
+    document.querySelector("#progress").innerHTML = `${Math.round(pers)}%`;
+
+    this.renderTime.push(new Date());
+
+    if (this.renderTime.length > 2) {
+      this.renderTime.shift();
+      const rm = (this.renderTime[1] - this.renderTime[0]) / 100;
+      document.querySelector("#remainingTime").innerHTML = `${this.formatTime(
+        Math.round(rm * (100 - pers)),
+      )} left`;
+    }
 
     const fps = 60;
     let needsToDelay = 0;

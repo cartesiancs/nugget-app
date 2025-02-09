@@ -31,7 +31,7 @@ In addition to essential features like basic cut editing, animation, sound mixin
 It also supports layer-based editing, which differs from traditional track-based editing. This approach makes it easier to apply multiple effects to individual assets, providing greater flexibility and creative control.
 
 > [!IMPORTANT]
-> 📢 <strong>Currently, the 0.4.1 version is being refactored.</strong> It can be a little unstable.
+> 📢 <strong>Currently, the 0.4.x version is being refactored.</strong> It can be a little unstable.
 
 ## About The Project
 
@@ -47,7 +47,7 @@ It also supports layer-based editing, which differs from traditional track-based
 - External Extension
 - Save&Load Project as File
 - Multilingual Support
-- 4k Edit & more resolution
+- 8k Edit & 4k Edit & more resolution
 - Screen Record & Audio Record
 - and more...
 

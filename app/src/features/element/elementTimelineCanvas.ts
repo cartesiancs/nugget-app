@@ -1091,14 +1091,30 @@ export class elementTimelineCanvas extends LitElement {
   _handleMouseWheel(e) {
     const newScroll = this.timelineScroll + e.deltaX;
 
-    if (this.canvasVerticalScroll + e.deltaY > 0) {
-      this.canvasVerticalScroll += e.deltaY;
-      this.timelineOptions.canvasVerticalScroll += e.deltaY;
-      this.drawCanvas();
-    }
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const dx = parseFloat(e.deltaY) * (this.timelineRange / 75);
+      const x = this.timelineRange - dx;
 
-    if (newScroll >= 0) {
-      this.timelineState.setScroll(newScroll);
+      if (e.deltaY < 0) {
+        if (x < 5) {
+          this.timelineState.setRange(x);
+        }
+      } else {
+        if (x > -8) {
+          this.timelineState.setRange(x);
+        }
+      }
+    } else {
+      if (this.canvasVerticalScroll + e.deltaY > 0) {
+        this.canvasVerticalScroll += e.deltaY;
+        this.timelineOptions.canvasVerticalScroll += e.deltaY;
+        this.drawCanvas();
+      }
+
+      if (newScroll >= 0) {
+        this.timelineState.setScroll(newScroll);
+      }
     }
   }
 
@@ -1244,7 +1260,21 @@ export class elementTimelineCanvas extends LitElement {
 
     if (event.keyCode == 49) {
       // 1
-      console.log(this.timelineHistory);
+      console.log(this.timelineHistory, this.timeline);
+
+      const sortd = Object.fromEntries(
+        Object.entries(useTimelineStore.getState().timeline).sort(
+          ([, valueA]: any, [, valueB]: any) =>
+            valueA.priority - valueB.priority,
+        ),
+      );
+
+      for (const key in sortd) {
+        if (Object.prototype.hasOwnProperty.call(sortd, key)) {
+          const element = sortd[key];
+          console.log(key);
+        }
+      }
     }
 
     if (event.keyCode == 8) {

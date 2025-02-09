@@ -74,6 +74,11 @@ export class ModalList extends LitElement {
                 25%
               </div>
             </div>
+            <b class="text-secondary"
+              ><i class="fas fa-info-circle"></i>
+              <span id="remainingTime">-s left</span>
+            </b>
+
             <!-- <b class="text-secondary"
               ><i class="fas fa-info-circle"></i> 랜더링 100%에 도달해도
               일정시간 지연될 수 있어요.

@@ -110,6 +110,7 @@ ipcMain.on("app:restart", ipcApp.restart);
 
 ipcMain.handle("stream:saveBufferToVideo", ipcStream.saveBufferToVideo);
 ipcMain.handle("stream:saveBufferToAudio", ipcStream.saveBufferToAudio);
+ipcMain.handle("stream:saveBufferToTempFile", ipcStream.saveBufferToTempFile);
 
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getTempPath", ipcApp.getTempPath);
@@ -162,6 +163,8 @@ if (!gotTheLock) {
   app.whenReady().then(() => {
     mainWindow = window.createMainWindow();
     validateFFmpeg();
+
+    //window.createAutomaticCaptionWindow();
 
     mainWindow.on("close", function (e) {
       e.preventDefault();

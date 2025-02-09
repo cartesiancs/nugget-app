@@ -72,10 +72,31 @@ export class ElementTimelineBottomScroll extends LitElement {
         tabindex="-1"
         aria-hidden="true"
       >
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content bg-dark">
-            <div class="modal-body">
-              <h5 class="modal-title text-white font-weight-lg">Info</h5>
+        <div class="modal-dialog modal-dialog-dark modal-dialog-centered">
+          <div class="modal-content modal-dark modal-darker">
+            <div class="modal-body modal-body-dark">
+              <h6 class="modal-title text-light font-weight-lg mb-2">
+                Nugget Info
+              </h6>
+              <span
+                @click=${() =>
+                  window.electronAPI.req.url.openUrl(
+                    "https://github.com/cartesiancs/nugget-app",
+                  )}
+                class="text-secondary"
+                style="font-size: 13px; cursor: pointer;"
+                >GitHub: https://github.com/cartesiancs/nugget-app</span
+              >
+              <br />
+              <span
+                @click=${() =>
+                  window.electronAPI.req.url.openUrl(
+                    "https://github.com/cartesiancs/nugget-app/issues",
+                  )}
+                class="text-secondary"
+                style="font-size: 13px; cursor: pointer;"
+                >Report Bug</span
+              >
             </div>
           </div>
         </div>

@@ -177,6 +177,13 @@ export class ControlSetting extends LitElement {
 
       <button
         class="btn btn-sm btn-default text-light mt-1"
+        @click=${() => this._handleClickResolution(3840, 2160)}
+      >
+        3840x2160 (4k)
+      </button>
+
+      <button
+        class="btn btn-sm btn-default text-light mt-1"
         @click=${() => this._handleClickResolution(1080, 1080)}
       >
         1080x1080 (square)

@@ -121,10 +121,24 @@ export class OptionVideo extends LitElement {
 
         <button
           type="button"
-          class="btn btn-sm mt-2 w-100 bg-dark text-light"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light ${this.filterList
+            .length >= 1
+            ? "d-none"
+            : ""}"
           @click=${this.handleClickAddFilter}
         >
           Add Filter
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm mt-2 w-100 bg-dark text-light ${this.filterList
+            .length == 1
+            ? ""
+            : "d-none"}"
+          @click=${this.handleClickRemoveFilter}
+        >
+          Remove Filter
         </button>
       </div>
 
@@ -258,6 +272,16 @@ export class OptionVideo extends LitElement {
     );
 
     this.filterList = filterList as any;
+
+    document.querySelector("preview-canvas").setChangeFilter();
+
+    this.requestUpdate();
+  }
+
+  handleClickRemoveFilter() {
+    this.timelineState.updateTimeline(this.elementId, ["filter", "list"], []);
+
+    this.filterList = [];
 
     document.querySelector("preview-canvas").setChangeFilter();
 

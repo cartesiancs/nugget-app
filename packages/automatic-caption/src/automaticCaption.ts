@@ -129,7 +129,7 @@ export class AutomaticCaption extends LitElement {
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/api/audio/test`, formData);
+    const request = await axios.post(`${serverUrl}/api/audio`, formData);
 
     const result = request.data.result;
 

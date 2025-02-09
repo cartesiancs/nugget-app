@@ -72,10 +72,10 @@ export class ElementTimelineBottomScroll extends LitElement {
         tabindex="-1"
         aria-hidden="true"
       >
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content bg-dark">
-            <div class="modal-body">
-              <h5 class="modal-title text-white font-weight-lg">Info</h5>
+        <div class="modal-dialog modal-dialog-dark modal-dialog-centered">
+          <div class="modal-content modal-dark modal-darker">
+            <div class="modal-body modal-body-dark">
+              <h6 class="modal-title text-light font-weight-lg">Info</h6>
             </div>
           </div>
         </div>

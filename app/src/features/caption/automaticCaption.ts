@@ -129,7 +129,7 @@ export class AutomaticCaption extends LitElement {
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/api/audio`, formData);
+    const request = await axios.post(`${serverUrl}/api/audio/test`, formData);
 
     const result = request.data.result;
 
@@ -523,7 +523,7 @@ export class AutomaticCaption extends LitElement {
     this.requestUpdate();
   }
 
-  clickCaptionText(index, indexPart, time) {
+  clickCaptionText(e, index, indexPart, time) {
     this.stopVideo();
     if (time != -1) {
       this.progress = time * 1000;
@@ -549,7 +549,13 @@ export class AutomaticCaption extends LitElement {
       }
     }
 
-    this.splitCursor = [index, indexPart];
+    console.log(e.target.offsetWidth, e.offsetX);
+    if (e.offsetX / e.target.offsetWidth > 0.5) {
+      this.splitCursor = [index, indexPart];
+    } else {
+      this.splitCursor = [index, indexPart - 1];
+    }
+
     this.requestUpdate();
   }
 
@@ -628,8 +634,9 @@ export class AutomaticCaption extends LitElement {
 
         partText.push(
           html`<span
-              @click=${() =>
+              @click=${(e) =>
                 this.clickCaptionText(
+                  e,
                   index,
                   indexPart,
                   partElement.start || -1,
@@ -668,9 +675,8 @@ export class AutomaticCaption extends LitElement {
         .caption-part {
           background-color: #1b1a1c;
           color: #ffffff;
-          padding: 0.125rem 0.2rem;
           margin-bottom: 0.1rem;
-          border: 2px solid #26262b;
+          outline: 1px solid #26262b;
           border-radius: 8px;
           height: fit-content;
           width: fit-content;
@@ -680,9 +686,8 @@ export class AutomaticCaption extends LitElement {
         .caption-part.active {
           background-color: #423d47;
           color: #ffffff;
-          padding: 0.125rem 0.2rem;
           margin-bottom: 0.1rem;
-          border: 2px solid #3838d3;
+          outline: 2px solid #3838d3;
           border-radius: 8px;
           height: fit-content;
           width: fit-content;
@@ -691,8 +696,10 @@ export class AutomaticCaption extends LitElement {
 
         .caption-split {
           width: 2px;
-          background-color: #3838d3;
-          height: 1rem;
+          background-color: #5a5abe;
+          height: 1.25rem;
+          z-index: 9999;
+          position: relative;
           display: inline-block;
         }
       </style>
@@ -831,8 +838,8 @@ export class AutomaticCaption extends LitElement {
         data-bs-backdrop="static"
         tabindex="-1"
       >
-        <div class="modal-dialog modal-fullscreen">
-          <div class="modal-content bg-dark">
+        <div class="modal-dialog modal-dialog-dark modal-fullscreen">
+          <div class="modal-content modal-dark modal-darker">
             <div class="modal-body">
               <div class="d-flex col gap-2 mt-4">
                 <div
@@ -923,11 +930,11 @@ export class AutomaticCaption extends LitElement {
                 </div>
               </div>
             </div>
-            <div class="modal-footer">
-              <div class="flex row gap-2 w-100">
+            <div class="modal-footer modal-footer-dark ">
+              <div class="flex row gap-2">
                 <button
                   type="button"
-                  class="col btn btn-secondary"
+                  class="col btn btn-secondary btn-nowarp"
                   data-bs-dismiss="modal"
                   @click=${() => {
                     this.isLoadVideo = false;
@@ -939,7 +946,7 @@ export class AutomaticCaption extends LitElement {
                 </button>
                 <button
                   type="button"
-                  class="col btn btn-primary"
+                  class="col btn btn-primary btn-nowarp"
                   data-bs-dismiss="modal"
                   @click=${this.handleClickComplate}
                 >

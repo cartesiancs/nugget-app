@@ -494,3 +494,25 @@ element-timeline-scroll {
   flex-wrap: nowrap !important;
   overflow-y: scroll;
 }
+
+.modal-dark {
+  background-color: #111315;
+  border: 1px solid #1f2225;
+  border-radius: 10px;
+}
+
+.modal-backdrop.show {
+  opacity: 0.61;
+}
+
+.modal-body-dark {
+  padding: 1.175rem 0.9rem;
+}
+
+.modal-footer-dark {
+  border-top: 1px solid #292c30;
+}
+
+.btn-nowarp {
+  white-space: nowrap;
+}

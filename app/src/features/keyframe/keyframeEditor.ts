@@ -137,7 +137,7 @@ export class KeyframeEditor extends LitElement {
         if (this.animationType == "position") {
           this.lineCount = 2;
         }
-        if (["opacity", "scale"].includes(this.animationType)) {
+        if (["opacity", "scale", "rotation"].includes(this.animationType)) {
           this.lineCount = 1;
         }
 

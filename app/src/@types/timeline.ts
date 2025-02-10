@@ -45,6 +45,11 @@ export type ImageElementType = {
       x?: CubicKeyframeType[];
       ax?: number[][];
     };
+    rotation?: {
+      isActivate?: boolean;
+      x?: CubicKeyframeType[];
+      ax?: number[][];
+    };
   };
 };
 
@@ -131,6 +136,11 @@ export type VideoElementType = {
       x?: CubicKeyframeType[];
       ax?: number[][];
     };
+    rotation?: {
+      isActivate?: boolean;
+      x?: CubicKeyframeType[];
+      ax?: number[][];
+    };
   };
 };
 
@@ -189,6 +199,11 @@ export type TextElementType = {
       ax?: number[][];
     };
     scale?: {
+      isActivate?: boolean;
+      x?: CubicKeyframeType[];
+      ax?: number[][];
+    };
+    rotation?: {
       isActivate?: boolean;
       x?: CubicKeyframeType[];
       ax?: number[][];

@@ -504,7 +504,7 @@ export class PreviewCanvas extends LitElement {
       });
 
       const video = this.loadedVideos[videoIndex];
-      const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+      let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
       video.object.muted = false;
 
@@ -663,6 +663,13 @@ export class PreviewCanvas extends LitElement {
         }
       }
 
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
+      }
+
       const centerX = x + scaleW / 2;
       const centerY = y + scaleH / 2;
 
@@ -717,7 +724,7 @@ export class PreviewCanvas extends LitElement {
     let scaleX = x;
     let scaleY = y;
     let compare = 1;
-    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     if (
       this.loadedObjects.findIndex((item: ImageTempType) => {
@@ -794,6 +801,13 @@ export class PreviewCanvas extends LitElement {
 
             return false;
           }
+        }
+      }
+
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
         }
       }
 
@@ -930,7 +944,7 @@ export class PreviewCanvas extends LitElement {
     let ty = y;
     let fontSize = this.timeline[elementId].fontsize;
     let compare = 1;
-    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     try {
       if (this.isEditText) {
@@ -975,13 +989,6 @@ export class PreviewCanvas extends LitElement {
             this.timelineCursor - this.timeline[elementId].startTime,
           ) as any;
 
-          // scaleW = w * ax;
-          // scaleH = h * ax;
-          // compare = scaleW - w;
-
-          // tx = x - compare / 2;
-          // ty = y - compare / 2;
-
           fontSize = this.timeline[elementId].fontsize * (ax / 10);
         } catch (error) {}
       }
@@ -1024,6 +1031,13 @@ export class PreviewCanvas extends LitElement {
           tx = ax;
           ty = ay;
         } catch (error) {}
+      }
+
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
       }
 
       const centerX = tx + scaleW / 2;
@@ -1290,6 +1304,32 @@ export class PreviewCanvas extends LitElement {
         return {
           ax: ax,
           ay: ay,
+        };
+      } catch (error) {
+        return false;
+      }
+    }
+  }
+
+  getAnimateRotation(elementId) {
+    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["rotation"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          ax: ax,
         };
       } catch (error) {
         return false;

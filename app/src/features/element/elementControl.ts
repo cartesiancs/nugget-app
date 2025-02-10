@@ -334,6 +334,11 @@ export class ElementControl extends LitElement {
             x: [],
             ax: [[], []],
           },
+          rotation: {
+            isActivate: false,
+            x: [],
+            ax: [[], []],
+          },
         },
       };
 
@@ -445,6 +450,11 @@ export class ElementControl extends LitElement {
               ax: [[], []],
             },
             scale: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+            rotation: {
               isActivate: false,
               x: [],
               ax: [[], []],
@@ -602,6 +612,11 @@ export class ElementControl extends LitElement {
           x: [],
           ax: [[], []],
         },
+        rotation: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
       },
     };
 
@@ -665,6 +680,11 @@ export class ElementControl extends LitElement {
           ax: [[], []],
         },
         scale: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
+        rotation: {
           isActivate: false,
           x: [],
           ax: [[], []],

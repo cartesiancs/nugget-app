@@ -275,7 +275,7 @@ export class RenderController implements ReactiveController {
           let scaleX = x;
           let scaleY = y;
           let compare = 1;
-          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           ctx.globalAlpha = imageElement.opacity / 100;
 
@@ -360,6 +360,18 @@ export class RenderController implements ReactiveController {
             } catch (error) {}
           }
 
+          if (
+            this.timeline[elementId].animation["rotation"].isActivate == true
+          ) {
+            const ax = this.getAnimateRotation(
+              elementId,
+              (frame / fps) * 1000,
+            ) as any;
+            if (ax != false) {
+              rotation = ax.ax;
+            }
+          }
+
           const centerX = x + scaleW / 2;
           const centerY = y + scaleH / 2;
 
@@ -436,7 +448,7 @@ export class RenderController implements ReactiveController {
           let ty = y;
           let fontSize = this.timeline[elementId].fontsize;
           let compare = 1;
-          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           try {
             ctx.globalAlpha = 1;
@@ -483,6 +495,18 @@ export class RenderController implements ReactiveController {
 
                 fontSize = this.timeline[elementId].fontsize * (ax / 10);
               } catch (error) {}
+            }
+
+            if (
+              this.timeline[elementId].animation["rotation"].isActivate == true
+            ) {
+              const ax = this.getAnimateRotation(
+                elementId,
+                (frame / fps) * 1000,
+              ) as any;
+              if (ax != false) {
+                rotation = ax.ax;
+              }
             }
 
             ctx.fillStyle = this.timeline[elementId].textcolor as string;
@@ -674,7 +698,7 @@ export class RenderController implements ReactiveController {
           let scaleX = x;
           let scaleY = y;
           let compare = 1;
-          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           if (
             !(
@@ -791,6 +815,18 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
+            if (
+              this.timeline[elementId].animation["rotation"].isActivate == true
+            ) {
+              const ax = this.getAnimateRotation(
+                elementId,
+                (frame / fps) * 1000,
+              ) as any;
+              if (ax != false) {
+                rotation = ax.ax;
+              }
+            }
+
             let animationType = "position";
 
             if (videoElement.animation[animationType].isActivate == true) {
@@ -900,6 +936,32 @@ export class RenderController implements ReactiveController {
               loaded[key] = frames;
             });
         }
+      }
+    }
+  }
+
+  getAnimateRotation(elementId, cursor) {
+    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+      let index = Math.round(cursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["rotation"].ax,
+          cursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          ax: ax,
+        };
+      } catch (error) {
+        return false;
       }
     }
   }

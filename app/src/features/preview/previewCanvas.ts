@@ -41,6 +41,7 @@ export class PreviewCanvas extends LitElement {
   moveType:
     | "none"
     | "position"
+    | "rotation"
     | "stretchN"
     | "stretchW"
     | "stretchE"
@@ -65,6 +66,7 @@ export class PreviewCanvas extends LitElement {
   nowShapeId: string;
   loadedVideos: any[];
   isChangeFilter: boolean;
+  isRotation: boolean;
   constructor() {
     super();
 
@@ -72,6 +74,8 @@ export class PreviewCanvas extends LitElement {
     this.isMove = false;
     this.isStretch = false;
     this.isEditText = false;
+    this.isRotation = false;
+
     this.moveType = "none";
     this.cursorType = "default";
 
@@ -352,6 +356,8 @@ export class PreviewCanvas extends LitElement {
           const y = this.timeline[elementId].location?.y as number;
           const w = this.timeline[elementId].width as number;
           const h = this.timeline[elementId].height as number;
+          const rotation = this.timeline[elementId].rotation as number;
+
           const fileType = this.timeline[elementId].filetype;
           let additionalStartTime = 0;
 
@@ -409,6 +415,7 @@ export class PreviewCanvas extends LitElement {
 
           if (fileType == "shape") {
             this.drawShape(elementId);
+            this.drawOutline(ctx, elementId, x, y, w, h, rotation);
           }
 
           if (this.activeElementId == elementId) {
@@ -418,36 +425,41 @@ export class PreviewCanvas extends LitElement {
                 this.drawAlign(ctx, checkAlign.direction);
               }
             }
-
-            const padding = 10;
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "#ffffff";
-            ctx.strokeRect(x, y, w, h);
-            ctx.fillStyle = "#ffffff";
-
-            ctx.beginPath();
-            ctx.rect(x - padding, y - padding, padding * 2, padding * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.rect(x + w - padding, y - padding, padding * 2, padding * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.rect(
-              x + w - padding,
-              y + h - padding,
-              padding * 2,
-              padding * 2,
-            );
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.rect(x - padding, y + h - padding, padding * 2, padding * 2);
-            ctx.fill();
           }
         }
       }
+    }
+  }
+
+  drawOutline(ctx, elementId, x, y, w, h, a) {
+    if (this.activeElementId == elementId) {
+      const padding = 10;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#ffffff";
+      ctx.strokeRect(x, y, w, h);
+      ctx.fillStyle = "#ffffff";
+
+      ctx.beginPath();
+      ctx.rect(x - padding, y - padding, padding * 2, padding * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.rect(x + w - padding, y - padding, padding * 2, padding * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.rect(x + w - padding, y + h - padding, padding * 2, padding * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.rect(x - padding, y + h - padding, padding * 2, padding * 2);
+      ctx.fill();
+
+      //draw control rotation
+
+      ctx.beginPath();
+      ctx.arc(x + w / 2, y - 50, 15, 0, 2 * Math.PI);
+      ctx.fill();
     }
   }
 
@@ -492,6 +504,7 @@ export class PreviewCanvas extends LitElement {
       });
 
       const video = this.loadedVideos[videoIndex];
+      let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
       video.object.muted = false;
 
@@ -622,20 +635,60 @@ export class PreviewCanvas extends LitElement {
               this.timelineCursor - videoElement.startTime,
             ) as any;
 
-            ctx.drawImage(
-              source,
-              ax - compare / 2,
-              ay - compare / 2,
+            x = ax - compare / 2;
+            y = ay - compare / 2;
+
+            const centerX = x + scaleW / 2;
+            const centerY = y + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+            this.drawOutline(
+              ctx,
+              elementId,
+              -scaleW / 2,
+              -scaleH / 2,
               scaleW,
               scaleH,
+              rotation,
             );
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
 
             return false;
           } catch (error) {}
         }
       }
 
-      ctx.drawImage(source, scaleX, scaleY, scaleW, scaleH);
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
+      }
+
+      const centerX = x + scaleW / 2;
+      const centerY = y + scaleH / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+      this.drawOutline(
+        ctx,
+        elementId,
+        -scaleW / 2,
+        -scaleH / 2,
+        scaleW,
+        scaleH,
+        rotation,
+      );
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
     } else {
       const video = document.createElement("video");
       video.playbackRate = this.timeline[elementId].speed;
@@ -671,6 +724,7 @@ export class PreviewCanvas extends LitElement {
     let scaleX = x;
     let scaleY = y;
     let compare = 1;
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     if (
       this.loadedObjects.findIndex((item: ImageTempType) => {
@@ -722,20 +776,60 @@ export class PreviewCanvas extends LitElement {
         } else {
           const result = this.getAnimatePosition(elementId) as any;
           if (result != false) {
-            ctx.drawImage(
-              img.object,
-              result.ax - compare / 2,
-              result.ay - compare / 2,
+            x = result.ax - compare / 2;
+            y = result.ay - compare / 2;
+
+            const centerX = x + scaleW / 2;
+            const centerY = y + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+            this.drawOutline(
+              ctx,
+              elementId,
+              -scaleW / 2,
+              -scaleH / 2,
               scaleW,
               scaleH,
+              rotation,
             );
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
 
             return false;
           }
         }
       }
 
-      ctx.drawImage(img.object, scaleX, scaleY, scaleW, scaleH);
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
+      }
+
+      const centerX = x + scaleW / 2;
+      const centerY = y + scaleH / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+      this.drawOutline(
+        ctx,
+        elementId,
+        -scaleW / 2,
+        -scaleH / 2,
+        scaleW,
+        scaleH,
+        rotation,
+      );
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
     } else {
       let img = new Image();
       img.onload = () => {
@@ -746,6 +840,7 @@ export class PreviewCanvas extends LitElement {
 
         ctx.globalAlpha = imageElement.opacity / 100;
         ctx.drawImage(img, x, y, w, h);
+        this.drawOutline(ctx, elementId, x, y, w, h, rotation);
       };
       img.src = imageElement.localpath;
     }
@@ -755,6 +850,7 @@ export class PreviewCanvas extends LitElement {
 
   drawGif(ctx, elementId, w, h, x, y) {
     const imageElement = this.timeline[elementId] as any;
+    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     if (
       this.gifFrames.findIndex((item) => {
@@ -790,7 +886,17 @@ export class PreviewCanvas extends LitElement {
 
       this.gifCanvas.tempCtx.putImageData(this.gifCanvas.frameImageData, 0, 0);
 
-      ctx.drawImage(this.gifTempCanvas, x, y, w, h);
+      const centerX = x + w / 2;
+      const centerY = y + h / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      ctx.drawImage(this.gifTempCanvas, -w / 2, -h / 2, w, h);
+      this.drawOutline(ctx, elementId, -w / 2, -h / 2, w, h, rotation);
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
     } else {
       fetch(imageElement.localpath)
         .then((resp) => resp.arrayBuffer())
@@ -838,6 +944,7 @@ export class PreviewCanvas extends LitElement {
     let ty = y;
     let fontSize = this.timeline[elementId].fontsize;
     let compare = 1;
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     try {
       if (this.isEditText) {
@@ -882,13 +989,6 @@ export class PreviewCanvas extends LitElement {
             this.timelineCursor - this.timeline[elementId].startTime,
           ) as any;
 
-          // scaleW = w * ax;
-          // scaleH = h * ax;
-          // compare = scaleW - w;
-
-          // tx = x - compare / 2;
-          // ty = y - compare / 2;
-
           fontSize = this.timeline[elementId].fontsize * (ax / 10);
         } catch (error) {}
       }
@@ -932,6 +1032,32 @@ export class PreviewCanvas extends LitElement {
           ty = ay;
         } catch (error) {}
       }
+
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
+      }
+
+      const centerX = tx + scaleW / 2;
+      const centerY = ty + scaleH / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      tx = -scaleW / 2;
+      ty = -scaleH / 2;
+
+      this.drawOutline(
+        ctx,
+        elementId,
+        -scaleW / 2,
+        -scaleH / 2,
+        scaleW,
+        scaleH,
+        rotation,
+      );
 
       this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
 
@@ -1041,6 +1167,9 @@ export class PreviewCanvas extends LitElement {
         );
         ctx.fillText(line, tx + w - lastWordWidth, textY);
       }
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
 
       ctx.globalAlpha = 1;
     } catch (error) {}
@@ -1175,6 +1304,32 @@ export class PreviewCanvas extends LitElement {
         return {
           ax: ax,
           ay: ay,
+        };
+      } catch (error) {
+        return false;
+      }
+    }
+  }
+
+  getAnimateRotation(elementId) {
+    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["rotation"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          ax: ax,
         };
       } catch (error) {
         return false;
@@ -1724,92 +1879,90 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  collisionCheck({ x, y, w, h, mx, my, padding }) {
+  collisionCheck({ x, y, w, h, mx, my, padding, rotation = 0 }) {
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+
+    const dx = mx - cx;
+    const dy = my - cy;
+
+    const cos = Math.cos(rotation * (Math.PI / 180));
+    const sin = Math.sin(rotation * (Math.PI / 180));
+    const localMouseX = dx * cos + dy * sin + cx;
+    const localMouseY = -dx * sin + dy * cos + cy;
+
     if (
-      mx > x + padding / 2 &&
-      mx < x + w - padding / 2 &&
-      my > y + padding / 2 &&
-      my < y + h - padding / 2
+      localMouseX > x + padding / 2 &&
+      localMouseX < x + w - padding / 2 &&
+      localMouseY > y + padding / 2 &&
+      localMouseY < y + h - padding / 2
     ) {
-      return {
-        type: "position",
-      };
+      return { type: "position" };
     } else if (
-      mx > x + w &&
-      mx < x + w + padding &&
-      my > y + padding &&
-      my < y + h - padding
+      localMouseX > x + w / 2 - 25 &&
+      localMouseX < x + w / 2 + 25 &&
+      localMouseY > y - 75 &&
+      localMouseY < y
     ) {
-      return {
-        type: "stretchE",
-      };
+      return { type: "rotation" };
     } else if (
-      mx > x - padding &&
-      mx < x &&
-      my > y + padding &&
-      my < y + h - padding
+      localMouseX > x + w &&
+      localMouseX < x + w + padding &&
+      localMouseY > y + padding &&
+      localMouseY < y + h - padding
     ) {
-      return {
-        type: "stretchW",
-      };
+      return { type: "stretchE" };
     } else if (
-      mx > x + padding &&
-      mx < x + w - padding &&
-      my > y - padding &&
-      my < y
+      localMouseX > x - padding &&
+      localMouseX < x &&
+      localMouseY > y + padding &&
+      localMouseY < y + h - padding
     ) {
-      return {
-        type: "stretchN",
-      };
+      return { type: "stretchW" };
     } else if (
-      mx > x + padding &&
-      mx < x + w - padding &&
-      my > y + h &&
-      my < y + h + padding
+      localMouseX > x + padding &&
+      localMouseX < x + w - padding &&
+      localMouseY > y - padding &&
+      localMouseY < y
     ) {
-      return {
-        type: "stretchS",
-      };
+      return { type: "stretchN" };
     } else if (
-      mx > x - padding &&
-      mx < x + padding &&
-      my > y - padding &&
-      my < y + padding
+      localMouseX > x + padding &&
+      localMouseX < x + w - padding &&
+      localMouseY > y + h &&
+      localMouseY < y + h + padding
     ) {
-      return {
-        type: "stretchNW",
-      };
+      return { type: "stretchS" };
     } else if (
-      mx > x - padding &&
-      mx < x + padding &&
-      my > y + h - padding &&
-      my < y + h + padding
+      localMouseX > x - padding &&
+      localMouseX < x + padding &&
+      localMouseY > y - padding &&
+      localMouseY < y + padding
     ) {
-      return {
-        type: "stretchSW",
-      };
+      return { type: "stretchNW" };
     } else if (
-      mx > x + w - padding &&
-      mx < x + w + padding &&
-      my > y - padding &&
-      my < y + padding
+      localMouseX > x - padding &&
+      localMouseX < x + padding &&
+      localMouseY > y + h - padding &&
+      localMouseY < y + h + padding
     ) {
-      return {
-        type: "stretchNE",
-      };
+      return { type: "stretchSW" };
     } else if (
-      mx > x + w - padding &&
-      mx < x + w + padding &&
-      my > y + h - padding &&
-      my < y + h + padding
+      localMouseX > x + w - padding &&
+      localMouseX < x + w + padding &&
+      localMouseY > y - padding &&
+      localMouseY < y + padding
     ) {
-      return {
-        type: "stretchSE",
-      };
+      return { type: "stretchNE" };
+    } else if (
+      localMouseX > x + w - padding &&
+      localMouseX < x + w + padding &&
+      localMouseY > y + h - padding &&
+      localMouseY < y + h + padding
+    ) {
+      return { type: "stretchSE" };
     } else {
-      return {
-        type: "none",
-      };
+      return { type: "none" };
     }
   }
 
@@ -1974,7 +2127,6 @@ export class PreviewCanvas extends LitElement {
     const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
 
     if (this.nowShapeId == "") {
-      // 아직 생성된적 없다면
       const createdElementId = this.createShape(x, y);
       this.nowShapeId = createdElementId;
 
@@ -1985,14 +2137,33 @@ export class PreviewCanvas extends LitElement {
     this.timelineState.patchTimeline(this.timeline);
   }
 
+  calculateRotation(point1, point2) {
+    const dx = point2.x - point1.x;
+    const dy = point2.y - point1.y;
+    let degrees = Math.atan2(dy, dx) * (180 / Math.PI);
+
+    degrees -= 90;
+    if (degrees < 0) degrees += 360;
+
+    return degrees;
+  }
+
   _handleMouseDown(e) {
     const mx = e.offsetX * this.previewRatio;
     const my = e.offsetY * this.previewRatio;
     const padding = 20;
     let isMoveTemp = false;
     let isStretchTemp = false;
+    let isRotationTemp = false;
     let activeElementTemp = "";
     let isClicked = false;
+
+    const clearTempStatus = () => {
+      isMoveTemp = false;
+      isStretchTemp = false;
+      isClicked = false;
+      isRotationTemp = false;
+    };
 
     if (this.timelineControl.cursorType == "shape") {
       this.addShapePoint(mx, my);
@@ -2013,6 +2184,8 @@ export class PreviewCanvas extends LitElement {
         const y = this.timeline[elementId].location?.y as number;
         const w = this.timeline[elementId].width as number;
         const h = this.timeline[elementId].height as number;
+        const rotation = this.timeline[elementId].rotation as number;
+
         const fileType = this.timeline[elementId].filetype;
         const startTime = this.timeline[elementId].startTime as number;
         const duration = this.timeline[elementId].duration as number;
@@ -2047,6 +2220,7 @@ export class PreviewCanvas extends LitElement {
           my: my,
           mx: mx,
           padding: padding,
+          rotation: rotation,
         });
 
         if (collide.type == "position") {
@@ -2058,10 +2232,25 @@ export class PreviewCanvas extends LitElement {
           this.elementOrigin = { x: x, y: y, w: w, h: h };
           this.moveType = "position";
           this.cursorType = "grabbing";
+          clearTempStatus();
           isMoveTemp = true;
           isStretchTemp = false;
           isClicked = true;
           this.showSideOption(elementId);
+        } else if (collide.type == "rotation") {
+          activeElementTemp = elementId;
+          this.mouseOrigin = {
+            x: mx,
+            y: my,
+          };
+          this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
+          isStretchTemp = true;
+          isMoveTemp = false;
+          isRotationTemp = true;
+          isClicked = true;
+          this.moveType = collide.type;
+          this.cursorType = "crosshair";
         } else if (collide.type == "stretchW") {
           activeElementTemp = elementId;
           this.mouseOrigin = {
@@ -2069,6 +2258,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2081,6 +2271,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2093,6 +2284,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2105,6 +2297,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2117,6 +2310,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2129,6 +2323,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2141,6 +2336,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2153,6 +2349,7 @@ export class PreviewCanvas extends LitElement {
             y: my,
           };
           this.elementOrigin = { x: x, y: y, w: w, h: h };
+          clearTempStatus();
           isStretchTemp = true;
           isMoveTemp = false;
           isClicked = true;
@@ -2170,6 +2367,7 @@ export class PreviewCanvas extends LitElement {
       this.activeElementId = activeElementTemp;
       this.isMove = isMoveTemp;
       this.isStretch = isStretchTemp;
+      this.isRotation = isRotationTemp;
     }
 
     if (isClicked == false) {
@@ -2209,6 +2407,8 @@ export class PreviewCanvas extends LitElement {
           const fileType = this.timeline[elementId].filetype;
           const startTime = this.timeline[elementId].startTime as number;
           const duration = this.timeline[elementId].duration as number;
+          const rotation = this.timeline[elementId].rotation as number;
+
           const animationType = "position";
 
           if (
@@ -2265,11 +2465,15 @@ export class PreviewCanvas extends LitElement {
             my: my,
             mx: mx,
             padding: padding,
+            rotation: rotation,
           });
 
           if (collide.type == "position") {
             //this.activeElementId = elementId;
             this.cursorType = "grabbing";
+            isCollide = true;
+          } else if (collide.type == "rotation") {
+            this.cursorType = "crosshair";
             isCollide = true;
           } else if (collide.type == "stretchW") {
             this.cursorType = "ew-resize";
@@ -2327,88 +2531,102 @@ export class PreviewCanvas extends LitElement {
       this.timelineState.patchTimeline(this.timeline);
     }
 
+    if (this.isRotation) {
+      const dx = mx - this.mouseOrigin.x;
+      const dy = my - this.mouseOrigin.y;
+
+      const p1 = {
+        x: this.elementOrigin.x + this.elementOrigin.w / 2,
+        y: this.elementOrigin.y + this.elementOrigin.h / 2,
+      };
+      const p2 = {
+        x: mx,
+        y: my,
+      };
+
+      console.log(mx, my);
+
+      const r = this.calculateRotation(p2, p1);
+      this.timeline[this.activeElementId].rotation = r;
+    }
+
     if (this.isStretch) {
       const minSize = 10;
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
-      const location = this.timeline[this.activeElementId].location as { x; y };
+
+      const rotation = this.timeline[this.activeElementId].rotation || 0;
+      const cosTheta = Math.cos(rotation);
+      const sinTheta = Math.sin(rotation);
+      const localDx = dx * cosTheta + dy * sinTheta;
+      const localDy = -dx * sinTheta + dy * cosTheta;
+
+      const location = this.timeline[this.activeElementId].location;
       const filetype = this.timeline[this.activeElementId].filetype;
 
       const moveE = () => {
-        if (this.elementOrigin.w + dx <= minSize) return false;
-        const width = this.elementOrigin.w + dx;
+        if (this.elementOrigin.w + localDx <= minSize) return false;
+        const width = this.elementOrigin.w + localDx;
         const ratio = this.timeline[this.activeElementId].ratio;
         this.timeline[this.activeElementId].width = width;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].height = width / ratio;
         this.timeline[this.activeElementId].location.y =
           this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveW = () => {
-        if (this.elementOrigin.w - dx <= minSize) return false;
-        const width = this.elementOrigin.w - dx;
+        if (this.elementOrigin.w - localDx <= minSize) return false;
+        const width = this.elementOrigin.w - localDx;
         const ratio = this.timeline[this.activeElementId].ratio;
 
-        this.timeline[this.activeElementId].width = this.elementOrigin.w - dx;
+        this.timeline[this.activeElementId].width = width;
         this.timeline[this.activeElementId].location.x =
-          this.elementOrigin.x + dx;
+          this.elementOrigin.x + localDx;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].height = width / ratio;
         this.timeline[this.activeElementId].location.y =
           this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveN = () => {
-        if (this.elementOrigin.h - dy <= minSize) return false;
-        const height = this.elementOrigin.h - dy;
+        if (this.elementOrigin.h - localDy <= minSize) return false;
+        const height = this.elementOrigin.h - localDy;
         const ratio = this.timeline[this.activeElementId].ratio;
 
         this.timeline[this.activeElementId].height = height;
         this.timeline[this.activeElementId].location.y =
-          this.elementOrigin.y + dy;
+          this.elementOrigin.y + localDy;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].width = height * ratio;
         this.timeline[this.activeElementId].location.x =
           this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
       const moveS = () => {
-        if (this.elementOrigin.h + dy <= minSize) return false;
-        const height = this.elementOrigin.h + dy;
+        if (this.elementOrigin.h + localDy <= minSize) return false;
+        const height = this.elementOrigin.h + localDy;
         const ratio = this.timeline[this.activeElementId].ratio;
         this.timeline[this.activeElementId].height = height;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].width = height * ratio;
         this.timeline[this.activeElementId].location.x =
           this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
-      if (this.moveType == "stretchE") {
-        moveE();
-      } else if (this.moveType == "stretchW") {
-        moveW();
-      } else if (this.moveType == "stretchN") {
-        moveN();
-      } else if (this.moveType == "stretchS") {
-        moveS();
-      } else if (this.moveType == "stretchNW") {
+      const moveNW = () => {
         if (filetype == "text") {
           moveN();
           moveW();
@@ -2418,8 +2636,8 @@ export class PreviewCanvas extends LitElement {
             m: 1,
             a1: this.elementOrigin.x,
             b1: this.elementOrigin.y,
-            a2: this.elementOrigin.x + dx,
-            b2: this.elementOrigin.y + dy,
+            a2: this.elementOrigin.x + localDx,
+            b2: this.elementOrigin.y + localDy,
           });
 
           this.timeline[this.activeElementId].width =
@@ -2432,7 +2650,9 @@ export class PreviewCanvas extends LitElement {
 
           this.timeline[this.activeElementId].location.x = intr.x;
         }
-      } else if (this.moveType == "stretchSW") {
+      };
+
+      const moveSW = () => {
         if (filetype == "text") {
           moveS();
           moveW();
@@ -2442,17 +2662,18 @@ export class PreviewCanvas extends LitElement {
             m: -1,
             a1: this.elementOrigin.x,
             b1: this.elementOrigin.h,
-            a2: this.elementOrigin.x + dx,
-            b2: this.elementOrigin.h + dy,
+            a2: this.elementOrigin.x + localDx,
+            b2: this.elementOrigin.h + localDy,
           });
 
           this.timeline[this.activeElementId].height = intr.y;
           this.timeline[this.activeElementId].width = intr.y * ratio;
-
           this.timeline[this.activeElementId].location.x =
             this.elementOrigin.x - (intr.y * ratio - this.elementOrigin.w);
         }
-      } else if (this.moveType == "stretchSE") {
+      };
+
+      const moveSE = () => {
         if (filetype == "text") {
           moveS();
           moveE();
@@ -2462,14 +2683,16 @@ export class PreviewCanvas extends LitElement {
             m: 1,
             a1: this.elementOrigin.w,
             b1: this.elementOrigin.h,
-            a2: this.elementOrigin.w + dx,
-            b2: this.elementOrigin.h + dy,
+            a2: this.elementOrigin.w + localDx,
+            b2: this.elementOrigin.h + localDy,
           });
 
           this.timeline[this.activeElementId].height = intr.y;
           this.timeline[this.activeElementId].width = intr.y * ratio;
         }
-      } else if (this.moveType == "stretchNE") {
+      };
+
+      const moveNE = () => {
         if (filetype == "text") {
           moveN();
           moveE();
@@ -2479,8 +2702,8 @@ export class PreviewCanvas extends LitElement {
             m: -1,
             a1: this.elementOrigin.w,
             b1: this.elementOrigin.y,
-            a2: this.elementOrigin.w + dx,
-            b2: this.elementOrigin.y + dy,
+            a2: this.elementOrigin.w + localDx,
+            b2: this.elementOrigin.y + localDy,
           });
 
           this.timeline[this.activeElementId].width = intr.x;
@@ -2488,6 +2711,24 @@ export class PreviewCanvas extends LitElement {
           this.timeline[this.activeElementId].location.y =
             this.elementOrigin.y - (intr.x / ratio - this.elementOrigin.h);
         }
+      };
+
+      if (this.moveType == "stretchE") {
+        moveE();
+      } else if (this.moveType == "stretchW") {
+        moveW();
+      } else if (this.moveType == "stretchN") {
+        moveN();
+      } else if (this.moveType == "stretchS") {
+        moveS();
+      } else if (this.moveType == "stretchNW") {
+        moveNW();
+      } else if (this.moveType == "stretchSW") {
+        moveSW();
+      } else if (this.moveType == "stretchSE") {
+        moveSE();
+      } else if (this.moveType == "stretchNE") {
+        moveNE();
       }
 
       this.timelineState.patchTimeline(this.timeline);
@@ -2502,6 +2743,8 @@ export class PreviewCanvas extends LitElement {
       );
       this.isMove = false;
       this.isStretch = false;
+      this.isRotation = false;
+
       this.drawCanvas(this.canvas);
     } catch (error) {}
   }
@@ -2517,6 +2760,7 @@ export class PreviewCanvas extends LitElement {
         const y = this.timeline[elementId].location?.y as number;
         const w = this.timeline[elementId].width as number;
         const h = this.timeline[elementId].height as number;
+        const rotation = this.timeline[elementId].rotation as number;
         const fileType = this.timeline[elementId].filetype;
 
         if (fileType != "text") {
@@ -2531,6 +2775,7 @@ export class PreviewCanvas extends LitElement {
           my: my,
           mx: mx,
           padding: padding,
+          rotation: rotation,
         });
 
         if (collide.type == "position") {

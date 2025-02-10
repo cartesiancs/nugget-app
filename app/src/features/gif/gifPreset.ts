@@ -1,5 +1,5 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { LocaleController } from "../../controllers/locale";
 import axios from "axios";
 import { Buffer } from "buffer";
@@ -9,13 +9,13 @@ export class ControlText extends LitElement {
   returnArray: any;
   constructor() {
     super();
-
-    this.getGif();
   }
 
   createRenderRoot() {
     return this;
   }
+
+  @query("#searchGifInput") searchInput;
 
   async _handleClickGif(gifurl) {
     const response = await fetch(gifurl);
@@ -38,15 +38,16 @@ export class ControlText extends LitElement {
   }
 
   async getGif() {
-    const request = await axios.get(`http://127.0.0.1:8000/api/gif?q=starwars`);
+    const searchText = this.querySelector(
+      "#searchGifInput",
+    ) as HTMLInputElement | null;
+    const value = searchText?.value?.trim() || "starwars";
 
+    const request = await axios.get(`http://127.0.0.1:8000/api/gif?q=${value}`);
     const result = request.data.result.data;
-
     this.returnArray = [];
-
     for (let index = 0; index < result.length; index++) {
       const element = result[index];
-
       this.returnArray.push(html`
         <div
           class="col-6 d-flex flex-column bd-highlight overflow-hidden mt-1 asset"
@@ -56,11 +57,36 @@ export class ControlText extends LitElement {
         </div>
       `);
     }
-
     this.requestUpdate();
   }
 
+  _handleKeyDown(event) {
+    if (event.key === "Enter") {
+      this.onSearch();
+    }
+  }
+
+  onSearch() {
+    const searchText = this.searchInput.value.trim();
+    if (searchText) {
+      this.getGif();
+      console.log("검색어:", searchText);
+    }
+  }
+
   render() {
-    return html` <div class="row px-2">${this.returnArray}</div>`;
+    return html` <label class="form-label text-light">search giphy</label>
+      <div class="input-group mb-3">
+        <input
+          id="searchGifInput"
+          type="text"
+          class="form-control bg-default text-light"
+          placeholder="search giphy gif..."
+          value="starwars"
+          @keydown="${this._handleKeyDown}"
+        />
+      </div>
+
+      <div class="row px-2">${this.returnArray}</div>`;
   }
 }

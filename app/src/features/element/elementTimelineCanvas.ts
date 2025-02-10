@@ -569,6 +569,35 @@ export class elementTimelineCanvas extends LitElement {
               ctx.arc(p, panelScaleTop + height / 2, 4, 0, 2 * Math.PI);
               ctx.fill();
             }
+
+            index += 1;
+
+            const panelRotationTop =
+              index * height * 1.2 - this.timelineOptions.canvasVerticalScroll;
+            ctx.fillStyle = "#24252b";
+
+            ctx.beginPath();
+            ctx.rect(0, panelRotationTop, this.canvas.width, height);
+            ctx.fill();
+
+            for (
+              let indexX = 0;
+              indexX < this.timeline[elementId].animation.rotation.x.length;
+              indexX++
+            ) {
+              const element =
+                this.timeline[elementId].animation.rotation.x[indexX];
+
+              const p =
+                this.millisecondsToPx(
+                  this.timeline[elementId].startTime + element.p[0],
+                ) - this.timelineScroll;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(p, panelRotationTop + height / 2, 4, 0, 2 * Math.PI);
+              ctx.fill();
+            }
           }
 
           index += 1;
@@ -877,7 +906,7 @@ export class elementTimelineCanvas extends LitElement {
         const isActive = this.isActiveAnimationPanel(elementId);
 
         if (isActive) {
-          index += 3;
+          index += 4;
         }
 
         index += 1;

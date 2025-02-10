@@ -275,6 +275,7 @@ export class RenderController implements ReactiveController {
           let scaleX = x;
           let scaleY = y;
           let compare = 1;
+          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           ctx.globalAlpha = imageElement.opacity / 100;
 
@@ -359,7 +360,33 @@ export class RenderController implements ReactiveController {
             } catch (error) {}
           }
 
-          ctx.drawImage(loaded[elementId], scaleX, scaleY, scaleW, scaleH);
+          if (
+            this.timeline[elementId].animation["rotation"].isActivate == true
+          ) {
+            const ax = this.getAnimateRotation(
+              elementId,
+              (frame / fps) * 1000,
+            ) as any;
+            if (ax != false) {
+              rotation = ax.ax;
+            }
+          }
+
+          const centerX = x + scaleW / 2;
+          const centerY = y + scaleH / 2;
+
+          ctx.translate(centerX, centerY);
+          ctx.rotate(rotation);
+
+          ctx.drawImage(
+            loaded[elementId],
+            -scaleW / 2,
+            -scaleH / 2,
+            scaleW,
+            scaleH,
+          );
+          ctx.rotate(-rotation);
+          ctx.translate(-centerX, -centerY);
 
           ctx.globalAlpha = 1;
 
@@ -370,6 +397,7 @@ export class RenderController implements ReactiveController {
         // NOTE: gif 랜더링 구현 필요
         if (fileType == "gif") {
           const imageElement = this.timeline[elementId] as any;
+          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           const gifTempCanvas = document.createElement("canvas");
           const gifTempCanvasCtx = gifTempCanvas.getContext("2d") as any;
@@ -398,7 +426,16 @@ export class RenderController implements ReactiveController {
 
           gifTempCanvasCtx.putImageData(frameImageData, 0, 0);
 
-          ctx.drawImage(gifTempCanvas, x, y, w, h);
+          const centerX = x + w / 2;
+          const centerY = y + h / 2;
+
+          ctx.translate(centerX, centerY);
+          ctx.rotate(rotation);
+
+          ctx.drawImage(gifTempCanvas, -w / 2, -h / 2, w, h);
+
+          ctx.rotate(-rotation);
+          ctx.translate(-centerX, -centerY);
 
           drawLayer(layerIndex + 1);
           return;
@@ -411,6 +448,7 @@ export class RenderController implements ReactiveController {
           let ty = y;
           let fontSize = this.timeline[elementId].fontsize;
           let compare = 1;
+          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           try {
             ctx.globalAlpha = 1;
@@ -459,6 +497,18 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
+            if (
+              this.timeline[elementId].animation["rotation"].isActivate == true
+            ) {
+              const ax = this.getAnimateRotation(
+                elementId,
+                (frame / fps) * 1000,
+              ) as any;
+              if (ax != false) {
+                rotation = ax.ax;
+              }
+            }
+
             ctx.fillStyle = this.timeline[elementId].textcolor as string;
             ctx.lineWidth = 0;
             ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
@@ -499,6 +549,15 @@ export class RenderController implements ReactiveController {
                 ty = ay;
               } catch (error) {}
             }
+
+            const centerX = tx + scaleW / 2;
+            const centerY = ty + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            tx = -scaleW / 2;
+            ty = -scaleH / 2;
 
             this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
 
@@ -616,6 +675,9 @@ export class RenderController implements ReactiveController {
               ctx.fillText(line, tx + w - lastWordWidth, textY);
             }
 
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
+
             ctx.globalAlpha = 1;
 
             drawLayer(layerIndex + 1);
@@ -636,6 +698,7 @@ export class RenderController implements ReactiveController {
           let scaleX = x;
           let scaleY = y;
           let compare = 1;
+          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           if (
             !(
@@ -752,6 +815,18 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
+            if (
+              this.timeline[elementId].animation["rotation"].isActivate == true
+            ) {
+              const ax = this.getAnimateRotation(
+                elementId,
+                (frame / fps) * 1000,
+              ) as any;
+              if (ax != false) {
+                rotation = ax.ax;
+              }
+            }
+
             let animationType = "position";
 
             if (videoElement.animation[animationType].isActivate == true) {
@@ -775,20 +850,36 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - videoElement.startTime,
                 ) as any;
 
-                ctx.drawImage(
-                  source,
-                  ax - compare / 2,
-                  ay - compare / 2,
-                  scaleW,
-                  scaleH,
-                );
+                const nx = ax - compare / 2;
+                const ny = ay - compare / 2;
+
+                const centerX = x + scaleW / 2;
+                const centerY = y + scaleH / 2;
+
+                ctx.translate(centerX, centerY);
+                ctx.rotate(rotation);
+
+                ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+
+                ctx.rotate(-rotation);
+                ctx.translate(-centerX, -centerY);
 
                 drawLayer(layerIndex + 1);
                 return;
               } catch (error) {}
             }
 
-            ctx.drawImage(source, scaleX, scaleY, scaleW, scaleH);
+            const centerX = x + scaleW / 2;
+            const centerY = y + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
+
             ctx.globalAlpha = 1;
 
             delayCount += 1;
@@ -845,6 +936,32 @@ export class RenderController implements ReactiveController {
               loaded[key] = frames;
             });
         }
+      }
+    }
+  }
+
+  getAnimateRotation(elementId, cursor) {
+    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+      let index = Math.round(cursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["rotation"].ax,
+          cursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          ax: ax,
+        };
+      } catch (error) {
+        return false;
       }
     }
   }

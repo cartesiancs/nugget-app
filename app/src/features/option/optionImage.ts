@@ -63,6 +63,17 @@ export class OptionImage extends LitElement {
           @change=${this.handleOpacity}
         />
       </div>
+
+      <label class="form-label text-light">Rotation</label>
+      <div class="d-flex flex-row bd-highlight mb-2">
+        <input
+          aria-event="rotation"
+          type="number"
+          class="form-control bg-default text-light me-1"
+          value="0"
+          @change=${this.handleRotation}
+        />
+      </div>
     `;
   }
 
@@ -83,10 +94,12 @@ export class OptionImage extends LitElement {
     const xDom: any = this.querySelector("input[aria-event='location-x'");
     const yDom: any = this.querySelector("input[aria-event='location-y'");
     const opacity: any = this.querySelector("input[aria-event='opacity'");
+    const rotation: any = this.querySelector("input[aria-event='rotation'");
 
     xDom.value = this.timeline[this.elementId].location?.x;
     yDom.value = this.timeline[this.elementId].location?.y;
     opacity.value = this.timeline[this.elementId].opacity;
+    rotation.value = this.timeline[this.elementId].rotation;
   }
 
   handleLocation() {
@@ -114,6 +127,14 @@ export class OptionImage extends LitElement {
     const opacity: any = this.querySelector("input[aria-event='opacity'");
 
     this.timeline[this.elementId].opacity = parseInt(opacity.value);
+
+    this.timelineState.patchTimeline(this.timeline);
+  }
+
+  handleRotation() {
+    const rotation = this.querySelector("input[aria-event='rotation'") as any;
+
+    this.timeline[this.elementId].rotation = parseInt(rotation.value);
 
     this.timelineState.patchTimeline(this.timeline);
   }

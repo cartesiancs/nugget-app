@@ -436,6 +436,7 @@ export class RenderController implements ReactiveController {
           let ty = y;
           let fontSize = this.timeline[elementId].fontsize;
           let compare = 1;
+          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           try {
             ctx.globalAlpha = 1;
@@ -524,6 +525,15 @@ export class RenderController implements ReactiveController {
                 ty = ay;
               } catch (error) {}
             }
+
+            const centerX = tx + scaleW / 2;
+            const centerY = ty + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            tx = -scaleW / 2;
+            ty = -scaleH / 2;
 
             this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
 
@@ -640,6 +650,9 @@ export class RenderController implements ReactiveController {
               );
               ctx.fillText(line, tx + w - lastWordWidth, textY);
             }
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
 
             ctx.globalAlpha = 1;
 

@@ -411,7 +411,6 @@ export class PreviewCanvas extends LitElement {
 
           if (fileType == "text") {
             this.drawText(ctx, elementId, w, h, x, y);
-            this.drawOutline(ctx, elementId, x, y, w, h, rotation);
           }
 
           if (fileType == "shape") {
@@ -931,6 +930,7 @@ export class PreviewCanvas extends LitElement {
     let ty = y;
     let fontSize = this.timeline[elementId].fontsize;
     let compare = 1;
+    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     try {
       if (this.isEditText) {
@@ -1025,6 +1025,25 @@ export class PreviewCanvas extends LitElement {
           ty = ay;
         } catch (error) {}
       }
+
+      const centerX = tx + scaleW / 2;
+      const centerY = ty + scaleH / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      tx = -scaleW / 2;
+      ty = -scaleH / 2;
+
+      this.drawOutline(
+        ctx,
+        elementId,
+        -scaleW / 2,
+        -scaleH / 2,
+        scaleW,
+        scaleH,
+        rotation,
+      );
 
       this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
 
@@ -1134,6 +1153,9 @@ export class PreviewCanvas extends LitElement {
         );
         ctx.fillText(line, tx + w - lastWordWidth, textY);
       }
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
 
       ctx.globalAlpha = 1;
     } catch (error) {}
@@ -2492,84 +2514,79 @@ export class PreviewCanvas extends LitElement {
       const minSize = 10;
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
-      const location = this.timeline[this.activeElementId].location as { x; y };
+
+      const rotation = this.timeline[this.activeElementId].rotation || 0;
+      const cosTheta = Math.cos(rotation);
+      const sinTheta = Math.sin(rotation);
+      const localDx = dx * cosTheta + dy * sinTheta;
+      const localDy = -dx * sinTheta + dy * cosTheta;
+
+      const location = this.timeline[this.activeElementId].location;
       const filetype = this.timeline[this.activeElementId].filetype;
 
       const moveE = () => {
-        if (this.elementOrigin.w + dx <= minSize) return false;
-        const width = this.elementOrigin.w + dx;
+        if (this.elementOrigin.w + localDx <= minSize) return false;
+        const width = this.elementOrigin.w + localDx;
         const ratio = this.timeline[this.activeElementId].ratio;
         this.timeline[this.activeElementId].width = width;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].height = width / ratio;
         this.timeline[this.activeElementId].location.y =
           this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveW = () => {
-        if (this.elementOrigin.w - dx <= minSize) return false;
-        const width = this.elementOrigin.w - dx;
+        if (this.elementOrigin.w - localDx <= minSize) return false;
+        const width = this.elementOrigin.w - localDx;
         const ratio = this.timeline[this.activeElementId].ratio;
 
-        this.timeline[this.activeElementId].width = this.elementOrigin.w - dx;
+        this.timeline[this.activeElementId].width = width;
         this.timeline[this.activeElementId].location.x =
-          this.elementOrigin.x + dx;
+          this.elementOrigin.x + localDx;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].height = width / ratio;
         this.timeline[this.activeElementId].location.y =
           this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveN = () => {
-        if (this.elementOrigin.h - dy <= minSize) return false;
-        const height = this.elementOrigin.h - dy;
+        if (this.elementOrigin.h - localDy <= minSize) return false;
+        const height = this.elementOrigin.h - localDy;
         const ratio = this.timeline[this.activeElementId].ratio;
 
         this.timeline[this.activeElementId].height = height;
         this.timeline[this.activeElementId].location.y =
-          this.elementOrigin.y + dy;
+          this.elementOrigin.y + localDy;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].width = height * ratio;
         this.timeline[this.activeElementId].location.x =
           this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
       const moveS = () => {
-        if (this.elementOrigin.h + dy <= minSize) return false;
-        const height = this.elementOrigin.h + dy;
+        if (this.elementOrigin.h + localDy <= minSize) return false;
+        const height = this.elementOrigin.h + localDy;
         const ratio = this.timeline[this.activeElementId].ratio;
         this.timeline[this.activeElementId].height = height;
 
         if (filetype == "text") {
           return false;
         }
-
         this.timeline[this.activeElementId].width = height * ratio;
         this.timeline[this.activeElementId].location.x =
           this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
-      if (this.moveType == "stretchE") {
-        moveE();
-      } else if (this.moveType == "stretchW") {
-        moveW();
-      } else if (this.moveType == "stretchN") {
-        moveN();
-      } else if (this.moveType == "stretchS") {
-        moveS();
-      } else if (this.moveType == "stretchNW") {
+      const moveNW = () => {
         if (filetype == "text") {
           moveN();
           moveW();
@@ -2579,8 +2596,8 @@ export class PreviewCanvas extends LitElement {
             m: 1,
             a1: this.elementOrigin.x,
             b1: this.elementOrigin.y,
-            a2: this.elementOrigin.x + dx,
-            b2: this.elementOrigin.y + dy,
+            a2: this.elementOrigin.x + localDx,
+            b2: this.elementOrigin.y + localDy,
           });
 
           this.timeline[this.activeElementId].width =
@@ -2593,7 +2610,9 @@ export class PreviewCanvas extends LitElement {
 
           this.timeline[this.activeElementId].location.x = intr.x;
         }
-      } else if (this.moveType == "stretchSW") {
+      };
+
+      const moveSW = () => {
         if (filetype == "text") {
           moveS();
           moveW();
@@ -2603,17 +2622,18 @@ export class PreviewCanvas extends LitElement {
             m: -1,
             a1: this.elementOrigin.x,
             b1: this.elementOrigin.h,
-            a2: this.elementOrigin.x + dx,
-            b2: this.elementOrigin.h + dy,
+            a2: this.elementOrigin.x + localDx,
+            b2: this.elementOrigin.h + localDy,
           });
 
           this.timeline[this.activeElementId].height = intr.y;
           this.timeline[this.activeElementId].width = intr.y * ratio;
-
           this.timeline[this.activeElementId].location.x =
             this.elementOrigin.x - (intr.y * ratio - this.elementOrigin.w);
         }
-      } else if (this.moveType == "stretchSE") {
+      };
+
+      const moveSE = () => {
         if (filetype == "text") {
           moveS();
           moveE();
@@ -2623,14 +2643,16 @@ export class PreviewCanvas extends LitElement {
             m: 1,
             a1: this.elementOrigin.w,
             b1: this.elementOrigin.h,
-            a2: this.elementOrigin.w + dx,
-            b2: this.elementOrigin.h + dy,
+            a2: this.elementOrigin.w + localDx,
+            b2: this.elementOrigin.h + localDy,
           });
 
           this.timeline[this.activeElementId].height = intr.y;
           this.timeline[this.activeElementId].width = intr.y * ratio;
         }
-      } else if (this.moveType == "stretchNE") {
+      };
+
+      const moveNE = () => {
         if (filetype == "text") {
           moveN();
           moveE();
@@ -2640,8 +2662,8 @@ export class PreviewCanvas extends LitElement {
             m: -1,
             a1: this.elementOrigin.w,
             b1: this.elementOrigin.y,
-            a2: this.elementOrigin.w + dx,
-            b2: this.elementOrigin.y + dy,
+            a2: this.elementOrigin.w + localDx,
+            b2: this.elementOrigin.y + localDy,
           });
 
           this.timeline[this.activeElementId].width = intr.x;
@@ -2649,6 +2671,24 @@ export class PreviewCanvas extends LitElement {
           this.timeline[this.activeElementId].location.y =
             this.elementOrigin.y - (intr.x / ratio - this.elementOrigin.h);
         }
+      };
+
+      if (this.moveType == "stretchE") {
+        moveE();
+      } else if (this.moveType == "stretchW") {
+        moveW();
+      } else if (this.moveType == "stretchN") {
+        moveN();
+      } else if (this.moveType == "stretchS") {
+        moveS();
+      } else if (this.moveType == "stretchNW") {
+        moveNW();
+      } else if (this.moveType == "stretchSW") {
+        moveSW();
+      } else if (this.moveType == "stretchSE") {
+        moveSE();
+      } else if (this.moveType == "stretchNE") {
+        moveNE();
       }
 
       this.timelineState.patchTimeline(this.timeline);

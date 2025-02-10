@@ -113,7 +113,17 @@ export class AutomaticCaption extends LitElement {
   }
 
   // 이벤트 처리
-  applyCursorEvent(type) {}
+  applyCursorEvent(type) {
+    this.dispatchEvent(
+      new CustomEvent("changeCursorType", {
+        detail: {
+          type: type,
+        },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
 
   async analyzeAudioToText(audioPath) {
     this.applyCursorEvent("lockKeyboard");

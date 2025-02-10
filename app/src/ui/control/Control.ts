@@ -112,6 +112,12 @@ export class Control extends LitElement {
     }
   }
 
+  _handleChangeCursorType(e) {
+    const type = e.detail.type;
+
+    this.timelineState.setCursorType(type);
+  }
+
   render() {
     return html`
       <div
@@ -315,6 +321,7 @@ export class Control extends LitElement {
             .timeline=${this.timeline}
             .isDev=${false}
             @editComplate=${this._handleComplateAutoCaption}
+            @changeCursorType=${this._handleChangeCursorType}
           ></automatic-caption>
         </div>
       </div>

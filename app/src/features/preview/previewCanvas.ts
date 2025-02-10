@@ -403,12 +403,10 @@ export class PreviewCanvas extends LitElement {
 
           if (fileType == "gif") {
             this.drawGif(ctx, elementId, w, h, x, y);
-            this.drawOutline(ctx, elementId, x, y, w, h, rotation);
           }
 
           if (fileType == "video") {
             this.drawVideo(ctx, elementId, w, h, x, y, startTime);
-            this.drawOutline(ctx, elementId, x, y, w, h, rotation);
           }
 
           if (fileType == "text") {
@@ -507,6 +505,7 @@ export class PreviewCanvas extends LitElement {
       });
 
       const video = this.loadedVideos[videoIndex];
+      const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
       video.object.muted = false;
 
@@ -637,20 +636,53 @@ export class PreviewCanvas extends LitElement {
               this.timelineCursor - videoElement.startTime,
             ) as any;
 
-            ctx.drawImage(
-              source,
-              ax - compare / 2,
-              ay - compare / 2,
+            x = ax - compare / 2;
+            y = ay - compare / 2;
+
+            const centerX = x + scaleW / 2;
+            const centerY = y + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+            this.drawOutline(
+              ctx,
+              elementId,
+              -scaleW / 2,
+              -scaleH / 2,
               scaleW,
               scaleH,
+              rotation,
             );
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
 
             return false;
           } catch (error) {}
         }
       }
 
-      ctx.drawImage(source, scaleX, scaleY, scaleW, scaleH);
+      const centerX = x + scaleW / 2;
+      const centerY = y + scaleH / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+      this.drawOutline(
+        ctx,
+        elementId,
+        -scaleW / 2,
+        -scaleH / 2,
+        scaleW,
+        scaleH,
+        rotation,
+      );
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
     } else {
       const video = document.createElement("video");
       video.playbackRate = this.timeline[elementId].speed;
@@ -738,22 +770,28 @@ export class PreviewCanvas extends LitElement {
         } else {
           const result = this.getAnimatePosition(elementId) as any;
           if (result != false) {
-            ctx.drawImage(
-              img.object,
-              result.ax - compare / 2,
-              result.ay - compare / 2,
-              scaleW,
-              scaleH,
-            );
+            x = result.ax - compare / 2;
+            y = result.ay - compare / 2;
+
+            const centerX = x + scaleW / 2;
+            const centerY = y + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
             this.drawOutline(
               ctx,
               elementId,
-              result.ax - compare / 2,
-              result.ay - compare / 2,
+              -scaleW / 2,
+              -scaleH / 2,
               scaleW,
               scaleH,
               rotation,
             );
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
 
             return false;
           }
@@ -799,6 +837,7 @@ export class PreviewCanvas extends LitElement {
 
   drawGif(ctx, elementId, w, h, x, y) {
     const imageElement = this.timeline[elementId] as any;
+    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
     if (
       this.gifFrames.findIndex((item) => {
@@ -834,7 +873,17 @@ export class PreviewCanvas extends LitElement {
 
       this.gifCanvas.tempCtx.putImageData(this.gifCanvas.frameImageData, 0, 0);
 
-      ctx.drawImage(this.gifTempCanvas, x, y, w, h);
+      const centerX = x + w / 2;
+      const centerY = y + h / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      ctx.drawImage(this.gifTempCanvas, -w / 2, -h / 2, w, h);
+      this.drawOutline(ctx, elementId, -w / 2, -h / 2, w, h, rotation);
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
     } else {
       fetch(imageElement.localpath)
         .then((resp) => resp.arrayBuffer())

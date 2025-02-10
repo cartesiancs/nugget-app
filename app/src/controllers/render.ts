@@ -385,6 +385,7 @@ export class RenderController implements ReactiveController {
         // NOTE: gif 랜더링 구현 필요
         if (fileType == "gif") {
           const imageElement = this.timeline[elementId] as any;
+          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           const gifTempCanvas = document.createElement("canvas");
           const gifTempCanvasCtx = gifTempCanvas.getContext("2d") as any;
@@ -413,7 +414,16 @@ export class RenderController implements ReactiveController {
 
           gifTempCanvasCtx.putImageData(frameImageData, 0, 0);
 
-          ctx.drawImage(gifTempCanvas, x, y, w, h);
+          const centerX = x + w / 2;
+          const centerY = y + h / 2;
+
+          ctx.translate(centerX, centerY);
+          ctx.rotate(rotation);
+
+          ctx.drawImage(gifTempCanvas, -w / 2, -h / 2, w, h);
+
+          ctx.rotate(-rotation);
+          ctx.translate(-centerX, -centerY);
 
           drawLayer(layerIndex + 1);
           return;
@@ -651,6 +661,7 @@ export class RenderController implements ReactiveController {
           let scaleX = x;
           let scaleY = y;
           let compare = 1;
+          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           if (
             !(
@@ -790,20 +801,36 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - videoElement.startTime,
                 ) as any;
 
-                ctx.drawImage(
-                  source,
-                  ax - compare / 2,
-                  ay - compare / 2,
-                  scaleW,
-                  scaleH,
-                );
+                const nx = ax - compare / 2;
+                const ny = ay - compare / 2;
+
+                const centerX = x + scaleW / 2;
+                const centerY = y + scaleH / 2;
+
+                ctx.translate(centerX, centerY);
+                ctx.rotate(rotation);
+
+                ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+
+                ctx.rotate(-rotation);
+                ctx.translate(-centerX, -centerY);
 
                 drawLayer(layerIndex + 1);
                 return;
               } catch (error) {}
             }
 
-            ctx.drawImage(source, scaleX, scaleY, scaleW, scaleH);
+            const centerX = x + scaleW / 2;
+            const centerY = y + scaleH / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+
+            ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+
+            ctx.rotate(-rotation);
+            ctx.translate(-centerX, -centerY);
+
             ctx.globalAlpha = 1;
 
             delayCount += 1;

@@ -763,10 +763,9 @@ export class PreviewCanvas extends LitElement {
       const centerX = x + scaleW / 2;
       const centerY = y + scaleH / 2;
 
-      ctx.translate(centerX, centerY); // 중심 이동
-      ctx.rotate(rotation); // 회전 적용
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
 
-      // 원래 위치를 유지하기 위해 중심 기준으로 이동
       ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
       this.drawOutline(
         ctx,
@@ -778,8 +777,8 @@ export class PreviewCanvas extends LitElement {
         rotation,
       );
 
-      ctx.rotate(-rotation); // 회전 적용
-      ctx.translate(-centerX, -centerY); // 중심 이동
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
     } else {
       let img = new Image();
       img.onload = () => {

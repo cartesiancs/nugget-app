@@ -275,6 +275,7 @@ export class RenderController implements ReactiveController {
           let scaleX = x;
           let scaleY = y;
           let compare = 1;
+          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           ctx.globalAlpha = imageElement.opacity / 100;
 
@@ -359,7 +360,21 @@ export class RenderController implements ReactiveController {
             } catch (error) {}
           }
 
-          ctx.drawImage(loaded[elementId], scaleX, scaleY, scaleW, scaleH);
+          const centerX = x + scaleW / 2;
+          const centerY = y + scaleH / 2;
+
+          ctx.translate(centerX, centerY);
+          ctx.rotate(rotation);
+
+          ctx.drawImage(
+            loaded[elementId],
+            -scaleW / 2,
+            -scaleH / 2,
+            scaleW,
+            scaleH,
+          );
+          ctx.rotate(-rotation);
+          ctx.translate(-centerX, -centerY);
 
           ctx.globalAlpha = 1;
 

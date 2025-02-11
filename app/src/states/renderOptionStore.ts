@@ -7,6 +7,7 @@ type Options = {
   };
   fps: number;
   duration: number;
+  backgroundColor: string;
 };
 
 export interface IRenderOptionStore {
@@ -22,6 +23,7 @@ export const renderOptionStore = createStore<IRenderOptionStore>((set) => ({
     },
     fps: 60,
     duration: 10,
+    backgroundColor: "#000000",
   },
 
   updateOptions: (options: Options) =>

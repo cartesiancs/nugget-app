@@ -343,6 +343,9 @@ export class PreviewCanvas extends LitElement {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      ctx.fillStyle = this.renderOption.backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       const sortedTimeline = Object.fromEntries(
         Object.entries(this.timeline).sort(
           ([, valueA]: any, [, valueB]: any) =>

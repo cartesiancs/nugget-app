@@ -158,7 +158,7 @@ export class OptionVideo extends LitElement {
           type="button"
           class="btn btn-sm mt-2 w-100 bg-dark text-light"
           @click=${() =>
-            this.handleClickAddAnimatePreset(0, 1, 250, 1.2, "scale")}
+            this.handleClickAddAnimatePreset(0, 10, 250, 12, "scale")}
         >
           Zoom In
         </button>

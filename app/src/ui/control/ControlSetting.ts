@@ -31,6 +31,11 @@ export class ControlSetting extends LitElement {
     return this;
   }
 
+  _handleUpdateBackgroundColor(e) {
+    this.renderOption.backgroundColor = e.target.value;
+    this.renderOptionStore.updateOptions(this.renderOption);
+  }
+
   _handleUpdatePreviewSizeW(e) {
     this.renderOption.previewSize.w = e.target.value;
     this.renderOptionStore.updateOptions(this.renderOption);
@@ -210,6 +215,22 @@ export class ControlSetting extends LitElement {
       </button>
 
       <!-- <button class="btn btn-sm bg-primary text-light mt-1" onclick="window.electronAPI.req.progressBar.test()">PROGRESSBARTEST </button> -->
+      <br />
+
+      <div class="input-group mb-2 mt-2">
+        <span class="input-group-text bg-default text-light" id="basic-addon2"
+          >background</span
+        >
+        <input
+          id="backgroundColor"
+          type="color"
+          class="form-control bg-default text-light"
+          value=${this.renderOption.backgroundColor}
+          @change=${this._handleUpdateBackgroundColor}
+          @input=${this._handleUpdateBackgroundColor}
+        />
+      </div>
+
       <br />
 
       <button

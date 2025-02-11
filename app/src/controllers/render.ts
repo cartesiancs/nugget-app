@@ -40,6 +40,7 @@ export class RenderController implements ReactiveController {
     const projectRatio = elementControlComponent.previewRatio;
     const previewSizeH = renderOptionState.previewSize.h;
     const previewSizeW = renderOptionState.previewSize.w;
+    const backgroundColor = renderOptionState.backgroundColor;
 
     const videoBitrate = Number(document.querySelector("#videoBitrate").value);
 
@@ -78,6 +79,7 @@ export class RenderController implements ReactiveController {
         videoDestinationFolder: projectFolder,
         videoBitrate: videoBitrate,
         previewRatio: projectRatio,
+        backgroundColor: backgroundColor,
         previewSize: {
           w: previewSizeW,
           h: previewSizeH,
@@ -132,7 +134,7 @@ export class RenderController implements ReactiveController {
       canvas.height = options.previewSize.h;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "black";
+      ctx.fillStyle = options.backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const sortedTimeline = Object.fromEntries(

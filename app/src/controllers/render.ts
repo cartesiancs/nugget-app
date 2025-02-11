@@ -299,29 +299,16 @@ export class RenderController implements ReactiveController {
             } catch (error) {}
           }
 
-          if (imageElement.animation["scale"].isActivate == true) {
-            let index = Math.round(((frame / fps) * 1000) / 16);
-            let indexToMs = index * 20;
-            let startTime = Number(this.timeline[elementId].startTime);
-            let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-            try {
-              if (indexPoint < 0) {
-                return false;
-              }
-
-              const ax = this.findNearestY(
-                imageElement.animation["scale"].ax,
-                (frame / fps) * 1000 - imageElement.startTime,
-              ) as any;
-
+          if (this.timeline[elementId].animation["scale"].isActivate == true) {
+            const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
+            if (ax != false) {
               scaleW = w * ax;
               scaleH = h * ax;
               compare = scaleW - w;
 
               scaleX = x - compare / 2;
               scaleY = y - compare / 2;
-            } catch (error) {}
+            }
           }
 
           let animationType = "position";
@@ -478,23 +465,10 @@ export class RenderController implements ReactiveController {
             if (
               this.timeline[elementId].animation["scale"].isActivate == true
             ) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  this.timeline[elementId].animation["scale"].ax,
-                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
-                ) as any;
-
+              const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
+              if (ax != false) {
                 fontSize = this.timeline[elementId].fontsize * (ax / 10);
-              } catch (error) {}
+              }
             }
 
             if (
@@ -790,29 +764,18 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
-            if (videoElement.animation["scale"].isActivate == true) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  videoElement.animation["scale"].ax,
-                  (frame / fps) * 1000 - videoElement.startTime,
-                ) as any;
-
+            if (
+              this.timeline[elementId].animation["scale"].isActivate == true
+            ) {
+              const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
+              if (ax != false) {
                 scaleW = w * ax;
                 scaleH = h * ax;
                 compare = scaleW - w;
 
                 scaleX = x - compare / 2;
                 scaleY = y - compare / 2;
-              } catch (error) {}
+              }
             }
 
             if (
@@ -936,6 +899,30 @@ export class RenderController implements ReactiveController {
               loaded[key] = frames;
             });
         }
+      }
+    }
+  }
+
+  getAnimateScale(elementId, cursor): number | any {
+    if (this.timeline[elementId].animation["scale"].isActivate == true) {
+      let index = Math.round(cursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["scale"].ax,
+          cursor - this.timeline[elementId].startTime,
+        ) as number;
+
+        return ax / 10;
+      } catch (error) {
+        return 1;
       }
     }
   }

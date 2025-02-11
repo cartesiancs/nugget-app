@@ -1246,7 +1246,7 @@ export class PreviewCanvas extends LitElement {
           this.timelineCursor - this.timeline[elementId].startTime,
         ) as number;
 
-        return Math.log10(ax) + 1;
+        return ax / 10;
       } catch (error) {
         return 1;
       }

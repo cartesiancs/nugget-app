@@ -141,20 +141,20 @@ export class KeyframeEditor extends LitElement {
           this.lineCount = 1;
         }
 
-        if (this.prevElementId != this.elementId) {
-          if (
-            this.timeline[this.elementId].animation[this.animationType]
-              .isActivate
-          ) {
-            this.points = [
-              ...this.timeline[this.elementId].animation[this.animationType]
-                .points,
-            ];
-          } else {
-            this.points = [[[0, 0]], [[0, 0]]];
-          }
-          this.prevElementId = this.elementId;
-        }
+        // if (this.prevElementId != this.elementId) {
+        //   if (
+        //     this.timeline[this.elementId].animation[this.animationType]
+        //       .isActivate
+        //   ) {
+        //     this.points = [
+        //       ...this.timeline[this.elementId].animation[this.animationType]
+        //         .points,
+        //     ];
+        //   } else {
+        //     this.points = [[[0, 0]], [[0, 0]]];
+        //   }
+        //   this.prevElementId = this.elementId;
+        // }
       }
 
       if (this.isShow) {

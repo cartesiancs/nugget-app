@@ -585,28 +585,15 @@ export class PreviewCanvas extends LitElement {
       }
 
       if (videoElement.animation["scale"].isActivate == true) {
-        let index = Math.round(this.timelineCursor / 16);
-        let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
-        let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-        try {
-          if (indexPoint < 0) {
-            return false;
-          }
-
-          const ax = this.findNearestY(
-            videoElement.animation["scale"].ax,
-            this.timelineCursor - videoElement.startTime,
-          ) as any;
-
+        const ax = this.getAnimateScale(elementId);
+        if (ax != false) {
           scaleW = w * ax;
           scaleH = h * ax;
           compare = scaleW - w;
 
           scaleX = x - compare / 2;
           scaleY = y - compare / 2;
-        } catch (error) {}
+        }
       }
 
       let animationType = "position";
@@ -768,6 +755,13 @@ export class PreviewCanvas extends LitElement {
         }
       }
 
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
+      }
+
       let animationType = "position";
 
       if (imageElement.animation[animationType].isActivate == true) {
@@ -801,13 +795,6 @@ export class PreviewCanvas extends LitElement {
 
             return false;
           }
-        }
-      }
-
-      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
-        const ax = this.getAnimateRotation(elementId) as any;
-        if (ax != false) {
-          rotation = ax.ax;
         }
       }
 
@@ -974,23 +961,10 @@ export class PreviewCanvas extends LitElement {
       }
 
       if (this.timeline[elementId].animation["scale"].isActivate == true) {
-        let index = Math.round(this.timelineCursor / 16);
-        let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
-        let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-        try {
-          if (indexPoint < 0) {
-            return false;
-          }
-
-          const ax = this.findNearestY(
-            this.timeline[elementId].animation["scale"].ax,
-            this.timelineCursor - this.timeline[elementId].startTime,
-          ) as any;
-
+        const ax = this.getAnimateScale(elementId);
+        if (ax != false) {
           fontSize = this.timeline[elementId].fontsize * (ax / 10);
-        } catch (error) {}
+        }
       }
 
       ctx.fillStyle = this.timeline[elementId].textcolor as string;
@@ -1255,7 +1229,7 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  getAnimateScale(elementId) {
+  getAnimateScale(elementId): number | any {
     if (this.timeline[elementId].animation["scale"].isActivate == true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
@@ -1270,9 +1244,9 @@ export class PreviewCanvas extends LitElement {
         const ax = this.findNearestY(
           this.timeline[elementId].animation["scale"].ax,
           this.timelineCursor - this.timeline[elementId].startTime,
-        ) as any;
+        ) as number;
 
-        return ax;
+        return Math.log10(ax) + 1;
       } catch (error) {
         return 1;
       }

@@ -276,7 +276,9 @@ export class RenderController implements ReactiveController {
           let scaleH = h;
           let scaleX = x;
           let scaleY = y;
-          let compare = 1;
+          let compareW = 1;
+          let compareH = 1;
+
           let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           ctx.globalAlpha = imageElement.opacity / 100;
@@ -306,10 +308,11 @@ export class RenderController implements ReactiveController {
             if (ax != false) {
               scaleW = w * ax;
               scaleH = h * ax;
-              compare = scaleW - w;
+              compareW = scaleW - w;
+              compareH = scaleH - h;
 
-              scaleX = x - compare / 2;
-              scaleY = y - compare / 2;
+              scaleX = x - compareW / 2;
+              scaleY = y - compareH / 2;
             }
           }
 
@@ -338,8 +341,8 @@ export class RenderController implements ReactiveController {
 
               ctx.drawImage(
                 loaded[elementId],
-                ax - compare / 2,
-                ay - compare / 2,
+                ax - compareW / 2,
+                ay - compareH / 2,
                 scaleW,
                 scaleH,
               );
@@ -361,8 +364,8 @@ export class RenderController implements ReactiveController {
             }
           }
 
-          const centerX = x + scaleW / 2;
-          const centerY = y + scaleH / 2;
+          const centerX = scaleX + scaleW / 2;
+          const centerY = scaleY + scaleH / 2;
 
           ctx.translate(centerX, centerY);
           ctx.rotate(rotation);
@@ -673,7 +676,8 @@ export class RenderController implements ReactiveController {
           let scaleH = h;
           let scaleX = x;
           let scaleY = y;
-          let compare = 1;
+          let compareW = 1;
+          let compareH = 1;
           let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           if (
@@ -773,10 +777,11 @@ export class RenderController implements ReactiveController {
               if (ax != false) {
                 scaleW = w * ax;
                 scaleH = h * ax;
-                compare = scaleW - w;
+                compareW = scaleW - w;
+                compareH = scaleH - h;
 
-                scaleX = x - compare / 2;
-                scaleY = y - compare / 2;
+                scaleX = x - compareW / 2;
+                scaleY = y - compareH / 2;
               }
             }
 
@@ -815,11 +820,11 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - videoElement.startTime,
                 ) as any;
 
-                const nx = ax - compare / 2;
-                const ny = ay - compare / 2;
+                const nx = ax - compareW / 2;
+                const ny = ay - compareH / 2;
 
-                const centerX = x + scaleW / 2;
-                const centerY = y + scaleH / 2;
+                const centerX = scaleX + scaleW / 2;
+                const centerY = scaleY + scaleH / 2;
 
                 ctx.translate(centerX, centerY);
                 ctx.rotate(rotation);
@@ -834,8 +839,8 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
-            const centerX = x + scaleW / 2;
-            const centerY = y + scaleH / 2;
+            const centerX = scaleX + scaleW / 2;
+            const centerY = scaleY + scaleH / 2;
 
             ctx.translate(centerX, centerY);
             ctx.rotate(rotation);

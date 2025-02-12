@@ -2,17 +2,22 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { LocaleController } from "../../controllers/locale";
+import { KeyframeController } from "../../controllers/keyframe";
 
 @customElement("option-image")
 export class OptionImage extends LitElement {
   elementId: string;
   private lc = new LocaleController(this);
+  private keyframeControl = new KeyframeController(this);
 
   @property()
-  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+  timelineState: any = useTimelineStore.getInitialState();
 
   @property()
   timeline = this.timelineState.timeline;
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
 
   @property()
   isShow = false;
@@ -20,6 +25,7 @@ export class OptionImage extends LitElement {
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
+      this.timelineCursor = state.cursor;
       if (this.isExistElement(this.elementId) && this.isShow) {
         this.updateValue();
       }
@@ -133,6 +139,32 @@ export class OptionImage extends LitElement {
     height.value = this.timeline[this.elementId].height;
   }
 
+  addAnimationPoint(x, line: number) {
+    const fileType = this.timeline[this.elementId].filetype as any;
+    const startTime = this.timeline[this.elementId].startTime as any;
+
+    const animationType = "position";
+    if (!["image", "video", "text"].includes(fileType)) return false;
+
+    if (
+      this.timeline[this.elementId].animation["position"].isActivate != true
+    ) {
+      return false;
+    }
+
+    try {
+      this.keyframeControl.addPoint({
+        x: this.timelineCursor - startTime,
+        y: x,
+        line: line,
+        elementId: this.elementId,
+        animationType: "position",
+      });
+    } catch (error) {
+      console.log(error, "AAARR");
+    }
+  }
+
   handleLocation() {
     const xDom: any = this.querySelector(
       "number-input[aria-event='location-x'",
@@ -143,6 +175,9 @@ export class OptionImage extends LitElement {
 
     let x = parseFloat(parseFloat(xDom.value).toFixed(2));
     let y = parseFloat(parseFloat(yDom.value).toFixed(2));
+
+    this.addAnimationPoint(x, 0);
+    this.addAnimationPoint(y, 1);
 
     this.timeline[this.elementId].location = {
       x: x,

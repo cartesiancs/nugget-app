@@ -23,7 +23,10 @@ export class OptionVideo extends LitElement {
   private keyframeControl = new KeyframeController(this);
 
   @property()
-  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+  timelineState: any = useTimelineStore.getInitialState();
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
 
   @property()
   timeline = this.timelineState.timeline;
@@ -34,6 +37,8 @@ export class OptionVideo extends LitElement {
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
+      this.timelineCursor = state.cursor;
+
       if (this.isExistElement(this.elementId) && this.isShow) {
         this.updateValue();
       }
@@ -94,21 +99,17 @@ export class OptionVideo extends LitElement {
       <label class="form-label text-light"
         >${this.lc.t("setting.position")}</label
       >
-      <div class="d-flex flex-row bd-highlight mb-2">
-        <input
+      <div class="d-flex flex-row gap-2 bd-highlight mb-2">
+        <number-input
           aria-event="location-x"
-          type="number"
-          class="form-control bg-default text-light me-1"
+          @onChange=${this.handleLocation}
           value="0"
-          @change=${this.handleLocation}
-        />
-        <input
+        ></number-input>
+        <number-input
           aria-event="location-y"
-          type="number"
-          class="form-control bg-default text-light"
+          @onChange=${this.handleLocation}
           value="0"
-          @change=${this.handleLocation}
-        />
+        ></number-input>
       </div>
 
       <button
@@ -212,8 +213,12 @@ export class OptionVideo extends LitElement {
   }
 
   updateValue() {
-    const xDom: any = this.querySelector("input[aria-event='location-x'");
-    const yDom: any = this.querySelector("input[aria-event='location-y'");
+    const xDom: any = this.querySelector(
+      "number-input[aria-event='location-x'",
+    );
+    const yDom: any = this.querySelector(
+      "number-input[aria-event='location-y'",
+    );
     xDom.value = this.timeline[this.elementId].location?.x;
     yDom.value = this.timeline[this.elementId].location?.y;
   }
@@ -343,24 +348,51 @@ export class OptionVideo extends LitElement {
     this.requestUpdate();
   }
 
+  addAnimationPoint(x, line: number) {
+    const fileType = this.timeline[this.elementId].filetype as any;
+    const startTime = this.timeline[this.elementId].startTime as any;
+
+    const animationType = "position";
+    if (!["image", "video", "text"].includes(fileType)) return false;
+
+    if (
+      this.timeline[this.elementId].animation["position"].isActivate != true
+    ) {
+      return false;
+    }
+
+    try {
+      this.keyframeControl.addPoint({
+        x: this.timelineCursor - startTime,
+        y: x,
+        line: line,
+        elementId: this.elementId,
+        animationType: "position",
+      });
+    } catch (error) {
+      console.log(error, "AAARR");
+    }
+  }
+
   handleLocation() {
-    const targetElement = document.querySelector(
-      `element-control-asset[element-id='${this.elementId}']`,
+    const xDom: any = this.querySelector(
+      "number-input[aria-event='location-x'",
     );
-    const xDom: any = this.querySelector("input[aria-event='location-x'");
-    const yDom: any = this.querySelector("input[aria-event='location-y'");
+    const yDom: any = this.querySelector(
+      "number-input[aria-event='location-y'",
+    );
 
-    let x = xDom.value;
-    let y = yDom.value;
+    let x = parseFloat(parseFloat(xDom.value).toFixed(2));
+    let y = parseFloat(parseFloat(yDom.value).toFixed(2));
 
-    let convertLocation = targetElement.convertAbsoluteToRelativeSize({
+    this.addAnimationPoint(x, 0);
+    this.addAnimationPoint(y, 1);
+
+    this.timeline[this.elementId].location = {
       x: x,
       y: y,
-    });
+    };
 
-    targetElement.changeLocation({
-      x: convertLocation.x,
-      y: convertLocation.y,
-    });
+    this.timelineState.patchTimeline(this.timeline);
   }
 }

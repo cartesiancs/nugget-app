@@ -115,6 +115,70 @@ export class OptionImage extends LitElement {
     return this.timeline.hasOwnProperty(elementId);
   }
 
+  findNearestY(pairs, a): number | null {
+    let closestY = null;
+    let closestDiff = Infinity;
+
+    for (const [x, y] of pairs) {
+      const diff = Math.abs(x - a);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestY = y;
+      }
+    }
+
+    return closestY;
+  }
+
+  getPosition() {
+    let animationType = "position";
+
+    if (
+      this.timeline[this.elementId].animation[animationType].isActivate == true
+    ) {
+      const result = this.getAnimatePosition(this.elementId) as any;
+      if (result != false) {
+        return result;
+      }
+    } else {
+      return {
+        x: this.timeline[this.elementId].location?.x,
+        y: this.timeline[this.elementId].location?.y,
+      };
+    }
+  }
+
+  getAnimatePosition(elementId) {
+    if (this.timeline[elementId].animation["position"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["position"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        const ay = this.findNearestY(
+          this.timeline[elementId].animation["position"].ay,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          x: ax || this.timeline[this.elementId].location?.x,
+          y: ay || this.timeline[this.elementId].location?.y,
+        };
+      } catch (error) {
+        return {
+          x: 0,
+          y: 0,
+        };
+      }
+    }
+  }
+
   updateValue() {
     const xDom: any = this.querySelector(
       "number-input[aria-event='location-x'",
@@ -131,8 +195,10 @@ export class OptionImage extends LitElement {
     const width: any = this.querySelector("number-input[aria-event='width'");
     const height: any = this.querySelector("number-input[aria-event='height'");
 
-    xDom.value = this.timeline[this.elementId].location?.x;
-    yDom.value = this.timeline[this.elementId].location?.y;
+    const position = this.getPosition();
+
+    xDom.value = position.x;
+    yDom.value = position.y;
     opacity.value = this.timeline[this.elementId].opacity;
     rotation.value = this.timeline[this.elementId].rotation;
     width.value = this.timeline[this.elementId].width;

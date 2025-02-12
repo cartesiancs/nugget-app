@@ -5,6 +5,7 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { LocaleController } from "../../controllers/locale";
+import "../../components/input/input";
 
 @customElement("control-ui-setting")
 export class ControlSetting extends LitElement {

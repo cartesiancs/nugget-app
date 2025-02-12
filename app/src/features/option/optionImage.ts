@@ -40,64 +40,52 @@ export class OptionImage extends LitElement {
       <label class="form-label text-light"
         >${this.lc.t("setting.position")}</label
       >
-      <div class="d-flex flex-row bd-highlight mb-2">
-        <input
+      <div class="d-flex flex-row gap-2 bd-highlight mb-2">
+        <number-input
           aria-event="location-x"
-          type="number"
-          class="form-control bg-default text-light me-1"
+          @onChange=${this.handleLocation}
           value="0"
-          @change=${this.handleLocation}
-        />
-        <input
+        ></number-input>
+        <number-input
           aria-event="location-y"
-          type="number"
-          class="form-control bg-default text-light"
+          @onChange=${this.handleLocation}
           value="0"
-          @change=${this.handleLocation}
-        />
+        ></number-input>
       </div>
 
       <label class="form-label text-light">Size</label>
-      <div class="d-flex flex-row bd-highlight mb-2">
-        <input
+      <div class="d-flex flex-row gap-2 bd-highlight mb-2">
+        <number-input
           aria-event="width"
-          type="number"
-          class="form-control bg-default text-light me-1"
+          @onChange=${this.handleSize}
           value="10"
-          @change=${this.handleSize}
-        />
-        <input
+        ></number-input>
+        <number-input
           aria-event="height"
-          type="number"
-          class="form-control bg-default text-light"
+          @onChange=${this.handleSize}
           value="10"
-          @change=${this.handleSize}
-        />
+        ></number-input>
       </div>
 
       <label class="form-label text-light"
         >${this.lc.t("setting.opacity")}</label
       >
       <div class="d-flex flex-row bd-highlight mb-2">
-        <input
+        <number-input
           aria-event="opacity"
-          type="number"
-          class="form-control bg-default text-light me-1"
+          @onChange=${this.handleOpacity}
           value="100"
           max="100"
-          @change=${this.handleOpacity}
-        />
+        ></number-input>
       </div>
 
       <label class="form-label text-light">Rotation</label>
       <div class="d-flex flex-row bd-highlight mb-2">
-        <input
+        <number-input
           aria-event="rotation"
-          type="number"
-          class="form-control bg-default text-light me-1"
+          @onChange=${this.handleRotation}
           value="0"
-          @change=${this.handleRotation}
-        />
+        ></number-input>
       </div>
     `;
   }
@@ -122,12 +110,20 @@ export class OptionImage extends LitElement {
   }
 
   updateValue() {
-    const xDom: any = this.querySelector("input[aria-event='location-x'");
-    const yDom: any = this.querySelector("input[aria-event='location-y'");
-    const opacity: any = this.querySelector("input[aria-event='opacity'");
-    const rotation: any = this.querySelector("input[aria-event='rotation'");
-    const width: any = this.querySelector("input[aria-event='width'");
-    const height: any = this.querySelector("input[aria-event='height'");
+    const xDom: any = this.querySelector(
+      "number-input[aria-event='location-x'",
+    );
+    const yDom: any = this.querySelector(
+      "number-input[aria-event='location-y'",
+    );
+    const opacity: any = this.querySelector(
+      "number-input[aria-event='opacity'",
+    );
+    const rotation: any = this.querySelector(
+      "number-input[aria-event='rotation'",
+    );
+    const width: any = this.querySelector("number-input[aria-event='width'");
+    const height: any = this.querySelector("number-input[aria-event='height'");
 
     xDom.value = this.timeline[this.elementId].location?.x;
     yDom.value = this.timeline[this.elementId].location?.y;
@@ -138,14 +134,15 @@ export class OptionImage extends LitElement {
   }
 
   handleLocation() {
-    const targetElement = document.querySelector(
-      `element-control-asset[element-id='${this.elementId}']`,
+    const xDom: any = this.querySelector(
+      "number-input[aria-event='location-x'",
     );
-    const xDom: any = this.querySelector("input[aria-event='location-x'");
-    const yDom: any = this.querySelector("input[aria-event='location-y'");
+    const yDom: any = this.querySelector(
+      "number-input[aria-event='location-y'",
+    );
 
-    let x = parseFloat(xDom.value);
-    let y = parseFloat(yDom.value);
+    let x = parseFloat(parseFloat(xDom.value).toFixed(2));
+    let y = parseFloat(parseFloat(yDom.value).toFixed(2));
 
     this.timeline[this.elementId].location = {
       x: x,
@@ -156,7 +153,9 @@ export class OptionImage extends LitElement {
   }
 
   handleOpacity() {
-    const opacity: any = this.querySelector("input[aria-event='opacity'");
+    const opacity: any = this.querySelector(
+      "number-input[aria-event='opacity'",
+    );
 
     this.timeline[this.elementId].opacity = parseInt(opacity.value);
 
@@ -164,7 +163,9 @@ export class OptionImage extends LitElement {
   }
 
   handleRotation() {
-    const rotation = this.querySelector("input[aria-event='rotation'") as any;
+    const rotation = this.querySelector(
+      "number-input[aria-event='rotation'",
+    ) as any;
 
     this.timeline[this.elementId].rotation = parseInt(rotation.value);
 
@@ -172,8 +173,8 @@ export class OptionImage extends LitElement {
   }
 
   handleSize() {
-    const width: any = this.querySelector("input[aria-event='width'");
-    const height: any = this.querySelector("input[aria-event='height'");
+    const width: any = this.querySelector("number-input[aria-event='width'");
+    const height: any = this.querySelector("number-input[aria-event='height'");
 
     this.timeline[this.elementId].width = parseFloat(width.value);
     this.timeline[this.elementId].height = parseFloat(height.value);

@@ -94,6 +94,10 @@ const request = {
     openDir: (dir) => ipcRenderer.invoke("extension:open:dir", dir),
     openFile: (file) => ipcRenderer.invoke("extension:open:file", file),
   },
+  media: {
+    backgroundRemove: (path) =>
+      ipcRenderer.invoke("media:backgroundRemove", path),
+  },
 };
 
 const response = {

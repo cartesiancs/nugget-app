@@ -847,6 +847,33 @@ export class PreviewCanvas extends LitElement {
     ctx.globalAlpha = 1;
   }
 
+  public preloadImage(elementId) {
+    let img = new Image();
+
+    img.onload = () => {
+      if (
+        this.loadedObjects.findIndex((item: ImageTempType) => {
+          return item.elementId == elementId;
+        }) != -1
+      ) {
+        const index = this.loadedObjects.findIndex((item: ImageTempType) => {
+          return item.elementId == elementId;
+        });
+
+        this.loadedObjects[index].object = img;
+      } else {
+        this.loadedObjects.push({
+          elementId: elementId,
+          object: img,
+        });
+      }
+
+      this.drawCanvas(this.canvas);
+    };
+
+    img.src = this.timeline[elementId].localpath;
+  }
+
   drawGif(ctx, elementId, w, h, x, y) {
     const imageElement = this.timeline[elementId] as any;
     const rotation = this.timeline[elementId].rotation * (Math.PI / 180);

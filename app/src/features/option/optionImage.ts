@@ -3,6 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { LocaleController } from "../../controllers/locale";
 import { KeyframeController } from "../../controllers/keyframe";
+import "../filter/backgroundRemove";
 
 @customElement("option-image")
 export class OptionImage extends LitElement {
@@ -18,6 +19,9 @@ export class OptionImage extends LitElement {
 
   @property()
   timelineCursor = this.timelineState.cursor;
+
+  @property()
+  bgRemoveImagePath = "";
 
   @property()
   isShow = false;
@@ -93,6 +97,11 @@ export class OptionImage extends LitElement {
           value="0"
         ></number-input>
       </div>
+
+      <background-remove
+        imagePath=${this.bgRemoveImagePath}
+        @onReturn=${this.handleRemoveBackground}
+      ></background-remove>
     `;
   }
 
@@ -108,11 +117,22 @@ export class OptionImage extends LitElement {
 
   public setElementId({ elementId }) {
     this.elementId = elementId;
+    this.bgRemoveImagePath = this.timeline[elementId].localpath;
     this.updateValue();
   }
 
   isExistElement(elementId) {
     return this.timeline.hasOwnProperty(elementId);
+  }
+
+  handleRemoveBackground(e) {
+    const imagePath = e.detail.path;
+    console.log(imagePath, "EEE");
+    this.timeline[this.elementId].localpath = imagePath;
+    this.timelineState.patchTimeline(this.timeline);
+
+    const previewCanvas = document.querySelector("preview-canvas");
+    previewCanvas.preloadImage(this.elementId);
   }
 
   findNearestY(pairs, a): number | null {

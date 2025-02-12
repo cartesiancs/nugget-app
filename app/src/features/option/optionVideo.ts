@@ -23,14 +23,25 @@ export class OptionVideo extends LitElement {
   private keyframeControl = new KeyframeController(this);
 
   @property()
-  timelineState: ITimelineStore = useTimelineStore.getInitialState();
+  timelineState: any = useTimelineStore.getInitialState();
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
 
   @property()
   timeline = this.timelineState.timeline;
 
+  @property()
+  isShow = false;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
+      this.timelineCursor = state.cursor;
+
+      if (this.isExistElement(this.elementId) && this.isShow) {
+        this.updateValue();
+      }
     });
 
     return this;
@@ -88,21 +99,17 @@ export class OptionVideo extends LitElement {
       <label class="form-label text-light"
         >${this.lc.t("setting.position")}</label
       >
-      <div class="d-flex flex-row bd-highlight mb-2">
-        <input
+      <div class="d-flex flex-row gap-2 bd-highlight mb-2">
+        <number-input
           aria-event="location-x"
-          type="number"
-          class="form-control bg-default text-light me-1"
+          @onChange=${this.handleLocation}
           value="0"
-          @change=${this.handleLocation}
-        />
-        <input
+        ></number-input>
+        <number-input
           aria-event="location-y"
-          type="number"
-          class="form-control bg-default text-light"
+          @onChange=${this.handleLocation}
           value="0"
-          @change=${this.handleLocation}
-        />
+        ></number-input>
       </div>
 
       <button
@@ -158,7 +165,7 @@ export class OptionVideo extends LitElement {
           type="button"
           class="btn btn-sm mt-2 w-100 bg-dark text-light"
           @click=${() =>
-            this.handleClickAddAnimatePreset(0, 1, 250, 1.2, "scale")}
+            this.handleClickAddAnimatePreset(0, 10, 250, 12, "scale")}
         >
           Zoom In
         </button>
@@ -181,10 +188,16 @@ export class OptionVideo extends LitElement {
 
   hide() {
     this.classList.add("d-none");
+    this.isShow = false;
   }
 
   show() {
     this.classList.remove("d-none");
+    this.isShow = true;
+  }
+
+  isExistElement(elementId) {
+    return this.timeline.hasOwnProperty(elementId);
   }
 
   setElementId({ elementId }) {
@@ -199,11 +212,82 @@ export class OptionVideo extends LitElement {
     this.updateValue();
   }
 
+  findNearestY(pairs, a): number | null {
+    let closestY = null;
+    let closestDiff = Infinity;
+
+    for (const [x, y] of pairs) {
+      const diff = Math.abs(x - a);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestY = y;
+      }
+    }
+
+    return closestY;
+  }
+
+  getPosition() {
+    let animationType = "position";
+
+    if (
+      this.timeline[this.elementId].animation[animationType].isActivate == true
+    ) {
+      const result = this.getAnimatePosition(this.elementId) as any;
+      if (result != false) {
+        return result;
+      }
+    } else {
+      return {
+        x: this.timeline[this.elementId].location?.x,
+        y: this.timeline[this.elementId].location?.y,
+      };
+    }
+  }
+
+  getAnimatePosition(elementId) {
+    if (this.timeline[elementId].animation["position"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["position"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        const ay = this.findNearestY(
+          this.timeline[elementId].animation["position"].ay,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          x: ax || this.timeline[this.elementId].location?.x,
+          y: ay || this.timeline[this.elementId].location?.y,
+        };
+      } catch (error) {
+        return {
+          x: 0,
+          y: 0,
+        };
+      }
+    }
+  }
+
   updateValue() {
-    const xDom: any = this.querySelector("input[aria-event='location-x'");
-    const yDom: any = this.querySelector("input[aria-event='location-y'");
-    xDom.value = this.timeline[this.elementId].location?.x;
-    yDom.value = this.timeline[this.elementId].location?.y;
+    const xDom: any = this.querySelector(
+      "number-input[aria-event='location-x'",
+    );
+    const yDom: any = this.querySelector(
+      "number-input[aria-event='location-y'",
+    );
+
+    const position = this.getPosition();
+
+    xDom.value = position.x;
+    yDom.value = position.y;
   }
 
   updateSpeed() {
@@ -331,24 +415,51 @@ export class OptionVideo extends LitElement {
     this.requestUpdate();
   }
 
+  addAnimationPoint(x, line: number) {
+    const fileType = this.timeline[this.elementId].filetype as any;
+    const startTime = this.timeline[this.elementId].startTime as any;
+
+    const animationType = "position";
+    if (!["image", "video", "text"].includes(fileType)) return false;
+
+    if (
+      this.timeline[this.elementId].animation["position"].isActivate != true
+    ) {
+      return false;
+    }
+
+    try {
+      this.keyframeControl.addPoint({
+        x: this.timelineCursor - startTime,
+        y: x,
+        line: line,
+        elementId: this.elementId,
+        animationType: "position",
+      });
+    } catch (error) {
+      console.log(error, "AAARR");
+    }
+  }
+
   handleLocation() {
-    const targetElement = document.querySelector(
-      `element-control-asset[element-id='${this.elementId}']`,
+    const xDom: any = this.querySelector(
+      "number-input[aria-event='location-x'",
     );
-    const xDom: any = this.querySelector("input[aria-event='location-x'");
-    const yDom: any = this.querySelector("input[aria-event='location-y'");
+    const yDom: any = this.querySelector(
+      "number-input[aria-event='location-y'",
+    );
 
-    let x = xDom.value;
-    let y = yDom.value;
+    let x = parseFloat(parseFloat(xDom.value).toFixed(2));
+    let y = parseFloat(parseFloat(yDom.value).toFixed(2));
 
-    let convertLocation = targetElement.convertAbsoluteToRelativeSize({
+    this.addAnimationPoint(x, 0);
+    this.addAnimationPoint(y, 1);
+
+    this.timeline[this.elementId].location = {
       x: x,
       y: y,
-    });
+    };
 
-    targetElement.changeLocation({
-      x: convertLocation.x,
-      y: convertLocation.y,
-    });
+    this.timelineState.patchTimeline(this.timeline);
   }
 }

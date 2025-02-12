@@ -12,6 +12,7 @@ export class ControlText extends LitElement {
   }
 
   createRenderRoot() {
+    this.getGif();
     return this;
   }
 
@@ -41,7 +42,7 @@ export class ControlText extends LitElement {
     const searchText = this.querySelector(
       "#searchGifInput",
     ) as HTMLInputElement | null;
-    const value = searchText?.value?.trim() || "starwars";
+    const value = searchText?.value?.trim() || "_defnugget";
 
     const request = await axios.get(`http://127.0.0.1:8000/api/gif?q=${value}`);
     const result = request.data.result.data;
@@ -82,7 +83,7 @@ export class ControlText extends LitElement {
           type="text"
           class="form-control bg-default text-light"
           placeholder="search giphy gif..."
-          value="starwars"
+          value=""
           @keydown="${this._handleKeyDown}"
         />
       </div>

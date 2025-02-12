@@ -28,6 +28,7 @@ import { ipcOverlayRecord } from "./ipc/ipcOverlayRecord.js";
 
 import "./render/renderFrame.js";
 import { ipcRenderV2 } from "./render/renderFrame.js";
+import { ipcMedia } from "./ipc/ipcMedia.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -111,6 +112,8 @@ ipcMain.on("app:restart", ipcApp.restart);
 ipcMain.handle("stream:saveBufferToVideo", ipcStream.saveBufferToVideo);
 ipcMain.handle("stream:saveBufferToAudio", ipcStream.saveBufferToAudio);
 ipcMain.handle("stream:saveBufferToTempFile", ipcStream.saveBufferToTempFile);
+
+ipcMain.handle("media:backgroundRemove", ipcMedia.backgroundRemove);
 
 ipcMain.handle("app:getResourcesPath", ipcApp.getResourcesPath);
 ipcMain.handle("app:getTempPath", ipcApp.getTempPath);

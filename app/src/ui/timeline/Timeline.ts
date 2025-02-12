@@ -218,7 +218,12 @@ export class Timeline extends LitElement {
           </div>
         </div>
         <div class="col-5">
-          <div id="keyframeEditorButtonGroup">${this.keyframeOption()}</div>
+          <div
+            class="d-flex justify-content-end"
+            id="keyframeEditorButtonGroup"
+          >
+            ${this.keyframeOption()}
+          </div>
         </div>
 
         <div class="col-3 row d-flex align-items-center m-0 p-0">

@@ -141,20 +141,20 @@ export class KeyframeEditor extends LitElement {
           this.lineCount = 1;
         }
 
-        if (this.prevElementId != this.elementId) {
-          if (
-            this.timeline[this.elementId].animation[this.animationType]
-              .isActivate
-          ) {
-            this.points = [
-              ...this.timeline[this.elementId].animation[this.animationType]
-                .points,
-            ];
-          } else {
-            this.points = [[[0, 0]], [[0, 0]]];
-          }
-          this.prevElementId = this.elementId;
-        }
+        // if (this.prevElementId != this.elementId) {
+        //   if (
+        //     this.timeline[this.elementId].animation[this.animationType]
+        //       .isActivate
+        //   ) {
+        //     this.points = [
+        //       ...this.timeline[this.elementId].animation[this.animationType]
+        //         .points,
+        //     ];
+        //   } else {
+        //     this.points = [[[0, 0]], [[0, 0]]];
+        //   }
+        //   this.prevElementId = this.elementId;
+        // }
       }
 
       if (this.isShow) {
@@ -656,11 +656,7 @@ export class KeyframeEditor extends LitElement {
             this.timeline[this.elementId].animation[this.animationType][
               lineToAlpha
             ][index];
-          console.log(
-            element.p[0] == px && index != this.clickIndex,
-            element.p[0],
-            px,
-          );
+
           if (element.p[0] == px && index != this.clickIndex) {
             isApply = false;
           }
@@ -678,6 +674,22 @@ export class KeyframeEditor extends LitElement {
       this.timeline[this.elementId].animation[this.animationType][lineToAlpha][
         this.clickIndex
       ][this.clickDot][1] = py;
+
+      if (this.clickDot == "p") {
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][this.clickIndex].ce[0] = px + 100;
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][this.clickIndex].ce[1] = py;
+
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][this.clickIndex].cs[0] = px - 100;
+        this.timeline[this.elementId].animation[this.animationType][
+          lineToAlpha
+        ][this.clickIndex].cs[1] = py;
+      }
 
       this.keyframeControl.interpolate(
         this.selectLine,

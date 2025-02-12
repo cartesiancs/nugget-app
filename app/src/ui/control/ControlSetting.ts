@@ -5,6 +5,7 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { LocaleController } from "../../controllers/locale";
+import "../../components/input/input";
 
 @customElement("control-ui-setting")
 export class ControlSetting extends LitElement {
@@ -29,6 +30,11 @@ export class ControlSetting extends LitElement {
     });
 
     return this;
+  }
+
+  _handleUpdateBackgroundColor(e) {
+    this.renderOption.backgroundColor = e.target.value;
+    this.renderOptionStore.updateOptions(this.renderOption);
   }
 
   _handleUpdatePreviewSizeW(e) {
@@ -146,6 +152,18 @@ export class ControlSetting extends LitElement {
         <span class="input-group-text bg-default text-light" id="basic-addon2"
           >fps</span
         >
+      </div>
+
+      <label class="form-label text-light">Background</label>
+      <div class="input-group mb-3">
+        <input
+          id="backgroundColor"
+          type="color"
+          class="form-control bg-default text-light"
+          value=${this.renderOption.backgroundColor}
+          @change=${this._handleUpdateBackgroundColor}
+          @input=${this._handleUpdateBackgroundColor}
+        />
       </div>
 
       <label class="form-label text-light"

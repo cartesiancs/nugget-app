@@ -83,15 +83,6 @@ export class ElementControlAsset extends LitElement {
       template = html`${this.templateAudio()}`;
     }
 
-    let resizeElement = this.convertAbsoluteToRelativeSize({
-      x: this.timeline[this.elementId].location?.x,
-      y: this.timeline[this.elementId].location?.y,
-      w: !this.timeline[this.elementId].width
-        ? 500
-        : this.timeline[this.elementId].width,
-      h: this.timeline[this.elementId].height,
-    });
-
     this.classList.add("element-drag");
     this.setAttribute("id", `element-${this.elementId}`);
 

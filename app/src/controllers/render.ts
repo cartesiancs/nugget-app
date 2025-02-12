@@ -40,6 +40,7 @@ export class RenderController implements ReactiveController {
     const projectRatio = elementControlComponent.previewRatio;
     const previewSizeH = renderOptionState.previewSize.h;
     const previewSizeW = renderOptionState.previewSize.w;
+    const backgroundColor = renderOptionState.backgroundColor;
 
     const videoBitrate = Number(document.querySelector("#videoBitrate").value);
 
@@ -78,6 +79,7 @@ export class RenderController implements ReactiveController {
         videoDestinationFolder: projectFolder,
         videoBitrate: videoBitrate,
         previewRatio: projectRatio,
+        backgroundColor: backgroundColor,
         previewSize: {
           w: previewSizeW,
           h: previewSizeH,
@@ -132,7 +134,7 @@ export class RenderController implements ReactiveController {
       canvas.height = options.previewSize.h;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "black";
+      ctx.fillStyle = options.backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const sortedTimeline = Object.fromEntries(
@@ -274,7 +276,9 @@ export class RenderController implements ReactiveController {
           let scaleH = h;
           let scaleX = x;
           let scaleY = y;
-          let compare = 1;
+          let compareW = 1;
+          let compareH = 1;
+
           let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           ctx.globalAlpha = imageElement.opacity / 100;
@@ -299,29 +303,17 @@ export class RenderController implements ReactiveController {
             } catch (error) {}
           }
 
-          if (imageElement.animation["scale"].isActivate == true) {
-            let index = Math.round(((frame / fps) * 1000) / 16);
-            let indexToMs = index * 20;
-            let startTime = Number(this.timeline[elementId].startTime);
-            let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-            try {
-              if (indexPoint < 0) {
-                return false;
-              }
-
-              const ax = this.findNearestY(
-                imageElement.animation["scale"].ax,
-                (frame / fps) * 1000 - imageElement.startTime,
-              ) as any;
-
+          if (this.timeline[elementId].animation["scale"].isActivate == true) {
+            const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
+            if (ax != false) {
               scaleW = w * ax;
               scaleH = h * ax;
-              compare = scaleW - w;
+              compareW = scaleW - w;
+              compareH = scaleH - h;
 
-              scaleX = x - compare / 2;
-              scaleY = y - compare / 2;
-            } catch (error) {}
+              scaleX = x - compareW / 2;
+              scaleY = y - compareH / 2;
+            }
           }
 
           let animationType = "position";
@@ -349,8 +341,8 @@ export class RenderController implements ReactiveController {
 
               ctx.drawImage(
                 loaded[elementId],
-                ax - compare / 2,
-                ay - compare / 2,
+                ax - compareW / 2,
+                ay - compareH / 2,
                 scaleW,
                 scaleH,
               );
@@ -372,8 +364,8 @@ export class RenderController implements ReactiveController {
             }
           }
 
-          const centerX = x + scaleW / 2;
-          const centerY = y + scaleH / 2;
+          const centerX = scaleX + scaleW / 2;
+          const centerY = scaleY + scaleH / 2;
 
           ctx.translate(centerX, centerY);
           ctx.rotate(rotation);
@@ -478,23 +470,10 @@ export class RenderController implements ReactiveController {
             if (
               this.timeline[elementId].animation["scale"].isActivate == true
             ) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  this.timeline[elementId].animation["scale"].ax,
-                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
-                ) as any;
-
+              const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
+              if (ax != false) {
                 fontSize = this.timeline[elementId].fontsize * (ax / 10);
-              } catch (error) {}
+              }
             }
 
             if (
@@ -697,7 +676,8 @@ export class RenderController implements ReactiveController {
           let scaleH = h;
           let scaleX = x;
           let scaleY = y;
-          let compare = 1;
+          let compareW = 1;
+          let compareH = 1;
           let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           if (
@@ -790,29 +770,19 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
-            if (videoElement.animation["scale"].isActivate == true) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  videoElement.animation["scale"].ax,
-                  (frame / fps) * 1000 - videoElement.startTime,
-                ) as any;
-
+            if (
+              this.timeline[elementId].animation["scale"].isActivate == true
+            ) {
+              const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
+              if (ax != false) {
                 scaleW = w * ax;
                 scaleH = h * ax;
-                compare = scaleW - w;
+                compareW = scaleW - w;
+                compareH = scaleH - h;
 
-                scaleX = x - compare / 2;
-                scaleY = y - compare / 2;
-              } catch (error) {}
+                scaleX = x - compareW / 2;
+                scaleY = y - compareH / 2;
+              }
             }
 
             if (
@@ -850,11 +820,11 @@ export class RenderController implements ReactiveController {
                   (frame / fps) * 1000 - videoElement.startTime,
                 ) as any;
 
-                const nx = ax - compare / 2;
-                const ny = ay - compare / 2;
+                const nx = ax - compareW / 2;
+                const ny = ay - compareH / 2;
 
-                const centerX = x + scaleW / 2;
-                const centerY = y + scaleH / 2;
+                const centerX = scaleX + scaleW / 2;
+                const centerY = scaleY + scaleH / 2;
 
                 ctx.translate(centerX, centerY);
                 ctx.rotate(rotation);
@@ -869,8 +839,8 @@ export class RenderController implements ReactiveController {
               } catch (error) {}
             }
 
-            const centerX = x + scaleW / 2;
-            const centerY = y + scaleH / 2;
+            const centerX = scaleX + scaleW / 2;
+            const centerY = scaleY + scaleH / 2;
 
             ctx.translate(centerX, centerY);
             ctx.rotate(rotation);
@@ -936,6 +906,30 @@ export class RenderController implements ReactiveController {
               loaded[key] = frames;
             });
         }
+      }
+    }
+  }
+
+  getAnimateScale(elementId, cursor): number | any {
+    if (this.timeline[elementId].animation["scale"].isActivate == true) {
+      let index = Math.round(cursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["scale"].ax,
+          cursor - this.timeline[elementId].startTime,
+        ) as number;
+
+        return ax / 10;
+      } catch (error) {
+        return 1;
       }
     }
   }

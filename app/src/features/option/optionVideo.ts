@@ -28,9 +28,15 @@ export class OptionVideo extends LitElement {
   @property()
   timeline = this.timelineState.timeline;
 
+  @property()
+  isShow = false;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
+      if (this.isExistElement(this.elementId) && this.isShow) {
+        this.updateValue();
+      }
     });
 
     return this;
@@ -181,10 +187,16 @@ export class OptionVideo extends LitElement {
 
   hide() {
     this.classList.add("d-none");
+    this.isShow = false;
   }
 
   show() {
     this.classList.remove("d-none");
+    this.isShow = true;
+  }
+
+  isExistElement(elementId) {
+    return this.timeline.hasOwnProperty(elementId);
   }
 
   setElementId({ elementId }) {

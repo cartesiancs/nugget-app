@@ -153,6 +153,18 @@ export class ControlSetting extends LitElement {
         >
       </div>
 
+      <label class="form-label text-light">Background</label>
+      <div class="input-group mb-3">
+        <input
+          id="backgroundColor"
+          type="color"
+          class="form-control bg-default text-light"
+          value=${this.renderOption.backgroundColor}
+          @change=${this._handleUpdateBackgroundColor}
+          @input=${this._handleUpdateBackgroundColor}
+        />
+      </div>
+
       <label class="form-label text-light"
         >${this.lc.t("setting.resolution")}</label
       >
@@ -215,22 +227,6 @@ export class ControlSetting extends LitElement {
       </button>
 
       <!-- <button class="btn btn-sm bg-primary text-light mt-1" onclick="window.electronAPI.req.progressBar.test()">PROGRESSBARTEST </button> -->
-      <br />
-
-      <div class="input-group mb-2 mt-2">
-        <span class="input-group-text bg-default text-light" id="basic-addon2"
-          >background</span
-        >
-        <input
-          id="backgroundColor"
-          type="color"
-          class="form-control bg-default text-light"
-          value=${this.renderOption.backgroundColor}
-          @change=${this._handleUpdateBackgroundColor}
-          @input=${this._handleUpdateBackgroundColor}
-        />
-      </div>
-
       <br />
 
       <button

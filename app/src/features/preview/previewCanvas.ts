@@ -2080,8 +2080,6 @@ export class PreviewCanvas extends LitElement {
         y: my,
       };
 
-      console.log(mx, my);
-
       const r = this.calculateRotation(p2, p1);
       this.timeline[this.activeElementId].rotation = r;
     }

@@ -6,6 +6,7 @@ import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
+import { millisecondsToPx, pxToMilliseconds } from "../../utils/time";
 
 @customElement("element-timeline-bottom-scroll")
 export class ElementTimelineBottomScroll extends LitElement {
@@ -33,13 +34,52 @@ export class ElementTimelineBottomScroll extends LitElement {
   left: number;
   width: number;
   mouseLeft: number;
+  prevLeft: number;
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineRange = state.range;
       this.timelineScroll = state.scroll;
-      this.left = this.timelineScroll / this.timelineRange;
-      this.requestUpdate();
+      if (!this.isMove) {
+        const scrollMs = pxToMilliseconds(state.scroll, state.range);
+        const per = (scrollMs / (this.renderOption.duration * 1000)) * 100;
+
+        const fullWidth = document.querySelector(
+          ".timeline-bottom-scroll",
+        ).offsetWidth;
+        const thumbWidth = document.querySelector(
+          ".timeline-bottom-scroll-thumb",
+        ).offsetWidth;
+
+        this.left = (fullWidth - thumbWidth) * (per / 100);
+        this.prevLeft = (fullWidth - thumbWidth) * (per / 100);
+
+        if (this.left <= 0) {
+          this.left = 0;
+          this.prevLeft = 0;
+        }
+
+        this.requestUpdate();
+      } else {
+        const scrollMs = pxToMilliseconds(state.scroll, state.range);
+        const per = (scrollMs / (this.renderOption.duration * 1000)) * 100;
+
+        const fullWidth = document.querySelector(
+          ".timeline-bottom-scroll",
+        ).offsetWidth;
+
+        const thumbWidth = document.querySelector(
+          ".timeline-bottom-scroll-thumb",
+        ).offsetWidth;
+
+        this.left = (fullWidth - thumbWidth) * (per / 100);
+
+        if (this.left <= 0) {
+          this.left = 0;
+        }
+
+        this.requestUpdate();
+      }
     });
 
     uiStore.subscribe((state) => {
@@ -58,6 +98,7 @@ export class ElementTimelineBottomScroll extends LitElement {
     this.isMove = false;
     this.mouseLeft = 0;
     this.left = 0;
+    this.prevLeft = 0;
     this.width = 100;
 
     document.addEventListener("mousemove", this._handleMouseMove.bind(this));
@@ -117,14 +158,26 @@ export class ElementTimelineBottomScroll extends LitElement {
   }
 
   _handleMouseUp(e) {
+    this.prevLeft = this.left;
     this.isMove = false;
   }
 
   _handleMouseMove(e) {
     if (!this.isMove) return false;
 
-    const x =
+    const fullWidth = document.querySelector(
+      ".timeline-bottom-scroll",
+    ).offsetWidth;
+
+    const thumbWidth = document.querySelector(
+      ".timeline-bottom-scroll-thumb",
+    ).offsetWidth;
+    const dx =
       e.clientX - this.resize.timelineVertical.leftOption - this.mouseLeft;
+
+    const x = this.prevLeft + dx;
+
+    const per = (x / (fullWidth - thumbWidth)) * 100;
 
     if (x <= 0) {
       this.left = 0;
@@ -132,13 +185,18 @@ export class ElementTimelineBottomScroll extends LitElement {
       this.timelineState.setScroll(0);
       return false;
     }
-    this.left = x;
-    this.requestUpdate();
-    // const cursor = x;
-    this.timelineState.setScroll(x * this.timelineRange);
+    // this.left = x;
+
+    const scroll = millisecondsToPx(
+      this.renderOption.duration * (per / 100) * 1000,
+      this.timelineRange,
+    );
+
+    this.timelineState.setScroll(scroll);
   }
 
   _handleClickThumb(e) {
+    console.log(e.clientX - this.resize.timelineVertical.leftOption);
     this.mouseLeft = e.clientX - this.resize.timelineVertical.leftOption;
     this.isMove = true;
   }

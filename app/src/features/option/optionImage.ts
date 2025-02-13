@@ -150,6 +150,40 @@ export class OptionImage extends LitElement {
     return closestY;
   }
 
+  getOpacity() {
+    let animationType = "opacity";
+
+    if (
+      this.timeline[this.elementId].animation[animationType].isActivate == true
+    ) {
+      const result = this.getAnimateOpacity(this.elementId) as any;
+      if (result != false) {
+        return result;
+      }
+    } else {
+      return {
+        x: this.timeline[this.elementId].opacity,
+      };
+    }
+  }
+
+  getRotation() {
+    let animationType = "rotation";
+
+    if (
+      this.timeline[this.elementId].animation[animationType].isActivate == true
+    ) {
+      const result = this.getAnimateRotation(this.elementId) as any;
+      if (result != false) {
+        return result;
+      }
+    } else {
+      return {
+        x: this.timeline[this.elementId].rotation,
+      };
+    }
+  }
+
   getPosition() {
     let animationType = "position";
 
@@ -199,6 +233,54 @@ export class OptionImage extends LitElement {
     }
   }
 
+  getAnimateOpacity(elementId) {
+    if (this.timeline[elementId].animation["opacity"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["opacity"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          x: ax || this.timeline[this.elementId].opacity,
+        };
+      } catch (error) {
+        return {
+          x: 0,
+        };
+      }
+    }
+  }
+
+  getAnimateRotation(elementId) {
+    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        const ax = this.findNearestY(
+          this.timeline[elementId].animation["rotation"].ax,
+          this.timelineCursor - this.timeline[elementId].startTime,
+        ) as any;
+
+        return {
+          x: ax || this.timeline[this.elementId].opacity,
+        };
+      } catch (error) {
+        return {
+          x: 0,
+        };
+      }
+    }
+  }
+
   updateValue() {
     const xDom: any = this.querySelector(
       "number-input[aria-event='location-x'",
@@ -206,21 +288,23 @@ export class OptionImage extends LitElement {
     const yDom: any = this.querySelector(
       "number-input[aria-event='location-y'",
     );
-    const opacity: any = this.querySelector(
+    const opacityDom: any = this.querySelector(
       "number-input[aria-event='opacity'",
     );
-    const rotation: any = this.querySelector(
+    const rotationDom: any = this.querySelector(
       "number-input[aria-event='rotation'",
     );
     const width: any = this.querySelector("number-input[aria-event='width'");
     const height: any = this.querySelector("number-input[aria-event='height'");
 
     const position = this.getPosition();
+    const opacity = this.getOpacity();
+    const rotation = this.getRotation();
 
     xDom.value = position.x;
     yDom.value = position.y;
-    opacity.value = this.timeline[this.elementId].opacity;
-    rotation.value = this.timeline[this.elementId].rotation;
+    opacityDom.value = opacity.x;
+    rotationDom.value = rotation.x;
     width.value = this.timeline[this.elementId].width;
     height.value = this.timeline[this.elementId].height;
   }
@@ -245,6 +329,29 @@ export class OptionImage extends LitElement {
         line: line,
         elementId: this.elementId,
         animationType: "position",
+      });
+    } catch (error) {
+      console.log(error, "AAARR");
+    }
+  }
+
+  addAnimationDot(x, line: number, animationType) {
+    const fileType = this.timeline[this.elementId].filetype as any;
+    const startTime = this.timeline[this.elementId].startTime as any;
+
+    if (
+      this.timeline[this.elementId].animation[animationType].isActivate != true
+    ) {
+      return false;
+    }
+
+    try {
+      this.keyframeControl.addPoint({
+        x: this.timelineCursor - startTime,
+        y: x,
+        line: line,
+        elementId: this.elementId,
+        animationType: animationType,
       });
     } catch (error) {
       console.log(error, "AAARR");
@@ -278,6 +385,8 @@ export class OptionImage extends LitElement {
       "number-input[aria-event='opacity'",
     );
 
+    this.addAnimationDot(parseInt(opacity.value), 0, "opacity");
+
     this.timeline[this.elementId].opacity = parseInt(opacity.value);
 
     this.timelineState.patchTimeline(this.timeline);
@@ -287,6 +396,8 @@ export class OptionImage extends LitElement {
     const rotation = this.querySelector(
       "number-input[aria-event='rotation'",
     ) as any;
+
+    this.addAnimationDot(parseInt(rotation.value), 0, "rotation");
 
     this.timeline[this.elementId].rotation = parseInt(rotation.value);
 

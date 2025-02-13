@@ -654,6 +654,7 @@ export class PreviewCanvas extends LitElement {
 
             ctx.rotate(-rotation);
             ctx.translate(-centerX, -centerY);
+            ctx.globalAlpha = 1;
 
             return false;
           } catch (error) {}
@@ -804,6 +805,7 @@ export class PreviewCanvas extends LitElement {
 
             ctx.rotate(-rotation);
             ctx.translate(-centerX, -centerY);
+            ctx.globalAlpha = 1;
 
             return false;
           }

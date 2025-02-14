@@ -98,6 +98,23 @@ export class PreviewTopBar extends LitElement {
     return this.createShape(shape);
   }
 
+  createCircle() {
+    const shape: number[][] = [];
+    const centerX = 50;
+    const centerY = 50;
+    const radius = 50;
+    const numSegments = 50;
+
+    for (let i = 0; i < numSegments; i++) {
+      const angle = (2 * Math.PI * i) / numSegments;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      shape.push([x, y]);
+    }
+
+    return this.createShape(shape);
+  }
+
   _handleClickButton(type) {
     this.timelineState.setCursorType(type);
   }
@@ -219,6 +236,15 @@ export class PreviewTopBar extends LitElement {
                     change_history
                   </span>
                   Triangle</a
+                >
+                <a
+                  class="dropdown-item dropdown-item-sm"
+                  @click=${this.createCircle}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    circle
+                  </span>
+                  Circle</a
                 >
                 <a
                   class="dropdown-item dropdown-item-sm ${this.control

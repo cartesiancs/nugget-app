@@ -943,10 +943,8 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   animationPanelDropdownTemplate() {
-    // NOTE: 영상 애니메이션은 아직 지원 안함
-
     if (this.targetId.length != 1) {
-      return false;
+      return "";
     }
 
     if (
@@ -1255,7 +1253,6 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleMouseUp(e) {
     this.isDrag = false;
-    this.whenRightClick(e);
   }
 
   _handleKeydown(event) {
@@ -1412,6 +1409,10 @@ export class elementTimelineCanvas extends LitElement {
     }
   }
 
+  _handleContextmenu(e) {
+    this.whenRightClick(e);
+  }
+
   renderAnimationPanel() {
     //this.isOpenAnimationPanelId
     return html``;
@@ -1427,6 +1428,7 @@ export class elementTimelineCanvas extends LitElement {
         @mousemove=${this._handleMouseMove}
         @mousedown=${this._handleMouseDown}
         @mouseup=${this._handleMouseUp}
+        @contextmenu=${this._handleContextmenu}
       ></canvas>
     `;
   }

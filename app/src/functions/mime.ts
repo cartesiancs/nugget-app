@@ -45,6 +45,9 @@ const mime = {
     m4a: {
       type: "audio",
     },
+    svg: {
+      type: "image",
+    },
   },
   lookup: function (filename) {
     const splitFilename = filename.split(".");

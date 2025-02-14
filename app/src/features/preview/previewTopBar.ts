@@ -144,12 +144,12 @@ export class PreviewTopBar extends LitElement {
 
             <ul class="dropdown-menu">
               <li>
-                <a class="dropdown-item dropdown-item-sm" href="#">
+                <!-- <a class="dropdown-item dropdown-item-sm" href="#">
                   <span class="material-symbols-outlined icon-xs">
                     change_history
                   </span>
                   Polygon</a
-                >
+                > -->
                 <a
                   class="dropdown-item dropdown-item-sm ${this.control
                     .cursorType == "shape"

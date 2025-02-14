@@ -132,14 +132,38 @@ export class PreviewTopBar extends LitElement {
           >
             <span class="material-symbols-outlined icon-xs"> text_fields </span>
           </button>
-          <button
-            @click=${() => this._handleClickButton("shape")}
-            class="btn btn-xxs ${this.control.cursorType == "shape"
-              ? "btn-primary"
-              : "btn-default"} text-light m-0"
-          >
-            <span class="material-symbols-outlined icon-xs"> square </span>
-          </button>
+
+          <div class="btn-group">
+            <button
+              class="btn btn-xxs btn-default dropdown-toggle text-light m-0"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <span class="material-symbols-outlined icon-xs"> add </span>
+            </button>
+
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item dropdown-item-sm" href="#">
+                  <span class="material-symbols-outlined icon-xs">
+                    change_history
+                  </span>
+                  Polygon</a
+                >
+                <a
+                  class="dropdown-item dropdown-item-sm ${this.control
+                    .cursorType == "shape"
+                    ? "bg-primary"
+                    : ""}"
+                  @click=${() => this._handleClickButton("shape")}
+                >
+                  <span class="material-symbols-outlined icon-xs"> edit </span>
+                  Pen Tool</a
+                >
+              </li>
+            </ul>
+          </div>
+
           <button
             @click=${() => this._handleClickButton("lockKeyboard")}
             class="btn btn-xxs ${this.control.cursorType == "lockKeyboard"

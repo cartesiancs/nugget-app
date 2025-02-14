@@ -44,9 +44,9 @@ export class ElementTimelineBottomScroll extends LitElement {
         const scrollMs = pxToMilliseconds(state.scroll, state.range);
         const per = (scrollMs / (this.renderOption.duration * 1000)) * 100;
 
-        const fullWidth = document.querySelector(
-          ".timeline-bottom-scroll",
-        ).offsetWidth;
+        const fullWidth =
+          document.querySelector(".timeline-bottom-scroll").offsetWidth -
+          this.resize.timelineVertical.leftOption;
         const thumbWidth = document.querySelector(
           ".timeline-bottom-scroll-thumb",
         ).offsetWidth;
@@ -64,9 +64,9 @@ export class ElementTimelineBottomScroll extends LitElement {
         const scrollMs = pxToMilliseconds(state.scroll, state.range);
         const per = (scrollMs / (this.renderOption.duration * 1000)) * 100;
 
-        const fullWidth = document.querySelector(
-          ".timeline-bottom-scroll",
-        ).offsetWidth;
+        const fullWidth =
+          document.querySelector(".timeline-bottom-scroll").offsetWidth -
+          this.resize.timelineVertical.leftOption;
 
         const thumbWidth = document.querySelector(
           ".timeline-bottom-scroll-thumb",
@@ -132,7 +132,10 @@ export class ElementTimelineBottomScroll extends LitElement {
         }
       </style>
 
-      <div class="timeline-bottom-scroll">
+      <div
+        class="timeline-bottom-scroll"
+        @mousedown=${this._handleMouseBodyDown}
+      >
         <div
           @mousedown=${this._handleClickThumb}
           class="timeline-bottom-scroll-thumb"
@@ -165,9 +168,9 @@ export class ElementTimelineBottomScroll extends LitElement {
   _handleMouseMove(e) {
     if (!this.isMove) return false;
 
-    const fullWidth = document.querySelector(
-      ".timeline-bottom-scroll",
-    ).offsetWidth;
+    const fullWidth =
+      document.querySelector(".timeline-bottom-scroll").offsetWidth -
+      this.resize.timelineVertical.leftOption;
 
     const thumbWidth = document.querySelector(
       ".timeline-bottom-scroll-thumb",
@@ -185,6 +188,7 @@ export class ElementTimelineBottomScroll extends LitElement {
       this.timelineState.setScroll(0);
       return false;
     }
+
     // this.left = x;
 
     const scroll = millisecondsToPx(
@@ -193,6 +197,30 @@ export class ElementTimelineBottomScroll extends LitElement {
     );
 
     this.timelineState.setScroll(scroll);
+  }
+
+  _handleMouseBodyDown(e) {
+    if (e.target.className == "timeline-bottom-scroll") {
+      const thumbWidth = document.querySelector(
+        ".timeline-bottom-scroll-thumb",
+      ).offsetWidth;
+
+      const fullWidth =
+        document.querySelector(".timeline-bottom-scroll").offsetWidth -
+        this.resize.timelineVertical.leftOption;
+
+      const per = (e.clientX / (fullWidth - thumbWidth / 2)) * 100;
+
+      this.mouseLeft = e.clientX - this.resize.timelineVertical.leftOption;
+      this.isMove = true;
+
+      // const scroll = millisecondsToPx(
+      //   this.renderOption.duration * (per / 100) * 1000,
+      //   this.timelineRange,
+      // );
+
+      // this.timelineState.setScroll(scroll);
+    }
   }
 
   _handleClickThumb(e) {

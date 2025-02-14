@@ -418,8 +418,7 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "shape") {
-            this.drawShape(elementId);
-            this.drawOutline(ctx, elementId, x, y, w, h, rotation);
+            this.drawShape(ctx, elementId);
           }
 
           if (this.activeElementId == elementId) {
@@ -1191,6 +1190,50 @@ export class PreviewCanvas extends LitElement {
     } catch (error) {}
   }
 
+  drawShape(ctx, elementId) {
+    const target = this.timeline[elementId];
+
+    let scaleW = target.width;
+    let scaleH = target.height;
+    let scaleX = target.location.x;
+    let scaleY = target.location.y;
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+
+    // const centerX = scaleX + scaleW / 2;
+    // const centerY = scaleY + scaleH / 2;
+
+    // ctx.translate(centerX, centerY);
+    // ctx.rotate(rotation);
+
+    ctx.beginPath();
+
+    const ratio = target.oWidth / target.width;
+
+    for (let index = 0; index < target.shape.length; index++) {
+      const element = target.shape[index];
+      const x = element[0] / ratio + target.location.x;
+      const y = element[1] / ratio + target.location.y;
+
+      ctx.fillStyle = target.option.fillColor;
+      if (this.nowShapeId == elementId) {
+        ctx.arc(x, y, 8, 0, 5 * Math.PI);
+      }
+
+      ctx.lineTo(x, y);
+    }
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    this.drawOutline(ctx, elementId, scaleX, scaleY, scaleW, scaleH, rotation);
+
+    // this.drawOutline(ctx, elementId, -scaleW / 2, -scaleH / 2, scaleW, scaleH, rotation);
+
+    // ctx.rotate(-rotation);
+    // ctx.translate(-centerX, -centerY);
+  }
+
   drawKeyframePath(ctx, elementId) {
     const imageElement = this.timeline[elementId] as any;
     const fileType = this.timeline[elementId].filetype;
@@ -1563,33 +1606,6 @@ export class PreviewCanvas extends LitElement {
     } catch (error) {
       console.log(error, "AAARR");
     }
-  }
-
-  drawShape(elementId) {
-    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-
-    const target = this.timeline[elementId];
-
-    ctx.beginPath();
-
-    const ratio = target.oWidth / target.width;
-
-    for (let index = 0; index < target.shape.length; index++) {
-      const element = target.shape[index];
-      const x = element[0] / ratio + target.location.x;
-      const y = element[1] / ratio + target.location.y;
-
-      ctx.fillStyle = target.option.fillColor;
-      if (this.nowShapeId == elementId) {
-        ctx.arc(x, y, 8, 0, 5 * Math.PI);
-      }
-
-      ctx.lineTo(x, y);
-    }
-
-    ctx.closePath();
-
-    ctx.fill();
   }
 
   public stopPlay() {

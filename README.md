@@ -38,6 +38,7 @@ It also supports layer-based editing, which differs from traditional track-based
 ## Features
 
 - Cut Edit
+- Support for all standard formats (mp4, mov, mp3, wav...)
 - Audio mixing
 - Fast rendering with FFmpeg
 - Unlimited layers
@@ -49,6 +50,10 @@ It also supports layer-based editing, which differs from traditional track-based
 - Multilingual Support
 - 8k Edit & 4k Edit & more resolution
 - Screen Record & Audio Record
+- Chromakey
+- AI Auto Caption (whisper)
+- Blur Effect (WebGL)
+- GIF Api
 - and more...
 
 ## Installation

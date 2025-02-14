@@ -511,6 +511,7 @@ export class PreviewCanvas extends LitElement {
 
       const video = this.loadedVideos[videoIndex];
       let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+      ctx.globalAlpha = videoElement.opacity / 100;
 
       video.object.muted = false;
 

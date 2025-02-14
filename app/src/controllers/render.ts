@@ -750,6 +750,8 @@ export class RenderController implements ReactiveController {
               }
             }
 
+            ctx.globalAlpha = videoElement.opacity / 100;
+
             if (videoElement.animation["opacity"].isActivate == true) {
               let index = Math.round(((frame / fps) * 1000) / 16);
               let indexToMs = index * 20;

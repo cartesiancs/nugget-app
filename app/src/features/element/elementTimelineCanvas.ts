@@ -37,7 +37,7 @@ export class elementTimelineCanvas extends LitElement {
   targetStartTime: ObjectClassType;
   targetDuration: ObjectClassType;
   targetMediaType: "static" | "dynamic" | undefined;
-  cursorType: "none" | "move" | "stretchStart" | "stretchEnd";
+  cursorType: "none" | "move" | "moveNotGuide" | "stretchStart" | "stretchEnd";
   cursorNow: number;
   targetTrim: ObjectClassTrimType;
   timelineColor: {};
@@ -943,10 +943,8 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   animationPanelDropdownTemplate() {
-    // NOTE: 영상 애니메이션은 아직 지원 안함
-
     if (this.targetId.length != 1) {
-      return false;
+      return "";
     }
 
     if (
@@ -1171,6 +1169,8 @@ export class elementTimelineCanvas extends LitElement {
           if (this.cursorType == "move") {
             this.updateTargetPosition({ targetId: target, dx: dx });
             this.magnet({ targetId: target, px: dx });
+          } else if (this.cursorType == "moveNotGuide") {
+            this.updateTargetPosition({ targetId: target, dx: dx });
           } else if (this.cursorType == "stretchStart") {
             this.updateTargetStartStretch({ targetId: target, dx: dx });
           } else if (this.cursorType == "stretchEnd") {
@@ -1195,6 +1195,15 @@ export class elementTimelineCanvas extends LitElement {
       if (e.shiftKey && target.targetId != "") {
         this.targetId.push(target.targetId);
         this.cursorType = target.cursorType;
+        if (target.cursorType == "move" && this.targetId.length > 1) {
+          this.cursorType = "moveNotGuide";
+        }
+      } else if (this.targetId.includes(target.targetId)) {
+        // 타겟 ID가 포함된 엘리먼트를 클릭했을때, 시프트 키 없이도 움직이도록.
+        this.cursorType = target.cursorType;
+        if (target.cursorType == "move" && this.targetId.length > 1) {
+          this.cursorType = "moveNotGuide";
+        }
       } else {
         if (target.targetId == "") {
           this.targetId = [];
@@ -1244,7 +1253,6 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleMouseUp(e) {
     this.isDrag = false;
-    this.whenRightClick(e);
   }
 
   _handleKeydown(event) {
@@ -1401,6 +1409,10 @@ export class elementTimelineCanvas extends LitElement {
     }
   }
 
+  _handleContextmenu(e) {
+    this.whenRightClick(e);
+  }
+
   renderAnimationPanel() {
     //this.isOpenAnimationPanelId
     return html``;
@@ -1416,6 +1428,7 @@ export class elementTimelineCanvas extends LitElement {
         @mousemove=${this._handleMouseMove}
         @mousedown=${this._handleMouseDown}
         @mouseup=${this._handleMouseUp}
+        @contextmenu=${this._handleContextmenu}
       ></canvas>
     `;
   }

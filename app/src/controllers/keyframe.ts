@@ -173,6 +173,19 @@ export class KeyframeController implements ReactiveController {
     const array =
       this.timeline[elementId].animation[animationType][lineToAlpha];
 
+    // point가 하나일때
+    if (array.length == 1) {
+      const t =
+        this.timeline[elementId].animation[animationType][lineToAlpha][0].p[0];
+      const x =
+        this.timeline[elementId].animation[animationType][lineToAlpha][0].p[1];
+
+      this.timeline[elementId].animation[animationType][lineToAllAlpha] = [
+        [t, x],
+      ];
+      return false;
+    }
+
     const interpolationArray: any = [];
 
     for (let ic = 0; ic < array.length - 1; ic++) {

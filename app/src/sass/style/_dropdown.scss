@@ -1,19 +1,25 @@
 .dropdown-item {
-    padding: 0.4rem 0.8rem !important;
-    color: #dedede;
+  padding: 0.4rem 0.8rem;
+  color: #dedede;
 }
 
 .dropdown-item:hover {
-    background-color: #43444aba;
-    color: #dedede;
+  background-color: #43444aba;
+  color: #dedede;
 }
 
 .dropdown-menu {
-    border-radius: 10px;
-    border: 0.3px solid rgba(0,0,0,.059);
-    box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 10%);
-    padding: 0rem 0.2rem !important;
-    background-color: #25262bba;
-    -webkit-backdrop-filter: saturate(120%) blur(8px);
-    backdrop-filter: saturate(120%) blur(8px);
+  border-radius: 10px;
+  border: 0.3px solid rgba(0, 0, 0, 0.059);
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 10%);
+  padding: 0rem 0.2rem;
+  background-color: #25262bba;
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  backdrop-filter: saturate(120%) blur(8px);
+}
+
+.dropdown-item-sm {
+  padding: 0.25rem 0.5rem !important;
+  color: #dedede;
+  font-size: 12px;
 }

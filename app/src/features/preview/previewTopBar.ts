@@ -5,6 +5,7 @@ import {
   IControlPanelStore,
   controlPanelStore,
 } from "../../states/controlPanelStore";
+import { v4 as uuidv4 } from "uuid";
 
 @customElement("preview-top-bar")
 export class PreviewTopBar extends LitElement {
@@ -27,6 +28,9 @@ export class PreviewTopBar extends LitElement {
   @property()
   nowActivePanel = this.controlPanel.nowActive;
 
+  @property()
+  timeline: any = this.timelineState.timeline;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.control = state.control;
@@ -38,6 +42,77 @@ export class PreviewTopBar extends LitElement {
     });
 
     return this;
+  }
+
+  createShape(shape) {
+    const elementId = uuidv4();
+
+    const width = 100;
+    const height = 100;
+
+    this.timeline[elementId] = {
+      key: elementId,
+      priority: 1,
+      blob: "",
+      startTime: 0,
+      duration: 1000,
+      opacity: 100,
+      location: { x: 0, y: 0 },
+      trim: { startTime: 0, endTime: 1000 },
+      rotation: 0,
+      width: width,
+      height: height,
+      oWidth: width,
+      oHeight: height,
+      ratio: width / height,
+      filetype: "shape",
+      localpath: "SHAPE",
+      shape: shape,
+      option: {
+        fillColor: "#ffffff",
+      },
+    };
+
+    this.timelineState.patchTimeline(this.timeline);
+    return elementId;
+  }
+
+  createSquare() {
+    const shape = [
+      [0, 0],
+      [0, 100],
+      [100, 100],
+      [100, 0],
+    ];
+
+    return this.createShape(shape);
+  }
+
+  createTriangle() {
+    const shape = [
+      [50, 0],
+      [0, 100],
+      [100, 100],
+    ];
+
+    return this.createShape(shape);
+  }
+
+  createCircle() {
+    const shape: number[][] = [];
+    const centerX = 50;
+    const centerY = 50;
+    const radius = 50;
+    const numSegments = 50;
+
+    for (let i = 0; i < numSegments; i++) {
+      const angle = (2 * Math.PI * i) / numSegments;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      shape.push([x, y]);
+    }
+
+    return this.createShape(shape);
   }
 
   _handleClickButton(type) {
@@ -132,14 +207,59 @@ export class PreviewTopBar extends LitElement {
           >
             <span class="material-symbols-outlined icon-xs"> text_fields </span>
           </button>
-          <button
-            @click=${() => this._handleClickButton("shape")}
-            class="btn btn-xxs ${this.control.cursorType == "shape"
-              ? "btn-primary"
-              : "btn-default"} text-light m-0"
-          >
-            <span class="material-symbols-outlined icon-xs"> square </span>
-          </button>
+
+          <div class="btn-group">
+            <button
+              class="btn btn-xxs btn-default dropdown-toggle text-light m-0"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <span class="material-symbols-outlined icon-xs"> add </span>
+            </button>
+
+            <ul class="dropdown-menu">
+              <li>
+                <a
+                  class="dropdown-item dropdown-item-sm"
+                  @click=${this.createSquare}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    square
+                  </span>
+                  Square</a
+                >
+                <a
+                  class="dropdown-item dropdown-item-sm"
+                  @click=${this.createTriangle}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    change_history
+                  </span>
+                  Triangle</a
+                >
+                <a
+                  class="dropdown-item dropdown-item-sm"
+                  @click=${this.createCircle}
+                >
+                  <span class="material-symbols-outlined icon-xs">
+                    circle
+                  </span>
+                  Circle</a
+                >
+                <a
+                  class="dropdown-item dropdown-item-sm ${this.control
+                    .cursorType == "shape"
+                    ? "bg-primary"
+                    : ""}"
+                  @click=${() => this._handleClickButton("shape")}
+                >
+                  <span class="material-symbols-outlined icon-xs"> edit </span>
+                  Pen Tool</a
+                >
+              </li>
+            </ul>
+          </div>
+
           <button
             @click=${() => this._handleClickButton("lockKeyboard")}
             class="btn btn-xxs ${this.control.cursorType == "lockKeyboard"

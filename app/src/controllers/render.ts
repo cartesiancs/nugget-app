@@ -316,6 +316,18 @@ export class RenderController implements ReactiveController {
             }
           }
 
+          if (
+            this.timeline[elementId].animation["rotation"].isActivate == true
+          ) {
+            const ax = this.getAnimateRotation(
+              elementId,
+              (frame / fps) * 1000,
+            ) as any;
+            if (ax != false) {
+              rotation = ax.ax;
+            }
+          }
+
           let animationType = "position";
 
           if (imageElement.animation[animationType].isActivate == true) {
@@ -339,29 +351,30 @@ export class RenderController implements ReactiveController {
                 (frame / fps) * 1000 - imageElement.startTime,
               ) as any;
 
+              scaleX = ax - compareW / 2;
+              scaleY = ay - compareH / 2;
+
+              const centerX = scaleX + scaleW / 2;
+              const centerY = scaleY + scaleH / 2;
+
+              ctx.translate(centerX, centerY);
+              ctx.rotate(rotation);
+
               ctx.drawImage(
                 loaded[elementId],
-                ax - compareW / 2,
-                ay - compareH / 2,
+                -scaleW / 2,
+                -scaleH / 2,
                 scaleW,
                 scaleH,
               );
+              ctx.rotate(-rotation);
+              ctx.translate(-centerX, -centerY);
+
+              ctx.globalAlpha = 1;
 
               drawLayer(layerIndex + 1);
               return;
             } catch (error) {}
-          }
-
-          if (
-            this.timeline[elementId].animation["rotation"].isActivate == true
-          ) {
-            const ax = this.getAnimateRotation(
-              elementId,
-              (frame / fps) * 1000,
-            ) as any;
-            if (ax != false) {
-              rotation = ax.ax;
-            }
           }
 
           const centerX = scaleX + scaleW / 2;
@@ -954,7 +967,7 @@ export class RenderController implements ReactiveController {
         ) as any;
 
         return {
-          ax: ax,
+          ax: ax * (Math.PI / 180),
         };
       } catch (error) {
         return false;

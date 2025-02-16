@@ -259,8 +259,8 @@ export class ElementControl extends LitElement {
 
   fitElementSizeOnPreview(width, height) {
     let preview = {
-      w: Number(document.querySelector("#video").style.width.split("px")[0]),
-      h: Number(document.querySelector("#video").style.height.split("px")[0]),
+      w: Number(document.querySelector("#elementPreviewCanvasRef").width),
+      h: Number(document.querySelector("#elementPreviewCanvasRef").height),
     };
 
     let originRatio = width / height;
@@ -311,8 +311,8 @@ export class ElementControl extends LitElement {
         opacity: 100,
         location: { x: 0, y: 0 },
         rotation: 0,
-        width: img.width,
-        height: img.height,
+        width: width,
+        height: height,
         localpath: path,
         filetype: "image",
         ratio: img.width / img.height,

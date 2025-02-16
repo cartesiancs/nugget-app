@@ -218,8 +218,8 @@ export class OptionImage extends LitElement {
         };
       } catch (error) {
         return {
-          x: 0,
-          y: 0,
+          x: this.timeline[this.elementId].location?.x,
+          y: this.timeline[this.elementId].location?.y,
         };
       }
     }
@@ -263,7 +263,7 @@ export class OptionImage extends LitElement {
         ) as any;
 
         return {
-          x: ax || this.timeline[this.elementId].opacity,
+          x: ax || this.timeline[this.elementId].rotation,
         };
       } catch (error) {
         return {

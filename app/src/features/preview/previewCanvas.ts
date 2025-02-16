@@ -1388,7 +1388,7 @@ export class PreviewCanvas extends LitElement {
         ) as any;
 
         return {
-          ax: ax,
+          ax: ax * (Math.PI / 180),
         };
       } catch (error) {
         return false;

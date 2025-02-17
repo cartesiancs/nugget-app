@@ -98,6 +98,9 @@ const request = {
     backgroundRemove: (path) =>
       ipcRenderer.invoke("media:backgroundRemove", path),
   },
+  selfhosted: {
+    run: () => ipcRenderer.invoke("selfhosted:run"),
+  },
 };
 
 const response = {

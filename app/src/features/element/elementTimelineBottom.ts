@@ -6,9 +6,13 @@ import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("element-timeline-bottom")
 export class ElementTimelineBottomScroll extends LitElement {
+  @property()
+  isRunSelfhosted = false;
+
   render() {
     return html`
       <style>
@@ -34,8 +38,7 @@ export class ElementTimelineBottomScroll extends LitElement {
 
         .timeline-bottom-grid-end {
           display: flex;
-          gap: 0.25rem;
-          flex-direction: column;
+          gap: 0.5rem;
           justify-content: end;
           padding-right: 0.5rem;
           align-items: center;
@@ -56,6 +59,16 @@ export class ElementTimelineBottomScroll extends LitElement {
           <span class="bottom-text">60fps</span>
         </div>
         <div class="timeline-bottom-grid-end">
+          <span
+            class="material-symbols-outlined timeline-bottom-question-icon icon-xs ${getLocationEnv() ==
+            "web"
+              ? "d-none"
+              : ""}"
+            data-bs-toggle="modal"
+            data-bs-target="#runServerModal"
+          >
+            public
+          </span>
           <span
             class="material-symbols-outlined timeline-bottom-question-icon icon-xs"
             data-bs-toggle="modal"
@@ -101,7 +114,47 @@ export class ElementTimelineBottomScroll extends LitElement {
           </div>
         </div>
       </div>
+
+      <div
+        class="modal fade"
+        id="runServerModal"
+        tabindex="-1"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-dark modal-dialog-centered">
+          <div class="modal-content modal-dark modal-darker">
+            <div class="modal-body modal-body-dark">
+              <h6 class="modal-title text-light font-weight-lg mb-2">
+                Run Self-Hosted Server
+              </h6>
+
+              <span
+                @click=${() =>
+                  window.electronAPI.req.url.openUrl("http://localhost:9825/")}
+                class="text-secondary ${this.isRunSelfhosted == true
+                  ? ""
+                  : "d-none"}"
+                style="font-size: 13px; cursor: pointer;"
+                >http://localhost:9825/</span
+              >
+
+              <br />
+              <button
+                class="btn btn-primary btn-sm"
+                @click=${this.runSelfhosted}
+              >
+                Run
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
+  }
+
+  runSelfhosted() {
+    window.electronAPI.req.selfhosted.run();
+    this.isRunSelfhosted = true;
   }
 
   createRenderRoot() {

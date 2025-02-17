@@ -1141,6 +1141,8 @@ export class elementTimelineCanvas extends LitElement {
 
       if (newScroll >= 0) {
         this.timelineState.setScroll(newScroll);
+      } else {
+        this.timelineState.setScroll(0);
       }
     }
   }

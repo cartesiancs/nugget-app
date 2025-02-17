@@ -534,6 +534,30 @@ export class ElementControl extends LitElement {
             width: width,
             height: height,
           },
+          animation: {
+            position: {
+              isActivate: false,
+              x: [],
+              y: [],
+              ax: [[], []],
+              ay: [[], []],
+            },
+            opacity: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+            scale: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+            rotation: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);

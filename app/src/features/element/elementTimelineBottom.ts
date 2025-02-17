@@ -60,15 +60,17 @@ export class ElementTimelineBottomScroll extends LitElement {
         </div>
         <div class="timeline-bottom-grid-end">
           <span
-            class="material-symbols-outlined timeline-bottom-question-icon icon-xs ${getLocationEnv() ==
+            class="d-flex justify-content-start align-items-center gap-1 ${getLocationEnv() ==
             "web"
               ? "d-none"
-              : ""}"
+              : ""} timeline-bottom-question-icon "
             data-bs-toggle="modal"
             data-bs-target="#runServerModal"
           >
-            public
+            <span class="material-symbols-outlined icon-xs "> public </span>
+            <span class="bottom-text">Public</span>
           </span>
+
           <span
             class="material-symbols-outlined timeline-bottom-question-icon icon-xs"
             data-bs-toggle="modal"
@@ -138,7 +140,7 @@ export class ElementTimelineBottomScroll extends LitElement {
                 >http://localhost:9825/</span
               >
 
-              <br />
+              <br class="${this.isRunSelfhosted == true ? "" : "d-none"}" />
               <button
                 class="btn btn-primary btn-sm"
                 @click=${this.runSelfhosted}

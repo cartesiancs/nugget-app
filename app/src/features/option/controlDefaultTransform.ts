@@ -45,52 +45,109 @@ export class OptionImage extends LitElement {
       <label class="form-label text-light"
         >${this.lc.t("setting.position")}</label
       >
-      <div class="d-flex flex-row gap-2 bd-highlight mb-2">
-        <number-input
-          aria-event="location-x"
-          @onChange=${this.handleLocation}
-          value="0"
-        ></number-input>
-        <number-input
-          aria-event="location-y"
-          @onChange=${this.handleLocation}
-          value="0"
-        ></number-input>
+      <div class="d-flex flex-row justify-content-between bd-highlight mb-2">
+        <div class="d-flex flex-row gap-2 justify-content-start">
+          <number-input
+            aria-event="location-x"
+            @onChange=${this.handleLocation}
+            value="0"
+          ></number-input>
+          <number-input
+            aria-event="location-y"
+            @onChange=${this.handleLocation}
+            value="0"
+          ></number-input>
+        </div>
+        <div class="d-flex flex-row gap-2 justify-content-end">
+          <button
+            class="btn btn-xxs text-light mr-2"
+            @click=${() => this.setAnimationEnable("position")}
+          >
+            <span
+              class="material-symbols-outlined icon-xsm ${this.getAnimationEnable(
+                "position",
+              )
+                ? "text-light"
+                : "text-secondary"}"
+            >
+              stat_0
+            </span>
+          </button>
+        </div>
       </div>
 
       <label class="form-label text-light">Size</label>
-      <div class="d-flex flex-row gap-2 bd-highlight mb-2">
-        <number-input
-          aria-event="width"
-          @onChange=${this.handleSize}
-          value="10"
-        ></number-input>
-        <number-input
-          aria-event="height"
-          @onChange=${this.handleSize}
-          value="10"
-        ></number-input>
+      <div class="d-flex flex-row justify-content-between bd-highlight mb-2">
+        <div class="d-flex flex-row gap-2 justify-content-start">
+          <number-input
+            aria-event="width"
+            @onChange=${this.handleSize}
+            value="10"
+          ></number-input>
+          <number-input
+            aria-event="height"
+            @onChange=${this.handleSize}
+            value="10"
+          ></number-input>
+        </div>
+        <div class="d-flex flex-row gap-2 justify-content-end"></div>
       </div>
 
       <label class="form-label text-light"
         >${this.lc.t("setting.opacity")}</label
       >
-      <div class="d-flex flex-row bd-highlight mb-2">
-        <number-input
-          aria-event="opacity"
-          @onChange=${this.handleOpacity}
-          value="100"
-          max="100"
-        ></number-input>
+      <div class="d-flex flex-row justify-content-between bd-highlight mb-2">
+        <div class="d-flex flex-row gap-2 justify-content-start">
+          <number-input
+            aria-event="opacity"
+            @onChange=${this.handleOpacity}
+            value="100"
+            max="100"
+          ></number-input>
+        </div>
+        <div class="d-flex flex-row gap-2 justify-content-end">
+          <button
+            class="btn btn-xxs text-light mr-2"
+            @click=${() => this.setAnimationEnable("opacity")}
+          >
+            <span
+              class="material-symbols-outlined icon-xsm ${this.getAnimationEnable(
+                "opacity",
+              )
+                ? "text-light"
+                : "text-secondary"}"
+            >
+              stat_0
+            </span>
+          </button>
+        </div>
       </div>
 
       <label class="form-label text-light">Rotation</label>
-      <div class="d-flex flex-row bd-highlight mb-2">
-        <number-input
-          aria-event="rotation"
-          @onChange=${this.handleRotation}
-          value="0"
-        ></number-input>
+      <div class="d-flex flex-row justify-content-between bd-highlight mb-2">
+        <div class="d-flex flex-row gap-2 justify-content-start">
+          <number-input
+            aria-event="rotation"
+            @onChange=${this.handleRotation}
+            value="0"
+          ></number-input>
+        </div>
+        <div class="d-flex flex-row gap-2 justify-content-end">
+          <button
+            class="btn btn-xxs text-light mr-2"
+            @click=${() => this.setAnimationEnable("rotation")}
+          >
+            <span
+              class="material-symbols-outlined icon-xsm ${this.getAnimationEnable(
+                "rotation",
+              )
+                ? "text-light"
+                : "text-secondary"}"
+            >
+              stat_0
+            </span>
+          </button>
+        </div>
       </div>
     `;
   }
@@ -319,6 +376,72 @@ export class OptionImage extends LitElement {
       });
     } catch (error) {
       console.log(error, "AAARR");
+    }
+  }
+
+  getAnimationEnable(animationType) {
+    try {
+      console.log(this.timeline[this.elementId].animation);
+
+      return this.timeline[this.elementId].animation[animationType].isActivate;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  setAnimationEnable(animationType) {
+    if (
+      this.timeline[this.elementId].animation[animationType].isActivate == false
+    ) {
+      // 현재 위치 혹은 x를 반영
+      this.appendFirstAnimation(animationType);
+      this.timeline[this.elementId].animation[animationType].isActivate = true;
+    } else {
+      this.timeline[this.elementId].animation[animationType].isActivate = false;
+    }
+    this.timelineState.patchTimeline(this.timeline);
+  }
+
+  appendFirstAnimation(animationType) {
+    // length 확인 필요
+    const startTime = this.timeline[this.elementId].startTime;
+    const padd = 100;
+
+    if (this.timeline[this.elementId].animation[animationType].x.length != 0) {
+      return false;
+    }
+
+    if (animationType == "position") {
+      const x = this.timeline[this.elementId].location.x;
+      const y = this.timeline[this.elementId].location.y;
+      const t = this.timelineCursor - startTime;
+
+      this.timeline[this.elementId].animation[animationType].x.push({
+        type: "cubic",
+        p: [t, x],
+        cs: [t - padd, x],
+        ce: [t + padd, x],
+      });
+
+      this.timeline[this.elementId].animation[animationType].y.push({
+        type: "cubic",
+        p: [t, y],
+        cs: [t - padd, y],
+        ce: [t + padd, y],
+      });
+
+      this.timeline[this.elementId].animation[animationType].ax = [[t, x]];
+      this.timeline[this.elementId].animation[animationType].ay = [[t, y]];
+    } else {
+      const x = this.timeline[this.elementId][animationType];
+      const t = this.timelineCursor - startTime;
+      this.timeline[this.elementId].animation[animationType].x.push({
+        type: "cubic",
+        p: [t, x],
+        cs: [t - padd, x],
+        ce: [t + padd, x],
+      });
+      this.timeline[this.elementId].animation[animationType].ax = [[t, x]];
     }
   }
 

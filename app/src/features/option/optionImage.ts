@@ -62,7 +62,7 @@ export class OptionImage extends LitElement {
 
   hide() {
     this.classList.add("d-none");
-    this.isShow = true;
+    this.isShow = false;
   }
 
   show() {

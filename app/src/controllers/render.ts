@@ -1566,6 +1566,21 @@ export class RenderController implements ReactiveController {
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
     const target = this.timeline[elementId];
+    let scaleW = target.width;
+    let scaleH = target.height;
+    let scaleX = target.location.x;
+    let scaleY = target.location.y;
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+
+    ctx.globalAlpha = target.opacity / 100;
+
+    const centerX = scaleX + scaleW / 2;
+    const centerY = scaleY + scaleH / 2;
+
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotation);
+
+    ctx.beginPath();
 
     ctx.beginPath();
 
@@ -1578,12 +1593,17 @@ export class RenderController implements ReactiveController {
 
       ctx.fillStyle = target.option.fillColor;
 
-      ctx.lineTo(x, y);
+      ctx.lineTo(x - centerX, y - centerY);
     }
 
     ctx.closePath();
 
     ctx.fill();
+
+    ctx.rotate(-rotation);
+    ctx.translate(-centerX, -centerY);
+
+    ctx.globalAlpha = 1;
   }
 
   parseRGBString(str) {

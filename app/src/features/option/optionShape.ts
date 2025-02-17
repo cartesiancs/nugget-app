@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import "./controlDefaultTransform";
 
 @customElement("option-shape")
 export class OptionShape extends LitElement {
@@ -9,20 +10,41 @@ export class OptionShape extends LitElement {
   @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
+  @property()
+  timeline = this.timelineState.timeline;
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
+  @property()
+  isShow = false;
+
   constructor() {
     super();
 
     this.elementId = "";
+    this.hide();
   }
 
   createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+      this.timelineCursor = state.cursor;
+    });
+
     return this;
   }
 
   render() {
-    this.hide();
-
     return html`
+      <default-transform
+        .elementId=${this.elementId}
+        .timeline=${this.timeline}
+        .timelineCursor=${this.timelineCursor}
+        .timelineState=${this.timelineState}
+        .isShow=${this.isShow}
+      ></default-transform>
+
       <div class="mb-2">
         <label class="form-label text-light">Fill Color</label>
         <input
@@ -39,10 +61,12 @@ export class OptionShape extends LitElement {
 
   hide() {
     this.classList.add("d-none");
+    this.isShow = false;
   }
 
   show() {
     this.classList.remove("d-none");
+    this.isShow = true;
   }
 
   setElementId({ elementId }) {

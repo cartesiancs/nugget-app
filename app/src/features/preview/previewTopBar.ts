@@ -34,6 +34,7 @@ export class PreviewTopBar extends LitElement {
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.control = state.control;
+      this.timeline = state.timeline;
     });
 
     controlPanelStore.subscribe((state) => {
@@ -70,6 +71,30 @@ export class PreviewTopBar extends LitElement {
       shape: shape,
       option: {
         fillColor: "#ffffff",
+      },
+      animation: {
+        position: {
+          isActivate: false,
+          x: [],
+          y: [],
+          ax: [[], []],
+          ay: [[], []],
+        },
+        opacity: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
+        scale: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
+        rotation: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
       },
     };
 

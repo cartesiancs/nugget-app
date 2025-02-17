@@ -1199,11 +1199,32 @@ export class PreviewCanvas extends LitElement {
     let scaleY = target.location.y;
     let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
-    // const centerX = scaleX + scaleW / 2;
-    // const centerY = scaleY + scaleH / 2;
+    ctx.globalAlpha = target.opacity / 100;
+    if (target.animation["opacity"].isActivate == true) {
+      let index = Math.round(this.timelineCursor / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
 
-    // ctx.translate(centerX, centerY);
-    // ctx.rotate(rotation);
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          target.animation["opacity"].ax,
+          this.timelineCursor - target.startTime,
+        ) as any;
+
+        ctx.globalAlpha = this.zeroIfNegative(ax / 100);
+      } catch (error) {}
+    }
+
+    const centerX = scaleX + scaleW / 2;
+    const centerY = scaleY + scaleH / 2;
+
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotation);
 
     ctx.beginPath();
 
@@ -1216,22 +1237,32 @@ export class PreviewCanvas extends LitElement {
 
       ctx.fillStyle = target.option.fillColor;
       if (this.nowShapeId == elementId) {
-        ctx.arc(x, y, 8, 0, 5 * Math.PI);
+        ctx.arc(x - centerX, y - centerY, 8, 0, 5 * Math.PI);
       }
 
-      ctx.lineTo(x, y);
+      ctx.lineTo(x - centerX, y - centerY);
     }
 
     ctx.closePath();
 
     ctx.fill();
 
-    this.drawOutline(ctx, elementId, scaleX, scaleY, scaleW, scaleH, rotation);
+    // this.drawOutline(ctx, elementId, scaleX, scaleY, scaleW, scaleH, rotation);
 
-    // this.drawOutline(ctx, elementId, -scaleW / 2, -scaleH / 2, scaleW, scaleH, rotation);
+    this.drawOutline(
+      ctx,
+      elementId,
+      -scaleW / 2,
+      -scaleH / 2,
+      scaleW,
+      scaleH,
+      rotation,
+    );
 
-    // ctx.rotate(-rotation);
-    // ctx.translate(-centerX, -centerY);
+    ctx.rotate(-rotation);
+    ctx.translate(-centerX, -centerY);
+
+    ctx.globalAlpha = 1;
   }
 
   drawKeyframePath(ctx, elementId) {
@@ -1669,6 +1700,30 @@ export class PreviewCanvas extends LitElement {
       shape: [[x, y]],
       option: {
         fillColor: "#ffffff",
+      },
+      animation: {
+        position: {
+          isActivate: false,
+          x: [],
+          y: [],
+          ax: [[], []],
+          ay: [[], []],
+        },
+        opacity: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
+        scale: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
+        rotation: {
+          isActivate: false,
+          x: [],
+          ax: [[], []],
+        },
       },
     };
 

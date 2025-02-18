@@ -15,6 +15,15 @@ export class OptionText extends LitElement {
   isBold: boolean;
   isItalic: boolean;
 
+  @property()
+  timeline = this.timelineState.timeline;
+
+  @property()
+  timelineCursor = this.timelineState.cursor;
+
+  @property()
+  isShow = false;
+
   constructor() {
     super();
 
@@ -30,6 +39,11 @@ export class OptionText extends LitElement {
   }
 
   createRenderRoot() {
+    useTimelineStore.subscribe((state) => {
+      this.timeline = state.timeline;
+      this.timelineCursor = state.cursor;
+    });
+
     return this;
   }
 
@@ -51,6 +65,15 @@ export class OptionText extends LitElement {
       <span class="text-light ${this.elementId.length > 1 ? "" : "d-none"}"
         >${this.elementId.length} selected</span
       >
+
+      <default-transform
+        .elementId=${this.elementId}
+        .timeline=${this.timeline}
+        .timelineCursor=${this.timelineCursor}
+        .timelineState=${this.timelineState}
+        .isShow=${this.isShow}
+      ></default-transform>
+
       <div class="mb-2">
         <label class="form-label text-light">Text</label>
         <input
@@ -236,10 +259,12 @@ export class OptionText extends LitElement {
 
   hide() {
     this.classList.add("d-none");
+    this.isShow = false;
   }
 
   show() {
     this.classList.remove("d-none");
+    this.isShow = true;
   }
 
   setElementId({ elementId }) {

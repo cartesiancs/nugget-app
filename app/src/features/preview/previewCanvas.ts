@@ -888,6 +888,8 @@ export class PreviewCanvas extends LitElement {
       const imageIndex = this.gifFrames.findIndex((item) => {
         return item.key == elementId;
       });
+      ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+
       const delay = this.gifFrames[imageIndex].frames[0].delay;
 
       const index =
@@ -925,6 +927,7 @@ export class PreviewCanvas extends LitElement {
 
       ctx.rotate(-rotation);
       ctx.translate(-centerX, -centerY);
+      ctx.globalAlpha = 1;
     } else {
       fetch(imageElement.localpath)
         .then((resp) => resp.arrayBuffer())
@@ -979,7 +982,7 @@ export class PreviewCanvas extends LitElement {
         return false;
       }
 
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = this.timeline[elementId].opacity / 100;
 
       if (this.timeline[elementId].animation["opacity"].isActivate == true) {
         let index = Math.round(this.timelineCursor / 16);

@@ -10,7 +10,7 @@ import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("element-timeline-bottom")
 export class ElementTimelineBottomScroll extends LitElement {
-  @property()
+  @property({ attribute: false })
   isRunSelfhosted = false;
 
   render() {

@@ -618,6 +618,7 @@ export class ElementControl extends LitElement {
       height: height,
       width: width,
       widthInner: 200,
+      opacity: 100,
       animation: {
         position: {
           isActivate: false,
@@ -669,6 +670,7 @@ export class ElementControl extends LitElement {
       fontweight: "medium",
       fonttype: "otf",
       letterSpacing: 0,
+      opacity: 100,
       options: {
         isBold: false,
         isItalic: false,

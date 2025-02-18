@@ -456,7 +456,7 @@ export class RenderController implements ReactiveController {
           let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
 
           try {
-            ctx.globalAlpha = 1;
+            ctx.globalAlpha = this.timeline[elementId].opacity / 100;
 
             if (
               this.timeline[elementId].animation["opacity"].isActivate == true

@@ -72,43 +72,43 @@ export class elementTimelineCanvas extends LitElement {
 
   @query("#elementTimelineCanvasRef") canvas!: HTMLCanvasElement;
 
-  @property()
+  @property({ attribute: false })
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   timeline: any = this.timelineState.timeline;
 
-  @property()
+  @property({ attribute: false })
   timelineRange = this.timelineState.range;
 
-  @property()
+  @property({ attribute: false })
   timelineScroll = this.timelineState.scroll;
 
-  @property()
+  @property({ attribute: false })
   timelineCursor = this.timelineState.cursor;
 
-  @property()
+  @property({ attribute: false })
   timelineHistory = this.timelineState.history;
 
-  @property()
+  @property({ attribute: false })
   isOpenAnimationPanelId: string[] = [];
 
-  @property()
+  @property({ attribute: false })
   keyframeState: IKeyframeStore = keyframeStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   target = this.keyframeState.target;
 
-  @property()
+  @property({ attribute: false })
   uiState: IUIStore = uiStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   resize = this.uiState.resize;
 
-  @property()
+  @property({ attribute: false })
   renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   renderOption = this.renderOptionStore.options;
 
   @consume({ context: timelineContext })

@@ -381,8 +381,6 @@ export class OptionImage extends LitElement {
 
   getAnimationEnable(animationType) {
     try {
-      console.log(this.timeline[this.elementId].animation);
-
       return this.timeline[this.elementId].animation[animationType].isActivate;
     } catch (error) {
       return false;

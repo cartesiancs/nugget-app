@@ -1,6 +1,7 @@
 import { ReactiveController, ReactiveControllerHost } from "lit";
 import { path } from "../functions/path";
 import mime from "../functions/mime";
+import { getLocationEnv } from "../functions/getLocationEnv";
 
 export class AssetController implements ReactiveController {
   private host: ReactiveControllerHost | undefined;
@@ -16,24 +17,34 @@ export class AssetController implements ReactiveController {
   }
 
   public add(originPath) {
-    const filepath = path.encode(originPath);
-    fetch(`file://${filepath}`)
+    const nowEnv = getLocationEnv();
+    const filepath =
+      nowEnv == "electron"
+        ? `file://${path.encode(originPath)}`
+        : `/api/file?path=${path.encode(originPath)}`;
+
+    const fileorgpath =
+      nowEnv == "electron"
+        ? `file://${path.encode(originPath)}`
+        : `${path.encode(originPath)}`;
+
+    fetch(`${filepath}`)
       .then((res) => {
         return res.blob();
       })
       .then((blob) => {
         let blobUrl = URL.createObjectURL(blob);
-        let blobType = mime.lookup(filepath).type;
+        let blobType = mime.lookup(fileorgpath).type;
         let control: any = document.querySelector("element-control");
 
         if (blobType == "image") {
-          control.addImage(blobUrl, filepath);
+          control.addImage(blobUrl, fileorgpath);
         } else if (blobType == "video") {
-          control.addVideo(blobUrl, filepath);
+          control.addVideo(blobUrl, fileorgpath);
         } else if (blobType == "audio") {
-          control.addAudio(blobUrl, filepath);
+          control.addAudio(blobUrl, fileorgpath);
         } else if (blobType == "gif") {
-          control.addGif(blobUrl, filepath);
+          control.addGif(blobUrl, fileorgpath);
         }
       });
   }

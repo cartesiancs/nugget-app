@@ -8,6 +8,7 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { decompressFrames, parseGIF } from "gifuct-js";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -303,6 +304,9 @@ export class ElementControl extends LitElement {
       let width = resize.width;
       let height = resize.height; // /division
 
+      const nowEnv = getLocationEnv();
+      const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
       this.timeline[elementId] = {
         priority: this.getNowPriority(),
         blob: blob,
@@ -313,7 +317,7 @@ export class ElementControl extends LitElement {
         rotation: 0,
         width: width,
         height: height,
-        localpath: path,
+        localpath: filepath,
         filetype: "image",
         ratio: img.width / img.height,
         animation: {
@@ -392,12 +396,10 @@ export class ElementControl extends LitElement {
       let height = video.videoHeight;
       let duration = video.duration * 1000;
 
-      window.electronAPI.req.ffmpeg.getMetadata(blob, path);
-
-      window.electronAPI.res.ffmpeg.getMetadata((evt, blobdata, metadata) => {
-        if (blobdata != blob) {
-          return 0;
-        }
+      window.electronAPI.req.ffmpeg.getMetadata(blob, path).then((result) => {
+        let blobdata = result.blobdata;
+        let metadata = result.metadata;
+        console.log(metadata);
 
         let isExist = false;
 
@@ -411,6 +413,9 @@ export class ElementControl extends LitElement {
           }
         });
 
+        const nowEnv = getLocationEnv();
+        const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
         this.timeline[elementId] = {
           priority: this.getNowPriority(),
           blob: blob,
@@ -423,7 +428,7 @@ export class ElementControl extends LitElement {
           width: width,
           height: height,
           ratio: width / height,
-          localpath: path,
+          localpath: filepath,
           isExistAudio: isExist,
           filetype: "video",
           codec: { video: "default", audio: "default" },

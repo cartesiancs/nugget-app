@@ -69,11 +69,18 @@ ipcMain.on("CLIENT_READY", async (evt) => {
   evt.sender.send("EXIST_FFMPEG", resourcesPath, config);
 });
 
-ipcMain.on("GET_METADATA", async (evt, bloburl, mediapath) => {
-  ffmpeg.ffprobe(mediapath, (err, metadata) => {
-    console.log(mediapath, metadata, bloburl);
-    mainWindow.webContents.send("GET_METADATA", bloburl, metadata);
+ipcMain.handle("GET_METADATA", async (evt, bloburl, mediapath) => {
+  const result = new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(mediapath, (err, metadata) => {
+      console.log(mediapath, metadata, bloburl);
+      resolve({
+        bloburl: bloburl,
+        metadata: metadata,
+      });
+    });
   });
+
+  return result;
 });
 ipcMain.on("INIT", electronInit.init);
 ipcMain.on("SELECT_DIR", ipcDialog.openDirectory);

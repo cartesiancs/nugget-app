@@ -1,3 +1,4 @@
+import axios from "axios";
 import { getLocationEnv } from "./getLocationEnv";
 
 export function enableIpcWrapper() {
@@ -28,7 +29,7 @@ export function enableIpcWrapper() {
       },
       dialog: {
         openDirectory: async function (lang) {
-          return "none";
+          return "/";
         },
         openFile: async function (lang) {
           return "none";
@@ -77,8 +78,9 @@ export function enableIpcWrapper() {
         },
       },
       filesystem: {
-        getDirectory: async function (lang) {
-          return "none";
+        getDirectory: async function (dir) {
+          const request = await axios.get(`/api/directory?dir=${dir}`);
+          return request.data;
         },
         openDirectory: async function (lang) {
           return "none";
@@ -107,8 +109,11 @@ export function enableIpcWrapper() {
         },
       },
       ffmpeg: {
-        getMetadata: async function (lang) {
-          return "none";
+        getMetadata: async function (bloburl, mediapath) {
+          const request = await axios.get(
+            `/api/file/metadata?path=${mediapath}`,
+          );
+          return request.data;
         },
         combineFrame: async function (lang) {
           return "none";

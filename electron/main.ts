@@ -31,6 +31,7 @@ import { ipcRenderV2 } from "./render/renderFrame.js";
 import { ipcMedia } from "./ipc/ipcMedia.js";
 import { runServer } from "./webServer.js";
 import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
+import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -141,6 +142,14 @@ ipcMain.handle("selfhosted:run", ipcSelfhosted.run);
 ipcMain.on("render:v2:start", ipcRenderV2.start);
 ipcMain.on("render:v2:sendFrame", ipcRenderV2.sendFrame);
 ipcMain.on("render:v2:finishStream", ipcRenderV2.finishStream);
+
+ipcMain.handle(
+  "render:offscreen:readyToRender",
+  httpFFmpegRenderV2.readyToRender,
+);
+ipcMain.on("render:offscreen:start", httpFFmpegRenderV2.start);
+ipcMain.on("render:offscreen:sendFrame", httpFFmpegRenderV2.sendFrame);
+ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
 // ipcMain.on("overlayRecord:stop:res", async (evt) => {
 //   mainWindow.webContents.send("overlayRecord:stop:res", "");

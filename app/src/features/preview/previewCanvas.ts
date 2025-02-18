@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element";
 import { millisecondsToPx } from "../../utils/time";
 import { glFilter } from "./glFilter";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 type ImageTempType = {
   elementId: string;
@@ -697,12 +698,12 @@ export class PreviewCanvas extends LitElement {
 
       this.loadedVideos.push({
         elementId: elementId,
-        path: this.timeline[elementId].localpath,
+        path: this.getPath(this.timeline[elementId].localpath),
         canvas: canvas,
         object: video,
         isPlay: false,
       });
-      video.src = this.timeline[elementId].localpath;
+      video.src = this.getPath(this.timeline[elementId].localpath);
 
       ctx.drawImage(video, x, y, w, h);
 
@@ -843,7 +844,8 @@ export class PreviewCanvas extends LitElement {
         ctx.drawImage(img, x, y, w, h);
         this.drawOutline(ctx, elementId, x, y, w, h, rotation);
       };
-      img.src = imageElement.localpath;
+
+      img.src = this.getPath(imageElement.localpath);
     }
 
     ctx.globalAlpha = 1;
@@ -873,7 +875,7 @@ export class PreviewCanvas extends LitElement {
       this.drawCanvas(this.canvas);
     };
 
-    img.src = this.timeline[elementId].localpath;
+    img.src = this.getPath(this.timeline[elementId].localpath);
   }
 
   drawGif(ctx, elementId, w, h, x, y) {
@@ -929,7 +931,7 @@ export class PreviewCanvas extends LitElement {
       ctx.translate(-centerX, -centerY);
       ctx.globalAlpha = 1;
     } else {
-      fetch(imageElement.localpath)
+      fetch(this.getPath(this.timeline[elementId].localpath))
         .then((resp) => resp.arrayBuffer())
         .then((buff) => {
           let gif = parseGIF(buff);
@@ -1266,6 +1268,13 @@ export class PreviewCanvas extends LitElement {
     ctx.translate(-centerX, -centerY);
 
     ctx.globalAlpha = 1;
+  }
+
+  getPath(path) {
+    const nowEnv = getLocationEnv();
+    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
+    return filepath;
   }
 
   drawKeyframePath(ctx, elementId) {

@@ -76,6 +76,14 @@ const request = {
       start: (options, timeline) =>
         ipcRenderer.send("render:v2:start", options, timeline),
     },
+    offscreen: {
+      readyToRender: () => ipcRenderer.invoke("render:offscreen:readyToRender"),
+      start: (options, timeline) =>
+        ipcRenderer.send("render:offscreen:start", options, timeline),
+      sendFrame: (base64Data) =>
+        ipcRenderer.send("render:offscreen:sendFrame", base64Data),
+      finishStream: () => ipcRenderer.send("render:offscreen:finishStream"),
+    },
   },
   url: {
     openUrl: (url) => ipcRenderer.send("OPEN_URL", url),

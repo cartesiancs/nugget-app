@@ -317,7 +317,7 @@ export class ElementControl extends LitElement {
         rotation: 0,
         width: width,
         height: height,
-        localpath: filepath,
+        localpath: path,
         filetype: "image",
         ratio: img.width / img.height,
         animation: {
@@ -355,7 +355,10 @@ export class ElementControl extends LitElement {
     const elementId = this.generateUUID();
     const img = document.createElement("img");
 
-    fetch(path)
+    const nowEnv = getLocationEnv();
+    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
+    fetch(filepath)
       .then((resp) => resp.arrayBuffer())
       .then((buff) => {
         let gif = parseGIF(buff);
@@ -428,7 +431,7 @@ export class ElementControl extends LitElement {
           width: width,
           height: height,
           ratio: width / height,
-          localpath: filepath,
+          localpath: path,
           isExistAudio: isExist,
           filetype: "video",
           codec: { video: "default", audio: "default" },
@@ -733,6 +736,9 @@ export class ElementControl extends LitElement {
   addAudio(blob, path) {
     const elementId = this.generateUUID();
     const audio = document.createElement("audio");
+
+    const nowEnv = getLocationEnv();
+    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
 
     audio.src = blob;
 

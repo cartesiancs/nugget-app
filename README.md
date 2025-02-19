@@ -35,7 +35,7 @@ It also supports layer-based editing, which differs from traditional track-based
 
 ## About The Project
 
-https://raw.githubusercontent.com/cartesiancs/nugget-app/develop/.github/demo.mp4
+https://github.com/user-attachments/assets/d7ec0c03-2205-47f9-b3c4-2f8cf61b2edb
 
 _This video is made of Nugget._
 

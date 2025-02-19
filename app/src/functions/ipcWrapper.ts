@@ -17,7 +17,8 @@ export function enableIpcWrapper() {
           return "none";
         },
         getTempPath: async function (lang) {
-          return "none";
+          const request = await axios.get(`/api/path/temp`);
+          return request.data;
         },
         getAppInfo: async function (lang) {
           return {

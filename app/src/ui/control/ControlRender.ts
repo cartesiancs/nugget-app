@@ -4,6 +4,10 @@ import { IProjectStore, projectStore } from "../../states/projectStore";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { RenderController } from "../../controllers/render";
 import { LocaleController } from "../../controllers/locale";
+import { getLocationEnv } from "../../functions/getLocationEnv";
+import axios from "axios";
+import { renderOptionStore } from "../../states/renderOptionStore";
+import { v4 as uuidv4 } from "uuid";
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
@@ -24,6 +28,60 @@ export class ControlRender extends LitElement {
     return this;
   }
 
+  async requestHttpRender() {
+    const tempPath = await window.electronAPI.req.app.getTempPath();
+    const renderOptionState = renderOptionStore.getState().options;
+    const elementControlComponent = document.querySelector("element-control");
+
+    const projectDuration = renderOptionState.duration;
+    const projectFolder = tempPath.path;
+    const projectRatio = elementControlComponent.previewRatio;
+    const previewSizeH = renderOptionState.previewSize.h;
+    const previewSizeW = renderOptionState.previewSize.w;
+    const backgroundColor = renderOptionState.backgroundColor;
+
+    const videoBitrate = Number(document.querySelector("#videoBitrate").value);
+    const uuidKey = uuidv4();
+
+    if (projectFolder == "") {
+      document
+        .querySelector("toast-box")
+        .showToast({ message: "Select a project folder", delay: "4000" });
+
+      return 0;
+    }
+
+    let options = {
+      videoDuration: projectDuration,
+      videoDestination: `${projectFolder}/${uuidKey}.mp4`,
+      videoDestinationFolder: projectFolder,
+      videoBitrate: videoBitrate,
+      previewRatio: projectRatio,
+      backgroundColor: backgroundColor,
+      previewSize: {
+        w: previewSizeW,
+        h: previewSizeH,
+      },
+    };
+
+    let timeline = Object.fromEntries(
+      Object.entries(useTimelineStore.getState().timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
+    for (const key in timeline) {
+      if (Object.prototype.hasOwnProperty.call(timeline, key)) {
+        timeline[key].localpath = `file:/${timeline[key].localpath}`;
+      }
+    }
+
+    axios.post("/api/render", {
+      options: options,
+      timeline: timeline,
+    });
+  }
+
   handleClickActionButton() {
     //this.renderControll.requestRender();
   }
@@ -33,7 +91,12 @@ export class ControlRender extends LitElement {
   }
 
   handleClickRenderV2Button() {
-    this.renderControl.requestRenderV2();
+    const env = getLocationEnv();
+    if (env == "electron") {
+      this.renderControl.requestRenderV2();
+    } else {
+      this.requestHttpRender();
+    }
   }
 
   render() {

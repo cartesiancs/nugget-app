@@ -128,6 +128,9 @@ const response = {
     error: (callback) => ipcRenderer.on("PROCESSING_ERROR", callback),
     finishCombineFrame: (callback) =>
       ipcRenderer.on("FINISH_COMBINE_FRAME", callback),
+    offscreen: {
+      start: (callback) => ipcRenderer.on("render:offscreen:start", callback),
+    },
   },
   overlayRecord: {
     stop: (callback) => ipcRenderer.on("overlayRecord:stop:res", callback),

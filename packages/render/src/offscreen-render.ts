@@ -1643,6 +1643,11 @@ export class OffscreenRender extends LitElement {
     window.electronAPI.req.render.offscreen.readyToRender().then((result) => {
       this.renderControl.requestRenderV2(result.timeline, result.options);
     });
+
+    window.electronAPI.res.render.offscreen.start((evt, result) => {
+      console.log(evt);
+      this.renderControl.requestRenderV2(result.timeline, result.options);
+    });
   }
 
   // ready to render 보내고 -> 서버 측에서 확인하면 이쪽으로 다시 timeline정보와 option 정보를 보내주면 그때부터 랜더링 시작

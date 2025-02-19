@@ -130,19 +130,25 @@ export class ElementTimelineBottomScroll extends LitElement {
                 Run Self-Hosted Server
               </h6>
 
+              <span class="text-secondary"
+                >This self-host mode might be unstable.
+              </span>
+
+              <br />
+
               <span
                 @click=${() =>
                   window.electronAPI.req.url.openUrl("http://localhost:9825/")}
                 class="text-secondary ${this.isRunSelfhosted == true
                   ? ""
                   : "d-none"}"
-                style="font-size: 13px; cursor: pointer;"
+                style="font-size: 13px; cursor: pointer; "
                 >http://localhost:9825/</span
               >
 
               <br class="${this.isRunSelfhosted == true ? "" : "d-none"}" />
               <button
-                class="btn btn-primary btn-sm"
+                class="btn btn-primary btn-sm mt-2"
                 @click=${this.runSelfhosted}
               >
                 Run

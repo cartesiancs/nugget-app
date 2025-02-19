@@ -125,7 +125,14 @@ export const httpRender = {
     timeline = req.body.timeline;
     options = req.body.options;
 
-    offscreenRender = window.createOffscreenRenderWindow();
+    if (offscreenRender) {
+      offscreenRender.webContents.send("render:offscreen:start", {
+        timeline: timeline,
+        options: options,
+      });
+    } else {
+      offscreenRender = window.createOffscreenRenderWindow();
+    }
 
     res.status(200).send({
       status: true,

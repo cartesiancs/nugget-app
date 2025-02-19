@@ -1,11 +1,20 @@
 import { IProjectStore, projectStore } from "../states/projectStore";
+import { getLocationEnv } from "./getLocationEnv";
 
 const directory = {
   select: function () {
     const projectFolder: any = document.querySelector("#projectFolder");
     window.electronAPI.req.dialog.openDirectory().then((result) => {
-      projectFolder.value = result || "/";
-      const dir = String(projectFolder.value);
+      let dir = "/";
+      if (getLocationEnv() == "web") {
+        const getDirectory = localStorage.getItem("targetDirectory");
+        if (getDirectory != null) {
+          dir = getDirectory;
+        }
+      } else {
+        projectFolder.value = result || "/";
+        dir = String(projectFolder.value);
+      }
 
       window.electronAPI.req.filesystem.getDirectory(dir).then((result) => {
         let fileLists = {};

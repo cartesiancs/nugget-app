@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("asset-browser")
 export class AssetBrowser extends LitElement {
@@ -44,6 +45,10 @@ export class AssetBrowser extends LitElement {
     }
     let directoryInput: any = root.querySelector("input[ref='text']");
     directoryInput.value = path;
+
+    if (getLocationEnv() == "web") {
+      localStorage.setItem("targetDirectory", path);
+    }
   }
 
   clickPrevDirectoryButton() {

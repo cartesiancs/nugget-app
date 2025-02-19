@@ -9,6 +9,7 @@ import { spawn } from "child_process";
 import { mainWindow } from "../../main";
 import { ipcMain } from "electron";
 import { ffmpegConfig } from "../../lib/ffmpeg";
+import { sendRenderDone, sendRenderProgress } from "../sockets/conn.js";
 
 let ffmpegProcess;
 let offscreenRender;
@@ -134,6 +135,7 @@ export const httpRender = {
 
 export const httpFFmpegRenderV2 = {
   start: (event, options, timeline) => {
+    sendRenderProgress(0);
     startFFmpegProcess(options, timeline);
   },
 
@@ -145,9 +147,9 @@ export const httpFFmpegRenderV2 = {
     //startFFmpegProcess(options, timeline);
   },
 
-  sendFrame: (event, arrayBuffer) => {
+  sendFrame: (event, arrayBuffer, per) => {
     const buffer = Buffer.from(arrayBuffer);
-    console.log("EEE");
+    sendRenderProgress(per);
     if (ffmpegProcess && ffmpegProcess.stdin.writable) {
       ffmpegProcess.stdin.write(buffer);
     }
@@ -155,6 +157,7 @@ export const httpFFmpegRenderV2 = {
   finishStream: () => {
     if (ffmpegProcess) {
       ffmpegProcess.stdin.end();
+      sendRenderDone(options.videoDestination);
     }
   },
 };

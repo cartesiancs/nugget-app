@@ -80,8 +80,8 @@ const request = {
       readyToRender: () => ipcRenderer.invoke("render:offscreen:readyToRender"),
       start: (options, timeline) =>
         ipcRenderer.send("render:offscreen:start", options, timeline),
-      sendFrame: (base64Data) =>
-        ipcRenderer.send("render:offscreen:sendFrame", base64Data),
+      sendFrame: (base64Data, pers) =>
+        ipcRenderer.send("render:offscreen:sendFrame", base64Data, pers),
       finishStream: () => ipcRenderer.send("render:offscreen:finishStream"),
     },
   },

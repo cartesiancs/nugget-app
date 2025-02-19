@@ -192,7 +192,10 @@ export class RenderController implements ReactiveController {
           canvas.toBlob(async (blob) => {
             if (blob) {
               const arrayBuffer = await blob.arrayBuffer();
-              window.electronAPI.req.render.offscreen.sendFrame(arrayBuffer);
+              window.electronAPI.req.render.offscreen.sendFrame(
+                arrayBuffer,
+                pers,
+              );
               if (frame == totalFrame - 1) {
                 window.electronAPI.req.render.offscreen.finishStream();
               } else {

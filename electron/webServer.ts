@@ -3,6 +3,8 @@ import express from "express";
 import path from "path";
 import api from "./server/api";
 import bodyParser from "body-parser";
+import { Server as SocketIOServer } from "socket.io";
+import { connectSocket } from "./server/sockets/conn";
 
 export function runServer() {
   const staticDir = path.join(__dirname, "../app");
@@ -22,7 +24,12 @@ export function runServer() {
     res.sendFile(path.join(staticDir, "index.html"));
   });
 
-  app.listen(9825, () => {
+  const server = http.createServer(app);
+  const io = new SocketIOServer(server);
+
+  connectSocket(io);
+
+  server.listen(9825, () => {
     console.log("Static server running at http://localhost:9825");
   });
 }

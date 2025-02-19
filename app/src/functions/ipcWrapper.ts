@@ -21,6 +21,14 @@ export function enableIpcWrapper() {
           return request.data;
         },
         getAppInfo: async function (lang) {
+          if (getLocationEnv() == "demo") {
+            return {
+              data: {
+                version: "Demo",
+              },
+            };
+          }
+
           return {
             data: {
               version: "SelfHosted",

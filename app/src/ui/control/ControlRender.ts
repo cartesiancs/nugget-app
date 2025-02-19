@@ -197,7 +197,7 @@ export class ControlRender extends LitElement {
       </button> -->
 
       <button
-        class="btn btn-blue-fill"
+        class="btn btn-blue-fill ${getLocationEnv() == "demo" ? "d-none" : ""}"
         @click=${this.handleClickRenderV2Button}
       >
         Render

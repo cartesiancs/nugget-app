@@ -61,9 +61,9 @@ export class ElementTimelineBottomScroll extends LitElement {
         <div class="timeline-bottom-grid-end">
           <span
             class="d-flex justify-content-start align-items-center gap-1 ${getLocationEnv() ==
-            "web"
-              ? "d-none"
-              : ""} timeline-bottom-question-icon "
+            "electron"
+              ? ""
+              : "d-none"} timeline-bottom-question-icon "
             data-bs-toggle="modal"
             data-bs-target="#runServerModal"
           >

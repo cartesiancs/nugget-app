@@ -10,25 +10,25 @@ import { millisecondsToPx, pxToMilliseconds } from "../../utils/time";
 
 @customElement("element-timeline-bottom-scroll")
 export class ElementTimelineBottomScroll extends LitElement {
-  @property()
+  @property({ attribute: false })
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   timelineRange = this.timelineState.range;
 
-  @property()
+  @property({ attribute: false })
   timelineScroll = this.timelineState.scroll;
 
-  @property()
+  @property({ attribute: false })
   uiState: IUIStore = uiStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   renderOptionStore: IRenderOptionStore = renderOptionStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   renderOption = this.renderOptionStore.options;
 
-  @property()
+  @property({ attribute: false })
   resize = this.uiState.resize;
   isMove: boolean;
   left: number;

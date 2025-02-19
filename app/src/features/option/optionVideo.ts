@@ -53,6 +53,9 @@ export class OptionVideo extends LitElement {
           @change=${(e) => this.handleChangeUpdateKey(e, index)}
           class="form-select bg-dark text-light form-select-sm"
           aria-label="select screen"
+          style="
+              height: fit-content;
+          "
         >
           <option value="chromakey">Chroma Key</option>
           <option value="blur">Blur</option>
@@ -66,7 +69,7 @@ export class OptionVideo extends LitElement {
             .name == "radialblur"
             ? ""
             : "d-none"}"
-          value="5"
+          value="0"
         />
 
         <input
@@ -79,15 +82,40 @@ export class OptionVideo extends LitElement {
           value="5"
         />
 
-        <input
-          @change=${(e) => this.handleChangeUpdateColor(e, index)}
-          type="color"
-          class="form-control bg-default text-light ${this.filterList[index]
-            .name == "chromakey"
-            ? ""
-            : "d-none"}"
-          value="#000000"
-        />
+        <div class="d-flex row gap-2">
+          <input
+            @change=${(e) => this.handleChangeUpdateChromakey(e, index)}
+            type="color"
+            aria-event="chromakey_color_${index}"
+            class="form-control bg-default text-light ${this.filterList[index]
+              .name == "chromakey"
+              ? ""
+              : "d-none"}"
+            value="#000000"
+          />
+
+          <div
+            class="input-group mb-3 ${this.filterList[index].name == "chromakey"
+              ? ""
+              : "d-none"}"
+          >
+            <span
+              class="input-group-text bg-default text-light"
+              id="basic-addon2"
+              >f</span
+            >
+            <input
+              @change=${(e) => this.handleChangeUpdateChromakey(e, index)}
+              type="number"
+              aria-event="chromakey_force_${index}"
+              class="form-control bg-default text-light"
+              value="0.5"
+              step="0.01"
+              max="1"
+              max="min"
+            />
+          </div>
+        </div>
       </div>`);
     }
 
@@ -255,9 +283,18 @@ export class OptionVideo extends LitElement {
     this.requestUpdate();
   }
 
-  handleChangeUpdateColor(e, index) {
-    const rgb = this.hexToRgb(e.target.value);
-    const valueArray = [`r=${rgb.r}`, `g=${rgb.g}`, `b=${rgb.b}`];
+  handleChangeUpdateChromakey(e, index) {
+    const color = this.querySelector(
+      `input[aria-event='chromakey_color_${index}'`,
+    ) as any;
+    const force = this.querySelector(
+      `input[aria-event='chromakey_force_${index}'`,
+    ) as any;
+
+    const rgb = this.hexToRgb(color.value);
+    const f = parseFloat(force.value);
+    console.log(f, "FFFFFFFF");
+    const valueArray = [`r=${rgb.r}`, `g=${rgb.g}`, `b=${rgb.b}`, `f=${f}`];
     this.filterList[index].value = valueArray.join(":");
     document.querySelector("preview-canvas").setChangeFilter();
 
@@ -270,7 +307,7 @@ export class OptionVideo extends LitElement {
 
     filterList?.push({
       name: "chromakey",
-      value: "r=0:g=0:b=0",
+      value: "r=0:g=0:b=0:r=0.5",
     });
 
     this.timelineState.updateTimeline(

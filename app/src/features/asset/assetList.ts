@@ -3,6 +3,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
 import { LocaleController } from "../../controllers/locale";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("asset-list")
 export class AssetList extends LitElement {
@@ -103,7 +104,13 @@ export class AssetFile extends LitElement {
 
   async render() {
     const fileType = NUGGET.mime.lookup(this.filename).type;
-    const fileUrl = path.encode(`file://${this.directory}/${this.filename}`);
+
+    const nowEnv = getLocationEnv();
+    const filepath =
+      nowEnv == "electron"
+        ? `file://${this.directory}/${this.filename}`
+        : `/api/file?path=${this.directory}/${this.filename}`;
+    const fileUrl = path.encode(filepath);
     const assetList = document.querySelector("asset-list");
 
     let template;

@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IUIStore, uiStore } from "./states/uiStore";
+import "./features/demo/warningDemoEnv";
 
 @customElement("app-root")
 export class App extends LitElement {
@@ -64,6 +65,8 @@ export class App extends LitElement {
 
         <div id="menuRightClick"></div>
         <toast-box></toast-box>
+
+        <warning-demo></warning-demo>
       </body>
     `;
   }

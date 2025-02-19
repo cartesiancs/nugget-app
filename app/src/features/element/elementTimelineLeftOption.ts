@@ -12,19 +12,19 @@ type AnimationType = "rotation" | "position" | "opacity" | "scale";
 export class ElementTimelineLeftOption extends LitElement {
   @query("#elementTimelineLeftOptionRef") canvas!: HTMLCanvasElement;
 
-  @property()
+  @property({ attribute: false })
   uiState: IUIStore = uiStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   resize = this.uiState.resize;
 
-  @property()
+  @property({ attribute: false })
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   timeline: any = this.timelineState.timeline;
 
-  @property()
+  @property({ attribute: false })
   isAbleResize: boolean = false;
 
   @consume({ context: timelineContext })

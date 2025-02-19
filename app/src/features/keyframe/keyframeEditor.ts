@@ -554,6 +554,63 @@ export class KeyframeEditor extends LitElement {
     this.requestUpdate();
   }
 
+  checkBoundary(element, mouseX, mouseY) {
+    const padding = 10;
+
+    const csx =
+      millisecondsToPx(
+        element.cs[0] + this.timeline[this.elementId].startTime,
+        this.timelineRange,
+      ) - this.timelineScroll;
+
+    const csy = (element.cs[1] + this.verticalScroll) / this.verticalRange;
+
+    if (
+      csx > mouseX - padding &&
+      csx < mouseX + padding &&
+      csy > mouseY - padding &&
+      csy < mouseY + padding
+    ) {
+      return "cs";
+    }
+
+    const cex =
+      millisecondsToPx(
+        element.ce[0] + this.timeline[this.elementId].startTime,
+        this.timelineRange,
+      ) - this.timelineScroll;
+
+    const cey = (element.ce[1] + this.verticalScroll) / this.verticalRange;
+
+    if (
+      cex > mouseX - padding &&
+      cex < mouseX + padding &&
+      cey > mouseY - padding &&
+      cey < mouseY + padding
+    ) {
+      return "ce";
+    }
+
+    const dotx =
+      millisecondsToPx(
+        element.p[0] + this.timeline[this.elementId].startTime,
+        this.timelineRange,
+      ) - this.timelineScroll;
+
+    const doty = (element.p[1] + this.verticalScroll) / this.verticalRange;
+
+    if (
+      dotx > mouseX - padding &&
+      dotx < mouseX + padding &&
+      doty > mouseY - padding &&
+      doty < mouseY + padding
+    ) {
+      return "p";
+    }
+
+    return "n";
+  }
+
   handleScroll(e) {
     let optionBottom = document.querySelector("#option_bottom");
     let isShowOptionBottom = optionBottom.classList.contains("show");
@@ -581,14 +638,16 @@ export class KeyframeEditor extends LitElement {
 
   _handleMouseMove(e) {
     //console.log(e);
+    const ox = e.offsetX;
+    const oy = e.offsetY;
     const px =
       pxToMilliseconds(e.offsetX, this.timelineRange) +
       pxToMilliseconds(this.timelineScroll, this.timelineRange) -
       this.timeline[this.elementId].startTime;
     const py = e.offsetY * this.verticalRange - this.verticalScroll;
     const lineToAlpha = this.selectLine == 0 ? "x" : "y";
-    const padding = 100;
-    const paddingY = 25;
+    const padding = 10;
+    const paddingY = 10;
 
     let isCursorChange = false;
 
@@ -604,32 +663,9 @@ export class KeyframeEditor extends LitElement {
           lineToAlpha
         ][index];
 
-      if (
-        element.cs[0] > px - padding &&
-        element.cs[0] < px + padding &&
-        element.cs[1] > py - paddingY &&
-        element.cs[1] < py + paddingY
-      ) {
-        this.cursor = "pointer";
-        isCursorChange = true;
-      }
+      const check = this.checkBoundary(element, ox, oy);
 
-      if (
-        element.ce[0] > px - padding &&
-        element.ce[0] < px + padding &&
-        element.ce[1] > py - paddingY &&
-        element.ce[1] < py + paddingY
-      ) {
-        this.cursor = "pointer";
-        isCursorChange = true;
-      }
-
-      if (
-        element.p[0] > px - padding &&
-        element.p[0] < px + padding &&
-        element.p[1] > py - paddingY &&
-        element.p[1] < py + paddingY
-      ) {
+      if (["p", "ce", "cs"].includes(check)) {
         this.cursor = "pointer";
         isCursorChange = true;
       }
@@ -713,6 +749,9 @@ export class KeyframeEditor extends LitElement {
       this.timeline[this.elementId].startTime;
     const py = e.offsetY * this.verticalRange - this.verticalScroll;
 
+    const ox = e.offsetX;
+
+    const oy = e.offsetY;
     for (
       let index = 0;
       index <
@@ -725,37 +764,20 @@ export class KeyframeEditor extends LitElement {
           lineToAlpha
         ][index];
 
-      if (
-        element.cs[0] > px - padding &&
-        element.cs[0] < px + padding &&
-        element.cs[1] > py - padding &&
-        element.cs[1] < py + padding
-      ) {
-        this.clickIndex = index;
-        this.clickDot = "cs";
-        this.isDrag = true;
-      }
+      const check = this.checkBoundary(element, ox, oy);
 
-      if (
-        element.ce[0] > px - padding &&
-        element.ce[0] < px + padding &&
-        element.ce[1] > py - padding &&
-        element.ce[1] < py + padding
-      ) {
-        this.clickIndex = index;
-        this.clickDot = "ce";
-        this.isDrag = true;
-      }
-
-      if (
-        element.p[0] > px - padding &&
-        element.p[0] < px + padding &&
-        element.p[1] > py - padding &&
-        element.p[1] < py + padding
-      ) {
+      if (check == "p") {
         this.clickIndex = index;
         this.clickDot = "p";
         this.activePointIndex = index;
+        this.isDrag = true;
+      } else if (check == "ce") {
+        this.clickIndex = index;
+        this.clickDot = "ce";
+        this.isDrag = true;
+      } else if (check == "cs") {
+        this.clickIndex = index;
+        this.clickDot = "cs";
         this.isDrag = true;
       }
     }

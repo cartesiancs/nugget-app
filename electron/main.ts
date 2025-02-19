@@ -29,6 +29,9 @@ import { ipcOverlayRecord } from "./ipc/ipcOverlayRecord.js";
 import "./render/renderFrame.js";
 import { ipcRenderV2 } from "./render/renderFrame.js";
 import { ipcMedia } from "./ipc/ipcMedia.js";
+import { runServer } from "./webServer.js";
+import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
+import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -67,11 +70,18 @@ ipcMain.on("CLIENT_READY", async (evt) => {
   evt.sender.send("EXIST_FFMPEG", resourcesPath, config);
 });
 
-ipcMain.on("GET_METADATA", async (evt, bloburl, mediapath) => {
-  ffmpeg.ffprobe(mediapath, (err, metadata) => {
-    console.log(mediapath, metadata, bloburl);
-    mainWindow.webContents.send("GET_METADATA", bloburl, metadata);
+ipcMain.handle("GET_METADATA", async (evt, bloburl, mediapath) => {
+  const result = new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(mediapath, (err, metadata) => {
+      console.log(mediapath, metadata, bloburl);
+      resolve({
+        bloburl: bloburl,
+        metadata: metadata,
+      });
+    });
   });
+
+  return result;
 });
 ipcMain.on("INIT", electronInit.init);
 ipcMain.on("SELECT_DIR", ipcDialog.openDirectory);
@@ -127,9 +137,19 @@ ipcMain.handle("overlayRecord:show", ipcOverlayRecord.show);
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
 
+ipcMain.handle("selfhosted:run", ipcSelfhosted.run);
+
 ipcMain.on("render:v2:start", ipcRenderV2.start);
 ipcMain.on("render:v2:sendFrame", ipcRenderV2.sendFrame);
 ipcMain.on("render:v2:finishStream", ipcRenderV2.finishStream);
+
+ipcMain.handle(
+  "render:offscreen:readyToRender",
+  httpFFmpegRenderV2.readyToRender,
+);
+ipcMain.on("render:offscreen:start", httpFFmpegRenderV2.start);
+ipcMain.on("render:offscreen:sendFrame", httpFFmpegRenderV2.sendFrame);
+ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
 // ipcMain.on("overlayRecord:stop:res", async (evt) => {
 //   mainWindow.webContents.send("overlayRecord:stop:res", "");

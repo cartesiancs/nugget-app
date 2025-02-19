@@ -4,6 +4,14 @@ import { IProjectStore, projectStore } from "../../states/projectStore";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { RenderController } from "../../controllers/render";
 import { LocaleController } from "../../controllers/locale";
+import { getLocationEnv } from "../../functions/getLocationEnv";
+import axios from "axios";
+import { renderOptionStore } from "../../states/renderOptionStore";
+import { v4 as uuidv4 } from "uuid";
+import { io } from "socket.io-client";
+import { rendererModal } from "../../utils/modal";
+
+let socket;
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
@@ -16,12 +24,110 @@ export class ControlRender extends LitElement {
   @property()
   nowDirectory = this.projectState.nowDirectory;
 
+  @property()
+  videoSrc = "";
+  httpRenderDoneModal: any;
+  hasUpdatedOnce: boolean;
+
+  constructor() {
+    super();
+    this.hasUpdatedOnce = false;
+  }
+
   createRenderRoot() {
     projectStore.subscribe((state) => {
       this.nowDirectory = state.nowDirectory;
     });
 
+    if (getLocationEnv() == "web") {
+      socket = io();
+
+      socket.on("render:progress", (msg) => {
+        rendererModal.progressModal.show();
+        document.querySelector("#progress").style.width = `${msg}%`;
+        document.querySelector("#progress").innerHTML = `${Math.round(msg)}%`;
+      });
+
+      socket.on("render:done", (path) => {
+        rendererModal.progressModal.hide();
+
+        document.querySelector("#progress").style.width = `100%`;
+        document.querySelector("#progress").innerHTML = `100%`;
+
+        this.videoSrc = `/api/file?path=${path}`;
+
+        this.httpRenderDoneModal.show();
+      });
+    }
+
     return this;
+  }
+
+  updated() {
+    if (this.hasUpdatedOnce == false) {
+      this.httpRenderDoneModal = new bootstrap.Modal(
+        document.getElementById("httpRenderDone"),
+        {
+          keyboard: false,
+        },
+      );
+    }
+
+    this.hasUpdatedOnce = true;
+  }
+
+  async requestHttpRender() {
+    const tempPath = await window.electronAPI.req.app.getTempPath();
+    const renderOptionState = renderOptionStore.getState().options;
+    const elementControlComponent = document.querySelector("element-control");
+
+    const projectDuration = renderOptionState.duration;
+    const projectFolder = tempPath.path;
+    const projectRatio = elementControlComponent.previewRatio;
+    const previewSizeH = renderOptionState.previewSize.h;
+    const previewSizeW = renderOptionState.previewSize.w;
+    const backgroundColor = renderOptionState.backgroundColor;
+
+    const videoBitrate = Number(document.querySelector("#videoBitrate").value);
+    const uuidKey = uuidv4();
+
+    if (projectFolder == "") {
+      document
+        .querySelector("toast-box")
+        .showToast({ message: "Select a project folder", delay: "4000" });
+
+      return 0;
+    }
+
+    let options = {
+      videoDuration: projectDuration,
+      videoDestination: `${projectFolder}/${uuidKey}.mp4`,
+      videoDestinationFolder: projectFolder,
+      videoBitrate: videoBitrate,
+      previewRatio: projectRatio,
+      backgroundColor: backgroundColor,
+      previewSize: {
+        w: previewSizeW,
+        h: previewSizeH,
+      },
+    };
+
+    let timeline = Object.fromEntries(
+      Object.entries(useTimelineStore.getState().timeline).sort(
+        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+      ),
+    );
+
+    for (const key in timeline) {
+      if (Object.prototype.hasOwnProperty.call(timeline, key)) {
+        timeline[key].localpath = `file:/${timeline[key].localpath}`;
+      }
+    }
+
+    axios.post("/api/render", {
+      options: options,
+      timeline: timeline,
+    });
   }
 
   handleClickActionButton() {
@@ -33,7 +139,12 @@ export class ControlRender extends LitElement {
   }
 
   handleClickRenderV2Button() {
-    this.renderControl.requestRenderV2();
+    const env = getLocationEnv();
+    if (env == "electron") {
+      this.renderControl.requestRenderV2();
+    } else {
+      this.requestHttpRender();
+    }
   }
 
   render() {
@@ -86,11 +197,37 @@ export class ControlRender extends LitElement {
       </button> -->
 
       <button
-        class="btn btn-blue-fill"
+        class="btn btn-blue-fill ${getLocationEnv() == "demo" ? "d-none" : ""}"
         @click=${this.handleClickRenderV2Button}
       >
         Render
       </button>
+
+      <div
+        class="modal fade"
+        id="httpRenderDone"
+        data-bs-keyboard="false"
+        tabindex="-1"
+      >
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content bg-dark">
+            <div class="modal-body">
+              <h5 class="modal-title text-white font-weight-lg">Render Done</h5>
+
+              <div class="mt-3">
+                <div class="flex row mb-3">
+                  <button
+                    class="btn btn-sm btn-default text-light mt-1"
+                    @click=${() => window.open(this.videoSrc)}
+                  >
+                    Show File
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
   }
 }

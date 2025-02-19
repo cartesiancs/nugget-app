@@ -109,6 +109,8 @@ export type VideoElementType = {
   codec?: { video: string; audio: string };
   ratio?: number;
   speed?: number;
+  opacity?: number;
+
   filter?: {
     enable?: boolean;
     list?: VideoFilterType[];

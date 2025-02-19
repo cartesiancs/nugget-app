@@ -55,7 +55,7 @@ const request = {
   },
   ffmpeg: {
     getMetadata: (bloburl, mediapath) =>
-      ipcRenderer.send("GET_METADATA", bloburl, mediapath),
+      ipcRenderer.invoke("GET_METADATA", bloburl, mediapath),
     combineFrame: (outputDir, elementId) =>
       ipcRenderer.invoke("ffmpeg:combineFrame", outputDir, elementId),
     extractAudioFromVideo: (outputAudio, videoPath) =>
@@ -75,6 +75,14 @@ const request = {
       finishStream: () => ipcRenderer.send("render:v2:finishStream"),
       start: (options, timeline) =>
         ipcRenderer.send("render:v2:start", options, timeline),
+    },
+    offscreen: {
+      readyToRender: () => ipcRenderer.invoke("render:offscreen:readyToRender"),
+      start: (options, timeline) =>
+        ipcRenderer.send("render:offscreen:start", options, timeline),
+      sendFrame: (base64Data, pers) =>
+        ipcRenderer.send("render:offscreen:sendFrame", base64Data, pers),
+      finishStream: () => ipcRenderer.send("render:offscreen:finishStream"),
     },
   },
   url: {
@@ -98,6 +106,9 @@ const request = {
     backgroundRemove: (path) =>
       ipcRenderer.invoke("media:backgroundRemove", path),
   },
+  selfhosted: {
+    run: () => ipcRenderer.invoke("selfhosted:run"),
+  },
 };
 
 const response = {
@@ -117,6 +128,9 @@ const response = {
     error: (callback) => ipcRenderer.on("PROCESSING_ERROR", callback),
     finishCombineFrame: (callback) =>
       ipcRenderer.on("FINISH_COMBINE_FRAME", callback),
+    offscreen: {
+      start: (callback) => ipcRenderer.on("render:offscreen:start", callback),
+    },
   },
   overlayRecord: {
     stop: (callback) => ipcRenderer.on("overlayRecord:stop:res", callback),

@@ -8,6 +8,7 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { decompressFrames, parseGIF } from "gifuct-js";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -259,8 +260,8 @@ export class ElementControl extends LitElement {
 
   fitElementSizeOnPreview(width, height) {
     let preview = {
-      w: Number(document.querySelector("#video").style.width.split("px")[0]),
-      h: Number(document.querySelector("#video").style.height.split("px")[0]),
+      w: Number(document.querySelector("#elementPreviewCanvasRef").width),
+      h: Number(document.querySelector("#elementPreviewCanvasRef").height),
     };
 
     let originRatio = width / height;
@@ -303,6 +304,9 @@ export class ElementControl extends LitElement {
       let width = resize.width;
       let height = resize.height; // /division
 
+      const nowEnv = getLocationEnv();
+      const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
       this.timeline[elementId] = {
         priority: this.getNowPriority(),
         blob: blob,
@@ -311,8 +315,8 @@ export class ElementControl extends LitElement {
         opacity: 100,
         location: { x: 0, y: 0 },
         rotation: 0,
-        width: img.width,
-        height: img.height,
+        width: width,
+        height: height,
         localpath: path,
         filetype: "image",
         ratio: img.width / img.height,
@@ -351,7 +355,10 @@ export class ElementControl extends LitElement {
     const elementId = this.generateUUID();
     const img = document.createElement("img");
 
-    fetch(path)
+    const nowEnv = getLocationEnv();
+    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
+    fetch(filepath)
       .then((resp) => resp.arrayBuffer())
       .then((buff) => {
         let gif = parseGIF(buff);
@@ -392,12 +399,10 @@ export class ElementControl extends LitElement {
       let height = video.videoHeight;
       let duration = video.duration * 1000;
 
-      window.electronAPI.req.ffmpeg.getMetadata(blob, path);
-
-      window.electronAPI.res.ffmpeg.getMetadata((evt, blobdata, metadata) => {
-        if (blobdata != blob) {
-          return 0;
-        }
+      window.electronAPI.req.ffmpeg.getMetadata(blob, path).then((result) => {
+        let blobdata = result.blobdata;
+        let metadata = result.metadata;
+        console.log(metadata);
 
         let isExist = false;
 
@@ -410,6 +415,9 @@ export class ElementControl extends LitElement {
             isExist = true;
           }
         });
+
+        const nowEnv = getLocationEnv();
+        const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
 
         this.timeline[elementId] = {
           priority: this.getNowPriority(),
@@ -534,6 +542,30 @@ export class ElementControl extends LitElement {
             width: width,
             height: height,
           },
+          animation: {
+            position: {
+              isActivate: false,
+              x: [],
+              y: [],
+              ax: [[], []],
+              ay: [[], []],
+            },
+            opacity: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+            scale: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+            rotation: {
+              isActivate: false,
+              x: [],
+              ax: [[], []],
+            },
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -594,6 +626,7 @@ export class ElementControl extends LitElement {
       height: height,
       width: width,
       widthInner: 200,
+      opacity: 100,
       animation: {
         position: {
           isActivate: false,
@@ -645,6 +678,7 @@ export class ElementControl extends LitElement {
       fontweight: "medium",
       fonttype: "otf",
       letterSpacing: 0,
+      opacity: 100,
       options: {
         isBold: false,
         isItalic: false,
@@ -702,6 +736,9 @@ export class ElementControl extends LitElement {
   addAudio(blob, path) {
     const elementId = this.generateUUID();
     const audio = document.createElement("audio");
+
+    const nowEnv = getLocationEnv();
+    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
 
     audio.src = blob;
 

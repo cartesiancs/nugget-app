@@ -43,7 +43,7 @@ It also supports layer-based editing, which differs from traditional track-based
 - Fast rendering with FFmpeg
 - Unlimited layers
 - Cross Platform
-- Re-position animation, Keyframe
+- Re-position, Scale, Opacity, Rotation animation, Keyframe
 - Add Text
 - External Extension
 - Save&Load Project as File
@@ -54,6 +54,7 @@ It also supports layer-based editing, which differs from traditional track-based
 - AI Auto Caption (whisper)
 - Blur Effect (WebGL)
 - GIF Api
+- Draw shape
 - and more...
 
 ## Installation

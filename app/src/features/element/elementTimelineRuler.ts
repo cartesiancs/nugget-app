@@ -26,22 +26,22 @@ export class ElementTimelineRuler extends LitElement {
     document.addEventListener("mouseup", this.handleMouseup.bind(this));
   }
 
-  @property()
+  @property({ attribute: false })
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   timelineRange = this.timelineState.range;
 
-  @property()
+  @property({ attribute: false })
   timelineScroll = this.timelineState.scroll;
 
-  @property()
+  @property({ attribute: false })
   timelineCursor = this.timelineState.cursor;
 
-  @property()
+  @property({ attribute: false })
   uiState: IUIStore = uiStore.getInitialState();
 
-  @property()
+  @property({ attribute: false })
   resize = this.uiState.resize;
 
   createRenderRoot() {

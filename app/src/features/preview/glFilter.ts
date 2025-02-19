@@ -15,11 +15,12 @@ function parseRGBString(str) {
 
   let r = 0,
     g = 0,
-    b = 0;
+    b = 0,
+    f = 1;
 
   parts.forEach((item) => {
     const [key, value] = item.split("=");
-    const numValue = parseInt(value, 10);
+    const numValue = parseFloat(value);
 
     switch (key) {
       case "r":
@@ -31,12 +32,15 @@ function parseRGBString(str) {
       case "b":
         b = numValue;
         break;
+      case "f":
+        f = numValue;
+        break;
       default:
         break;
     }
   });
 
-  return { r, g, b };
+  return { r, g, b, f };
 }
 
 function parseBlurString(str) {
@@ -164,15 +168,17 @@ export const glFilter = {
       const u_keyColor = gl.getUniformLocation(program, "u_keyColor");
       const u_threshold = gl.getUniformLocation(program, "u_threshold");
       let keyColor = [0.0, 1.0, 0.0]; // Green
+      let ThresholdForce = 0.5;
       if (videoElement.filter.list && videoElement.filter.list.length > 0) {
         const targetRgb = videoElement.filter.list[0].value;
         const parsedRgb = parseRGBString(targetRgb);
+
         keyColor = [parsedRgb.r / 255, parsedRgb.g / 255, parsedRgb.b / 255];
+        ThresholdForce = parsedRgb.f;
       }
 
-      console.log(keyColor);
       gl.uniform3fv(u_keyColor, keyColor);
-      gl.uniform1f(u_threshold, 0.5);
+      gl.uniform1f(u_threshold, ThresholdForce);
 
       const u_video = gl.getUniformLocation(program, "u_video");
       gl.uniform1i(u_video, 0);

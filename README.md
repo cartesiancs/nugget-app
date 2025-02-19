@@ -35,6 +35,12 @@ It also supports layer-based editing, which differs from traditional track-based
 
 ## About The Project
 
+https://raw.githubusercontent.com/cartesiancs/nugget-app/develop/.github/demo.mp4
+
+_This video is made of Nugget._
+
+You can check out a limited demo of the website at the [following link](https://demo.nugget.cartesiancs.com/).
+
 ## Features
 
 - Cut Edit

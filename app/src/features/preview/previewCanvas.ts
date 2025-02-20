@@ -2182,9 +2182,10 @@ export class PreviewCanvas extends LitElement {
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
 
-      const rotation = this.timeline[this.activeElementId].rotation || 0;
-      const cosTheta = Math.cos(rotation);
-      const sinTheta = Math.sin(rotation);
+      const rotationDeg = this.timeline[this.activeElementId].rotation || 0;
+      const rotationRad = (rotationDeg * Math.PI) / 180;
+      const cosTheta = Math.cos(rotationRad);
+      const sinTheta = Math.sin(rotationRad);
       const localDx = dx * cosTheta + dy * sinTheta;
       const localDy = -dx * sinTheta + dy * cosTheta;
 

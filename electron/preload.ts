@@ -88,6 +88,11 @@ const request = {
   url: {
     openUrl: (url) => ipcRenderer.send("OPEN_URL", url),
   },
+  ai: {
+    stt: (path) => ipcRenderer.invoke("ai:stt", path),
+    setKey: (key) => ipcRenderer.invoke("ai:setKey", key),
+    getKey: () => ipcRenderer.invoke("ai:getKey"),
+  },
   stream: {
     saveBufferToVideo: (arrayBuffer) =>
       ipcRenderer.invoke("stream:saveBufferToVideo", arrayBuffer),

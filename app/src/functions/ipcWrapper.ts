@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getLocationEnv } from "./getLocationEnv";
+import { sampleDemoFileList } from "../data/sampleDemoFiles";
 
 export function enableIpcWrapper() {
   if (getLocationEnv() == "electron") return false;
@@ -88,6 +89,10 @@ export function enableIpcWrapper() {
       },
       filesystem: {
         getDirectory: async function (dir) {
+          if (getLocationEnv() == "demo") {
+            return sampleDemoFileList;
+          }
+
           const request = await axios.get(`/api/directory?dir=${dir}`);
           return request.data;
         },

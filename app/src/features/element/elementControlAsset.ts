@@ -1,6 +1,7 @@
 import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("element-control-asset")
 export class ElementControlAsset extends LitElement {
@@ -147,10 +148,17 @@ export class ElementControlAsset extends LitElement {
 
   templateAudio() {
     return html`<audio
-      src="${this.timeline[this.elementId].localpath || ""} "
+      src="${this.getPath(this.timeline[this.elementId].localpath) || ""} "
       class="d-none"
       draggable="false"
     ></audio>`;
+  }
+
+  getPath(path) {
+    const nowEnv = getLocationEnv();
+    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+
+    return filepath;
   }
 
   // templateText() {

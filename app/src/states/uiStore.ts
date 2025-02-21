@@ -2,6 +2,8 @@ import { createStore } from "zustand/vanilla";
 
 export interface IUIStore {
   resize: {
+    chatSidebar: number;
+
     vertical: {
       top: number;
       bottom: number;
@@ -17,7 +19,7 @@ export interface IUIStore {
   };
   topBarTitle: string;
   updateTimelineVertical: (px: number) => void;
-
+  setChatSidebar: (width: number) => void;
   updateVertical: (criteria: number) => void;
   updateHorizontal: (criteria: number, panel: "panel" | "preview") => void;
   setTopBarTitle: (topBarTitle: string) => void;
@@ -25,6 +27,7 @@ export interface IUIStore {
 
 export const uiStore = createStore<IUIStore>((set) => ({
   resize: {
+    chatSidebar: 0,
     vertical: {
       top: 60,
       bottom: 40,
@@ -40,6 +43,18 @@ export const uiStore = createStore<IUIStore>((set) => ({
   },
   topBarTitle: "Nugget",
 
+  setChatSidebar: (width) =>
+    set((state) => ({
+      resize: {
+        chatSidebar: width,
+        vertical: { ...state.resize.vertical },
+        horizontal: { ...state.resize.horizontal },
+        timelineVertical: {
+          leftOption: state.resize.timelineVertical.leftOption,
+        },
+      },
+    })),
+
   setTopBarTitle: (topBarTitle) =>
     set((state) => ({
       topBarTitle: topBarTitle,
@@ -48,6 +63,7 @@ export const uiStore = createStore<IUIStore>((set) => ({
   updateTimelineVertical: (px) =>
     set((state) => ({
       resize: {
+        chatSidebar: state.resize.chatSidebar,
         vertical: { ...state.resize.vertical },
         horizontal: { ...state.resize.horizontal },
         timelineVertical: { leftOption: px },
@@ -57,6 +73,8 @@ export const uiStore = createStore<IUIStore>((set) => ({
   updateVertical: (criteria) =>
     set((state) => ({
       resize: {
+        chatSidebar: state.resize.chatSidebar,
+
         vertical: { top: 100 - criteria, bottom: criteria },
         horizontal: { ...state.resize.horizontal },
         timelineVertical: { ...state.resize.timelineVertical },
@@ -69,6 +87,8 @@ export const uiStore = createStore<IUIStore>((set) => ({
         const optionPer = state.resize.horizontal.option;
         return {
           resize: {
+            chatSidebar: state.resize.chatSidebar,
+
             vertical: { ...state.resize.vertical },
             horizontal: {
               panel: criteria,
@@ -84,6 +104,8 @@ export const uiStore = createStore<IUIStore>((set) => ({
         const optionPer = state.resize.horizontal.option;
         return {
           resize: {
+            chatSidebar: state.resize.chatSidebar,
+
             vertical: { ...state.resize.vertical },
             horizontal: {
               panel: state.resize.horizontal.panel,

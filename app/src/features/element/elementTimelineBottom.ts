@@ -49,6 +49,7 @@ export class ElementTimelineBottomScroll extends LitElement {
           justify-content: space-between;
           border-top: 0.05rem #3a3f44 solid;
           align-items: center;
+          z-index: 999;
         }
 
         .timeline-bottom-grid-start {

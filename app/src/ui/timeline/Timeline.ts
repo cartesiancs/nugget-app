@@ -5,6 +5,7 @@ import { IUIStore, uiStore } from "../../states/uiStore";
 import { IKeyframeStore, keyframeStore } from "../../states/keyframeStore";
 import "../../features/element/elementTimelineScroll";
 import "../../features/element/elementTimelineBottom";
+import "../../features/gpt/aiInput";
 
 @customElement("timeline-ui")
 export class Timeline extends LitElement {
@@ -184,6 +185,7 @@ export class Timeline extends LitElement {
           data-bs-dismiss="offcanvas"
           @click=${this._handleClickClosedKeyframe}
           aria-label="close"
+          style="    white-space: nowrap;"
         >
           Close Keyframe
         </button>
@@ -217,7 +219,8 @@ export class Timeline extends LitElement {
             >
           </div>
         </div>
-        <div class="col-5">
+        <div class="d-flex col col-5 gap-2">
+          <ai-input class="w-100"></ai-input>
           <div
             class="d-flex justify-content-end"
             id="keyframeEditorButtonGroup"

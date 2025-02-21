@@ -42,6 +42,38 @@ export const ipcAi = {
     }
   },
 
+  text: async (evt, model, question) => {
+    try {
+      if (!question) {
+        return { status: 0 };
+      }
+
+      const OPENAI_API_KEY = store.get("ai_openai_key");
+      if (OPENAI_API_KEY == undefined) {
+        return { status: 0 };
+      }
+
+      const response = await axios.post(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: model,
+          messages: [{ role: "user", content: question }],
+          max_tokens: 100,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return { status: 1, text: response.data.choices[0].message };
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
   setKey: async (evt, key) => {
     store.set("ai_openai_key", key);
     return { status: 1 };

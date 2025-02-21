@@ -24,7 +24,7 @@ export const ipcAi = {
         {
           model: "whisper-1",
           file: fileStream,
-          language: "ko",
+          response_format: "verbose_json",
         },
         {
           headers: {
@@ -36,7 +36,7 @@ export const ipcAi = {
 
       console.log(response);
 
-      return { status: 1, text: response.data.text };
+      return { status: 1, text: response.data };
     } catch (error) {
       console.error(error);
     }

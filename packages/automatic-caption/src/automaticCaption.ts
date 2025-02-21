@@ -167,17 +167,44 @@ export class AutomaticCaption extends LitElement {
             .join(" "),
         );
       }
+
+      this.requestUpdate();
+
+      this.panelVideoModal.show();
     }
 
     if (this.sttMethod == "openai") {
       window.electronAPI.req.ai.stt(audioPath).then((result) => {
         console.log(result);
+
+        this.analyzingVideoModal.hide();
+
+        setTimeout(() => {
+          this.analyzingVideoModal.hide();
+        }, 1000);
+
+        this.analyzedText = [];
+
+        let seg = result.text.segments.map((item) => {
+          return {
+            word: item.text,
+            start: item.start,
+            end: item.end,
+            score: 1,
+          };
+        });
+
+        for (let index = 0; index < seg.length; index++) {
+          const element = seg[index] as any;
+          this.analyzedText.push([element]);
+          this.analyzedEditCaption.push(element.word);
+        }
+
+        this.requestUpdate();
+
+        this.panelVideoModal.show();
       });
     }
-
-    this.requestUpdate();
-
-    this.panelVideoModal.show();
   }
 
   async translateText() {

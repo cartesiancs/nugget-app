@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 
@@ -23,6 +23,8 @@ export class OptionText extends LitElement {
 
   @property()
   isShow = false;
+  updateOnce: any;
+  selectedFont: string;
 
   constructor() {
     super();
@@ -34,6 +36,8 @@ export class OptionText extends LitElement {
     this.align = "left";
     this.isBold = false;
     this.isItalic = false;
+    this.updateOnce = false;
+    this.selectedFont = "notosanskr";
     this.insertFontLists();
     this.hide();
   }
@@ -53,12 +57,19 @@ export class OptionText extends LitElement {
     for (let index = 0; index < this.fontList.length; index++) {
       const font = this.fontList[index];
 
-      fontListTemplate.push(html` <option
-        value-index="${font.index}"
-        value="${font.value}"
-      >
-        ${font.name}
-      </option>`);
+      fontListTemplate.push(html`
+        <li>
+          <a
+            class="dropdown-item dropdown-item-sm ${this.selectedFont ==
+            font.name
+              ? "bg-primary"
+              : ""}"
+            style="font-family: '${font.name}'"
+            @click=${() => this.handleChangeTextFont(font.value, font.name)}
+            >${font.name}</a
+          >
+        </li>
+      `);
     }
 
     return html`
@@ -123,18 +134,39 @@ export class OptionText extends LitElement {
 
       <div class="mb-2">
         <label class="form-label text-light">Font</label>
-        <select
-          @change=${this.handleChangeTextFont}
-          ref="lists"
-          id="fontSelectStyle"
-          class="form-select form-control bg-default text-light"
-          aria-label="Default select example"
-        >
-          <option selected>pretendard</option>
-          ${fontListTemplate}
-        </select>
-        <style id="fontStyles" ref="fontStyles"></style>
+
+        <div class="dropdown ">
+          <button
+            class="btn btn-dark btn-sm dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            data-bs-display="static"
+            aria-expanded="false"
+          >
+            Select Font
+          </button>
+          <ul
+            class="dropdown-menu"
+            style="    height: 160px;
+    overflow: scroll; "
+          >
+            <li>
+              <a
+                class="dropdown-item dropdown-item-sm ${this.selectedFont ==
+                "notosanskr"
+                  ? "bg-primary"
+                  : ""}"
+                @click=${() =>
+                  this.handleChangeTextFont("default", "notosanskr")}
+                >Pretendard</a
+              >
+            </li>
+            ${fontListTemplate}
+          </ul>
+        </div>
       </div>
+
+      <label class="form-label text-light">Font Options</label>
 
       <div class="mb-2">
         <div class="btn-group" role="group" aria-label="Basic example">
@@ -294,6 +326,31 @@ export class OptionText extends LitElement {
           value: font.path,
           name: font.name,
         });
+
+        if (!this.updateOnce) {
+          for (let index = 0; index < this.fontList.length; index++) {
+            const font = this.fontList[index];
+
+            const type = font.value
+              .split("/")
+              [font.value.split("/").length - 1].split(".")[1];
+
+            console.log();
+
+            document.querySelector("#fontStyles").insertAdjacentHTML(
+              "beforeend",
+              `
+            @font-face {
+                font-family: "${font.name}";
+                src: local("${font.name}"),
+                  url("${font.value}") format("${type}");
+            }
+            `,
+            );
+          }
+          this.updateOnce = true;
+        }
+
         this.requestUpdate();
       }
     });
@@ -480,34 +537,13 @@ export class OptionText extends LitElement {
     }
   }
 
-  handleChangeTextFont(e) {
-    const selectFont: any = this.querySelector("select-font");
+  handleChangeTextFont(value, name) {
     const elementControl = document.querySelector("element-control");
 
-    const selectElement = document.querySelector("#fontSelectStyle");
-
-    // 선택된 값 가져오기
-    const selectedValue = selectElement.value;
-
-    const value = selectedValue;
-
-    const selectedText =
-      selectElement.options[selectElement.selectedIndex].text;
+    const selectedText = name;
+    this.selectedFont = name;
 
     const type = value.split("/")[value.split("/").length - 1].split(".")[1];
-
-    console.log(e.target.value, selectedValue);
-
-    document.querySelector("#fontStyles").insertAdjacentHTML(
-      "beforeend",
-      `
-        @font-face {
-            font-family: "${selectedText}";
-            src: local("${selectedText}"),
-              url("${value}") format("${type}");
-        }
-        `,
-    );
 
     elementControl.changeTextFont({
       elementId: this.elementId[0],

@@ -31,7 +31,7 @@ export class ChatSidebar extends LitElement {
   }
 
   panelClose() {
-    this.uiState.setChatSidebar(0);
+    this.uiState.setChatSidebar(10);
   }
 
   render() {

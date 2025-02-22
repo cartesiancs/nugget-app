@@ -29,6 +29,7 @@ export class AutomaticCaption extends LitElement {
   mediaType: string;
   captionLocationY: number;
   targetTranslateLang: any;
+  sttMethod: "local" | "openai";
 
   constructor() {
     super();
@@ -58,6 +59,8 @@ export class AutomaticCaption extends LitElement {
     this._animationFrameId = null;
 
     this.targetTranslateLang = "en";
+
+    this.sttMethod = "local";
 
     const fontSize = 52;
     const screenHeight = 1080;
@@ -128,47 +131,80 @@ export class AutomaticCaption extends LitElement {
   async analyzeAudioToText(audioPath) {
     this.applyCursorEvent("lockKeyboard");
 
-    const serverUrl = document.querySelector("#NuggetAutoServer").value;
-    const response = await fetch(audioPath);
+    if (this.sttMethod == "local") {
+      const serverUrl = document.querySelector("#NuggetAutoServer").value;
+      const response = await fetch(audioPath);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch audio file: ${response.statusText}`);
-    }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio file: ${response.statusText}`);
+      }
 
-    const audioBlob = await response.blob();
+      const audioBlob = await response.blob();
 
-    const formData = new FormData();
-    formData.append("file", audioBlob, "audio.wav");
+      const formData = new FormData();
+      formData.append("file", audioBlob, "audio.wav");
 
-    const request = await axios.post(`${serverUrl}/api/audio`, formData);
+      const request = await axios.post(`${serverUrl}/api/audio`, formData);
 
-    const result = request.data.result;
+      const result = request.data.result;
 
-    this.analyzingVideoModal.hide();
-
-    setTimeout(() => {
       this.analyzingVideoModal.hide();
-    }, 1000);
 
-    this.analyzedText = [];
+      setTimeout(() => {
+        this.analyzingVideoModal.hide();
+      }, 1000);
 
-    for (let index = 0; index < result.length; index++) {
-      const element = result[index] as any;
-      this.analyzedText.push(element.words);
-      this.analyzedEditCaption.push(
-        element.words
-          .map((item: any) => {
-            return item.word;
-          })
-          .join(" "),
-      );
+      this.analyzedText = [];
+
+      for (let index = 0; index < result.length; index++) {
+        const element = result[index] as any;
+        this.analyzedText.push(element.words);
+        this.analyzedEditCaption.push(
+          element.words
+            .map((item: any) => {
+              return item.word;
+            })
+            .join(" "),
+        );
+      }
+
+      this.requestUpdate();
+
+      this.panelVideoModal.show();
     }
 
-    this.requestUpdate();
+    if (this.sttMethod == "openai") {
+      window.electronAPI.req.ai.stt(audioPath).then((result) => {
+        console.log(result);
 
-    this.panelVideoModal.show();
+        this.analyzingVideoModal.hide();
 
-    console.log("RESULT", result);
+        setTimeout(() => {
+          this.analyzingVideoModal.hide();
+        }, 1000);
+
+        this.analyzedText = [];
+
+        let seg = result.text.segments.map((item) => {
+          return {
+            word: item.text,
+            start: item.start,
+            end: item.end,
+            score: 1,
+          };
+        });
+
+        for (let index = 0; index < seg.length; index++) {
+          const element = seg[index] as any;
+          this.analyzedText.push([element]);
+          this.analyzedEditCaption.push(element.word);
+        }
+
+        this.requestUpdate();
+
+        this.panelVideoModal.show();
+      });
+    }
   }
 
   async translateText() {
@@ -581,6 +617,11 @@ export class AutomaticCaption extends LitElement {
     this.requestUpdate();
   }
 
+  setSttMethod(method) {
+    this.sttMethod = method;
+    this.requestUpdate();
+  }
+
   splitCaption() {
     const index = this.splitCursor[0];
     const indexPart = this.splitCursor[1] + 1;
@@ -732,7 +773,26 @@ export class AutomaticCaption extends LitElement {
     align-items: center;
     gap: 1rem;"
       >
-        <div class="input-group">
+        <div class="d-flex gap-2 col">
+          <button
+            @click=${() => this.setSttMethod("local")}
+            class="btn btn-sm ${this.sttMethod == "local"
+              ? "btn-primary"
+              : "btn-default"} text-light"
+          >
+            Local
+          </button>
+          <button
+            @click=${() => this.setSttMethod("openai")}
+            class="btn btn-sm ${this.sttMethod == "openai"
+              ? "btn-primary"
+              : "btn-default"} text-light"
+          >
+            OpenAI
+          </button>
+        </div>
+
+        <div class="input-group ${this.sttMethod == "local" ? "" : "d-none"}">
           <span class="input-group-text bg-dark text-light" id="basic-addon2"
             >NuggetAutoServer</span
           >

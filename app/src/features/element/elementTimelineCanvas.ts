@@ -91,6 +91,9 @@ export class elementTimelineCanvas extends LitElement {
   timelineHistory = this.timelineState.history;
 
   @property({ attribute: false })
+  control = this.timelineState.control;
+
+  @property({ attribute: false })
   isOpenAnimationPanelId: string[] = [];
 
   @property({ attribute: false })
@@ -125,6 +128,7 @@ export class elementTimelineCanvas extends LitElement {
       this.timelineCursor = state.cursor;
       this.timelineScroll = state.scroll;
       this.timelineHistory = state.history;
+      this.control = state.control;
 
       this.setTimelineColor();
       this.drawCanvas();
@@ -1276,6 +1280,10 @@ export class elementTimelineCanvas extends LitElement {
     }
 
     if (event.keyCode == 39) {
+      if (this.control.cursorType != "pointer") {
+        return false;
+      }
+
       const elementControl = document.querySelector("element-control");
 
       elementControl.progress = this.timelineScroll + 1000 / 60;
@@ -1287,6 +1295,9 @@ export class elementTimelineCanvas extends LitElement {
 
     // arrowBack
     if (event.keyCode == 37) {
+      if (this.control.cursorType != "pointer") {
+        return false;
+      }
       const elementControl = document.querySelector("element-control");
 
       elementControl.progress = this.timelineScroll - 1000 / 60;

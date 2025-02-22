@@ -35,7 +35,11 @@ It also supports layer-based editing, which differs from traditional track-based
 
 ## About The Project
 
-https://github.com/user-attachments/assets/d7ec0c03-2205-47f9-b3c4-2f8cf61b2edb
+
+
+https://github.com/user-attachments/assets/922a8a7d-ec58-4141-bb4a-5b016da268a8
+
+
 
 _This video is made of Nugget._
 

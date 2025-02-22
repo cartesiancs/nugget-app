@@ -12,6 +12,28 @@ import { getLocationEnv } from "../../functions/getLocationEnv";
 export class ElementTimelineBottomScroll extends LitElement {
   @property({ attribute: false })
   isRunSelfhosted = false;
+  openaiKey: string;
+
+  constructor() {
+    super();
+    this.openaiKey = "";
+
+    this.getOpenAiKey();
+  }
+
+  getOpenAiKey() {
+    window.electronAPI.req.ai.getKey().then((result) => {
+      if (result.status == 1) {
+        this.openaiKey = result.value;
+        this.requestUpdate();
+      }
+    });
+  }
+
+  _handleSetOpenAIKey(e) {
+    const key = e.target.value;
+    window.electronAPI.req.ai.setKey(key);
+  }
 
   render() {
     return html`
@@ -27,6 +49,7 @@ export class ElementTimelineBottomScroll extends LitElement {
           justify-content: space-between;
           border-top: 0.05rem #3a3f44 solid;
           align-items: center;
+          z-index: 999;
         }
 
         .timeline-bottom-grid-start {
@@ -59,6 +82,14 @@ export class ElementTimelineBottomScroll extends LitElement {
           <span class="bottom-text">60fps</span>
         </div>
         <div class="timeline-bottom-grid-end">
+          <span
+            class="material-symbols-outlined timeline-bottom-question-icon icon-xs"
+            data-bs-toggle="modal"
+            data-bs-target="#settingAi"
+          >
+            bolt
+          </span>
+
           <span
             class="d-flex justify-content-start align-items-center gap-1 ${getLocationEnv() ==
             "electron"
@@ -153,6 +184,37 @@ export class ElementTimelineBottomScroll extends LitElement {
               >
                 Run
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="settingAi" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-dark modal-dialog-centered">
+          <div class="modal-content modal-dark modal-darker">
+            <div class="modal-body modal-body-dark">
+              <h6 class="modal-title text-light font-weight-lg mb-2">Set AI</h6>
+
+              <span class="text-secondary">OpenAI API Key </span>
+
+              <br />
+
+              <div class="input-group mb-3">
+                <span
+                  class="input-group-text bg-default text-light"
+                  id="basic-addon2"
+                  >OpenAI Key</span
+                >
+                <input
+                  id="projectDurationMinute"
+                  type="password"
+                  class="form-control bg-default text-light"
+                  placeholder="openai key"
+                  .value=${this.openaiKey}
+                  @change=${this._handleSetOpenAIKey}
+                  @input=${this._handleSetOpenAIKey}
+                />
+              </div>
             </div>
           </div>
         </div>

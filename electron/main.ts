@@ -32,6 +32,7 @@ import { ipcMedia } from "./ipc/ipcMedia.js";
 import { runServer } from "./webServer.js";
 import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
 import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
+import { ipcAi } from "./ipc/ipcAi.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -138,6 +139,11 @@ ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
 
 ipcMain.handle("selfhosted:run", ipcSelfhosted.run);
+
+ipcMain.handle("ai:stt", ipcAi.stt);
+ipcMain.handle("ai:text", ipcAi.text);
+ipcMain.handle("ai:setKey", ipcAi.setKey);
+ipcMain.handle("ai:getKey", ipcAi.getKey);
 
 ipcMain.on("render:v2:start", ipcRenderV2.start);
 ipcMain.on("render:v2:sendFrame", ipcRenderV2.sendFrame);

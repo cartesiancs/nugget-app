@@ -374,6 +374,7 @@ export class OptionText extends LitElement {
     this.align = timeline[this.elementId[0]].options.align;
     this.isBold = timeline[this.elementId[0]].options.isBold;
     this.isItalic = timeline[this.elementId[0]].options.isItalic;
+    this.selectedFont = timeline[this.elementId[0]].fontname;
   }
 
   handleChangeOutlineSize() {

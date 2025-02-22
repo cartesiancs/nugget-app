@@ -58,7 +58,6 @@ export const ipcAi = {
         {
           model: model,
           messages: [{ role: "user", content: question }],
-          max_tokens: 100,
         },
         {
           headers: {
@@ -70,7 +69,7 @@ export const ipcAi = {
 
       return { status: 1, text: response.data.choices[0].message };
     } catch (error) {
-      console.error(error);
+      return { status: 0 };
     }
   },
 

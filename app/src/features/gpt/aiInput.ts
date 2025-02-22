@@ -33,7 +33,6 @@ export class AiInput extends LitElement {
         this.executeFunction(event.target.value);
         document.querySelector("#chatLLMInput").value = "";
 
-        this.uiState.setChatSidebar(250);
         setTimeout(() => {
           this.isEnter = false;
         }, 100);
@@ -47,8 +46,14 @@ export class AiInput extends LitElement {
       .text("gpt-3.5-turbo-0125", value)
       .then((result) => {
         if (result.status == 1) {
+          this.uiState.setChatSidebar(250);
+
           this.chatLLMState.addList(result.text.content);
           console.log(result.text.content);
+        } else {
+          document
+            .querySelector("toast-box")
+            .showToast({ message: "Invaild OpenAI Key", delay: "2000" });
         }
       });
   }
@@ -75,7 +80,7 @@ export class AiInput extends LitElement {
         />
         <span
           @click=${this.panelOpen}
-          class="material-symbols-outlined timeline-bottom-question-icon icon-sm"
+          class="material-symbols-outlined timeline-bottom-question-icon icon-sm  text-secondary"
           >right_panel_open</span
         >
       </div>

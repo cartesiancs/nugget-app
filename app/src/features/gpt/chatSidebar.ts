@@ -63,7 +63,7 @@ export class ChatSidebar extends LitElement {
         <div class="chat-top" style="width: ${parseInt(this.width)}px;">
           <span
             @click=${this.panelClose}
-            class="material-symbols-outlined timeline-bottom-question-icon icon-sm"
+            class="material-symbols-outlined timeline-bottom-question-icon icon-sm text-secondary"
             >right_panel_close</span
           >
         </div>

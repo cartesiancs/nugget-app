@@ -4,6 +4,7 @@ import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
+import { actionParsor, parseCommands } from "./resultParser";
 
 @customElement("ai-input")
 export class AiInput extends LitElement {
@@ -25,6 +26,14 @@ export class AiInput extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   createRenderRoot() {
+    // const parser = parseCommands(
+    //   `ADD VIDEO "/folder/day.mp4" x=0:y=0:w=1920:h=1080:t=0:d=30 ADD TEXT "Daily Vlog" x=50:y=50:w=300:t=1:d=3 ADD TEXT "이건텍스트임" x=0:y=0:w=200:t=5:d=2 ADD TEXT "이건텍스트임" x=0:y=0:w=200:t=8:d=2`,
+    // );
+
+    // console.log(parser);
+
+    // actionParsor(parser);
+
     return this;
   }
 
@@ -88,6 +97,11 @@ export class AiInput extends LitElement {
             this.uiState.setChatSidebar(250);
 
             this.chatLLMState.addList(result.text.content);
+
+            const parser = parseCommands(result.text.content);
+
+            actionParsor(parser);
+
             console.log(result.text.content);
           } else {
             document

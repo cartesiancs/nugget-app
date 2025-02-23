@@ -3,7 +3,17 @@ import * as fsp from "fs/promises";
 import fse from "fs-extra";
 import axios from "axios";
 import Store from "electron-store";
+import path from "path";
 const store = new Store();
+
+const llmPromptfilePath = path.join(
+  __dirname,
+  "..",
+  "..",
+  "assets",
+  "llm",
+  "textPrompt.txt",
+);
 
 export const ipcAi = {
   stt: async (evt, filepath) => {
@@ -53,11 +63,16 @@ export const ipcAi = {
         return { status: 0 };
       }
 
+      const data = fs.readFileSync(llmPromptfilePath, "utf8");
+
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
           model: model,
-          messages: [{ role: "user", content: question }],
+          messages: [
+            { role: "system", content: data },
+            { role: "user", content: question },
+          ],
         },
         {
           headers: {
@@ -69,6 +84,7 @@ export const ipcAi = {
 
       return { status: 1, text: response.data.choices[0].message };
     } catch (error) {
+      console.log(error);
       return { status: 0 };
     }
   },

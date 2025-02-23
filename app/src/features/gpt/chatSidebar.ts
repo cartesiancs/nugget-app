@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
-import { IChatLLMPanelStore, chatLLMStore } from "../../states/chatLlm";
+import { IChatLLMPanelStore, chatLLMStore } from "../../states/chatLLM";
 import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("chat-sidebar")
@@ -51,6 +51,11 @@ export class ChatSidebar extends LitElement {
           justify-content: start;
           padding-left: 0.5rem;
         }
+
+        .chat-box {
+          overflow: scroll;
+          height: 100vh;
+        }
       </style>
 
       <div
@@ -67,7 +72,7 @@ export class ChatSidebar extends LitElement {
             >right_panel_close</span
           >
         </div>
-        <div class="w-100 d-flex row gap-3 p-1">${lists}</div>
+        <div class="w-100 d-flex row gap-3 p-1 chat-box">${lists}</div>
       </div>
     `;
   }

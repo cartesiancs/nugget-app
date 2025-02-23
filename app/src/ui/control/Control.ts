@@ -73,7 +73,7 @@ export class Control extends LitElement {
     const elementControlComponent = document.querySelector("element-control");
 
     if (this.isAbleResize) {
-      const windowWidth = window.innerWidth;
+      const windowWidth = window.innerWidth - this.resize.chatSidebar;
       const nowX = e.clientX;
       const resizeX = (nowX / windowWidth) * 100;
 

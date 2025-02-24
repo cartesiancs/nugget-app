@@ -1,10 +1,11 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
 import { actionParsor, parseCommands } from "./resultParser";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("ai-input")
 export class AiInput extends LitElement {
@@ -33,6 +34,10 @@ export class AiInput extends LitElement {
     // console.log(parser);
 
     // actionParsor(parser);
+
+    if (getLocationEnv() != "electron") {
+      this.classList.add("d-none");
+    }
 
     return this;
   }

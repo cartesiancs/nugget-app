@@ -51,16 +51,12 @@ export class ChatSidebar extends LitElement {
           justify-content: start;
           padding-left: 0.5rem;
         }
-
-        .chat-box {
-          overflow: scroll;
-          height: 100vh;
-        }
       </style>
 
       <div
         style=" min-width: ${this.width}; width: ${this
-          .width}; z-index: 998; left: 0.75rem; position: relative;"
+          .width}; z-index: 998; left: 0.75rem; position: relative;     overflow: scroll;
+    padding-bottom: 5rem;"
         class=" ${parseInt(this.width) <= 0
           ? "d-none"
           : ""} h-100 bg-darker option-window"

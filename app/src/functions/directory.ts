@@ -3,6 +3,15 @@ import { getLocationEnv } from "./getLocationEnv";
 
 const directory = {
   select: function () {
+    if (getLocationEnv() == "demo") {
+      document.querySelector("toast-box").showToast({
+        message: "The folder cannot be viewed in the demo version.",
+        delay: "3000",
+      });
+
+      return false;
+    }
+
     const projectFolder: any = document.querySelector("#projectFolder");
     window.electronAPI.req.dialog.openDirectory().then((result) => {
       let dir = "/";

@@ -72,6 +72,8 @@ export class App extends LitElement {
         <toast-list-ui></toast-list-ui>
 
         <div id="menuRightClick"></div>
+        <style id="fontStyles" ref="fontStyles"></style>
+
         <toast-box></toast-box>
 
         <warning-demo></warning-demo>

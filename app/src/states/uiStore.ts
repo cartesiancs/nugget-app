@@ -27,7 +27,7 @@ export interface IUIStore {
 
 export const uiStore = createStore<IUIStore>((set) => ({
   resize: {
-    chatSidebar: 0,
+    chatSidebar: 10,
     vertical: {
       top: 60,
       bottom: 40,

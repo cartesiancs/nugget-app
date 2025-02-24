@@ -122,6 +122,15 @@ export function enableIpcWrapper() {
           return "none";
         },
       },
+      ai: {
+        getKey: async function (lang) {
+          return "";
+        },
+        setKey: async function (lang) {
+          return "";
+        },
+      },
+
       ffmpeg: {
         getMetadata: async function (bloburl, mediapath) {
           const request = await axios.get(

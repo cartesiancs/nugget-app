@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
-import { IChatLLMPanelStore, chatLLMStore } from "../../states/chatLlm";
+import { IChatLLMPanelStore, chatLLMStore } from "../../states/chatLLM";
 import { IUIStore, uiStore } from "../../states/uiStore";
 
 @customElement("chat-sidebar")
@@ -31,7 +31,7 @@ export class ChatSidebar extends LitElement {
   }
 
   panelClose() {
-    this.uiState.setChatSidebar(0);
+    this.uiState.setChatSidebar(10);
   }
 
   render() {
@@ -55,7 +55,8 @@ export class ChatSidebar extends LitElement {
 
       <div
         style=" min-width: ${this.width}; width: ${this
-          .width}; z-index: 998; left: 0.75rem; position: relative;"
+          .width}; z-index: 998; left: 0.75rem; position: relative;     overflow: scroll;
+    padding-bottom: 5rem;"
         class=" ${parseInt(this.width) <= 0
           ? "d-none"
           : ""} h-100 bg-darker option-window"
@@ -67,7 +68,7 @@ export class ChatSidebar extends LitElement {
             >right_panel_close</span
           >
         </div>
-        <div class="w-100 d-flex row gap-3 p-1">${lists}</div>
+        <div class="w-100 d-flex row gap-3 p-1 chat-box">${lists}</div>
       </div>
     `;
   }

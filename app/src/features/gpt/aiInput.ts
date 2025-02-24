@@ -1,8 +1,11 @@
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
-import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLlm";
+import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
+import { ToastController } from "../../controllers/toast";
+import { actionParsor, parseCommands } from "./resultParser";
+import { getLocationEnv } from "../../functions/getLocationEnv";
 
 @customElement("ai-input")
 export class AiInput extends LitElement {
@@ -11,6 +14,8 @@ export class AiInput extends LitElement {
     super();
     this.isEnter = false;
   }
+
+  toast = new ToastController(this);
 
   @property()
   uiState: IUIStore = uiStore.getInitialState();
@@ -22,6 +27,18 @@ export class AiInput extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   createRenderRoot() {
+    // const parser = parseCommands(
+    //   `ADD VIDEO "/folder/day.mp4" x=0:y=0:w=1920:h=1080:t=0:d=30 ADD TEXT "Daily Vlog" x=50:y=50:w=300:t=1:d=3 ADD TEXT "이건텍스트임" x=0:y=0:w=200:t=5:d=2 ADD TEXT "이건텍스트임" x=0:y=0:w=200:t=8:d=2`,
+    // );
+
+    // console.log(parser);
+
+    // actionParsor(parser);
+
+    if (getLocationEnv() != "electron") {
+      this.classList.add("d-none");
+    }
+
     return this;
   }
 
@@ -42,20 +59,108 @@ export class AiInput extends LitElement {
 
   executeFunction(value) {
     console.log("Entered value:", value);
-    window.electronAPI.req.ai
-      .text("gpt-3.5-turbo-0125", value)
-      .then((result) => {
-        if (result.status == 1) {
-          this.uiState.setChatSidebar(250);
+    const lists = this.mapTimeline();
 
-          this.chatLLMState.addList(result.text.content);
-          console.log(result.text.content);
-        } else {
-          document
-            .querySelector("toast-box")
-            .showToast({ message: "Invaild OpenAI Key", delay: "2000" });
+    console.log(`${lists.join(" ")} \n ${value}`);
+
+    const directory = document.querySelector("asset-list").nowDirectory;
+    if (directory == "") {
+      this.toast.show("Please specify a directory", 2000);
+      return 0;
+    }
+
+    window.electronAPI.req.filesystem.getDirectory(directory).then((result) => {
+      let fileLists = {};
+      let resultList: any = [];
+      console.log(directory, result);
+
+      for (const key in result) {
+        if (Object.hasOwnProperty.call(result, key)) {
+          const element = result[key];
+          if (!element.isDirectory) {
+            fileLists[key] = element;
+          }
         }
-      });
+      }
+
+      for (const file in fileLists) {
+        if (Object.hasOwnProperty.call(fileLists, file)) {
+          const element = fileLists[file];
+          const path = directory + "/" + element.title;
+          console.log(path);
+          resultList.push(`EXIST "${path}"`);
+        }
+      }
+
+      window.electronAPI.req.ai
+        .text(
+          "gpt-3.5-turbo-0125",
+          `${resultList.join("\n")} \n ${lists.join("\n")} \n ${value}`,
+        )
+        .then((result) => {
+          if (result.status == 1) {
+            this.uiState.setChatSidebar(250);
+
+            this.chatLLMState.addList(result.text.content);
+
+            const parser = parseCommands(result.text.content);
+
+            actionParsor(parser);
+
+            console.log(result.text.content);
+          } else {
+            document
+              .querySelector("toast-box")
+              .showToast({ message: "Invaild OpenAI Key", delay: "2000" });
+          }
+        });
+    });
+  }
+
+  mapTimeline(): string[] {
+    const list: any = [];
+    const timeline = useTimelineStore.getState();
+    for (const key in timeline.timeline) {
+      if (Object.prototype.hasOwnProperty.call(timeline.timeline, key)) {
+        const element = timeline.timeline[key];
+        if (element.filetype == "text") {
+          const options = [
+            `x=${element.location?.x}`,
+            `y=${element.location?.y}`,
+            `w=${element.width}`,
+            `h=${element.height}`,
+            `t=${element.startTime}`,
+            `d=${element.duration}`,
+          ];
+          list.push(`TEXT "${element.text}" ${options.join(":")}`);
+        } else if (element.filetype == "image") {
+          const options = [
+            `x=${element.location?.x}`,
+            `y=${element.location?.y}`,
+            `w=${element.width}`,
+            `h=${element.height}`,
+            `t=${element.startTime}`,
+            `d=${element.duration}`,
+          ];
+          list.push(`IMAGE "${key}" ${options.join(":")}`);
+        } else if (element.filetype == "video") {
+          const options = [
+            `x=${element.location?.x}`,
+            `y=${element.location?.y}`,
+            `w=${element.width}`,
+            `h=${element.height}`,
+            `t=${element.startTime}`,
+            `d=${element.duration}`,
+          ];
+          list.push(`VIDEO "${key}" ${options.join(":")}`);
+        } else if (element.filetype == "audio") {
+          const options = [`t=${element.startTime}`, `d=${element.duration}`];
+          list.push(`AUDIO "${key}" ${options.join(":")}`);
+        }
+      }
+    }
+
+    return list;
   }
 
   handleClickInput() {

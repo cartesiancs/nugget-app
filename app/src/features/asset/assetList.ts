@@ -23,8 +23,19 @@ export class AssetList extends LitElement {
 
   render() {
     return html`<div class="row px-2">
-      <p class="text-light mt-2 text-center">
+      <p
+        class="text-light mt-2 text-center ${getLocationEnv() == "demo"
+          ? "d-none"
+          : ""}"
+      >
         ${this.lc.t("setting.need_select_project_folder")}
+      </p>
+      <p
+        class="text-light mt-2 text-center ${getLocationEnv() != "demo"
+          ? "d-none"
+          : ""}"
+      >
+        The folder cannot be viewed in the demo version.
       </p>
       <button
         class="btn btn-sm btn-default text-light"

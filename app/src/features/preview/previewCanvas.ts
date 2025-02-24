@@ -1272,7 +1272,14 @@ export class PreviewCanvas extends LitElement {
 
   getPath(path) {
     const nowEnv = getLocationEnv();
-    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+    let filepath = path;
+    if (nowEnv == "electron") {
+      filepath = path;
+    } else if (nowEnv == "web") {
+      filepath = `/api/file?path=${path}`;
+    } else {
+      filepath = path;
+    }
 
     return filepath;
   }

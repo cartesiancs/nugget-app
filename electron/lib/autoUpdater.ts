@@ -12,8 +12,8 @@ const updater = {
       defaultId: 0,
       cancelId: 1,
       title: "Update Available",
-      message: "업데이트 가능",
-      detail: "새 버전으로 업데이트가 가능합니다.",
+      message: "Update Available",
+      detail: "Update Available",
     };
     dialog.showMessageBox(dialogOpts).then((result) => {
       if (result.response === 0) {
@@ -30,8 +30,8 @@ const updater = {
       type: "error",
       buttons: ["확인"],
       title: "Error",
-      message: "업데이트에 실패했습니다",
-      detail: "새 버전을 확인하는 도중에 접속 오류가 있었습니다.",
+      message: "Error",
+      detail: "E013",
     };
     dialog.showMessageBox(dialogOpts);
     log.info("Error in auto-updater. " + err);
@@ -52,9 +52,9 @@ const updater = {
     const dialogOpts: any = {
       type: "info",
       buttons: ["확인"],
-      title: "업데이트 다운로드 완료",
-      message: "업데이트 다운로드를 완료했습니다",
-      detail: "새 버전의 업데이트 다운로드를 완료했습니다.",
+      title: "Success",
+      message: "Success",
+      detail: "Success",
     };
     dialog.showMessageBox(dialogOpts);
   },

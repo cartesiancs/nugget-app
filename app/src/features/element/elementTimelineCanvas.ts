@@ -162,7 +162,8 @@ export class elementTimelineCanvas extends LitElement {
       if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
         const element = this.timeline[key];
         if (!this.timelineColor.hasOwnProperty(key)) {
-          this.timelineColor[key] = this.getRandomColor();
+          // this.timelineColor[key] = this.getRandomColor();
+          this.timelineColor[key] = this.timeline[key].timelineOptions.color;
         }
       }
     }

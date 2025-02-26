@@ -344,6 +344,9 @@ export class ElementControl extends LitElement {
             ax: [[], []],
           },
         },
+        timelineOptions: {
+          color: "rgb(134, 41, 143)",
+        },
       };
 
       this.timelineState.patchTimeline(this.timeline);
@@ -376,6 +379,9 @@ export class ElementControl extends LitElement {
           localpath: path,
           filetype: "gif",
           ratio: frames[0].dims.width / frames[0].dims.height,
+          timelineOptions: {
+            color: "rgb(134, 41, 143)",
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -467,6 +473,9 @@ export class ElementControl extends LitElement {
               x: [],
               ax: [[], []],
             },
+          },
+          timelineOptions: {
+            color: "rgb(71, 59, 179)",
           },
         };
 
@@ -566,6 +575,9 @@ export class ElementControl extends LitElement {
               ax: [[], []],
             },
           },
+          timelineOptions: {
+            color: "rgb(71, 59, 179)",
+          },
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -651,6 +663,9 @@ export class ElementControl extends LitElement {
           ax: [[], []],
         },
       },
+      timelineOptions: {
+        color: "rgb(59, 143, 179)",
+      },
     };
 
     this.timelineState.patchTimeline(this.timeline);
@@ -724,6 +739,9 @@ export class ElementControl extends LitElement {
           ax: [[], []],
         },
       },
+      timelineOptions: {
+        color: "rgb(59, 143, 179)",
+      },
     };
 
     this.timelineState.patchTimeline(this.timeline);
@@ -755,6 +773,9 @@ export class ElementControl extends LitElement {
         localpath: path,
         filetype: "audio",
         speed: 1,
+        timelineOptions: {
+          color: "rgb(133, 179, 59)",
+        },
       };
 
       this.timelineState.patchTimeline(this.timeline);
@@ -779,6 +800,9 @@ export class ElementControl extends LitElement {
       localpath: path,
       filetype: "audio",
       speed: 1,
+      timelineOptions: {
+        color: "rgb(133, 179, 59)",
+      },
     };
 
     this.timelineState.patchTimeline(this.timeline);

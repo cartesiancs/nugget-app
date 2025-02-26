@@ -4,7 +4,7 @@ import { LocaleController } from "../../controllers/locale";
 import "../../features/gif/gifPreset";
 
 @customElement("control-ui-filter")
-export class ControlText extends LitElement {
+export class ControlUiFilter extends LitElement {
   private lc = new LocaleController(this);
 
   @property()
@@ -47,12 +47,12 @@ export class ControlText extends LitElement {
           overlay
         </button>
         <button
-          class="btn btn-sm ${this.activePanel == "audio"
+          class="btn btn-sm ${this.activePanel == "sound"
             ? "btn-primary"
             : "btn-default"} text-light mt-1"
-          @click=${() => this._handleClickChangePanel("audio")}
+          @click=${() => this._handleClickChangePanel("sound")}
         >
-          audio
+          sound
         </button>
       </div>
 

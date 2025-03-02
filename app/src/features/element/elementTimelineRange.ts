@@ -17,6 +17,9 @@ export class ElementTimelineRange extends LitElement {
     useTimelineStore.subscribe((state) => {
       this.timelineRange = state.range;
       this.timelineCursor = state.cursor;
+
+      const x = -Math.log(10 / state.range - 1);
+      document.querySelector("#timelineRange").value = x;
     });
 
     return this;

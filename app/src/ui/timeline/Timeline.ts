@@ -181,7 +181,7 @@ export class Timeline extends LitElement {
       return html`
         <button
           type="button"
-          class="btn btn-dark btn-sm"
+          class="btn btn-dark btn-xs"
           data-bs-dismiss="offcanvas"
           @click=${this._handleClickClosedKeyframe}
           aria-label="close"

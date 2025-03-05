@@ -591,7 +591,7 @@ export class ElementTimelineLeftOption extends LitElement {
           height: 30px;
           margin-bottom: 6px;
           color: #ffffff;
-          background-color: #2277e7;
+          background-color: #505a67;
           display: flex;
           align-items: center;
           justify-content: space-between;

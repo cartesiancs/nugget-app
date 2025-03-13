@@ -22,7 +22,6 @@ export class OverlayWebcam extends LitElement {
       height: 250px;
       border-radius: 50%;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     video {
       width: 100%;

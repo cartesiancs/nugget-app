@@ -121,6 +121,7 @@ const window = {
       frame: false,
       movable: false,
       show: false,
+      hasShadow: false,
     });
 
     overlayWindow.setAlwaysOnTop(true, "screen-saver");
@@ -192,7 +193,7 @@ const createOverlayWindowTray = (overlayWindow) => {
   const tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "Stop Record",
+      label: "Exit",
       type: "checkbox",
       checked: false,
       click: (menuItem) => {

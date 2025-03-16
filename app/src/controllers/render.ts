@@ -127,8 +127,6 @@ export class RenderController implements ReactiveController {
 
     const fps = 60;
     let needsToDelay = 0;
-    let delayCount = 0; // Video와 같은 개체의 경우 프레임 정확성을 보장하기 위해 이벤트 리스너를 사용합니다.
-    // 이때 이벤트가 달린 딜레이가 필요한 개체를 카운트 해주고 해당 카운트가 needsToDelay와 같아질때 랜더링합니다.
 
     const ctx = canvas.getContext("2d") as any;
     if (ctx) {

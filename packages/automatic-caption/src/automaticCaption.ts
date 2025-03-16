@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import "./progress";
 
 @customElement("automatic-caption")
 export class AutomaticCaption extends LitElement {
@@ -30,6 +31,8 @@ export class AutomaticCaption extends LitElement {
   captionLocationY: number;
   targetTranslateLang: any;
   sttMethod: "local" | "openai";
+  maxProgress: number;
+  mediaDuration: number;
 
   constructor() {
     super();
@@ -51,6 +54,8 @@ export class AutomaticCaption extends LitElement {
 
     this.isPlay = false;
     this.progress = 0;
+    this.mediaDuration = 0;
+
     this.previousProgress = 0;
 
     this._start = undefined;
@@ -107,10 +112,11 @@ export class AutomaticCaption extends LitElement {
     return this;
   }
 
-  handleRowSelection(rowId: any, key: any, mediaType: any) {
+  handleRowSelection(rowId: any, key: any, mediaType: any, duration: any) {
     this.selectedRow = rowId;
     this.selectedKey = key;
     this.mediaType = mediaType;
+    this.mediaDuration = duration;
     console.log("Selected Row:", this.selectedRow, key);
     this.requestUpdate();
   }
@@ -144,7 +150,7 @@ export class AutomaticCaption extends LitElement {
       const formData = new FormData();
       formData.append("file", audioBlob, "audio.wav");
 
-      const request = await axios.post(`${serverUrl}/api/audio`, formData);
+      const request = await axios.post(`${serverUrl}/api/audio/test`, formData);
 
       const result = request.data.result;
 
@@ -452,22 +458,93 @@ export class AutomaticCaption extends LitElement {
     const w = screenWidth - xPadding * 2;
     const h = fontSize;
 
+    let scaleW = w;
+    let scaleH = h;
+    let tx = x;
+    let ty = y;
+
     ctx.fillStyle = "#ffffff";
     ctx.lineWidth = 0;
     ctx.letterSpacing = `0px`;
 
     ctx.font = `${fontSize}px ${fontName}`;
 
-    const fontBoxWidth = ctx.measureText(text).width;
-
+    this.drawTextBackground(ctx, text, tx, ty, scaleW, scaleH);
     ctx.fillStyle = "#ffffff";
+
+    const textSplited = text.split(" ");
+    let line = "";
+    let textY = ty + fontSize;
+    let lineHeight = h;
+
+    for (let index = 0; index < textSplited.length; index++) {
+      const testLine = line + textSplited[index] + " ";
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+
+      if (testWidth < w) {
+        line = testLine;
+      } else {
+        const wordWidth = ctx.measureText(line).width;
+
+        ctx.fillText(line, tx + w / 2 - wordWidth / 2, textY);
+        line = textSplited[index] + " ";
+        textY += lineHeight;
+      }
+    }
+
+    const lastWordWidth = ctx.measureText(line).width;
+
+    ctx.fillText(line, tx + w / 2 - lastWordWidth / 2, textY);
+    // const fontBoxWidth = ctx.measureText(text).width;
+
+    // ctx.fillStyle = "#ffffff";
+
+    // ctx.fillStyle = "#000000";
+    // ctx.fillRect(x, y - fontSize, w, h + 6);
+
+    // ctx.fillStyle = "#ffffff";
+
+    // ctx.fillText(text, x + w / 2 - fontBoxWidth / 2, y);
+  }
+
+  drawTextBackground(ctx, text, x, y, w, h) {
+    const backgroundPadding = 12;
+    let backgroundX = x;
+    let backgroundW = w;
+
+    const textSplited = text.split(" ");
+    let line = "";
+    let textY = y;
+    let lineHeight = h;
+
+    for (let index = 0; index < textSplited.length; index++) {
+      const testLine = line + textSplited[index] + " ";
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+
+      if (testWidth < w) {
+        line = testLine;
+      } else {
+        const wordWidth = ctx.measureText(line).width;
+
+        backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+        backgroundW = wordWidth + backgroundPadding;
+
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(backgroundX, textY, backgroundW, h);
+
+        line = textSplited[index] + " ";
+        textY += lineHeight;
+      }
+    }
+
+    const wordWidth = ctx.measureText(line).width;
+    backgroundX = x + w / 2 - wordWidth / 2 - backgroundPadding;
+    backgroundW = wordWidth + backgroundPadding;
 
     ctx.fillStyle = "#000000";
-    ctx.fillRect(x, y - fontSize, w, h + 6);
-
-    ctx.fillStyle = "#ffffff";
-
-    ctx.fillText(text, x + w / 2 - fontBoxWidth / 2, y);
+    ctx.fillRect(backgroundX, textY, backgroundW, h);
   }
 
   showRightIndexCaption() {
@@ -924,13 +1001,9 @@ export class AutomaticCaption extends LitElement {
           <div class="modal-content modal-dark modal-darker">
             <div class="modal-body">
               <div class="d-flex col gap-2 mt-4">
-                <div
-                  class="d-flex row gap-2"
-                  style="width: 400px;position: fixed;"
-                >
+                <div class="d-flex col-5 row gap-2" style="position: fixed;">
                   <canvas
                     id="previewCanvasCaption"
-                    style="width: 400px;"
                     width="1920"
                     height="1080"
                   ></canvas>
@@ -951,12 +1024,22 @@ export class AutomaticCaption extends LitElement {
                     >${Math.round(this.progress / 1000)}s</span
                   >
 
+                  <progress-bar
+                    percent="${(Math.round(this.progress / 1000) /
+                      (this.mediaDuration / 1000)) *
+                    100}"
+                  ></progress-bar>
+
                   <div class="d-flex col gap-2">
                     <button
                       class=" btn btn-sm btn-secondary"
                       @click=${this.resetVideo}
                     >
-                      reset
+                      <span
+                        class="material-symbols-outlined icon-white icon-md"
+                      >
+                        restart_alt
+                      </span>
                     </button>
                     <button
                       class="${this.isPlay
@@ -964,7 +1047,11 @@ export class AutomaticCaption extends LitElement {
                         : ""} btn btn-sm btn-secondary"
                       @click=${this.playVideo}
                     >
-                      play
+                      <span
+                        class="material-symbols-outlined icon-white icon-md"
+                      >
+                        play_circle
+                      </span>
                     </button>
 
                     <button
@@ -973,7 +1060,11 @@ export class AutomaticCaption extends LitElement {
                         : ""}  btn btn-sm btn-danger"
                       @click=${this.stopVideo}
                     >
-                      stop
+                      <span
+                        class="material-symbols-outlined icon-white icon-md"
+                      >
+                        stop_circle
+                      </span>
                     </button>
                   </div>
                   <div class="d-flex col gap-2">
@@ -995,7 +1086,7 @@ export class AutomaticCaption extends LitElement {
 
                   <button
                     type="button"
-                    class="btn btn-primary  btn-sm"
+                    class="btn btn-primary  btn-sm w-auto"
                     data-bs-toggle="modal"
                     data-bs-target="#TranslateText"
                   >
@@ -1081,6 +1172,7 @@ export class AutomaticCaption extends LitElement {
     video?: string;
     key: string;
     filetype: string;
+    duration: number;
   }[] {
     const timeline = this.timeline;
     const timelineArray: {
@@ -1088,6 +1180,7 @@ export class AutomaticCaption extends LitElement {
       video?: string;
       key: string;
       filetype: string;
+      duration: number;
     }[] = [];
     let index = 1;
 
@@ -1101,6 +1194,7 @@ export class AutomaticCaption extends LitElement {
             video: element.localpath,
             key: key,
             filetype: element.filetype,
+            duration: element.duration,
           });
           index += 1;
         }
@@ -1111,6 +1205,7 @@ export class AutomaticCaption extends LitElement {
             video: element.localpath,
             key: key,
             filetype: element.filetype,
+            duration: element.duration,
           });
           index += 1;
         }
@@ -1128,7 +1223,12 @@ export class AutomaticCaption extends LitElement {
         (row) => html`
           <tr
             @click="${() =>
-              this.handleRowSelection(row.video, row.key, row.filetype)}"
+              this.handleRowSelection(
+                row.video,
+                row.key,
+                row.filetype,
+                row.duration,
+              )}"
           >
             <th scope="row">${row.id}</th>
             <td>${row.video}</td>

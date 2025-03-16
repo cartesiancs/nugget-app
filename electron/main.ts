@@ -193,7 +193,7 @@ if (!gotTheLock) {
     mainWindow = window.createMainWindow();
     validateFFmpeg();
 
-    //window.createAutomaticCaptionWindow();
+    window.createAutomaticCaptionWindow();
 
     mainWindow.on("close", function (e) {
       e.preventDefault();

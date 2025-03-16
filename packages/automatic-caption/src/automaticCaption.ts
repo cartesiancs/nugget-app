@@ -31,7 +31,6 @@ export class AutomaticCaption extends LitElement {
   captionLocationY: number;
   targetTranslateLang: any;
   sttMethod: "local" | "openai";
-  maxProgress: number;
   mediaDuration: number;
   resolution: { w: number; h: number };
 

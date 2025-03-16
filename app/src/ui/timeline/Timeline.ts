@@ -156,7 +156,7 @@ export class Timeline extends LitElement {
     if (this.isPlay) {
       return html`<button
         id="playToggle"
-        class="btn btn-xs btn-transparent"
+        class="btn btn-xs2 btn-transparent"
         @click=${this._handleClickStop}
       >
         <span class="material-symbols-outlined icon-white icon-md">
@@ -166,7 +166,7 @@ export class Timeline extends LitElement {
     } else {
       return html`<button
         id="playToggle"
-        class="btn btn-xs btn-transparent"
+        class="btn btn-xs2 btn-transparent"
         @click=${this._handleClickPlay}
       >
         <span class="material-symbols-outlined icon-white icon-md">
@@ -207,7 +207,7 @@ export class Timeline extends LitElement {
           <div class="d-flex justify-content-start">
             ${this.togglePlayButton()}
             <button
-              class="btn btn-xs btn-transparent ms-2"
+              class="btn btn-xs2 btn-transparent ms-2"
               @click=${this._handleClickReset}
             >
               <span class="material-symbols-outlined icon-white icon-md">

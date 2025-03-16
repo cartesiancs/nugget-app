@@ -232,7 +232,6 @@ export class Control extends LitElement {
 
               <div class="tab-pane fade" id="nav-draft" role="tabpanel">
                 <asset-browser></asset-browser>
-                <asset-list></asset-list>
               </div>
 
               <div class="tab-pane fade" id="nav-text" role="tabpanel">

@@ -1,19 +1,28 @@
 import { path } from "../../functions/path";
-import { LitElement, html } from "lit";
+import { LitElement, PropertyValues, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
 import { LocaleController } from "../../controllers/locale";
 import { getLocationEnv } from "../../functions/getLocationEnv";
+import { assetContext } from "./context/assetContext";
+import { consume } from "@lit/context";
 
 @customElement("asset-list")
 export class AssetList extends LitElement {
   blobThumbnail: {};
   nowDirectory: string;
+  map: any;
   constructor() {
     super();
     this.blobThumbnail = {};
     this.nowDirectory = "";
+
+    this.map = [];
   }
+
+  @property()
+  showType;
+  isShowOption = true;
 
   private lc = new LocaleController(this);
 
@@ -24,26 +33,30 @@ export class AssetList extends LitElement {
   render() {
     return html`<div class="row px-2">
       <p
-        class="text-light mt-2 text-center ${getLocationEnv() == "demo"
+        class="text-light mt-2 text-center ${!this.isShowOption
           ? "d-none"
-          : ""}"
+          : ""} ${getLocationEnv() == "demo" ? "d-none" : ""}"
       >
         ${this.lc.t("setting.need_select_project_folder")}
       </p>
       <p
-        class="text-light mt-2 text-center ${getLocationEnv() != "demo"
+        class="text-light mt-2 text-center ${!this.isShowOption
           ? "d-none"
-          : ""}"
+          : ""} ${getLocationEnv() != "demo" ? "d-none" : ""}"
       >
         The folder cannot be viewed in the demo version.
       </p>
       <button
-        class="btn btn-sm btn-default text-light"
+        class="btn btn-sm btn-default text-light ${!this.isShowOption
+          ? "d-none"
+          : ""}"
         onclick="NUGGET.directory.select()"
       >
         ${this.lc.t("setting.select_project_folder")}
       </button>
-    </div>`;
+
+      ${this.map}
+    </div> `;
   }
 
   getFile(filename) {
@@ -56,10 +69,13 @@ export class AssetList extends LitElement {
 
     let listBody: HTMLDivElement | null = this.querySelector("div");
     if (listBody == null) return false;
-    listBody.insertAdjacentHTML(
-      "beforeend",
-      `<asset-file asset-name="${filename}"></asset-file>`,
+    this.map.push(
+      html`<asset-file
+        showType="${this.showType}"
+        assetName="${filename}"
+      ></asset-file>`,
     );
+    console.log("AAA", filename);
   }
 
   getFolder(foldername) {
@@ -72,25 +88,25 @@ export class AssetList extends LitElement {
 
     let listBody = this.querySelector("div");
     if (listBody == null) return false;
-
-    listBody.insertAdjacentHTML(
-      "beforeend",
-      `<asset-folder asset-name="${foldername}"></asset-folder>`,
+    this.map.push(
+      html`<asset-folder
+        showType="${this.showType}"
+        assetName="${foldername}"
+      ></asset-folder>`,
     );
   }
 
   clearList() {
-    const div = this.querySelector("div");
-    if (div == null) return false;
-
-    div.innerHTML = "";
+    this.map = [];
+    this.isShowOption = false;
+    this.requestUpdate();
   }
 }
 
 @customElement("asset-file")
 export class AssetFile extends LitElement {
-  filename: string;
   directory: any;
+  videoBlob: string;
   constructor() {
     super();
 
@@ -103,24 +119,50 @@ export class AssetFile extends LitElement {
       "mt-1",
       "asset",
     );
-    this.filename = this.getAttribute("asset-name") || "";
+
+    this.addEventListener("click", this.handleClick.bind(this));
+
+    this.videoBlob = "";
+
     this.directory = document.querySelector("asset-list").nowDirectory;
   }
+
+  @property()
+  assetName;
+
+  @consume({ context: assetContext, subscribe: true })
+  @property({ attribute: false })
+  public assetOptions = {
+    showType: "grid",
+  };
 
   createRenderRoot() {
     return this;
   }
 
+  protected updated(_changedProperties: PropertyValues): void {
+    console.log("this.", this.assetOptions.showType);
+    if (this.assetOptions.showType == "grid") {
+      this.classList.remove("col-12", "flex-row");
+      this.classList.add("col-4", "flex-column");
+    } else {
+      this.classList.remove("col-4", "flex-column");
+      this.classList.add("col-12", "flex-row");
+    }
+  }
+
   private assetControl = new AssetController();
 
-  async render() {
-    const fileType = NUGGET.mime.lookup(this.filename).type;
+  render() {
+    this.directory = document.querySelector("asset-list").nowDirectory;
+
+    const fileType = NUGGET.mime.lookup(this.assetName).type;
 
     const nowEnv = getLocationEnv();
     const filepath =
       nowEnv == "electron"
-        ? `file://${this.directory}/${this.filename}`
-        : `/api/file?path=${this.directory}/${this.filename}`;
+        ? `file://${this.directory}/${this.assetName}`
+        : `/api/file?path=${this.directory}/${this.assetName}`;
     const fileUrl = path.encode(filepath);
     const assetList = document.querySelector("asset-list");
 
@@ -132,17 +174,17 @@ export class AssetFile extends LitElement {
     } else if (fileType == "video") {
       if (assetList.blobThumbnail.hasOwnProperty(fileUrl)) {
         let savedThumbnailUrl = assetList.blobThumbnail[fileUrl];
-        template = this.templateVideoThumbnail(savedThumbnailUrl);
+        this.videoBlob = savedThumbnailUrl;
+        template = this.templateVideoThumbnail();
       } else {
-        let thumbnailUrl = await this.captureVideoThumbnail(fileUrl);
-        assetList.blobThumbnail[fileUrl] = thumbnailUrl;
-        template = this.templateVideoThumbnail(thumbnailUrl);
+        let thumbnailUrl = this.captureVideoThumbnail(fileUrl);
+        template = this.templateVideoThumbnail();
       }
     } else {
       template = this.template(fileType);
     }
 
-    this.innerHTML = template;
+    return template;
   }
 
   template(filetype = "unknown") {
@@ -151,33 +193,62 @@ export class AssetFile extends LitElement {
       audio: "audio_file",
       unknown: "draft",
     };
-    return `<span class="material-symbols-outlined icon-lg align-self-center"> ${fileIcon[filetype]} </span>
-        <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`;
+    return html`<span
+        class="material-symbols-outlined icon-lg align-self-center"
+      >
+        ${fileIcon[filetype]}
+      </span>
+      <b class="align-self-center text-ellipsis-scroll text-light text-center"
+        >${this.assetName}</b
+      >`;
   }
 
   templateImage(url) {
-    return `<img src="${url}" alt="" class="align-self-center asset-preview">
-        <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`;
+    this.directory = document.querySelector("asset-list").nowDirectory;
+
+    return html`<img
+        src="${url}"
+        alt=""
+        class="align-self-center asset-preview"
+      />
+      <b class="align-self-center text-ellipsis-scroll text-light text-center"
+        >${this.assetName}</b
+      >`;
   }
 
-  templateVideoThumbnail(blobUrl) {
-    return `
-        <div class="position-relative align-self-center">
-        <img src="${blobUrl}" alt="" class="align-self-center asset-preview w-100">
+  templateVideoThumbnail() {
+    return html` <div class="position-relative align-self-center">
+        <img
+          src="${this.videoBlob}"
+          alt=""
+          class="align-self-center asset-preview w-100"
+        />
         <span class="material-symbols-outlined position-absolute icon-center ">
-        play_arrow
+          play_arrow
         </span>
-        </div>
-        
-        <b class="align-self-center text-ellipsis-scroll text-light text-center">${this.filename}</b>`;
+      </div>
+
+      <b class="align-self-center text-ellipsis-scroll text-light text-center"
+        >${this.assetName}</b
+      >`;
   }
 
   handleClick() {
-    this.assetControl.add(`${this.directory}/${this.filename}`);
+    this.directory = document.querySelector("asset-list").nowDirectory;
+
+    this.assetControl.add(`${this.directory}/${this.assetName}`);
     //this.patchToControl(`${this.directory}/${this.filename}`, `${this.directory}`)
   }
 
   async captureVideoThumbnail(url) {
+    const assetList = document.querySelector("asset-list");
+    const nowEnv = getLocationEnv();
+    const filepath =
+      nowEnv == "electron"
+        ? `file://${this.directory}/${this.assetName}`
+        : `/api/file?path=${this.directory}/${this.assetName}`;
+    const fileUrl = path.encode(filepath);
+
     try {
       const thumbnailUrl = await new Promise((resolve, reject) => {
         fetch(`${url}`)
@@ -219,6 +290,9 @@ export class AssetFile extends LitElement {
                       URL.revokeObjectURL(url);
                     };
 
+                    this.videoBlob = url;
+                    this.requestUpdate();
+                    assetList.blobThumbnail[fileUrl] = url;
                     resolve(url);
                   } catch (error) {}
                 });
@@ -235,20 +309,10 @@ export class AssetFile extends LitElement {
       return thumbnailUrl;
     } catch (error) {}
   }
-
-  async connectedCallback() {
-    await this.render();
-    this.addEventListener("click", this.handleClick.bind(this));
-  }
-
-  disconnectedCallback() {
-    this.removeEventListener("click", this.handleClick);
-  }
 }
 
 @customElement("asset-folder")
 export class AssetFolder extends LitElement {
-  foldername: string;
   directory: any;
 
   constructor() {
@@ -263,9 +327,14 @@ export class AssetFolder extends LitElement {
       "mt-1",
       "asset",
     );
-    this.foldername = this.getAttribute("asset-name") || "";
+
+    this.addEventListener("click", this.handleClick.bind(this));
+
     this.directory = document.querySelector("asset-list").nowDirectory;
   }
+
+  @property()
+  assetName;
 
   createRenderRoot() {
     return this;
@@ -275,24 +344,21 @@ export class AssetFolder extends LitElement {
 
   render() {
     const template = this.template();
-    this.innerHTML = template;
+    return template;
   }
 
   template() {
-    return `<span class="material-symbols-outlined icon-lg align-self-center"> folder </span>
-        <b class="align-self-center text-ellipsis text-light text-center">${this.foldername}</b>`;
+    return html`<span
+        class="material-symbols-outlined icon-lg align-self-center"
+      >
+        folder
+      </span>
+      <b class="align-self-center text-ellipsis text-light text-center"
+        >${this.assetName}</b
+      >`;
   }
 
   handleClick() {
-    this.assetControl.requestAllDir(`${this.directory}/${this.foldername}`);
-  }
-
-  connectedCallback() {
-    this.render();
-    this.addEventListener("click", this.handleClick.bind(this));
-  }
-
-  disconnectedCallback() {
-    this.removeEventListener("click", this.handleClick);
+    this.assetControl.requestAllDir(`${this.directory}/${this.assetName}`);
   }
 }

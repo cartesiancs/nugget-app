@@ -2,6 +2,9 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { AssetController } from "../../controllers/asset";
 import { getLocationEnv } from "../../functions/getLocationEnv";
+import { provide } from "@lit/context";
+import { assetContext } from "./context/assetContext";
+import "./switchShowType";
 
 @customElement("asset-browser")
 export class AssetBrowser extends LitElement {
@@ -12,6 +15,12 @@ export class AssetBrowser extends LitElement {
     this.directory = "";
   }
 
+  @provide({ context: assetContext })
+  @property()
+  public assetOptions = {
+    showType: "grid",
+  };
+
   createRenderRoot() {
     return this;
   }
@@ -20,22 +29,26 @@ export class AssetBrowser extends LitElement {
 
   render() {
     return html`<div class="d-flex flex-row p-0 mt-2">
-      <button
-        ref="arrowup"
-        class="btn btn-transparent btn-sm"
-        @click=${this.clickPrevDirectoryButton}
-      >
-        <span class="material-symbols-outlined icon-sm"> arrow_upward </span>
-      </button>
-      <input
-        ref="text"
-        type="text"
-        class="form-control"
-        aria-describedby="basic-addon1"
-        value=""
-        disabled
-      />
-    </div>`;
+        <button
+          ref="arrowup"
+          class="btn btn-transparent btn-sm"
+          @click=${this.clickPrevDirectoryButton}
+        >
+          <span class="material-symbols-outlined icon-sm"> arrow_upward </span>
+        </button>
+        <input
+          ref="text"
+          type="text"
+          class="form-control"
+          aria-describedby="basic-addon1"
+          value=""
+          disabled
+        />
+
+        <switch-showtype></switch-showtype>
+      </div>
+
+      <asset-list showType="${this.assetOptions.showType}"></asset-list> `;
   }
 
   updateDirectoryInput(path) {

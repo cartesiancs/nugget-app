@@ -33,6 +33,7 @@ export class AutomaticCaption extends LitElement {
   sttMethod: "local" | "openai";
   maxProgress: number;
   mediaDuration: number;
+  resolution: { w: number; h: number };
 
   constructor() {
     super();
@@ -55,6 +56,11 @@ export class AutomaticCaption extends LitElement {
     this.isPlay = false;
     this.progress = 0;
     this.mediaDuration = 0;
+
+    this.resolution = {
+      w: 1920,
+      h: 1080,
+    };
 
     this.previousProgress = 0;
 
@@ -112,11 +118,21 @@ export class AutomaticCaption extends LitElement {
     return this;
   }
 
-  handleRowSelection(rowId: any, key: any, mediaType: any, duration: any) {
+  handleRowSelection(
+    rowId: any,
+    key: any,
+    mediaType: any,
+    duration: any,
+    resolution: { w: number; h: number },
+  ) {
     this.selectedRow = rowId;
     this.selectedKey = key;
     this.mediaType = mediaType;
     this.mediaDuration = duration;
+    this.resolution = {
+      w: resolution.w,
+      h: resolution.h,
+    };
     console.log("Selected Row:", this.selectedRow, key);
     this.requestUpdate();
   }
@@ -311,8 +327,8 @@ export class AutomaticCaption extends LitElement {
     this.analyzingVideoModal.hide();
     this.applyCursorEvent("pointer");
 
-    const screenWidth = 1920;
-    const screenHeight = 1080;
+    const screenWidth = this.resolution.w;
+    const screenHeight = this.resolution.h;
     const xPadding = 100;
     const yPadding = 100;
     const fontSize = 52;
@@ -427,7 +443,7 @@ export class AutomaticCaption extends LitElement {
       );
 
       const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-      ctx.drawImage(video, 0, 0, 1920, 1080);
+      ctx.drawImage(video, 0, 0, this.resolution.w, this.resolution.h);
     }
 
     this.showRightIndexCaption();
@@ -448,8 +464,8 @@ export class AutomaticCaption extends LitElement {
 
     const text = this.analyzedEditCaption[index];
 
-    const screenWidth = 1920;
-    const screenHeight = 1080;
+    const screenWidth = this.resolution.w;
+    const screenHeight = this.resolution.h;
     const xPadding = 100;
     const yPadding = 100;
 
@@ -567,6 +583,8 @@ export class AutomaticCaption extends LitElement {
       }
     }
 
+    console.log(nowCaptionIndex, "SSS");
+
     this.drawCaption(nowCaptionIndex);
   }
 
@@ -643,7 +661,7 @@ export class AutomaticCaption extends LitElement {
       video.currentTime = 0;
 
       const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-      ctx.drawImage(video, 0, 0, 1920, 1080);
+      ctx.drawImage(video, 0, 0, this.resolution.w, this.resolution.h);
     }
 
     if (this.mediaType == "audio") {
@@ -664,8 +682,6 @@ export class AutomaticCaption extends LitElement {
       this.progress = time * 1000;
       this.previousProgress = time * 1000;
 
-      this.showRightIndexCaption();
-
       if (this.mediaType == "video") {
         const video: HTMLVideoElement = document.querySelector(
           "#captionPreviewVideo",
@@ -673,7 +689,7 @@ export class AutomaticCaption extends LitElement {
         video.currentTime = time;
 
         const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-        ctx.drawImage(video, 0, 0, 1920, 1080);
+        ctx.drawImage(video, 0, 0, this.resolution.w, this.resolution.h);
       }
 
       if (this.mediaType == "audio") {
@@ -683,6 +699,8 @@ export class AutomaticCaption extends LitElement {
         audio.currentTime = time;
       }
     }
+
+    this.showRightIndexCaption();
 
     console.log(e.target.offsetWidth, e.offsetX);
     if (e.offsetX / e.target.offsetWidth > 0.5) {
@@ -792,7 +810,7 @@ export class AutomaticCaption extends LitElement {
           >${partText}
           <input
             @input=${(e) => this._handleChangeInput(e, index)}
-            class="form-control bg-default text-light mt-2"
+            class="form-control bg-dark text-light mt-2"
             type="text"
             id="analyzedEditCaption_${index}"
             value=${this.analyzedEditCaption[index]}
@@ -1004,8 +1022,8 @@ export class AutomaticCaption extends LitElement {
                 <div class="d-flex col-5 row gap-2" style="position: fixed;">
                   <canvas
                     id="previewCanvasCaption"
-                    width="1920"
-                    height="1080"
+                    width=${this.resolution.w}
+                    height=${this.resolution.h}
                   ></canvas>
 
                   <video
@@ -1173,6 +1191,10 @@ export class AutomaticCaption extends LitElement {
     key: string;
     filetype: string;
     duration: number;
+    resolution: {
+      w: number;
+      h: number;
+    };
   }[] {
     const timeline = this.timeline;
     const timelineArray: {
@@ -1181,6 +1203,10 @@ export class AutomaticCaption extends LitElement {
       key: string;
       filetype: string;
       duration: number;
+      resolution: {
+        w: number;
+        h: number;
+      };
     }[] = [];
     let index = 1;
 
@@ -1195,6 +1221,10 @@ export class AutomaticCaption extends LitElement {
             key: key,
             filetype: element.filetype,
             duration: element.duration,
+            resolution: {
+              w: element.origin.width,
+              h: element.origin.height,
+            },
           });
           index += 1;
         }
@@ -1206,6 +1236,10 @@ export class AutomaticCaption extends LitElement {
             key: key,
             filetype: element.filetype,
             duration: element.duration,
+            resolution: {
+              w: 1920,
+              h: 1080,
+            },
           });
           index += 1;
         }
@@ -1228,6 +1262,10 @@ export class AutomaticCaption extends LitElement {
                 row.key,
                 row.filetype,
                 row.duration,
+                {
+                  w: row.resolution.w,
+                  h: row.resolution.h,
+                },
               )}"
           >
             <th scope="row">${row.id}</th>

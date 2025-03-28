@@ -2,7 +2,7 @@ const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
-  entry: ["./app/src/index.ts"],
+  entry: ["./apps/app/src/index.ts"],
   watch: false,
   plugins: [new MiniCssExtractPlugin({ filename: `style.css` })],
   module: {
@@ -23,7 +23,7 @@ module.exports = {
   },
   output: {
     filename: "index.js",
-    path: path.resolve(__dirname, "app/dist"),
+    path: path.resolve(__dirname, "apps/app/dist"),
     library: "NUGGET",
   },
 };

@@ -32,7 +32,7 @@ const window = {
         webviewTag: true,
         preload: path.join(__dirname, "..", "preload.js"),
       },
-      indexFile: "app/index.html",
+      indexFile: "apps/app/index.html",
     });
 
     autoUpdater.checkForUpdatesAndNotify();
@@ -89,7 +89,7 @@ const window = {
   },
 
   createCreditWindow: () => {
-    const indexFile = "app/page/credit.html";
+    const indexFile = "apps/app/page/credit.html";
     const newWindow = new BrowserWindow({
       width: 600,
       height: 500,
@@ -102,7 +102,7 @@ const window = {
   },
 
   createOverlayRecordWindow: () => {
-    const indexFile = "packages/overlay-record/dist/index.html";
+    const indexFile = "apps/overlay-record/dist/index.html";
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize as any;
 
@@ -142,7 +142,7 @@ const window = {
   },
 
   createOffscreenRenderWindow: () => {
-    const indexFile = "packages/render/dist/index.html";
+    const indexFile = "apps/render/dist/index.html";
 
     const renderWindow = new BrowserWindow({
       width: 100,

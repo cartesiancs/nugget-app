@@ -7,5 +7,5 @@
 /bin/yt-dlp
 /main
 /temp
-/app/dist
+/apps/app/dist
 .DS_Store

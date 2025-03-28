@@ -11,7 +11,7 @@ import "../../features/record/screenRecord";
 import "../../features/record/audioRecord";
 import "../../features/ytdown/ytDownload";
 
-import "../../../../packages/automatic-caption/src/automaticCaption";
+import "../../../../automatic-caption/src/automaticCaption";
 
 import { IUIStore, uiStore } from "../../states/uiStore";
 import { TimelineController } from "../../controllers/timeline";

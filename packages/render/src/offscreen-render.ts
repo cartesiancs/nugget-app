@@ -4,6 +4,8 @@ import { customElement } from "lit/decorators.js";
 import { ReactiveController, ReactiveControllerHost } from "lit";
 import { decompressFrames, parseGIF } from "gifuct-js";
 
+// 해당 랜더링 로직은 컨트롤러 렌더링 로직과 중복됨으로 나중에 리팩토링 되어야 합니다.
+
 let loaded = {};
 let canvas = document.createElement("canvas");
 

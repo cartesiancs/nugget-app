@@ -9,6 +9,7 @@ import "./ControlFilter";
 import "../../features/preview/previewTopBar";
 import "../../features/record/screenRecord";
 import "../../features/record/audioRecord";
+import "../../features/ytdown/ytDownload";
 
 import "../../../../packages/automatic-caption/src/automaticCaption";
 
@@ -232,7 +233,6 @@ export class Control extends LitElement {
 
               <div class="tab-pane fade" id="nav-draft" role="tabpanel">
                 <asset-browser></asset-browser>
-                <asset-list></asset-list>
               </div>
 
               <div class="tab-pane fade" id="nav-text" role="tabpanel">
@@ -308,6 +308,16 @@ export class Control extends LitElement {
             : "d-none"}"
         >
           <audio-record-panel></audio-record-panel>
+        </div>
+
+        <div
+          style="height: calc(100% - 2rem);"
+          class="position-relative d-flex align-items-center justify-content-center ${this
+            .nowActivePanel == "ytDownload"
+            ? ""
+            : "d-none"}"
+        >
+          <youtube-download></youtube-download>
         </div>
 
         <div

@@ -4,67 +4,60 @@ import { LocaleController } from "../../controllers/locale";
 import "../../features/gif/gifPreset";
 
 @customElement("control-ui-filter")
-export class ControlText extends LitElement {
+export class ControlUiFilter extends LitElement {
   private lc = new LocaleController(this);
+
+  @property()
+  activePanel = "gif";
 
   createRenderRoot() {
     return this;
   }
 
+  _handleClickChangePanel(name) {
+    this.activePanel = name;
+    this.requestUpdate();
+  }
+
   render() {
     return html` <div class="row px-2">
-      <div
-        class="accordion text-light"
-        style="margin: 0px; padding: 0px;"
-        id="accordionExample"
-      >
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="OverlayAccordion">
-            <button
-              class="accordion-button"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#collapseOne"
-              aria-expanded="true"
-              aria-controls="collapseOne"
-            >
-              GIF
-            </button>
-          </h2>
-          <div
-            id="collapseOne"
-            class="accordion-collapse collapse show"
-            aria-labelledby="OverlayAccordion"
-            data-bs-parent="#accordionExample"
-          >
-            <div class="accordion-body">
-              <gif-preset></gif-preset>
-            </div>
-          </div>
-        </div>
+      <div class="d-flex col gap-2 overflow-scroll">
+        <button
+          class="btn btn-sm ${this.activePanel == "gif"
+            ? "btn-primary"
+            : "btn-default"} text-light mt-1"
+          @click=${() => this._handleClickChangePanel("gif")}
+        >
+          gif
+        </button>
+        <button
+          class="btn btn-sm ${this.activePanel == "transition"
+            ? "btn-primary"
+            : "btn-default"} text-light mt-1"
+          @click=${() => this._handleClickChangePanel("transition")}
+        >
+          transition
+        </button>
+        <button
+          class="btn btn-sm ${this.activePanel == "overlay"
+            ? "btn-primary"
+            : "btn-default"} text-light mt-1"
+          @click=${() => this._handleClickChangePanel("overlay")}
+        >
+          overlay
+        </button>
+        <button
+          class="btn btn-sm ${this.activePanel == "sound"
+            ? "btn-primary"
+            : "btn-default"} text-light mt-1"
+          @click=${() => this._handleClickChangePanel("sound")}
+        >
+          sound
+        </button>
+      </div>
 
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="TransitionAccordion">
-            <button
-              class="accordion-button"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#collapseTransition"
-              aria-expanded="true"
-              aria-controls="collapseTransition"
-            >
-              Transition Filter
-            </button>
-          </h2>
-          <div
-            id="collapseTransition"
-            class="accordion-collapse collapse"
-            aria-labelledby="TransitionAccordion"
-            data-bs-parent="#accordionExample"
-          >
-            <div class="accordion-body">...</div>
-          </div>
-        </div>
+      <div class="${this.activePanel == "gif" ? "" : "d-none"}">
+        <gif-preset></gif-preset>
       </div>
     </div>`;
   }

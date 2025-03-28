@@ -191,7 +191,15 @@ element-timeline-scroll {
 }
 
 .btn-xs {
-  padding: 0rem !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 11px;
+  height: fit-content;
+}
+
+.btn-xs2 {
+  padding: 0rem 0rem !important;
+  font-size: 11px;
+  height: fit-content;
 }
 
 .btn-default {

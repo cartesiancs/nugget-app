@@ -4,6 +4,7 @@
 /bin/ffprobe
 /bin/ffmpeg.exe
 /bin/ffprobe.exe
+/bin/yt-dlp
 /main
 /temp
 /app/dist

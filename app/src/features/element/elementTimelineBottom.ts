@@ -56,14 +56,14 @@ export class ElementTimelineBottomScroll extends LitElement {
           display: flex;
           gap: 0.25rem;
           flex-direction: column;
-          padding-left: 0.5rem;
+          padding-left: 1rem;
         }
 
         .timeline-bottom-grid-end {
           display: flex;
           gap: 0.5rem;
           justify-content: end;
-          padding-right: 0.5rem;
+          padding-right: 1rem;
           align-items: center;
         }
 

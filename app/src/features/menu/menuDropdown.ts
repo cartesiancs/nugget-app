@@ -60,7 +60,7 @@ export class MenuDropdownItem extends LitElement {
   }
 
   template() {
-    return `<li><a class="dropdown-item">${this.name}</a></li>`;
+    return `<li><a class="dropdown-item dropdown-item-sm">${this.name}</a></li>`;
   }
 
   connectedCallback() {

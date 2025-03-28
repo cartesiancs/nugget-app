@@ -127,8 +127,6 @@ export class RenderController implements ReactiveController {
 
     const fps = 60;
     let needsToDelay = 0;
-    let delayCount = 0; // Video와 같은 개체의 경우 프레임 정확성을 보장하기 위해 이벤트 리스너를 사용합니다.
-    // 이때 이벤트가 달린 딜레이가 필요한 개체를 카운트 해주고 해당 카운트가 needsToDelay와 같아질때 랜더링합니다.
 
     const ctx = canvas.getContext("2d") as any;
     if (ctx) {
@@ -273,588 +271,560 @@ export class RenderController implements ReactiveController {
         }
 
         if (fileType == "image") {
-          const imageElement = this.timeline[elementId] as any;
-          let scaleW = w;
-          let scaleH = h;
-          let scaleX = x;
-          let scaleY = y;
-          let compareW = 1;
-          let compareH = 1;
-
-          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
-
-          ctx.globalAlpha = imageElement.opacity / 100;
-
-          if (imageElement.animation["opacity"].isActivate == true) {
-            let index = Math.round(((frame / fps) * 1000) / 16);
-            let indexToMs = index * 20;
-            let startTime = Number(this.timeline[elementId].startTime);
-            let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-            try {
-              if (indexPoint < 0) {
-                return false;
-              }
-
-              const ax = this.findNearestY(
-                imageElement.animation["opacity"].ax,
-                (frame / fps) * 1000 - imageElement.startTime,
-              ) as any;
-
-              ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-            } catch (error) {}
-          }
-
-          if (this.timeline[elementId].animation["scale"].isActivate == true) {
-            const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
-            if (ax != false) {
-              scaleW = w * ax;
-              scaleH = h * ax;
-              compareW = scaleW - w;
-              compareH = scaleH - h;
-
-              scaleX = x - compareW / 2;
-              scaleY = y - compareH / 2;
-            }
-          }
-
-          if (
-            this.timeline[elementId].animation["rotation"].isActivate == true
-          ) {
-            const ax = this.getAnimateRotation(
-              elementId,
-              (frame / fps) * 1000,
-            ) as any;
-            if (ax != false) {
-              rotation = ax.ax;
-            }
-          }
-
-          let animationType = "position";
-
-          if (imageElement.animation[animationType].isActivate == true) {
-            let index = Math.round(((frame / fps) * 1000) / 16);
-            let indexToMs = index * 20;
-            let startTime = Number(this.timeline[elementId].startTime);
-            let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-            try {
-              if (indexPoint < 0) {
-                return false;
-              }
-
-              const ax = this.findNearestY(
-                imageElement.animation[animationType].ax,
-                (frame / fps) * 1000 - imageElement.startTime,
-              ) as any;
-
-              const ay = this.findNearestY(
-                imageElement.animation[animationType].ay,
-                (frame / fps) * 1000 - imageElement.startTime,
-              ) as any;
-
-              scaleX = ax - compareW / 2;
-              scaleY = ay - compareH / 2;
-
-              const centerX = scaleX + scaleW / 2;
-              const centerY = scaleY + scaleH / 2;
-
-              ctx.translate(centerX, centerY);
-              ctx.rotate(rotation);
-
-              ctx.drawImage(
-                loaded[elementId],
-                -scaleW / 2,
-                -scaleH / 2,
-                scaleW,
-                scaleH,
-              );
-              ctx.rotate(-rotation);
-              ctx.translate(-centerX, -centerY);
-
-              ctx.globalAlpha = 1;
-
-              drawLayer(layerIndex + 1);
-              return;
-            } catch (error) {}
-          }
-
-          const centerX = scaleX + scaleW / 2;
-          const centerY = scaleY + scaleH / 2;
-
-          ctx.translate(centerX, centerY);
-          ctx.rotate(rotation);
-
-          ctx.drawImage(
-            loaded[elementId],
-            -scaleW / 2,
-            -scaleH / 2,
-            scaleW,
-            scaleH,
-          );
-          ctx.rotate(-rotation);
-          ctx.translate(-centerX, -centerY);
-
-          ctx.globalAlpha = 1;
-
+          this.drawImage(ctx, elementId, w, h, x, y, frame / fps);
           drawLayer(layerIndex + 1);
-          return;
         }
 
         // NOTE: gif 랜더링 구현 필요
         if (fileType == "gif") {
-          const imageElement = this.timeline[elementId] as any;
-          const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
-
-          const gifTempCanvas = document.createElement("canvas");
-          const gifTempCanvasCtx = gifTempCanvas.getContext("2d") as any;
-
-          const imageIndex = loaded[elementId].findIndex((item) => {
-            return item.key == elementId;
-          });
-          const delay = loaded[elementId][0].delay;
-
-          const index =
-            Math.round(((frame / fps) * 1000) / delay) %
-            loaded[elementId].length;
-          const firstFrame = loaded[elementId][index];
-
-          let dims = firstFrame.dims;
-          let frameImageData: any = null;
-          gifTempCanvas.width = dims.width;
-          gifTempCanvas.height = dims.height;
-
-          frameImageData = gifTempCanvasCtx.createImageData(
-            dims.width,
-            dims.height,
-          );
-
-          frameImageData.data.set(firstFrame.patch);
-
-          gifTempCanvasCtx.putImageData(frameImageData, 0, 0);
-
-          const centerX = x + w / 2;
-          const centerY = y + h / 2;
-
-          ctx.translate(centerX, centerY);
-          ctx.rotate(rotation);
-
-          ctx.drawImage(gifTempCanvas, -w / 2, -h / 2, w, h);
-
-          ctx.rotate(-rotation);
-          ctx.translate(-centerX, -centerY);
-
+          this.drawGif(ctx, elementId, w, h, x, y, frame / fps);
           drawLayer(layerIndex + 1);
-          return;
         }
 
         if (fileType == "text") {
-          let scaleW = w;
-          let scaleH = h;
-          let tx = x;
-          let ty = y;
-          let fontSize = this.timeline[elementId].fontsize;
-          let compare = 1;
-          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
-
-          try {
-            ctx.globalAlpha = this.timeline[elementId].opacity / 100;
-
-            if (
-              this.timeline[elementId].animation["opacity"].isActivate == true
-            ) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  this.timeline[elementId].animation["opacity"].ax,
-                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
-                ) as any;
-
-                ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-              } catch (error) {}
-            }
-
-            if (
-              this.timeline[elementId].animation["scale"].isActivate == true
-            ) {
-              const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
-              if (ax != false) {
-                fontSize = this.timeline[elementId].fontsize * (ax / 10);
-              }
-            }
-
-            if (
-              this.timeline[elementId].animation["rotation"].isActivate == true
-            ) {
-              const ax = this.getAnimateRotation(
-                elementId,
-                (frame / fps) * 1000,
-              ) as any;
-              if (ax != false) {
-                rotation = ax.ax;
-              }
-            }
-
-            ctx.fillStyle = this.timeline[elementId].textcolor as string;
-            ctx.lineWidth = 0;
-            ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
-
-            ctx.font = `${
-              this.timeline[elementId].options.isItalic ? "italic" : ""
-            } ${
-              this.timeline[elementId].options.isBold ? "bold" : ""
-            } ${fontSize}px ${this.timeline[elementId].fontname}`;
-
-            let animationType = "position";
-
-            if (
-              this.timeline[elementId].animation[animationType].isActivate ==
-              true
-            ) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  this.timeline[elementId].animation[animationType].ax,
-                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
-                ) as any;
-
-                const ay = this.findNearestY(
-                  this.timeline[elementId].animation[animationType].ay,
-                  (frame / fps) * 1000 - this.timeline[elementId].startTime,
-                ) as any;
-
-                tx = ax;
-                ty = ay;
-              } catch (error) {}
-            }
-
-            const centerX = tx + scaleW / 2;
-            const centerY = ty + scaleH / 2;
-
-            ctx.translate(centerX, centerY);
-            ctx.rotate(rotation);
-
-            tx = -scaleW / 2;
-            ty = -scaleH / 2;
-
-            this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
-
-            ctx.fillStyle = this.timeline[elementId].textcolor as string;
-
-            if (this.timeline[elementId].options.align == "left") {
-              const textSplited = this.timeline[elementId].text.split(" ");
-              let line = "";
-              let textY = ty + (this.timeline[elementId].fontsize || 0);
-              let lineHeight = h;
-
-              for (let index = 0; index < textSplited.length; index++) {
-                const testLine = line + textSplited[index] + " ";
-                const metrics = ctx.measureText(testLine);
-                const testWidth = metrics.width;
-
-                if (testWidth < w) {
-                  line = testLine;
-                } else {
-                  this.drawTextStroke(
-                    ctx,
-                    elementId,
-                    line,
-                    tx,
-                    textY,
-                    fontSize,
-                  );
-                  ctx.fillText(line, tx, textY);
-                  line = textSplited[index] + " ";
-                  textY += lineHeight;
-                }
-              }
-
-              this.drawTextStroke(ctx, elementId, line, tx, textY, fontSize);
-              ctx.fillText(line, tx, textY);
-            } else if (this.timeline[elementId].options.align == "center") {
-              const textSplited = this.timeline[elementId].text.split(" ");
-              let line = "";
-              let textY = ty + (this.timeline[elementId].fontsize || 0);
-              let lineHeight = h;
-
-              for (let index = 0; index < textSplited.length; index++) {
-                const testLine = line + textSplited[index] + " ";
-                const metrics = ctx.measureText(testLine);
-                const testWidth = metrics.width;
-
-                if (testWidth < w) {
-                  line = testLine;
-                } else {
-                  const wordWidth = ctx.measureText(line).width;
-                  this.drawTextStroke(
-                    ctx,
-                    elementId,
-                    line,
-                    tx + w / 2 - wordWidth / 2,
-                    textY,
-                    fontSize,
-                  );
-                  ctx.fillText(line, tx + w / 2 - wordWidth / 2, textY);
-                  line = textSplited[index] + " ";
-                  textY += lineHeight;
-                }
-              }
-
-              const lastWordWidth = ctx.measureText(line).width;
-
-              this.drawTextStroke(
-                ctx,
-                elementId,
-                line,
-                tx + w / 2 - lastWordWidth / 2,
-                textY,
-                fontSize,
-              );
-              ctx.fillText(line, tx + w / 2 - lastWordWidth / 2, textY);
-            } else if (this.timeline[elementId].options.align == "right") {
-              const textSplited = this.timeline[elementId].text.split(" ");
-              let line = "";
-              let textY = ty + (this.timeline[elementId].fontsize || 0);
-              let lineHeight = h;
-
-              for (let index = 0; index < textSplited.length; index++) {
-                const testLine = line + textSplited[index] + " ";
-                const metrics = ctx.measureText(testLine);
-                const testWidth = metrics.width;
-
-                if (testWidth < w) {
-                  line = testLine;
-                } else {
-                  const wordWidth = ctx.measureText(line).width;
-                  this.drawTextStroke(
-                    ctx,
-                    elementId,
-                    line,
-                    tx + w - wordWidth,
-                    textY,
-                    fontSize,
-                  );
-                  ctx.fillText(line, tx + w - wordWidth, textY);
-                  line = textSplited[index] + " ";
-                  textY += lineHeight;
-                }
-              }
-
-              const lastWordWidth = ctx.measureText(line).width;
-
-              this.drawTextStroke(
-                ctx,
-                elementId,
-                line,
-                tx + w - lastWordWidth,
-                textY,
-                fontSize,
-              );
-              ctx.fillText(line, tx + w - lastWordWidth, textY);
-            }
-
-            ctx.rotate(-rotation);
-            ctx.translate(-centerX, -centerY);
-
-            ctx.globalAlpha = 1;
-
-            drawLayer(layerIndex + 1);
-            return;
-          } catch (error) {}
+          this.drawText(ctx, elementId, w, h, x, y, frame / fps);
+          drawLayer(layerIndex + 1);
         }
 
         if (fileType == "shape") {
           this.drawShape(canvas, elementId);
           drawLayer(layerIndex + 1);
-          return;
         }
 
         if (fileType == "video") {
-          const videoElement = this.timeline[elementId] as any;
-          let scaleW = w;
-          let scaleH = h;
-          let scaleX = x;
-          let scaleY = y;
-          let compareW = 1;
-          let compareH = 1;
-          let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
-
-          if (
-            !(
-              (frame / fps) * 1000 >=
-                startTime + this.timeline[elementId].trim.startTime &&
-              (frame / fps) * 1000 <
-                startTime + this.timeline[elementId].trim.endTime
-            )
-          ) {
+          await this.drawVideo(
+            ctx,
+            elementId,
+            w,
+            h,
+            x,
+            y,
+            frame / fps,
+            startTime,
+          ).then(() => {
             drawLayer(layerIndex + 1);
-            return;
+          });
+        }
+      };
+
+      drawLayer(0);
+    }
+  }
+
+  drawImage(ctx, elementId, w, h, x, y, framefps) {
+    const imageElement = this.timeline[elementId] as any;
+    let scaleW = w;
+    let scaleH = h;
+    let scaleX = x;
+    let scaleY = y;
+    let compareW = 1;
+    let compareH = 1;
+
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+
+    ctx.globalAlpha = imageElement.opacity / 100;
+
+    if (imageElement.animation["opacity"].isActivate == true) {
+      let index = Math.round((framefps * 1000) / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          imageElement.animation["opacity"].ax,
+          framefps * 1000 - imageElement.startTime,
+        ) as any;
+
+        ctx.globalAlpha = this.zeroIfNegative(ax / 100);
+      } catch (error) {}
+    }
+
+    if (this.timeline[elementId].animation["scale"].isActivate == true) {
+      const ax = this.getAnimateScale(elementId, framefps * 1000);
+      if (ax != false) {
+        scaleW = w * ax;
+        scaleH = h * ax;
+        compareW = scaleW - w;
+        compareH = scaleH - h;
+
+        scaleX = x - compareW / 2;
+        scaleY = y - compareH / 2;
+      }
+    }
+
+    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+      const ax = this.getAnimateRotation(elementId, framefps * 1000) as any;
+      if (ax != false) {
+        rotation = ax.ax;
+      }
+    }
+
+    let animationType = "position";
+
+    if (imageElement.animation[animationType].isActivate == true) {
+      let index = Math.round((framefps * 1000) / 16);
+      let indexToMs = index * 20;
+      let startTime = Number(this.timeline[elementId].startTime);
+      let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+      try {
+        if (indexPoint < 0) {
+          return false;
+        }
+
+        const ax = this.findNearestY(
+          imageElement.animation[animationType].ax,
+          framefps * 1000 - imageElement.startTime,
+        ) as any;
+
+        const ay = this.findNearestY(
+          imageElement.animation[animationType].ay,
+          framefps * 1000 - imageElement.startTime,
+        ) as any;
+
+        scaleX = ax - compareW / 2;
+        scaleY = ay - compareH / 2;
+
+        const centerX = scaleX + scaleW / 2;
+        const centerY = scaleY + scaleH / 2;
+
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rotation);
+
+        ctx.drawImage(
+          loaded[elementId],
+          -scaleW / 2,
+          -scaleH / 2,
+          scaleW,
+          scaleH,
+        );
+        ctx.rotate(-rotation);
+        ctx.translate(-centerX, -centerY);
+
+        ctx.globalAlpha = 1;
+
+        return;
+      } catch (error) {}
+    }
+
+    const centerX = scaleX + scaleW / 2;
+    const centerY = scaleY + scaleH / 2;
+
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotation);
+
+    ctx.drawImage(loaded[elementId], -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+    ctx.rotate(-rotation);
+    ctx.translate(-centerX, -centerY);
+
+    ctx.globalAlpha = 1;
+
+    return;
+  }
+
+  drawGif(ctx, elementId, w, h, x, y, framefps) {
+    const imageElement = this.timeline[elementId] as any;
+    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+
+    const gifTempCanvas = document.createElement("canvas");
+    const gifTempCanvasCtx = gifTempCanvas.getContext("2d") as any;
+
+    const imageIndex = loaded[elementId].findIndex((item) => {
+      return item.key == elementId;
+    });
+    const delay = loaded[elementId][0].delay;
+
+    const index =
+      Math.round((framefps * 1000) / delay) % loaded[elementId].length;
+    const firstFrame = loaded[elementId][index];
+
+    let dims = firstFrame.dims;
+    let frameImageData: any = null;
+    gifTempCanvas.width = dims.width;
+    gifTempCanvas.height = dims.height;
+
+    frameImageData = gifTempCanvasCtx.createImageData(dims.width, dims.height);
+
+    frameImageData.data.set(firstFrame.patch);
+
+    gifTempCanvasCtx.putImageData(frameImageData, 0, 0);
+
+    const centerX = x + w / 2;
+    const centerY = y + h / 2;
+
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotation);
+
+    ctx.drawImage(gifTempCanvas, -w / 2, -h / 2, w, h);
+
+    ctx.rotate(-rotation);
+    ctx.translate(-centerX, -centerY);
+
+    return;
+  }
+
+  drawText(ctx, elementId, w, h, x, y, framefps) {
+    let scaleW = w;
+    let scaleH = h;
+    let tx = x;
+    let ty = y;
+    let fontSize = this.timeline[elementId].fontsize;
+    let compare = 1;
+    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+
+    try {
+      ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+
+      if (this.timeline[elementId].animation["opacity"].isActivate == true) {
+        let index = Math.round((framefps * 1000) / 16);
+        let indexToMs = index * 20;
+        let startTime = Number(this.timeline[elementId].startTime);
+        let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+        try {
+          if (indexPoint < 0) {
+            return false;
           }
 
-          const onSeeked = () => {
-            loaded[elementId].removeEventListener("seeked", onSeeked);
+          const ax = this.findNearestY(
+            this.timeline[elementId].animation["opacity"].ax,
+            framefps * 1000 - this.timeline[elementId].startTime,
+          ) as any;
 
-            const video = {
-              object: loaded[elementId],
-            };
+          ctx.globalAlpha = this.zeroIfNegative(ax / 100);
+        } catch (error) {}
+      }
 
-            let source = loaded[elementId];
+      if (this.timeline[elementId].animation["scale"].isActivate == true) {
+        const ax = this.getAnimateScale(elementId, framefps * 1000);
+        if (ax != false) {
+          fontSize = this.timeline[elementId].fontsize * (ax / 10);
+        }
+      }
 
-            if (
-              this.timeline[elementId].filter.enable &&
-              this.timeline[elementId].filter.list.length > 0
-            ) {
-              if (this.timeline[elementId].filter.list[0].name == "chromakey") {
-                source = this.applyChromaKey(
-                  ctx,
-                  video,
-                  videoElement,
-                  w,
-                  h,
-                  scaleX,
-                  scaleY,
-                  scaleW,
-                  scaleH,
-                );
-              }
+      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId, framefps * 1000) as any;
+        if (ax != false) {
+          rotation = ax.ax;
+        }
+      }
 
-              if (this.timeline[elementId].filter.list[0].name == "blur") {
-                source = this.applyBlur(
-                  ctx,
-                  video,
-                  videoElement,
-                  w,
-                  h,
-                  scaleX,
-                  scaleY,
-                  scaleW,
-                  scaleH,
-                );
-              }
+      ctx.fillStyle = this.timeline[elementId].textcolor as string;
+      ctx.lineWidth = 0;
+      ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
 
-              if (
-                this.timeline[elementId].filter.list[0].name == "radialblur"
-              ) {
-                source = this.applyRadialBlur(
-                  ctx,
-                  video,
-                  videoElement,
-                  w,
-                  h,
-                  scaleX,
-                  scaleY,
-                  scaleW,
-                  scaleH,
-                );
-              }
+      ctx.font = `${
+        this.timeline[elementId].options.isItalic ? "italic" : ""
+      } ${
+        this.timeline[elementId].options.isBold ? "bold" : ""
+      } ${fontSize}px ${this.timeline[elementId].fontname}`;
+
+      let animationType = "position";
+
+      if (
+        this.timeline[elementId].animation[animationType].isActivate == true
+      ) {
+        let index = Math.round((framefps * 1000) / 16);
+        let indexToMs = index * 20;
+        let startTime = Number(this.timeline[elementId].startTime);
+        let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+        try {
+          if (indexPoint < 0) {
+            return false;
+          }
+
+          const ax = this.findNearestY(
+            this.timeline[elementId].animation[animationType].ax,
+            framefps * 1000 - this.timeline[elementId].startTime,
+          ) as any;
+
+          const ay = this.findNearestY(
+            this.timeline[elementId].animation[animationType].ay,
+            framefps * 1000 - this.timeline[elementId].startTime,
+          ) as any;
+
+          tx = ax;
+          ty = ay;
+        } catch (error) {}
+      }
+
+      const centerX = tx + scaleW / 2;
+      const centerY = ty + scaleH / 2;
+
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      tx = -scaleW / 2;
+      ty = -scaleH / 2;
+
+      this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
+
+      ctx.fillStyle = this.timeline[elementId].textcolor as string;
+
+      if (this.timeline[elementId].options.align == "left") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = ty + (this.timeline[elementId].fontsize || 0);
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            this.drawTextStroke(ctx, elementId, line, tx, textY, fontSize);
+            ctx.fillText(line, tx, textY);
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        this.drawTextStroke(ctx, elementId, line, tx, textY, fontSize);
+        ctx.fillText(line, tx, textY);
+      } else if (this.timeline[elementId].options.align == "center") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = ty + (this.timeline[elementId].fontsize || 0);
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+            this.drawTextStroke(
+              ctx,
+              elementId,
+              line,
+              tx + w / 2 - wordWidth / 2,
+              textY,
+              fontSize,
+            );
+            ctx.fillText(line, tx + w / 2 - wordWidth / 2, textY);
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const lastWordWidth = ctx.measureText(line).width;
+
+        this.drawTextStroke(
+          ctx,
+          elementId,
+          line,
+          tx + w / 2 - lastWordWidth / 2,
+          textY,
+          fontSize,
+        );
+        ctx.fillText(line, tx + w / 2 - lastWordWidth / 2, textY);
+      } else if (this.timeline[elementId].options.align == "right") {
+        const textSplited = this.timeline[elementId].text.split(" ");
+        let line = "";
+        let textY = ty + (this.timeline[elementId].fontsize || 0);
+        let lineHeight = h;
+
+        for (let index = 0; index < textSplited.length; index++) {
+          const testLine = line + textSplited[index] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+
+          if (testWidth < w) {
+            line = testLine;
+          } else {
+            const wordWidth = ctx.measureText(line).width;
+            this.drawTextStroke(
+              ctx,
+              elementId,
+              line,
+              tx + w - wordWidth,
+              textY,
+              fontSize,
+            );
+            ctx.fillText(line, tx + w - wordWidth, textY);
+            line = textSplited[index] + " ";
+            textY += lineHeight;
+          }
+        }
+
+        const lastWordWidth = ctx.measureText(line).width;
+
+        this.drawTextStroke(
+          ctx,
+          elementId,
+          line,
+          tx + w - lastWordWidth,
+          textY,
+          fontSize,
+        );
+        ctx.fillText(line, tx + w - lastWordWidth, textY);
+      }
+
+      ctx.rotate(-rotation);
+      ctx.translate(-centerX, -centerY);
+
+      ctx.globalAlpha = 1;
+
+      return;
+    } catch (error) {}
+  }
+
+  async drawVideo(ctx, elementId, w, h, x, y, framefps, startTime) {
+    const results = new Promise((resolve, reject) => {
+      const videoElement = this.timeline[elementId] as any;
+      let scaleW = w;
+      let scaleH = h;
+      let scaleX = x;
+      let scaleY = y;
+      let compareW = 1;
+      let compareH = 1;
+      let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+
+      if (
+        !(
+          framefps * 1000 >=
+            startTime + this.timeline[elementId].trim.startTime &&
+          framefps * 1000 < startTime + this.timeline[elementId].trim.endTime
+        )
+      ) {
+        return;
+      }
+
+      const onSeeked = () => {
+        loaded[elementId].removeEventListener("seeked", onSeeked);
+
+        const video = {
+          object: loaded[elementId],
+        };
+
+        let source = loaded[elementId];
+
+        if (
+          this.timeline[elementId].filter.enable &&
+          this.timeline[elementId].filter.list.length > 0
+        ) {
+          if (this.timeline[elementId].filter.list[0].name == "chromakey") {
+            source = this.applyChromaKey(
+              ctx,
+              video,
+              videoElement,
+              w,
+              h,
+              scaleX,
+              scaleY,
+              scaleW,
+              scaleH,
+            );
+          }
+
+          if (this.timeline[elementId].filter.list[0].name == "blur") {
+            source = this.applyBlur(
+              ctx,
+              video,
+              videoElement,
+              w,
+              h,
+              scaleX,
+              scaleY,
+              scaleW,
+              scaleH,
+            );
+          }
+
+          if (this.timeline[elementId].filter.list[0].name == "radialblur") {
+            source = this.applyRadialBlur(
+              ctx,
+              video,
+              videoElement,
+              w,
+              h,
+              scaleX,
+              scaleY,
+              scaleW,
+              scaleH,
+            );
+          }
+        }
+
+        ctx.globalAlpha = videoElement.opacity / 100;
+
+        if (videoElement.animation["opacity"].isActivate == true) {
+          let index = Math.round((framefps * 1000) / 16);
+          let indexToMs = index * 20;
+          let startTime = Number(this.timeline[elementId].startTime);
+          let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+          try {
+            if (indexPoint < 0) {
+              return false;
             }
 
-            ctx.globalAlpha = videoElement.opacity / 100;
+            const ax = this.findNearestY(
+              videoElement.animation["opacity"].ax,
+              framefps * 1000 - videoElement.startTime,
+            ) as any;
 
-            if (videoElement.animation["opacity"].isActivate == true) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
+            ctx.globalAlpha = this.zeroIfNegative(ax / 100);
+          } catch (error) {}
+        }
 
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
+        if (this.timeline[elementId].animation["scale"].isActivate == true) {
+          const ax = this.getAnimateScale(elementId, framefps * 1000);
+          if (ax != false) {
+            scaleW = w * ax;
+            scaleH = h * ax;
+            compareW = scaleW - w;
+            compareH = scaleH - h;
 
-                const ax = this.findNearestY(
-                  videoElement.animation["opacity"].ax,
-                  (frame / fps) * 1000 - videoElement.startTime,
-                ) as any;
+            scaleX = x - compareW / 2;
+            scaleY = y - compareH / 2;
+          }
+        }
 
-                ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-              } catch (error) {}
+        if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+          const ax = this.getAnimateRotation(elementId, framefps * 1000) as any;
+          if (ax != false) {
+            rotation = ax.ax;
+          }
+        }
+
+        let animationType = "position";
+
+        if (videoElement.animation[animationType].isActivate == true) {
+          let index = Math.round((framefps * 1000) / 16);
+          let indexToMs = index * 20;
+          let startTime = Number(this.timeline[elementId].startTime);
+          let indexPoint = Math.round((indexToMs - startTime) / 20);
+
+          try {
+            if (indexPoint < 0) {
+              return false;
             }
 
-            if (
-              this.timeline[elementId].animation["scale"].isActivate == true
-            ) {
-              const ax = this.getAnimateScale(elementId, (frame / fps) * 1000);
-              if (ax != false) {
-                scaleW = w * ax;
-                scaleH = h * ax;
-                compareW = scaleW - w;
-                compareH = scaleH - h;
+            const ax = this.findNearestY(
+              videoElement.animation[animationType].ax,
+              framefps * 1000 - videoElement.startTime,
+            ) as any;
 
-                scaleX = x - compareW / 2;
-                scaleY = y - compareH / 2;
-              }
-            }
+            const ay = this.findNearestY(
+              videoElement.animation[animationType].ay,
+              framefps * 1000 - videoElement.startTime,
+            ) as any;
 
-            if (
-              this.timeline[elementId].animation["rotation"].isActivate == true
-            ) {
-              const ax = this.getAnimateRotation(
-                elementId,
-                (frame / fps) * 1000,
-              ) as any;
-              if (ax != false) {
-                rotation = ax.ax;
-              }
-            }
-
-            let animationType = "position";
-
-            if (videoElement.animation[animationType].isActivate == true) {
-              let index = Math.round(((frame / fps) * 1000) / 16);
-              let indexToMs = index * 20;
-              let startTime = Number(this.timeline[elementId].startTime);
-              let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-              try {
-                if (indexPoint < 0) {
-                  return false;
-                }
-
-                const ax = this.findNearestY(
-                  videoElement.animation[animationType].ax,
-                  (frame / fps) * 1000 - videoElement.startTime,
-                ) as any;
-
-                const ay = this.findNearestY(
-                  videoElement.animation[animationType].ay,
-                  (frame / fps) * 1000 - videoElement.startTime,
-                ) as any;
-
-                const nx = ax - compareW / 2;
-                const ny = ay - compareH / 2;
-
-                const centerX = scaleX + scaleW / 2;
-                const centerY = scaleY + scaleH / 2;
-
-                ctx.translate(centerX, centerY);
-                ctx.rotate(rotation);
-
-                ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
-
-                ctx.rotate(-rotation);
-                ctx.translate(-centerX, -centerY);
-
-                drawLayer(layerIndex + 1);
-                return;
-              } catch (error) {}
-            }
+            const nx = ax - compareW / 2;
+            const ny = ay - compareH / 2;
 
             const centerX = scaleX + scaleW / 2;
             const centerY = scaleY + scaleH / 2;
@@ -867,24 +837,35 @@ export class RenderController implements ReactiveController {
             ctx.rotate(-rotation);
             ctx.translate(-centerX, -centerY);
 
-            ctx.globalAlpha = 1;
-
-            delayCount += 1;
-
-            drawLayer(layerIndex + 1);
-          };
-
-          loaded[elementId].addEventListener("seeked", onSeeked);
-
-          loaded[elementId].currentTime =
-            (-(this.timeline[elementId].startTime - (frame / fps) * 1000) *
-              this.timeline[elementId].speed) /
-            1000;
+            resolve(true);
+          } catch (error) {}
         }
+
+        const centerX = scaleX + scaleW / 2;
+        const centerY = scaleY + scaleH / 2;
+
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rotation);
+
+        ctx.drawImage(source, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
+
+        ctx.rotate(-rotation);
+        ctx.translate(-centerX, -centerY);
+
+        ctx.globalAlpha = 1;
+
+        resolve(true);
       };
 
-      drawLayer(0);
-    }
+      loaded[elementId].addEventListener("seeked", onSeeked);
+
+      loaded[elementId].currentTime =
+        (-(this.timeline[elementId].startTime - framefps * 1000) *
+          this.timeline[elementId].speed) /
+        1000;
+    });
+
+    return results;
   }
 
   loadMedia() {

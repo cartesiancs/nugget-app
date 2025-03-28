@@ -51,6 +51,9 @@ export type ImageElementType = {
       ax?: number[][];
     };
   };
+  timelineOptions?: {
+    color?: string;
+  };
 };
 
 export type GifElementType = {
@@ -67,6 +70,9 @@ export type GifElementType = {
   localpath?: string;
   filetype?: string;
   ratio?: number;
+  timelineOptions?: {
+    color?: string;
+  };
 };
 
 export type ShapeElementType = {
@@ -88,6 +94,9 @@ export type ShapeElementType = {
   shape?: number[][]; // [[x, y]...]
   option?: {
     fillColor?: string;
+  };
+  timelineOptions?: {
+    color?: string;
   };
 };
 
@@ -143,6 +152,9 @@ export type VideoElementType = {
       x?: CubicKeyframeType[];
       ax?: number[][];
     };
+  };
+  timelineOptions?: {
+    color?: string;
   };
 };
 
@@ -211,6 +223,9 @@ export type TextElementType = {
       ax?: number[][];
     };
   };
+  timelineOptions?: {
+    color?: string;
+  };
 };
 
 export type AudioElementType = {
@@ -224,6 +239,9 @@ export type AudioElementType = {
   localpath?: string;
   filetype?: string;
   speed?: number;
+  timelineOptions?: {
+    color?: string;
+  };
 };
 
 export interface Timeline {

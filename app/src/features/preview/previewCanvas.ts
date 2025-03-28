@@ -1744,6 +1744,9 @@ export class PreviewCanvas extends LitElement {
           ax: [[], []],
         },
       },
+      timelineOptions: {
+        color: "rgb(59, 143, 179)",
+      },
     };
 
     this.timelineState.patchTimeline(this.timeline);

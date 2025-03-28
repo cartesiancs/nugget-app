@@ -67,6 +67,27 @@ const project = {
               project.changeProjectFileValue({ projectDestination: filepath });
             });
         });
+
+        JSZip.loadAsync(data).then(function (zip: any) {
+          zip
+            .file("renderOptions.json")
+            .async("string")
+            .then(async (result) => {
+              let options = JSON.parse(result);
+
+              console.log(options, "Soptions");
+
+              renderOptionStore.getState().updateOptions({
+                previewSize: {
+                  w: options.previewSize.w,
+                  h: options.previewSize.h,
+                },
+                fps: 60,
+                duration: options.videoDuration,
+                backgroundColor: options.backgroundColor,
+              });
+            });
+        });
       });
     });
 
@@ -77,9 +98,14 @@ const project = {
 
   saveProjectFile: function ({ projectDestination }) {
     const elementTimeline = document.querySelector("element-timeline");
+    const renderOptionState = renderOptionStore.getState().options;
+
     const timeline = document.querySelector("element-timeline").timeline;
     const projectDuration = renderOptionStore.getState().options.duration;
     const projectRatio = document.querySelector("element-control").previewRatio;
+    const previewSizeH = renderOptionState.previewSize.h;
+    const previewSizeW = renderOptionState.previewSize.w;
+    const backgroundColor = renderOptionState.backgroundColor;
 
     const zip = new JSZip();
 
@@ -87,6 +113,11 @@ const project = {
       videoDuration: projectDuration,
       previewRatio: projectRatio,
       videoDestination: projectDestination,
+      backgroundColor: backgroundColor,
+      previewSize: {
+        w: previewSizeW,
+        h: previewSizeH,
+      },
     };
 
     zip.file("timeline.json", JSON.stringify(timeline));

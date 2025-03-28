@@ -44,11 +44,13 @@ export class elementTimelineCanvas extends LitElement {
   canvasVerticalScroll: number;
   copyedTimelineData: {};
   isGuide: boolean;
+  targetIdDuringRightClick: any;
 
   constructor() {
     super();
 
     this.targetId = [];
+    this.targetIdDuringRightClick = [];
     this.targetStartTime = {};
     this.targetDuration = {};
     this.targetTrim = {};
@@ -162,7 +164,8 @@ export class elementTimelineCanvas extends LitElement {
       if (Object.prototype.hasOwnProperty.call(this.timeline, key)) {
         const element = this.timeline[key];
         if (!this.timelineColor.hasOwnProperty(key)) {
-          this.timelineColor[key] = this.getRandomColor();
+          // this.timelineColor[key] = this.getRandomColor();
+          this.timelineColor[key] = this.timeline[key].timelineOptions.color;
         }
       }
     }
@@ -979,7 +982,6 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   showMenuDropdown({ x, y }) {
-    // ${this.animationPanelDropdownTemplate()}
     document.querySelector("#menuRightClick").innerHTML = `
         <menu-dropdown-body top="${y}" left="${x}">
         ${this.animationPanelDropdownTemplate()}
@@ -1020,6 +1022,8 @@ export class elementTimelineCanvas extends LitElement {
   whenRightClick(e) {
     const isRightClick = e.which == 3 || e.button == 2;
 
+    this.targetIdDuringRightClick = [...this.targetId];
+
     if (!isRightClick) {
       return 0;
     }
@@ -1028,7 +1032,6 @@ export class elementTimelineCanvas extends LitElement {
       x: e.clientX,
       y: e.clientY,
     });
-    //document.querySelector('element-timeline').removeSeletedElements()
   }
 
   exchangePriority(targetId, next) {
@@ -1108,9 +1111,11 @@ export class elementTimelineCanvas extends LitElement {
   public removeSeletedElements() {
     let isAbleRemove = true;
 
-    for (const key in this.targetId) {
-      if (Object.prototype.hasOwnProperty.call(this.targetId, key)) {
-        const element = this.targetId[key];
+    for (const key in this.targetIdDuringRightClick) {
+      if (
+        Object.prototype.hasOwnProperty.call(this.targetIdDuringRightClick, key)
+      ) {
+        const element = this.targetIdDuringRightClick[key];
         const hasChild = this.searchChildrenKey(element);
         if (!hasChild) {
           this.timelineState.removeTimeline(element);

@@ -119,6 +119,9 @@ export class YoutubeDownload extends LitElement {
           @input=${this._handleInputChange}
           placeholder="Enter Youtube URL"
           class="form-control bg-default text-light"
+          style="
+    width: 400px;
+"
         />
         <button class="btn btn-primary" @click=${this._handleClickDownload}>
           download

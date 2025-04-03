@@ -7,7 +7,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { connectSocket } from "./server/sockets/conn";
 
 export function runServer() {
-  const staticDir = path.join(__dirname, "../app");
+  const staticDir = path.join(__dirname, "../apps/app");
 
   const app = express();
 

@@ -94,7 +94,10 @@ export class ElementTimelineBottomScroll extends LitElement {
         </div>
         <div class="timeline-bottom-grid-end">
           <span
-            class="material-symbols-outlined timeline-bottom-question-icon icon-xs"
+            class="material-symbols-outlined timeline-bottom-question-icon icon-xs ${getLocationEnv() ==
+            "electron"
+              ? ""
+              : "d-none"}"
             data-bs-toggle="modal"
             data-bs-target="#settingAi"
           >

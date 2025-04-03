@@ -142,7 +142,7 @@ const window = {
   },
 
   createOffscreenRenderWindow: () => {
-    const indexFile = "apps/render/dist/index.html";
+    const indexFile = "packages/render/dist/index.html";
 
     const renderWindow = new BrowserWindow({
       width: 100,

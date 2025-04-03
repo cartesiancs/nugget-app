@@ -12,6 +12,8 @@ import { getLocationEnv } from "../../functions/getLocationEnv";
 export class ElementTimelineBottomScroll extends LitElement {
   @property({ attribute: false })
   isRunSelfhosted = false;
+  isRunMcp = false;
+
   openaiKey: string;
 
   constructor() {
@@ -25,6 +27,15 @@ export class ElementTimelineBottomScroll extends LitElement {
     window.electronAPI.req.ai.getKey().then((result) => {
       if (result.status == 1) {
         this.openaiKey = result.value;
+        this.requestUpdate();
+      }
+    });
+  }
+
+  runMcpServer() {
+    window.electronAPI.req.ai.runMcpServer().then((result) => {
+      if (result.status == 1) {
+        this.isRunMcp = true;
         this.requestUpdate();
       }
     });
@@ -206,7 +217,6 @@ export class ElementTimelineBottomScroll extends LitElement {
                   >OpenAI Key</span
                 >
                 <input
-                  id="projectDurationMinute"
                   type="password"
                   class="form-control bg-default text-light"
                   placeholder="openai key"
@@ -215,6 +225,25 @@ export class ElementTimelineBottomScroll extends LitElement {
                   @input=${this._handleSetOpenAIKey}
                 />
               </div>
+
+              <button
+                class="btn btn-primary btn-sm mt-2 ${!this.isRunMcp == true
+                  ? ""
+                  : "d-none"}"
+                @click=${this.runMcpServer}
+              >
+                Run MCP Server
+              </button>
+
+              <input
+                type="text"
+                class="form-control bg-default text-light ${this.isRunMcp ==
+                true
+                  ? ""
+                  : "d-none"}"
+                placeholder="mcp"
+                .value=${"http://localhost:9826/sse"}
+              />
             </div>
           </div>
         </div>

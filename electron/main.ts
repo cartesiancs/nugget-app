@@ -145,6 +145,7 @@ ipcMain.handle("ai:stt", ipcAi.stt);
 ipcMain.handle("ai:text", ipcAi.text);
 ipcMain.handle("ai:setKey", ipcAi.setKey);
 ipcMain.handle("ai:getKey", ipcAi.getKey);
+ipcMain.handle("ai:runMcpServer", ipcAi.runMcpServer);
 
 ipcMain.handle("ytdlp:downloadVideo", ipcYtdlp.downloadVideo);
 

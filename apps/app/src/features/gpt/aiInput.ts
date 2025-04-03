@@ -19,11 +19,7 @@ export class AiInput extends LitElement {
 
   @property()
   uiState: IUIStore = uiStore.getInitialState();
-
-  @property()
   chatLLMState: IChatLLMPanelStore = chatLLMStore.getInitialState();
-
-  @property()
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   createRenderRoot() {
@@ -94,7 +90,7 @@ export class AiInput extends LitElement {
 
       window.electronAPI.req.ai
         .text(
-          "gpt-3.5-turbo-0125",
+          "gpt-4o-mini",
           `${resultList.join("\n")} \n ${lists.join("\n")} \n ${value}`,
         )
         .then((result) => {

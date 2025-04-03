@@ -4,6 +4,7 @@ import fse from "fs-extra";
 import axios from "axios";
 import Store from "electron-store";
 import path from "path";
+import { runMcpServer } from "../mcp/mcpServer";
 const store = new Store();
 
 const llmPromptfilePath = path.join(
@@ -87,6 +88,11 @@ export const ipcAi = {
       console.log(error);
       return { status: 0 };
     }
+  },
+
+  runMcpServer: async (evt, key) => {
+    runMcpServer();
+    return { status: 1 };
   },
 
   setKey: async (evt, key) => {

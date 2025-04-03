@@ -93,6 +93,7 @@ const request = {
     text: (model, question) => ipcRenderer.invoke("ai:text", model, question),
     setKey: (key) => ipcRenderer.invoke("ai:setKey", key),
     getKey: () => ipcRenderer.invoke("ai:getKey"),
+    runMcpServer: () => ipcRenderer.invoke("ai:runMcpServer"),
   },
   stream: {
     saveBufferToVideo: (arrayBuffer) =>

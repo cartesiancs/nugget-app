@@ -1,18 +1,15 @@
 import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
-import { keyframeStore } from "../../states/keyframeStore";
 import { IUIStore, uiStore } from "../../states/uiStore";
 import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
-import { ImageElementType } from "../../@types/timeline";
 import { KeyframeController } from "../../controllers/keyframe";
 import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
 import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element";
-import { millisecondsToPx } from "../../utils/time";
 import { glFilter } from "./glFilter";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 
@@ -20,18 +17,6 @@ type ImageTempType = {
   elementId: string;
   object: any;
 };
-
-function createShader(gl, type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error("셰이더 컴파일 에러:", gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
-  }
-  return shader;
-}
 
 @customElement("preview-canvas")
 export class PreviewCanvas extends LitElement {

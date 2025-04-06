@@ -8,246 +8,158 @@ export type CubicKeyframeType = {
 };
 
 export type VideoFilterType = {
-  name: "chromakey" | "blur";
+  name: "chromakey" | "blur" | "radialblur";
   value: string; //  if chromakey => r=0:g=0:b=0. 구분자는 : 로 구분합니다.
 };
 
-export type ImageElementType = {
-  key?: string;
-  priority?: number;
-  blob?: string;
-  startTime?: number;
-  duration?: number;
-  opacity?: number;
-  location?: { x: number; y: number };
-  rotation?: number;
-  width?: number;
-  height?: number;
-  localpath?: string;
-  filetype?: string;
-  ratio?: number;
-  animation?: {
-    position?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      y?: CubicKeyframeType[];
+type TimelineElementType =
+  | "video"
+  | "image"
+  | "gif"
+  | "shape"
+  | "text"
+  | "audio";
 
-      ax?: number[][];
-      ay?: number[][];
-    };
-    opacity?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-    scale?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-    rotation?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-  };
-  timelineOptions?: {
-    color?: string;
+type TimelinePlaced = {
+  filetype: TimelineElementType;
+  key: string;
+  localpath: string;
+  priority: number;
+  blob: string;
+  startTime: number;
+  duration: number;
+  location: { x: number; y: number }; // TODO: 기존 Audio 정의에 location이 있었는데 왜 있는지 확인 필요
+  timelineOptions: {
+    color: string;
   };
 };
 
-export type GifElementType = {
-  key?: string;
-  priority?: number;
-  blob?: string;
-  startTime?: number;
-  duration?: number;
-  opacity?: number;
-  location?: { x: number; y: number };
-  rotation?: number;
-  width?: number;
-  height?: number;
-  localpath?: string;
-  filetype?: string;
-  ratio?: number;
-  timelineOptions?: {
-    color?: string;
+type Visual = {
+  width: number;
+  height: number;
+  ratio: number;
+  opacity: number;
+  rotation: number;
+};
+
+// Shape는 opacity만 애니메이팅 가능하므로 다른 속성을 지원할 때 까지 임시 타입을 사용한다다
+type OpacityAnimatable = {
+  animation: {
+    opacity: {
+      isActivate: boolean;
+      x: CubicKeyframeType[];
+      ax: number[][];
+    };
   };
 };
 
-export type ShapeElementType = {
-  key?: string;
-  priority?: number;
-  blob?: string;
-  startTime?: number;
-  duration?: number;
-  opacity?: number;
-  location?: { x: number; y: number };
-  rotation?: number;
-  width?: number;
-  height?: number;
-  oWidth?: number; // 원래 shape 사이즈
-  oHeight?: number;
-  filetype?: string;
-  ratio?: number;
-  localpath?: string;
-  shape?: number[][]; // [[x, y]...]
-  option?: {
-    fillColor?: string;
-  };
-  timelineOptions?: {
-    color?: string;
+type Animatable = OpacityAnimatable & {
+  animation: {
+    position: {
+      isActivate: boolean;
+      x: CubicKeyframeType[];
+      y: CubicKeyframeType[];
+
+      ax: number[][];
+      ay: number[][];
+    };
+    scale: {
+      isActivate: boolean;
+      x: CubicKeyframeType[];
+      ax: number[][];
+    };
+    rotation: {
+      isActivate: boolean;
+      x: CubicKeyframeType[];
+      ax: number[][];
+    };
   };
 };
 
-export type VideoElementType = {
-  key?: string;
+export type ImageElementType = TimelinePlaced &
+  Visual &
+  Animatable & {
+    filetype: "image";
+  };
 
-  priority?: number;
-  blob?: string;
-  startTime?: number;
-  duration?: number;
-  location?: { x: number; y: number };
-  trim?: { startTime: number; endTime: number };
-  rotation?: number;
-  width?: number;
-  height?: number;
-  localpath?: string;
-  isExistAudio?: boolean;
-  filetype?: string;
-  codec?: { video: string; audio: string };
-  ratio?: number;
-  speed?: number;
-  opacity?: number;
+export type GifElementType = TimelinePlaced &
+  Visual & {
+    filetype: "gif";
+  };
 
-  filter?: {
-    enable?: boolean;
-    list?: VideoFilterType[];
+export type ShapeElementType = TimelinePlaced &
+  Visual &
+  OpacityAnimatable & {
+    filetype: "shape";
+    oWidth: number; // 원래 shape 사이즈
+    oHeight: number;
+    shape: number[][]; // [[x, y]...]
+    option: {
+      fillColor: string;
+    };
   };
-  origin?: {
-    width?: number;
-    height?: number;
-  };
-  animation?: {
-    position?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      y?: CubicKeyframeType[];
 
-      ax?: number[][];
-      ay?: number[][];
+export type VideoElementType = TimelinePlaced &
+  Visual &
+  Animatable & {
+    filetype: "video";
+    trim: { startTime: number; endTime: number };
+    isExistAudio: boolean;
+    codec: { video: string; audio: string };
+    speed: number;
+    filter: {
+      enable: boolean;
+      list: VideoFilterType[];
     };
-    opacity?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-    scale?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-    rotation?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
+    origin: {
+      width: number;
+      height: number;
     };
   };
-  timelineOptions?: {
-    color?: string;
-  };
-};
 
 // parentKey must be 1 top depth
-export type TextElementType = {
-  key?: string;
-  parentKey?: string | "standalone";
-  blob?: string;
-
-  priority?: number;
-  startTime?: number;
-  duration?: number;
-  text?: string;
-  textcolor?: string;
-  fontsize?: number;
-  fontpath?: string;
-  fontname?: string;
-  fontweight?: string;
-  fonttype?: string;
-  letterSpacing?: number;
-  options?: {
-    isBold?: boolean;
-    isItalic?: boolean;
-    align?: "left" | "center" | "right";
-    outline?: {
-      enable?: boolean;
-      size?: number;
-      color?: string;
+export type TextElementType = TimelinePlaced &
+  Visual &
+  Animatable & {
+    filetype: "text";
+    parentKey: string | "standalone";
+    text: string;
+    textcolor: string;
+    fontsize: number;
+    fontpath: string;
+    fontname: string;
+    fontweight: string;
+    fonttype: string;
+    letterSpacing: number;
+    options: {
+      isBold: boolean;
+      isItalic: boolean;
+      align: "left" | "center" | "right";
+      outline: {
+        enable: boolean;
+        size: number;
+        color: string;
+      };
     };
-  };
-  background?: {
-    enable?: boolean;
-    color?: string;
-  };
-  location?: { x: number; y: number };
-  rotation?: number;
-  localpath?: string;
-  filetype?: string;
-  height?: number;
-  width?: number;
-  widthInner?: number;
-  ratio?: number;
-
-  animation?: {
-    position?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      y?: CubicKeyframeType[];
-
-      ax?: number[][];
-      ay?: number[][];
+    background: {
+      enable: boolean;
+      color: string;
     };
-    opacity?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-    scale?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
-    rotation?: {
-      isActivate?: boolean;
-      x?: CubicKeyframeType[];
-      ax?: number[][];
-    };
+    widthInner: number;
   };
-  timelineOptions?: {
-    color?: string;
-  };
-};
 
-export type AudioElementType = {
-  key?: string;
-
-  priority?: number;
-  startTime?: number;
-  duration?: number;
-  location?: { x: number; y: number };
-  trim?: { startTime: number; endTime: number };
-  localpath?: string;
-  filetype?: string;
-  speed?: number;
-  timelineOptions?: {
-    color?: string;
-  };
+export type AudioElementType = TimelinePlaced & {
+  filetype: "audio";
+  trim: { startTime: number; endTime: number };
+  speed: number;
 };
 
 export interface Timeline {
-  [elementId: string]: ImageElementType &
-    VideoElementType &
-    TextElementType &
-    AudioElementType &
-    GifElementType;
+  [elementId: string]:
+    | ImageElementType
+    | VideoElementType
+    | TextElementType
+    | AudioElementType
+    | GifElementType
+    | ShapeElementType;
 }

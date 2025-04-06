@@ -12,10 +12,19 @@ import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element";
 import { glFilter } from "./glFilter";
 import { getLocationEnv } from "../../functions/getLocationEnv";
+import type { AudioElementType, VideoElementType } from "../../@types/timeline";
 
 type ImageTempType = {
   elementId: string;
   object: any;
+};
+
+type LoadedVideo = {
+  elementId: string;
+  path: string;
+  canvas: HTMLCanvasElement;
+  object: HTMLVideoElement;
+  isPlay: boolean;
 };
 
 @customElement("preview-canvas")
@@ -51,7 +60,7 @@ export class PreviewCanvas extends LitElement {
   gifCanvas: { frameImageData: any; tempCtx: any };
   gifFrames: { key: string; frames: ParsedFrame[] }[];
   nowShapeId: string;
-  loadedVideos: any[];
+  loadedVideos: LoadedVideo[];
   isChangeFilter: boolean;
   isRotation: boolean;
   constructor() {
@@ -74,7 +83,7 @@ export class PreviewCanvas extends LitElement {
 
     this.gifCanvas = {
       frameImageData: null,
-      tempCtx: this.gifTempCanvas.getContext("2d") as any,
+      tempCtx: this.gifTempCanvas.getContext("2d") as CanvasRenderingContext2D,
     };
 
     this.gifFrames = [];
@@ -98,7 +107,7 @@ export class PreviewCanvas extends LitElement {
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
   @property()
-  timeline: any = this.timelineState.timeline;
+  timeline = this.timelineState.timeline;
 
   @property()
   timelineRange = this.timelineState.range;
@@ -176,7 +185,7 @@ export class PreviewCanvas extends LitElement {
     this.canvas.style.cursor = this.cursorType;
   }
 
-  zeroIfNegative(num) {
+  zeroIfNegative(num: number) {
     if (num > 0) {
       return num;
     } else {
@@ -184,8 +193,8 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  findNearestY(pairs, a): number | null {
-    let closestY = null;
+  findNearestY(pairs: number[][], a: number): number | null {
+    let closestY: number | null = null;
     let closestDiff = Infinity;
 
     for (const [x, y] of pairs) {
@@ -199,7 +208,17 @@ export class PreviewCanvas extends LitElement {
     return closestY;
   }
 
-  drawTextStroke(ctx, elementId, text, x, y, fontSize) {
+  drawTextStroke(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    text: string,
+    x: number,
+    y: number,
+    fontSize: number,
+  ) {
+    if (this.timeline[elementId].filetype != "text") {
+      return;
+    }
     if (this.timeline[elementId].options.outline.enable) {
       ctx.font = `${
         this.timeline[elementId].options.isItalic ? "italic" : ""
@@ -207,13 +226,23 @@ export class PreviewCanvas extends LitElement {
         this.timeline[elementId].options.isBold ? "bold" : ""
       } ${fontSize}px ${this.timeline[elementId].fontname}`;
 
-      ctx.lineWidth = parseInt(this.timeline[elementId].options.outline.size);
+      ctx.lineWidth = this.timeline[elementId].options.outline.size;
       ctx.strokeStyle = this.timeline[elementId].options.outline.color;
       ctx.strokeText(text, x, y);
     }
   }
 
-  drawTextBackground(ctx, elementId, x, y, w, h) {
+  drawTextBackground(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) {
+    if (this.timeline[elementId].filetype != "text") {
+      return;
+    }
     if (this.timeline[elementId].background.enable) {
       const backgroundPadding = 12;
       let backgroundX = x;
@@ -333,36 +362,30 @@ export class PreviewCanvas extends LitElement {
       ctx.fillStyle = this.renderOption.backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const sortedTimeline = Object.fromEntries(
-        Object.entries(this.timeline).sort(
-          ([, valueA]: any, [, valueB]: any) =>
-            valueA.priority - valueB.priority,
-        ),
+      const sortedTimeline = Object.entries(this.timeline).sort(
+        ([, valueA], [, valueB]) => valueA.priority - valueB.priority,
       );
 
-      for (const elementId in sortedTimeline) {
-        if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
-          const x = this.timeline[elementId].location?.x as number;
-          const y = this.timeline[elementId].location?.y as number;
-          const w = this.timeline[elementId].width as number;
-          const h = this.timeline[elementId].height as number;
-          const rotation = this.timeline[elementId].rotation as number;
+      for (const [elementId, element] of sortedTimeline) {
+        if (element.filetype != "audio") {
+          const x = element.location.x;
+          const y = element.location.y;
+          const w = element.width;
+          const h = element.height;
 
-          const fileType = this.timeline[elementId].filetype;
+          const fileType = element.filetype;
           let additionalStartTime = 0;
 
           if (fileType == "text") {
-            if (this.timeline[elementId].parentKey != "standalone") {
+            if (element.parentKey != "standalone") {
               const parentStartTime =
-                this.timeline[this.timeline[elementId].parentKey].startTime;
+                this.timeline[element.parentKey].startTime;
               additionalStartTime = parentStartTime;
             }
           }
 
-          const startTime =
-            (this.timeline[elementId].startTime as number) +
-            additionalStartTime;
-          const duration = this.timeline[elementId].duration as number;
+          const startTime = element.startTime + additionalStartTime;
+          const duration = element.duration;
 
           const elementType = elementUtils.getElementType(fileType);
 
@@ -376,11 +399,13 @@ export class PreviewCanvas extends LitElement {
               continue;
             }
           } else {
+            // TODO: elementType을 타입 체크와 연계되도록 수정 필요
+            const speed = (element as VideoElementType | AudioElementType)
+              .speed;
             if (
               !(
                 this.timelineCursor >= startTime &&
-                this.timelineCursor <
-                  startTime + duration / this.timeline[elementId].speed
+                this.timelineCursor < startTime + duration / speed
               )
             ) {
               continue;
@@ -420,7 +445,15 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  drawOutline(ctx, elementId, x, y, w, h, a) {
+  drawOutline(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    a: number,
+  ) {
     if (this.activeElementId == elementId) {
       const padding = 10;
       ctx.lineWidth = 3;
@@ -452,8 +485,19 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  drawVideo(ctx, elementId, w, h, x, y, startTime) {
-    const videoElement = this.timeline[elementId] as any;
+  drawVideo(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    w: number,
+    h: number,
+    x: number,
+    y: number,
+    startTime: number,
+  ) {
+    const videoElement = this.timeline[elementId];
+    if (videoElement.filetype != "video") {
+      return;
+    }
     let scaleW = w;
     let scaleH = h;
     let scaleX = x;
@@ -463,9 +507,8 @@ export class PreviewCanvas extends LitElement {
 
     if (
       !(
-        this.timelineCursor >=
-          startTime + this.timeline[elementId].trim.startTime &&
-        this.timelineCursor < startTime + this.timeline[elementId].trim.endTime
+        this.timelineCursor >= startTime + videoElement.trim.startTime &&
+        this.timelineCursor < startTime + videoElement.trim.endTime
       )
     ) {
       if (
@@ -495,23 +538,16 @@ export class PreviewCanvas extends LitElement {
       });
 
       const video = this.loadedVideos[videoIndex];
-      let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+      let rotation = videoElement.rotation * (Math.PI / 180);
       ctx.globalAlpha = videoElement.opacity / 100;
 
       video.object.muted = false;
 
       let source = video.object;
 
-      if (
-        this.timeline[elementId].filter.enable &&
-        this.timeline[elementId].filter.list.length > 0
-      ) {
-        for (
-          let index = 0;
-          index < this.timeline[elementId].filter.list.length;
-          index++
-        ) {
-          const filter = this.timeline[elementId].filter.list[index];
+      if (videoElement.filter.enable && videoElement.filter.list.length > 0) {
+        for (let index = 0; index < videoElement.filter.list.length; index++) {
+          const filter = videoElement.filter.list[index];
           if (filter.name == "chromakey") {
             source = glFilter.applyChromaKey(
               ctx,
@@ -562,7 +598,7 @@ export class PreviewCanvas extends LitElement {
       if (videoElement.animation["opacity"].isActivate == true) {
         let index = Math.round(this.timelineCursor / 16);
         let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
+        let startTime = videoElement.startTime;
         let indexPoint = Math.round((indexToMs - startTime) / 20);
 
         try {
@@ -573,7 +609,11 @@ export class PreviewCanvas extends LitElement {
           const ax = this.findNearestY(
             videoElement.animation["opacity"].ax,
             this.timelineCursor - videoElement.startTime,
-          ) as any;
+          );
+
+          if (ax == null) {
+            return false;
+          }
 
           ctx.globalAlpha = this.zeroIfNegative(ax / 100);
         } catch (error) {}
@@ -600,7 +640,7 @@ export class PreviewCanvas extends LitElement {
         } else {
           let index = Math.round(this.timelineCursor / 16);
           let indexToMs = index * 20;
-          let startTime = Number(this.timeline[elementId].startTime);
+          let startTime = videoElement.startTime;
           let indexPoint = Math.round((indexToMs - startTime) / 20);
 
           try {
@@ -611,12 +651,16 @@ export class PreviewCanvas extends LitElement {
             const ax = this.findNearestY(
               videoElement.animation[animationType].ax,
               this.timelineCursor - videoElement.startTime,
-            ) as any;
+            );
 
             const ay = this.findNearestY(
               videoElement.animation[animationType].ay,
               this.timelineCursor - videoElement.startTime,
-            ) as any;
+            );
+
+            if (ax == null || ay == null) {
+              return false;
+            }
 
             x = ax - compareW / 2;
             y = ay - compareH / 2;
@@ -647,8 +691,8 @@ export class PreviewCanvas extends LitElement {
         }
       }
 
-      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
-        const ax = this.getAnimateRotation(elementId) as any;
+      if (videoElement.animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId);
         if (ax != false) {
           rotation = ax.ax;
         }
@@ -675,7 +719,7 @@ export class PreviewCanvas extends LitElement {
       ctx.translate(-centerX, -centerY);
     } else {
       const video = document.createElement("video");
-      video.playbackRate = this.timeline[elementId].speed;
+      video.playbackRate = videoElement.speed;
 
       const canvas = document.createElement("canvas");
       canvas.width = w;
@@ -683,12 +727,12 @@ export class PreviewCanvas extends LitElement {
 
       this.loadedVideos.push({
         elementId: elementId,
-        path: this.getPath(this.timeline[elementId].localpath),
+        path: this.getPath(videoElement.localpath),
         canvas: canvas,
         object: video,
         isPlay: false,
       });
-      video.src = this.getPath(this.timeline[elementId].localpath);
+      video.src = this.getPath(videoElement.localpath);
 
       ctx.drawImage(video, x, y, w, h);
 
@@ -701,15 +745,25 @@ export class PreviewCanvas extends LitElement {
     ctx.globalAlpha = 1;
   }
 
-  drawImage(ctx, elementId, w, h, x, y) {
-    const imageElement = this.timeline[elementId] as any;
+  drawImage(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    w: number,
+    h: number,
+    x: number,
+    y: number,
+  ) {
+    const imageElement = this.timeline[elementId];
+    if (imageElement.filetype != "image") {
+      return;
+    }
     let scaleW = w;
     let scaleH = h;
     let scaleX = x;
     let scaleY = y;
     let compareW = 1;
     let compareH = 1;
-    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+    let rotation = imageElement.rotation * (Math.PI / 180);
 
     if (
       this.loadedObjects.findIndex((item: ImageTempType) => {
@@ -724,7 +778,7 @@ export class PreviewCanvas extends LitElement {
       if (imageElement.animation["opacity"].isActivate == true) {
         let index = Math.round(this.timelineCursor / 16);
         let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
+        let startTime = Number(imageElement.startTime);
         let indexPoint = Math.round((indexToMs - startTime) / 20);
 
         try {
@@ -735,7 +789,11 @@ export class PreviewCanvas extends LitElement {
           const ax = this.findNearestY(
             imageElement.animation["opacity"].ax,
             this.timelineCursor - imageElement.startTime,
-          ) as any;
+          );
+
+          if (ax == null) {
+            return false;
+          }
 
           ctx.globalAlpha = this.zeroIfNegative(ax / 100);
         } catch (error) {}
@@ -754,8 +812,8 @@ export class PreviewCanvas extends LitElement {
         }
       }
 
-      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
-        const ax = this.getAnimateRotation(elementId) as any;
+      if (imageElement.animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId);
         if (ax != false) {
           rotation = ax.ax;
         }
@@ -767,7 +825,7 @@ export class PreviewCanvas extends LitElement {
         if (this.isMove && this.activeElementId == elementId) {
           ctx.drawImage(img.object, x, y, w, h);
         } else {
-          const result = this.getAnimatePosition(elementId) as any;
+          const result = this.getAnimatePosition(elementId);
           if (result != false) {
             scaleX = result.ax - compareW / 2;
             scaleY = result.ay - compareH / 2;
@@ -836,7 +894,11 @@ export class PreviewCanvas extends LitElement {
     ctx.globalAlpha = 1;
   }
 
-  public preloadImage(elementId) {
+  public preloadImage(elementId: string) {
+    const imageElement = this.timeline[elementId];
+    if (imageElement.filetype != "image") {
+      return;
+    }
     let img = new Image();
 
     img.onload = () => {
@@ -860,12 +922,22 @@ export class PreviewCanvas extends LitElement {
       this.drawCanvas(this.canvas);
     };
 
-    img.src = this.getPath(this.timeline[elementId].localpath);
+    img.src = this.getPath(imageElement.localpath);
   }
 
-  drawGif(ctx, elementId, w, h, x, y) {
-    const imageElement = this.timeline[elementId] as any;
-    const rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+  drawGif(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    w: number,
+    h: number,
+    x: number,
+    y: number,
+  ) {
+    const imageElement = this.timeline[elementId];
+    if (imageElement.filetype != "gif") {
+      return;
+    }
+    const rotation = imageElement.rotation * (Math.PI / 180);
 
     if (
       this.gifFrames.findIndex((item) => {
@@ -875,7 +947,7 @@ export class PreviewCanvas extends LitElement {
       const imageIndex = this.gifFrames.findIndex((item) => {
         return item.key == elementId;
       });
-      ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+      ctx.globalAlpha = imageElement.opacity / 100;
 
       const delay = this.gifFrames[imageIndex].frames[0].delay;
 
@@ -916,7 +988,7 @@ export class PreviewCanvas extends LitElement {
       ctx.translate(-centerX, -centerY);
       ctx.globalAlpha = 1;
     } else {
-      fetch(this.getPath(this.timeline[elementId].localpath))
+      fetch(this.getPath(imageElement.localpath))
         .then((resp) => resp.arrayBuffer())
         .then((buff) => {
           let gif = parseGIF(buff);
@@ -955,26 +1027,37 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  drawText(ctx, elementId, w, h, x, y) {
+  drawText(
+    ctx: CanvasRenderingContext2D,
+    elementId: string,
+    w: number,
+    h: number,
+    x: number,
+    y: number,
+  ) {
+    const textElement = this.timeline[elementId];
+    if (textElement.filetype != "text") {
+      return;
+    }
     let scaleW = w;
     let scaleH = h;
     let tx = x;
     let ty = y;
-    let fontSize = this.timeline[elementId].fontsize;
+    let fontSize = textElement.fontsize;
     let compare = 1;
-    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+    let rotation = textElement.rotation * (Math.PI / 180);
 
     try {
       if (this.isEditText) {
         return false;
       }
 
-      ctx.globalAlpha = this.timeline[elementId].opacity / 100;
+      ctx.globalAlpha = textElement.opacity / 100;
 
-      if (this.timeline[elementId].animation["opacity"].isActivate == true) {
+      if (textElement.animation["opacity"].isActivate == true) {
         let index = Math.round(this.timelineCursor / 16);
         let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
+        let startTime = Number(textElement.startTime);
         let indexPoint = Math.round((indexToMs - startTime) / 20);
 
         try {
@@ -983,39 +1066,39 @@ export class PreviewCanvas extends LitElement {
           }
 
           const ax = this.findNearestY(
-            this.timeline[elementId].animation["opacity"].ax,
-            this.timelineCursor - this.timeline[elementId].startTime,
-          ) as any;
+            textElement.animation["opacity"].ax,
+            this.timelineCursor - textElement.startTime,
+          );
+
+          if (ax == null) {
+            return false;
+          }
 
           ctx.globalAlpha = this.zeroIfNegative(ax / 100);
         } catch (error) {}
       }
 
-      if (this.timeline[elementId].animation["scale"].isActivate == true) {
+      if (textElement.animation["scale"].isActivate == true) {
         const ax = this.getAnimateScale(elementId);
         if (ax != false) {
-          fontSize = this.timeline[elementId].fontsize * (ax / 10);
+          fontSize = textElement.fontsize * (ax / 10);
         }
       }
 
-      ctx.fillStyle = this.timeline[elementId].textcolor as string;
+      ctx.fillStyle = textElement.textcolor;
       ctx.lineWidth = 0;
-      ctx.letterSpacing = `${this.timeline[elementId].letterSpacing}px`;
+      ctx.letterSpacing = `${textElement.letterSpacing}px`;
 
-      ctx.font = `${
-        this.timeline[elementId].options.isItalic ? "italic" : ""
-      } ${
-        this.timeline[elementId].options.isBold ? "bold" : ""
-      } ${fontSize}px ${this.timeline[elementId].fontname}`;
+      ctx.font = `${textElement.options.isItalic ? "italic" : ""} ${
+        textElement.options.isBold ? "bold" : ""
+      } ${fontSize}px ${textElement.fontname}`;
 
       let animationType = "position";
 
-      if (
-        this.timeline[elementId].animation[animationType].isActivate == true
-      ) {
+      if (textElement.animation[animationType].isActivate == true) {
         let index = Math.round(this.timelineCursor / 16);
         let indexToMs = index * 20;
-        let startTime = Number(this.timeline[elementId].startTime);
+        let startTime = Number(textElement.startTime);
         let indexPoint = Math.round((indexToMs - startTime) / 20);
 
         try {
@@ -1024,22 +1107,26 @@ export class PreviewCanvas extends LitElement {
           }
 
           const ax = this.findNearestY(
-            this.timeline[elementId].animation[animationType].ax,
-            this.timelineCursor - this.timeline[elementId].startTime,
-          ) as any;
+            textElement.animation[animationType].ax,
+            this.timelineCursor - textElement.startTime,
+          );
 
           const ay = this.findNearestY(
-            this.timeline[elementId].animation[animationType].ay,
-            this.timelineCursor - this.timeline[elementId].startTime,
-          ) as any;
+            textElement.animation[animationType].ay,
+            this.timelineCursor - textElement.startTime,
+          );
+
+          if (ax == null || ay == null) {
+            return false;
+          }
 
           tx = ax;
           ty = ay;
         } catch (error) {}
       }
 
-      if (this.timeline[elementId].animation["rotation"].isActivate == true) {
-        const ax = this.getAnimateRotation(elementId) as any;
+      if (textElement.animation["rotation"].isActivate == true) {
+        const ax = this.getAnimateRotation(elementId);
         if (ax != false) {
           rotation = ax.ax;
         }
@@ -1066,12 +1153,12 @@ export class PreviewCanvas extends LitElement {
 
       this.drawTextBackground(ctx, elementId, tx, ty, scaleW, scaleH);
 
-      ctx.fillStyle = this.timeline[elementId].textcolor as string;
+      ctx.fillStyle = textElement.textcolor;
 
-      if (this.timeline[elementId].options.align == "left") {
-        const textSplited = this.timeline[elementId].text.split(" ");
+      if (textElement.options.align == "left") {
+        const textSplited = textElement.text.split(" ");
         let line = "";
-        let textY = ty + (this.timeline[elementId].fontsize || 0);
+        let textY = ty + (textElement.fontsize || 0);
         let lineHeight = h;
 
         for (let index = 0; index < textSplited.length; index++) {
@@ -1091,10 +1178,10 @@ export class PreviewCanvas extends LitElement {
 
         this.drawTextStroke(ctx, elementId, line, tx, textY, fontSize);
         ctx.fillText(line, tx, textY);
-      } else if (this.timeline[elementId].options.align == "center") {
-        const textSplited = this.timeline[elementId].text.split(" ");
+      } else if (textElement.options.align == "center") {
+        const textSplited = textElement.text.split(" ");
         let line = "";
-        let textY = ty + (this.timeline[elementId].fontsize || 0);
+        let textY = ty + (textElement.fontsize || 0);
         let lineHeight = h;
 
         for (let index = 0; index < textSplited.length; index++) {
@@ -1131,10 +1218,10 @@ export class PreviewCanvas extends LitElement {
           fontSize,
         );
         ctx.fillText(line, tx + w / 2 - lastWordWidth / 2, textY);
-      } else if (this.timeline[elementId].options.align == "right") {
-        const textSplited = this.timeline[elementId].text.split(" ");
+      } else if (textElement.options.align == "right") {
+        const textSplited = textElement.text.split(" ");
         let line = "";
-        let textY = ty + (this.timeline[elementId].fontsize || 0);
+        let textY = ty + (textElement.fontsize || 0);
         let lineHeight = h;
 
         for (let index = 0; index < textSplited.length; index++) {
@@ -1180,20 +1267,23 @@ export class PreviewCanvas extends LitElement {
     } catch (error) {}
   }
 
-  drawShape(ctx, elementId) {
-    const target = this.timeline[elementId];
+  drawShape(ctx: CanvasRenderingContext2D, elementId: string) {
+    const shapeElement = this.timeline[elementId];
+    if (shapeElement.filetype != "shape") {
+      return false;
+    }
 
-    let scaleW = target.width;
-    let scaleH = target.height;
-    let scaleX = target.location.x;
-    let scaleY = target.location.y;
-    let rotation = this.timeline[elementId].rotation * (Math.PI / 180);
+    let scaleW = shapeElement.width;
+    let scaleH = shapeElement.height;
+    let scaleX = shapeElement.location.x;
+    let scaleY = shapeElement.location.y;
+    let rotation = shapeElement.rotation * (Math.PI / 180);
 
-    ctx.globalAlpha = target.opacity / 100;
-    if (target.animation["opacity"].isActivate == true) {
+    ctx.globalAlpha = shapeElement.opacity / 100;
+    if (shapeElement.animation["opacity"].isActivate == true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
-      let startTime = Number(this.timeline[elementId].startTime);
+      let startTime = Number(shapeElement.startTime);
       let indexPoint = Math.round((indexToMs - startTime) / 20);
 
       try {
@@ -1202,9 +1292,13 @@ export class PreviewCanvas extends LitElement {
         }
 
         const ax = this.findNearestY(
-          target.animation["opacity"].ax,
-          this.timelineCursor - target.startTime,
-        ) as any;
+          shapeElement.animation["opacity"].ax,
+          this.timelineCursor - shapeElement.startTime,
+        );
+
+        if (ax == null) {
+          return false;
+        }
 
         ctx.globalAlpha = this.zeroIfNegative(ax / 100);
       } catch (error) {}
@@ -1218,14 +1312,14 @@ export class PreviewCanvas extends LitElement {
 
     ctx.beginPath();
 
-    const ratio = target.oWidth / target.width;
+    const ratio = shapeElement.oWidth / shapeElement.width;
 
-    for (let index = 0; index < target.shape.length; index++) {
-      const element = target.shape[index];
-      const x = element[0] / ratio + target.location.x;
-      const y = element[1] / ratio + target.location.y;
+    for (let index = 0; index < shapeElement.shape.length; index++) {
+      const element = shapeElement.shape[index];
+      const x = element[0] / ratio + shapeElement.location.x;
+      const y = element[1] / ratio + shapeElement.location.y;
 
-      ctx.fillStyle = target.option.fillColor;
+      ctx.fillStyle = shapeElement.option.fillColor;
       if (this.nowShapeId == elementId) {
         ctx.arc(x - centerX, y - centerY, 8, 0, 5 * Math.PI);
       }
@@ -1255,7 +1349,7 @@ export class PreviewCanvas extends LitElement {
     ctx.globalAlpha = 1;
   }
 
-  getPath(path) {
+  getPath(path: string) {
     const nowEnv = getLocationEnv();
     let filepath = path;
     if (nowEnv == "electron") {
@@ -1269,11 +1363,13 @@ export class PreviewCanvas extends LitElement {
     return filepath;
   }
 
-  drawKeyframePath(ctx, elementId) {
-    const imageElement = this.timeline[elementId] as any;
-    const fileType = this.timeline[elementId].filetype;
+  drawKeyframePath(ctx: CanvasRenderingContext2D, elementId: string) {
+    const imageElement = this.timeline[elementId];
+    if (imageElement.filetype != "image") {
+      return false;
+    }
+
     const animationType = "position";
-    if (fileType != "image") return false;
     if (imageElement.animation[animationType].isActivate != true) return false;
 
     try {
@@ -1292,7 +1388,7 @@ export class PreviewCanvas extends LitElement {
     } catch (error) {}
   }
 
-  drawAlign(ctx, direction) {
+  drawAlign(ctx: CanvasRenderingContext2D, direction: string[]) {
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#ffffff";
     if (direction.includes("top")) {
@@ -1349,7 +1445,10 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  getAnimateScale(elementId): number | any {
+  getAnimateScale(elementId): number | false {
+    if (!("animation" in this.timeline[elementId])) {
+      return false;
+    }
     if (this.timeline[elementId].animation["scale"].isActivate == true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
@@ -1364,16 +1463,26 @@ export class PreviewCanvas extends LitElement {
         const ax = this.findNearestY(
           this.timeline[elementId].animation["scale"].ax,
           this.timelineCursor - this.timeline[elementId].startTime,
-        ) as number;
+        );
+
+        if (ax == null) {
+          return false;
+        }
 
         return ax / 10;
       } catch (error) {
         return 1;
       }
     }
+
+    return false;
   }
 
-  getAnimatePosition(elementId) {
+  getAnimatePosition(elementId: string) {
+    if (!("animation" in this.timeline[elementId])) {
+      return false;
+    }
+
     if (this.timeline[elementId].animation["position"].isActivate == true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
@@ -1388,12 +1497,16 @@ export class PreviewCanvas extends LitElement {
         const ax = this.findNearestY(
           this.timeline[elementId].animation["position"].ax,
           this.timelineCursor - this.timeline[elementId].startTime,
-        ) as any;
+        );
 
         const ay = this.findNearestY(
           this.timeline[elementId].animation["position"].ay,
           this.timelineCursor - this.timeline[elementId].startTime,
-        ) as any;
+        );
+
+        if (ax == null || ay == null) {
+          return false;
+        }
 
         return {
           ax: ax,
@@ -1403,13 +1516,19 @@ export class PreviewCanvas extends LitElement {
         return false;
       }
     }
+
+    return false;
   }
 
   getAnimateRotation(elementId) {
+    if (!("animation" in this.timeline[elementId])) {
+      return false;
+    }
+
     if (this.timeline[elementId].animation["rotation"].isActivate == true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
-      let startTime = Number(this.timeline[elementId].startTime);
+      let startTime = this.timeline[elementId].startTime;
       let indexPoint = Math.round((indexToMs - startTime) / 20);
 
       try {
@@ -1420,7 +1539,11 @@ export class PreviewCanvas extends LitElement {
         const ax = this.findNearestY(
           this.timeline[elementId].animation["rotation"].ax,
           this.timelineCursor - this.timeline[elementId].startTime,
-        ) as any;
+        );
+
+        if (ax == null) {
+          return false;
+        }
 
         return {
           ax: ax * (Math.PI / 180),
@@ -1429,6 +1552,8 @@ export class PreviewCanvas extends LitElement {
         return false;
       }
     }
+
+    return false;
   }
 
   setChangeFilter() {
@@ -1494,7 +1619,25 @@ export class PreviewCanvas extends LitElement {
     }
   }
 
-  collisionCheck({ x, y, w, h, mx, my, padding, rotation = 0 }) {
+  collisionCheck({
+    x,
+    y,
+    w,
+    h,
+    mx,
+    my,
+    padding,
+    rotation = 0,
+  }: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    mx: number;
+    my: number;
+    padding: number;
+    rotation: number;
+  }) {
     const cx = x + w / 2;
     const cy = y + h / 2;
 
@@ -1609,16 +1752,20 @@ export class PreviewCanvas extends LitElement {
   }
 
   addAnimationPoint(x, y) {
-    const fileType = this.timeline[this.activeElementId].filetype;
-    const startTime = this.timeline[this.activeElementId].startTime;
+    const activeElement = this.timeline[this.activeElementId];
+    const startTime = activeElement.startTime;
 
     const animationType = "position";
-    if (!["image", "video", "text"].includes(fileType)) return false;
 
     if (
-      this.timeline[this.activeElementId].animation["position"].isActivate !=
-      true
+      activeElement.filetype != "image" &&
+      activeElement.filetype != "video" &&
+      activeElement.filetype != "text"
     ) {
+      return false;
+    }
+
+    if (activeElement.animation["position"].isActivate != true) {
       return false;
     }
 
@@ -1647,11 +1794,14 @@ export class PreviewCanvas extends LitElement {
     for (let index = 0; index < this.loadedVideos.length; index++) {
       try {
         const element = this.loadedVideos[index];
+        const videoElement = this.timeline[
+          element.elementId
+        ] as VideoElementType;
         element.isPlay = false;
         element.object.pause();
         element.object.currentTime =
-          (-(this.timeline[element.elementId].startTime - this.timelineCursor) *
-            this.timeline[element.elementId].speed) /
+          (-(videoElement.startTime - this.timelineCursor) *
+            videoElement.speed) /
           1000;
 
         this.drawCanvas(this.canvas);
@@ -1663,22 +1813,25 @@ export class PreviewCanvas extends LitElement {
     for (let index = 0; index < this.loadedVideos.length; index++) {
       try {
         const element = this.loadedVideos[index];
+        const videoElement = this.timeline[
+          element.elementId
+        ] as VideoElementType;
         element.isPlay = true;
         element.object.currentTime =
-          (-(this.timeline[element.elementId].startTime - this.timelineCursor) *
-            this.timeline[element.elementId].speed) /
+          (-(videoElement.startTime - this.timelineCursor) *
+            videoElement.speed) /
           1000;
 
-        element.object.playbackRate = this.timeline[element.elementId].speed;
+        element.object.playbackRate = videoElement.speed;
         element.object.muted = true;
-        console.log(this.timeline[element.elementId].speed);
+        console.log(videoElement.speed);
 
         element.object.play();
       } catch (error) {}
     }
   }
 
-  createShape(x, y) {
+  createShape(x: number, y: number) {
     const elementId = uuidv4();
 
     const width = this.renderOption.previewSize.w;
@@ -1692,7 +1845,7 @@ export class PreviewCanvas extends LitElement {
       duration: 1000,
       opacity: 100,
       location: { x: 0, y: 0 },
-      trim: { startTime: 0, endTime: 1000 },
+      // trim: { startTime: 0, endTime: 1000 },
       rotation: 0,
       width: width,
       height: height,
@@ -1706,28 +1859,28 @@ export class PreviewCanvas extends LitElement {
         fillColor: "#ffffff",
       },
       animation: {
-        position: {
-          isActivate: false,
-          x: [],
-          y: [],
-          ax: [[], []],
-          ay: [[], []],
-        },
+        // position: {
+        //   isActivate: false,
+        //   x: [],
+        //   y: [],
+        //   ax: [[], []],
+        //   ay: [[], []],
+        // },
         opacity: {
           isActivate: false,
           x: [],
           ax: [[], []],
         },
-        scale: {
-          isActivate: false,
-          x: [],
-          ax: [[], []],
-        },
-        rotation: {
-          isActivate: false,
-          x: [],
-          ax: [[], []],
-        },
+        // scale: {
+        //   isActivate: false,
+        //   x: [],
+        //   ax: [[], []],
+        // },
+        // rotation: {
+        //   isActivate: false,
+        //   x: [],
+        //   ax: [[], []],
+        // },
       },
       timelineOptions: {
         color: "rgb(59, 143, 179)",
@@ -1738,9 +1891,7 @@ export class PreviewCanvas extends LitElement {
     return elementId;
   }
 
-  addShapePoint(x, y) {
-    const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-
+  addShapePoint(x: number, y: number) {
     if (this.nowShapeId == "") {
       const createdElementId = this.createShape(x, y);
       this.nowShapeId = createdElementId;
@@ -1748,7 +1899,12 @@ export class PreviewCanvas extends LitElement {
       return false;
     }
 
-    this.timeline[this.nowShapeId].shape.push([x, y]);
+    const shapeElement = this.timeline[this.nowShapeId];
+    if (shapeElement.filetype != "shape") {
+      return false;
+    }
+
+    shapeElement.shape.push([x, y]);
     this.timelineState.patchTimeline(this.timeline);
   }
 
@@ -1789,21 +1945,22 @@ export class PreviewCanvas extends LitElement {
 
     const sortedTimeline = Object.fromEntries(
       Object.entries(this.timeline).sort(
-        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+        ([, valueA], [, valueB]) => valueA.priority - valueB.priority,
       ),
     );
 
-    for (const elementId in sortedTimeline) {
-      if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
-        const x = this.timeline[elementId].location?.x as number;
-        const y = this.timeline[elementId].location?.y as number;
-        const w = this.timeline[elementId].width as number;
-        const h = this.timeline[elementId].height as number;
-        const rotation = this.timeline[elementId].rotation as number;
+    for (const elementId of Object.keys(sortedTimeline)) {
+      const element = this.timeline[elementId];
+      if (element.filetype != "audio") {
+        const x = element.location.x;
+        const y = element.location.y;
+        const w = element.width;
+        const h = element.height;
+        const rotation = element.rotation;
 
-        const fileType = this.timeline[elementId].filetype;
-        const startTime = this.timeline[elementId].startTime as number;
-        const duration = this.timeline[elementId].duration as number;
+        const fileType = element.filetype;
+        const startTime = element.startTime;
+        const duration = element.duration;
 
         if (
           !(
@@ -1817,10 +1974,8 @@ export class PreviewCanvas extends LitElement {
         if (fileType == "video") {
           if (
             !(
-              this.timelineCursor >=
-                startTime + this.timeline[elementId].trim.startTime &&
-              this.timelineCursor <
-                startTime + this.timeline[elementId].trim.endTime
+              this.timelineCursor >= startTime + element.trim.startTime &&
+              this.timelineCursor < startTime + element.trim.endTime
             )
           ) {
             continue;
@@ -2016,47 +2171,55 @@ export class PreviewCanvas extends LitElement {
 
     const sortedTimeline = Object.fromEntries(
       Object.entries(this.timeline).sort(
-        ([, valueA]: any, [, valueB]: any) => valueA.priority - valueB.priority,
+        ([, valueA], [, valueB]) => valueA.priority - valueB.priority,
       ),
     );
 
     if (!this.isMove || !this.isStretch) {
-      for (const elementId in sortedTimeline) {
-        if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
-          let x = this.timeline[elementId].location?.x;
-          let y = this.timeline[elementId].location?.y;
+      for (const elementId of Object.keys(sortedTimeline)) {
+        const element = this.timeline[elementId];
+        if (element.filetype != "audio") {
+          let x = element.location.x;
+          let y = element.location.y;
 
-          const w = this.timeline[elementId].width;
-          const h = this.timeline[elementId].height;
-          const fileType = this.timeline[elementId].filetype;
-          const startTime = this.timeline[elementId].startTime as number;
-          const duration = this.timeline[elementId].duration as number;
-          const rotation = this.timeline[elementId].rotation as number;
+          const w = element.width;
+          const h = element.height;
+          const fileType = element.filetype;
+          const startTime = element.startTime;
+          const duration = element.duration;
+          const rotation = element.rotation;
 
           const animationType = "position";
 
           if (
             fileType == "image" &&
-            this.timeline[elementId].animation[animationType].isActivate == true
+            element.animation[animationType].isActivate == true
           ) {
             let index = Math.round(this.timelineCursor / 16);
             let indexToMs = index * 20;
-            let startTime = Number(this.timeline[elementId].startTime);
+            let startTime = Number(element.startTime);
             let indexPoint = Math.round((indexToMs - startTime) / 20);
 
             if (indexPoint < 0) {
               return false;
             }
 
-            x = this.findNearestY(
-              this.timeline[elementId].animation[animationType].ax,
-              this.timelineCursor - this.timeline[elementId].startTime,
-            ) as any;
+            const possibleX = this.findNearestY(
+              element.animation[animationType].ax,
+              this.timelineCursor - element.startTime,
+            );
 
-            y = this.findNearestY(
-              this.timeline[elementId].animation[animationType].ay,
-              this.timelineCursor - this.timeline[elementId].startTime,
-            ) as any;
+            const possibleY = this.findNearestY(
+              element.animation[animationType].ay,
+              this.timelineCursor - element.startTime,
+            );
+
+            if (possibleX == null || possibleY == null) {
+              return false;
+            }
+
+            x = possibleX;
+            y = possibleY;
           }
 
           if (
@@ -2071,10 +2234,8 @@ export class PreviewCanvas extends LitElement {
           if (fileType == "video") {
             if (
               !(
-                this.timelineCursor >=
-                  startTime + this.timeline[elementId].trim.startTime &&
-                this.timelineCursor <
-                  startTime + this.timeline[elementId].trim.endTime
+                this.timelineCursor >= startTime + element.trim.startTime &&
+                this.timelineCursor < startTime + element.trim.endTime
               )
             ) {
               continue;
@@ -2133,10 +2294,15 @@ export class PreviewCanvas extends LitElement {
     }
     this.updateCursor();
 
+    const activeElement = this.timeline[this.activeElementId];
+    if (activeElement == undefined || activeElement.filetype == "audio") {
+      return;
+    }
+
     if (this.isMove) {
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
-      const location = this.timeline[this.activeElementId].location as { x; y };
+      const location = this.timeline[this.activeElementId].location;
       location.x = this.elementOrigin.x + dx;
       location.y = this.elementOrigin.y + dy;
 
@@ -2169,7 +2335,7 @@ export class PreviewCanvas extends LitElement {
       };
 
       const r = this.calculateRotation(p2, p1);
-      this.timeline[this.activeElementId].rotation = r;
+      activeElement.rotation = r;
     }
 
     if (this.isStretch) {
@@ -2177,75 +2343,73 @@ export class PreviewCanvas extends LitElement {
       const dx = mx - this.mouseOrigin.x;
       const dy = my - this.mouseOrigin.y;
 
-      const rotationDeg = this.timeline[this.activeElementId].rotation || 0;
+      const rotationDeg = activeElement.rotation || 0;
       const rotationRad = (rotationDeg * Math.PI) / 180;
       const cosTheta = Math.cos(rotationRad);
       const sinTheta = Math.sin(rotationRad);
       const localDx = dx * cosTheta + dy * sinTheta;
       const localDy = -dx * sinTheta + dy * cosTheta;
 
-      const location = this.timeline[this.activeElementId].location;
-      const filetype = this.timeline[this.activeElementId].filetype;
+      const location = activeElement.location;
+      const filetype = activeElement.filetype;
 
       const moveE = () => {
         if (this.elementOrigin.w + localDx <= minSize) return false;
         const width = this.elementOrigin.w + localDx;
-        const ratio = this.timeline[this.activeElementId].ratio;
-        this.timeline[this.activeElementId].width = width;
+        const ratio = activeElement.ratio;
+        activeElement.width = width;
 
         if (filetype == "text") {
           return false;
         }
-        this.timeline[this.activeElementId].height = width / ratio;
-        this.timeline[this.activeElementId].location.y =
+        activeElement.height = width / ratio;
+        activeElement.location.y =
           this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveW = () => {
         if (this.elementOrigin.w - localDx <= minSize) return false;
         const width = this.elementOrigin.w - localDx;
-        const ratio = this.timeline[this.activeElementId].ratio;
+        const ratio = activeElement.ratio;
 
-        this.timeline[this.activeElementId].width = width;
-        this.timeline[this.activeElementId].location.x =
-          this.elementOrigin.x + localDx;
+        activeElement.width = width;
+        activeElement.location.x = this.elementOrigin.x + localDx;
 
         if (filetype == "text") {
           return false;
         }
-        this.timeline[this.activeElementId].height = width / ratio;
-        this.timeline[this.activeElementId].location.y =
+        activeElement.height = width / ratio;
+        activeElement.location.y =
           this.elementOrigin.y - (width / ratio - this.elementOrigin.h) / 2;
       };
 
       const moveN = () => {
         if (this.elementOrigin.h - localDy <= minSize) return false;
         const height = this.elementOrigin.h - localDy;
-        const ratio = this.timeline[this.activeElementId].ratio;
+        const ratio = activeElement.ratio;
 
-        this.timeline[this.activeElementId].height = height;
-        this.timeline[this.activeElementId].location.y =
-          this.elementOrigin.y + localDy;
+        activeElement.height = height;
+        activeElement.location.y = this.elementOrigin.y + localDy;
 
         if (filetype == "text") {
           return false;
         }
-        this.timeline[this.activeElementId].width = height * ratio;
-        this.timeline[this.activeElementId].location.x =
+        activeElement.width = height * ratio;
+        activeElement.location.x =
           this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
       const moveS = () => {
         if (this.elementOrigin.h + localDy <= minSize) return false;
         const height = this.elementOrigin.h + localDy;
-        const ratio = this.timeline[this.activeElementId].ratio;
-        this.timeline[this.activeElementId].height = height;
+        const ratio = activeElement.ratio;
+        activeElement.height = height;
 
         if (filetype == "text") {
           return false;
         }
-        this.timeline[this.activeElementId].width = height * ratio;
-        this.timeline[this.activeElementId].location.x =
+        activeElement.width = height * ratio;
+        activeElement.location.x =
           this.elementOrigin.x - (height * ratio - this.elementOrigin.w) / 2;
       };
 
@@ -2254,7 +2418,7 @@ export class PreviewCanvas extends LitElement {
           moveN();
           moveW();
         } else {
-          const ratio = this.timeline[this.activeElementId].ratio;
+          const ratio = activeElement.ratio;
           const intr = this.getIntersection({
             m: 1,
             a1: this.elementOrigin.x,
@@ -2263,15 +2427,15 @@ export class PreviewCanvas extends LitElement {
             b2: this.elementOrigin.y + localDy,
           });
 
-          this.timeline[this.activeElementId].width =
+          activeElement.width =
             this.elementOrigin.w + (this.elementOrigin.x - intr.x);
-          this.timeline[this.activeElementId].height =
+          activeElement.height =
             (this.elementOrigin.w + (this.elementOrigin.x - intr.x)) / ratio;
-          this.timeline[this.activeElementId].location.y =
+          activeElement.location.y =
             this.elementOrigin.y +
-            (this.elementOrigin.h - this.timeline[this.activeElementId].height);
+            (this.elementOrigin.h - activeElement.height);
 
-          this.timeline[this.activeElementId].location.x = intr.x;
+          activeElement.location.x = intr.x;
         }
       };
 
@@ -2280,7 +2444,7 @@ export class PreviewCanvas extends LitElement {
           moveS();
           moveW();
         } else {
-          const ratio = this.timeline[this.activeElementId].ratio;
+          const ratio = activeElement.ratio;
           const intr = this.getIntersection({
             m: -1,
             a1: this.elementOrigin.x,
@@ -2289,9 +2453,9 @@ export class PreviewCanvas extends LitElement {
             b2: this.elementOrigin.h + localDy,
           });
 
-          this.timeline[this.activeElementId].height = intr.y;
-          this.timeline[this.activeElementId].width = intr.y * ratio;
-          this.timeline[this.activeElementId].location.x =
+          activeElement.height = intr.y;
+          activeElement.width = intr.y * ratio;
+          activeElement.location.x =
             this.elementOrigin.x - (intr.y * ratio - this.elementOrigin.w);
         }
       };
@@ -2301,7 +2465,7 @@ export class PreviewCanvas extends LitElement {
           moveS();
           moveE();
         } else {
-          const ratio = this.timeline[this.activeElementId].ratio;
+          const ratio = activeElement.ratio;
           const intr = this.getIntersection({
             m: 1,
             a1: this.elementOrigin.w,
@@ -2310,8 +2474,8 @@ export class PreviewCanvas extends LitElement {
             b2: this.elementOrigin.h + localDy,
           });
 
-          this.timeline[this.activeElementId].height = intr.y;
-          this.timeline[this.activeElementId].width = intr.y * ratio;
+          activeElement.height = intr.y;
+          activeElement.width = intr.y * ratio;
         }
       };
 
@@ -2320,7 +2484,7 @@ export class PreviewCanvas extends LitElement {
           moveN();
           moveE();
         } else {
-          const ratio = this.timeline[this.activeElementId].ratio;
+          const ratio = activeElement.ratio;
           const intr = this.getIntersection({
             m: -1,
             a1: this.elementOrigin.w,
@@ -2329,9 +2493,9 @@ export class PreviewCanvas extends LitElement {
             b2: this.elementOrigin.y + localDy,
           });
 
-          this.timeline[this.activeElementId].width = intr.x;
-          this.timeline[this.activeElementId].height = intr.x / ratio;
-          this.timeline[this.activeElementId].location.y =
+          activeElement.width = intr.x;
+          activeElement.height = intr.x / ratio;
+          activeElement.location.y =
             this.elementOrigin.y - (intr.x / ratio - this.elementOrigin.h);
         }
       };
@@ -2377,14 +2541,15 @@ export class PreviewCanvas extends LitElement {
     const my = e.offsetY * this.previewRatio;
     const padding = 40;
 
-    for (const elementId in this.timeline) {
-      if (Object.prototype.hasOwnProperty.call(this.timeline, elementId)) {
-        const x = this.timeline[elementId].location?.x as number;
-        const y = this.timeline[elementId].location?.y as number;
-        const w = this.timeline[elementId].width as number;
-        const h = this.timeline[elementId].height as number;
-        const rotation = this.timeline[elementId].rotation as number;
-        const fileType = this.timeline[elementId].filetype;
+    for (const elementId of Object.keys(this.timeline)) {
+      const element = this.timeline[elementId];
+      if (element.filetype != "audio") {
+        const x = element.location.x;
+        const y = element.location.y;
+        const w = element.width;
+        const h = element.height;
+        const rotation = element.rotation;
+        const fileType = element.filetype;
 
         if (fileType != "text") {
           continue;

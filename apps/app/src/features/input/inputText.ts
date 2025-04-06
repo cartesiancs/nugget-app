@@ -64,6 +64,10 @@ export class InputText extends LitElement {
   }
 
   setWidthInner() {
+    const element = this.timeline[this.elementId];
+    if (element.filetype !== "text") {
+      return;
+    }
     console.log();
     const span: any = this.querySelector("span");
     let resizedInput = document
@@ -72,13 +76,17 @@ export class InputText extends LitElement {
         w: span.offsetWidth,
       });
 
-    this.timeline[this.elementId].widthInner = resizedInput.w;
+    element.widthInner = resizedInput.w;
     this.timelineState.patchTimeline(this.timeline);
   }
 
   updateText({ value }: { value: string }) {
-    console.log(this.timeline[this.elementId], this.timeline, this.elementId);
-    this.timeline[this.elementId].text = value;
+    const element = this.timeline[this.elementId];
+    if (element.filetype !== "text") {
+      return;
+    }
+    console.log(element, this.timeline, this.elementId);
+    element.text = value;
   }
 
   _handleInput(event) {

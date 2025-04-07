@@ -28,7 +28,7 @@ type TimelinePlaced = {
   blob: string;
   startTime: number;
   duration: number;
-  location: { x: number; y: number }; // TODO: 기존 Audio 정의에 location이 있었는데 왜 있는지 확인 필요
+  location: { x: number; y: number };
   timelineOptions: {
     color: string;
   };
@@ -42,7 +42,7 @@ type Visual = {
   rotation: number;
 };
 
-// Shape는 opacity만 애니메이팅 가능하므로 다른 속성을 지원할 때 까지 임시 타입을 사용한다다
+// Shape는 opacity만 애니메이팅 가능하므로 다른 속성을 지원할 때 까지 임시 타입을 사용한다
 type OpacityAnimatable = {
   animation: {
     opacity: {
@@ -154,12 +154,14 @@ export type AudioElementType = TimelinePlaced & {
   speed: number;
 };
 
+export type TimelineElement =
+  | VideoElementType
+  | ImageElementType
+  | GifElementType
+  | ShapeElementType
+  | TextElementType
+  | AudioElementType;
+
 export interface Timeline {
-  [elementId: string]:
-    | ImageElementType
-    | VideoElementType
-    | TextElementType
-    | AudioElementType
-    | GifElementType
-    | ShapeElementType;
+  [elementId: string]: TimelineElement;
 }

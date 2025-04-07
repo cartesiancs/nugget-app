@@ -13,6 +13,7 @@ import { elementUtils } from "../../utils/element";
 import { glFilter } from "./glFilter";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 import type { AudioElementType, VideoElementType } from "../../@types/timeline";
+import { renderText } from "../renderer/text";
 
 type ImageTempType = {
   elementId: string;
@@ -63,6 +64,10 @@ export class PreviewCanvas extends LitElement {
   loadedVideos: LoadedVideo[];
   isChangeFilter: boolean;
   isRotation: boolean;
+
+  // TODO: 렌더러 리팩토링이 끝나고 나면 지울 것
+  useNewRenderer: boolean = false;
+
   constructor() {
     super();
 
@@ -399,7 +404,6 @@ export class PreviewCanvas extends LitElement {
               continue;
             }
           } else {
-            // TODO: elementType을 타입 체크와 연계되도록 수정 필요
             const speed = (element as VideoElementType | AudioElementType)
               .speed;
             if (
@@ -425,7 +429,16 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "text") {
-            this.drawText(ctx, elementId, w, h, x, y);
+            if (this.useNewRenderer) {
+              renderText(
+                ctx,
+                element,
+                this.timelineCursor,
+                this.activeElementId === elementId,
+              );
+            } else {
+              this.drawText(ctx, elementId, w, h, x, y);
+            }
           }
 
           if (fileType == "shape") {

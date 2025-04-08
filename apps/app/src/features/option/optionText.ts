@@ -415,8 +415,12 @@ export class OptionText extends LitElement {
 
   handleClickEnableOutline() {
     const state = useTimelineStore.getState();
-    const enableOutline =
-      state.timeline[this.elementId[0]].options?.outline?.enable;
+    const textElement = state.timeline[this.elementId[0]];
+    if (textElement.filetype !== "text") {
+      return;
+    }
+
+    const enableOutline = textElement.options?.outline?.enable;
 
     this.outlineEnable = !enableOutline;
 
@@ -431,8 +435,11 @@ export class OptionText extends LitElement {
 
   handleClickEnableBackground() {
     const state = useTimelineStore.getState();
-    const enableBackground =
-      state.timeline[this.elementId[0]].background?.enable;
+    const textElement = state.timeline[this.elementId[0]];
+    if (textElement.filetype !== "text") {
+      return;
+    }
+    const enableBackground = textElement.background.enable;
     this.timelineState.updateTimeline(
       this.elementId[0],
       ["background", "enable"],
@@ -457,15 +464,19 @@ export class OptionText extends LitElement {
 
   handleClickEnableBold() {
     const state = useTimelineStore.getState();
+    const textElement = state.timeline[this.elementId[0]];
+    if (textElement.filetype !== "text") {
+      return;
+    }
 
     for (let index = 0; index < this.elementId.length; index++) {
       const element = this.elementId[index];
-      this.isBold = !state.timeline[this.elementId[0]].options?.isBold;
+      this.isBold = !textElement.options.isBold;
 
       this.timelineState.updateTimeline(
         element,
         ["options", "isBold"],
-        !state.timeline[this.elementId[0]].options?.isBold,
+        !textElement.options.isBold,
       );
     }
 
@@ -474,12 +485,16 @@ export class OptionText extends LitElement {
 
   handleClickEnableItalic() {
     const state = useTimelineStore.getState();
-    this.isItalic = !state.timeline[this.elementId[0]].options?.isItalic;
+    const textElement = state.timeline[this.elementId[0]];
+    if (textElement.filetype !== "text") {
+      return;
+    }
+    this.isItalic = !textElement.options?.isItalic;
 
     this.timelineState.updateTimeline(
       this.elementId[0],
       ["options", "isItalic"],
-      !state.timeline[this.elementId[0]].options?.isItalic,
+      !textElement.options?.isItalic,
     );
 
     this.requestUpdate();

@@ -303,7 +303,11 @@ export class OptionVideo extends LitElement {
 
   handleClickAddFilter() {
     const state = useTimelineStore.getState();
-    const filterList = state.timeline[this.elementId].filter?.list;
+    const element = state.timeline[this.elementId];
+    if (element.filetype !== "video") {
+      return;
+    }
+    const filterList = element.filter?.list;
 
     filterList?.push({
       name: "chromakey",
@@ -363,7 +367,11 @@ export class OptionVideo extends LitElement {
 
   handleClickEnableFilter() {
     const state = useTimelineStore.getState();
-    const enableFilter = state.timeline[this.elementId].filter?.enable;
+    const element = state.timeline[this.elementId];
+    if (element.filetype !== "video") {
+      return;
+    }
+    const enableFilter = element.filter?.enable;
 
     this.enableFilter = !enableFilter;
 

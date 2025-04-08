@@ -147,8 +147,12 @@ export class ElementControlAsset extends LitElement {
   }
 
   templateAudio() {
+    const element = this.timeline[this.elementId];
+    if (element.filetype !== "audio") {
+      return ``;
+    }
     return html`<audio
-      src="${this.getPath(this.timeline[this.elementId].localpath) || ""} "
+      src="${this.getPath(element.localpath) || ""} "
       class="d-none"
       draggable="false"
     ></audio>`;
@@ -635,13 +639,18 @@ export class ElementControlAsset extends LitElement {
       return 0;
     }
 
+    const element = this.timeline[this.elementId];
+    if (element.filetype !== "text") {
+      return 0;
+    }
+
     let targetInput = this.querySelector("input-text");
 
     this.style.fontSize = `${px}px`;
 
     this.elementControl.changeTextSize({
       elementId: this.elementId,
-      size: this.timeline[this.elementId].fontsize,
+      size: element.fontsize,
     });
   }
 

@@ -16,6 +16,7 @@ import type { AudioElementType, VideoElementType } from "../../@types/timeline";
 import { renderText } from "../renderer/text";
 import { renderElement } from "../renderer/element";
 import { renderImage } from "../renderer/image";
+import { renderShape } from "../renderer/shape";
 
 type ImageTempType = {
   elementId: string;
@@ -303,7 +304,13 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "shape") {
-            this.drawShape(ctx, elementId);
+            renderElement(
+              ctx,
+              element,
+              this.timelineCursor,
+              this.activeElementId === elementId,
+              renderShape,
+            );
           }
 
           if (this.activeElementId == elementId) {
@@ -719,88 +726,6 @@ export class PreviewCanvas extends LitElement {
           });
         });
     }
-  }
-
-  drawShape(ctx: CanvasRenderingContext2D, elementId: string) {
-    const shapeElement = this.timeline[elementId];
-    if (shapeElement.filetype != "shape") {
-      return false;
-    }
-
-    let scaleW = shapeElement.width;
-    let scaleH = shapeElement.height;
-    let scaleX = shapeElement.location.x;
-    let scaleY = shapeElement.location.y;
-    let rotation = shapeElement.rotation * (Math.PI / 180);
-
-    ctx.globalAlpha = shapeElement.opacity / 100;
-    if (shapeElement.animation["opacity"].isActivate == true) {
-      let index = Math.round(this.timelineCursor / 16);
-      let indexToMs = index * 20;
-      let startTime = Number(shapeElement.startTime);
-      let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-      try {
-        if (indexPoint < 0) {
-          return false;
-        }
-
-        const ax = this.findNearestY(
-          shapeElement.animation["opacity"].ax,
-          this.timelineCursor - shapeElement.startTime,
-        );
-
-        if (ax == null) {
-          return false;
-        }
-
-        ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-      } catch (error) {}
-    }
-
-    const centerX = scaleX + scaleW / 2;
-    const centerY = scaleY + scaleH / 2;
-
-    ctx.translate(centerX, centerY);
-    ctx.rotate(rotation);
-
-    ctx.beginPath();
-
-    const ratio = shapeElement.oWidth / shapeElement.width;
-
-    for (let index = 0; index < shapeElement.shape.length; index++) {
-      const element = shapeElement.shape[index];
-      const x = element[0] / ratio + shapeElement.location.x;
-      const y = element[1] / ratio + shapeElement.location.y;
-
-      ctx.fillStyle = shapeElement.option.fillColor;
-      if (this.nowShapeId == elementId) {
-        ctx.arc(x - centerX, y - centerY, 8, 0, 5 * Math.PI);
-      }
-
-      ctx.lineTo(x - centerX, y - centerY);
-    }
-
-    ctx.closePath();
-
-    ctx.fill();
-
-    // this.drawOutline(ctx, elementId, scaleX, scaleY, scaleW, scaleH, rotation);
-
-    this.drawOutline(
-      ctx,
-      elementId,
-      -scaleW / 2,
-      -scaleH / 2,
-      scaleW,
-      scaleH,
-      rotation,
-    );
-
-    ctx.rotate(-rotation);
-    ctx.translate(-centerX, -centerY);
-
-    ctx.globalAlpha = 1;
   }
 
   getPath(path: string) {

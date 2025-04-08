@@ -15,6 +15,7 @@ import { getLocationEnv } from "../../functions/getLocationEnv";
 import type { AudioElementType, VideoElementType } from "../../@types/timeline";
 import { renderText } from "../renderer/text";
 import { renderElement } from "../renderer/element";
+import { renderImage } from "../renderer/image";
 
 type ImageTempType = {
   elementId: string;
@@ -274,7 +275,13 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "image") {
-            this.drawImage(ctx, elementId, w, h, x, y);
+            renderElement(
+              ctx,
+              element,
+              this.timelineCursor,
+              this.activeElementId === elementId,
+              renderImage,
+            );
           }
 
           if (fileType == "gif") {
@@ -610,186 +617,6 @@ export class PreviewCanvas extends LitElement {
     }
 
     ctx.globalAlpha = 1;
-  }
-
-  drawImage(
-    ctx: CanvasRenderingContext2D,
-    elementId: string,
-    w: number,
-    h: number,
-    x: number,
-    y: number,
-  ) {
-    const imageElement = this.timeline[elementId];
-    if (imageElement.filetype != "image") {
-      return;
-    }
-    let scaleW = w;
-    let scaleH = h;
-    let scaleX = x;
-    let scaleY = y;
-    let compareW = 1;
-    let compareH = 1;
-    let rotation = imageElement.rotation * (Math.PI / 180);
-
-    if (
-      this.loadedObjects.findIndex((item: ImageTempType) => {
-        return item.elementId == elementId;
-      }) != -1
-    ) {
-      const img = this.loadedObjects.filter((item) => {
-        return item.elementId == elementId;
-      })[0];
-
-      ctx.globalAlpha = imageElement.opacity / 100;
-      if (imageElement.animation["opacity"].isActivate == true) {
-        let index = Math.round(this.timelineCursor / 16);
-        let indexToMs = index * 20;
-        let startTime = Number(imageElement.startTime);
-        let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-        try {
-          if (indexPoint < 0) {
-            return false;
-          }
-
-          const ax = this.findNearestY(
-            imageElement.animation["opacity"].ax,
-            this.timelineCursor - imageElement.startTime,
-          );
-
-          if (ax == null) {
-            return false;
-          }
-
-          ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-        } catch (error) {}
-      }
-
-      if (imageElement.animation["scale"].isActivate == true) {
-        const ax = this.getAnimateScale(elementId);
-        if (ax != false) {
-          scaleW = w * ax;
-          scaleH = h * ax;
-          compareW = scaleW - w;
-          compareH = scaleH - h;
-
-          scaleX = x - compareW / 2;
-          scaleY = y - compareH / 2;
-        }
-      }
-
-      if (imageElement.animation["rotation"].isActivate == true) {
-        const ax = this.getAnimateRotation(elementId);
-        if (ax != false) {
-          rotation = ax.ax;
-        }
-      }
-
-      let animationType = "position";
-
-      if (imageElement.animation[animationType].isActivate == true) {
-        if (this.isMove && this.activeElementId == elementId) {
-          ctx.drawImage(img.object, x, y, w, h);
-        } else {
-          const result = this.getAnimatePosition(elementId);
-          if (result != false) {
-            scaleX = result.ax - compareW / 2;
-            scaleY = result.ay - compareH / 2;
-
-            const centerX = scaleX + scaleW / 2;
-            const centerY = scaleY + scaleH / 2;
-
-            ctx.translate(centerX, centerY);
-            ctx.rotate(rotation);
-
-            ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
-            this.drawOutline(
-              ctx,
-              elementId,
-              -scaleW / 2,
-              -scaleH / 2,
-              scaleW,
-              scaleH,
-              rotation,
-            );
-
-            ctx.rotate(-rotation);
-            ctx.translate(-centerX, -centerY);
-            ctx.globalAlpha = 1;
-
-            return false;
-          }
-        }
-      }
-
-      const centerX = scaleX + scaleW / 2;
-      const centerY = scaleY + scaleH / 2;
-
-      ctx.translate(centerX, centerY);
-      ctx.rotate(rotation);
-
-      ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
-      this.drawOutline(
-        ctx,
-        elementId,
-        -scaleW / 2,
-        -scaleH / 2,
-        scaleW,
-        scaleH,
-        rotation,
-      );
-
-      ctx.rotate(-rotation);
-      ctx.translate(-centerX, -centerY);
-    } else {
-      let img = new Image();
-      img.onload = () => {
-        this.loadedObjects.push({
-          elementId: elementId,
-          object: img,
-        });
-
-        ctx.globalAlpha = imageElement.opacity / 100;
-        ctx.drawImage(img, x, y, w, h);
-        this.drawOutline(ctx, elementId, x, y, w, h, rotation);
-      };
-
-      img.src = this.getPath(imageElement.localpath);
-    }
-
-    ctx.globalAlpha = 1;
-  }
-
-  public preloadImage(elementId: string) {
-    const imageElement = this.timeline[elementId];
-    if (imageElement.filetype != "image") {
-      return;
-    }
-    let img = new Image();
-
-    img.onload = () => {
-      if (
-        this.loadedObjects.findIndex((item: ImageTempType) => {
-          return item.elementId == elementId;
-        }) != -1
-      ) {
-        const index = this.loadedObjects.findIndex((item: ImageTempType) => {
-          return item.elementId == elementId;
-        });
-
-        this.loadedObjects[index].object = img;
-      } else {
-        this.loadedObjects.push({
-          elementId: elementId,
-          object: img,
-        });
-      }
-
-      this.drawCanvas(this.canvas);
-    };
-
-    img.src = this.getPath(imageElement.localpath);
   }
 
   drawGif(

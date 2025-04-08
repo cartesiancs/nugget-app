@@ -1,6 +1,4 @@
 import type { TextElementType } from "../../@types/timeline";
-import { interpolate } from "../animation/interpolation";
-import { renderControlOutline } from "./controlOutline";
 import type { ElementRenderFunction } from "./type";
 
 function getWrappedLines(
@@ -50,12 +48,9 @@ export const renderText: ElementRenderFunction<TextElementType> = (
   ctx,
   textElement,
   timelineCursor,
-  controlOutlineEnabled,
 ) => {
-  let { width: scaleW, height: scaleH, fontsize: fontSize } = textElement;
-  let { x, y } = textElement.location;
+  let { width, height, fontsize: fontSize } = textElement;
 
-  // Common
   ctx.fillStyle = textElement.textcolor;
   ctx.lineWidth = 0;
   ctx.letterSpacing = `${textElement.letterSpacing}px`;
@@ -64,91 +59,33 @@ export const renderText: ElementRenderFunction<TextElementType> = (
     textElement.options.isBold ? "bold" : ""
   } ${fontSize}px ${textElement.fontname}`;
 
-  // Opacity
-  const opacityAnimation = textElement.animation["opacity"];
-  const opacityScaledBy100 = opacityAnimation.isActivate
-    ? interpolate(
-        textElement.opacity,
-        opacityAnimation.ax,
-        textElement.startTime,
-        timelineCursor,
-      )
-    : textElement.opacity;
-  ctx.globalAlpha = opacityScaledBy100 / 100;
-
-  // Scale
-  const scaleAnimation = textElement.animation["scale"];
-  const scale = scaleAnimation.isActivate
-    ? interpolate(
-        10,
-        scaleAnimation.ax,
-        textElement.startTime,
-        timelineCursor,
-      ) / 10
-    : 1;
-  fontSize = textElement.fontsize * scale;
-
-  // Position
-  const positionAnimation = textElement.animation["position"];
-  let tx = positionAnimation.isActivate
-    ? interpolate(
-        x,
-        positionAnimation.ax,
-        textElement.startTime,
-        timelineCursor,
-      )
-    : x;
-  let ty = positionAnimation.isActivate
-    ? interpolate(
-        y,
-        positionAnimation.ay,
-        textElement.startTime,
-        timelineCursor,
-      )
-    : y;
-
-  // Rotation
-  const rotationAnimation = textElement.animation["rotation"];
-  const rotationInDegree = rotationAnimation.isActivate
-    ? interpolate(
-        textElement.rotation,
-        rotationAnimation.ax,
-        textElement.startTime,
-        timelineCursor,
-      )
-    : textElement.rotation;
-  const radian = rotationInDegree * (Math.PI / 180);
-
-  const centerX = tx + scaleW / 2;
-  const centerY = ty + scaleH / 2;
-
-  ctx.translate(centerX, centerY);
-  ctx.rotate(radian);
-
-  tx = -scaleW / 2;
-  ty = -scaleH / 2;
-
-  // Actual Rendering
   const textAlignOrigin = ctx.textAlign;
-  let textY = ty + (textElement.fontsize ?? 0);
+  let textY = textElement.fontsize ?? 0;
   for (const {
     line,
     width: lineWidth,
     ascent: lineAscent,
     descent: lineDescent,
-  } of getWrappedLines(ctx, textElement.text, scaleW)) {
+  } of getWrappedLines(ctx, textElement.text, width)) {
     const backgroundPadding = 12;
-    let textX = tx;
-    let backgroundX = tx - backgroundPadding;
-    if (textElement.options.align == "left") {
-      textX = tx;
-      backgroundX = tx - backgroundPadding;
-    } else if (textElement.options.align == "center") {
-      textX = tx + scaleW / 2;
-      backgroundX = textX - lineWidth / 2 - backgroundPadding;
-    } else if (textElement.options.align == "right") {
-      textX = tx + scaleW;
-      backgroundX = textX - lineWidth - backgroundPadding;
+    let textX: number;
+    let backgroundX: number;
+    switch (textElement.options.align) {
+      case "left":
+        textX = 0;
+        backgroundX = -backgroundPadding;
+        break;
+      case "center":
+        textX = width / 2;
+        backgroundX = textX - lineWidth / 2 - backgroundPadding;
+        break;
+      case "right":
+        textX = width;
+        backgroundX = textX - lineWidth - backgroundPadding;
+        break;
+      default:
+        textX = 0;
+        backgroundX = -backgroundPadding;
     }
     ctx.textAlign = textElement.options.align;
 
@@ -170,16 +107,7 @@ export const renderText: ElementRenderFunction<TextElementType> = (
 
     ctx.fillStyle = textElement.textcolor;
     ctx.fillText(line, textX, textY);
-    textY += scaleH;
+    textY += height;
   }
   ctx.textAlign = textAlignOrigin;
-
-  // Control Outline
-  ctx.globalAlpha = 1;
-  if (controlOutlineEnabled) {
-    renderControlOutline(ctx, -scaleW / 2, -scaleH / 2, scaleW, scaleH, radian);
-  }
-
-  ctx.rotate(-radian);
-  ctx.translate(-centerX, -centerY);
 };

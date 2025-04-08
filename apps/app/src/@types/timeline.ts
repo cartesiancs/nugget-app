@@ -162,6 +162,8 @@ export type TimelineElement =
   | TextElementType
   | AudioElementType;
 
+export type VisualTimelineElement = Exclude<TimelineElement, AudioElementType>;
+
 export interface Timeline {
   [elementId: string]: TimelineElement;
 }

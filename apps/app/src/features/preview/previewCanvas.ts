@@ -14,6 +14,7 @@ import { glFilter } from "./glFilter";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 import type { AudioElementType, VideoElementType } from "../../@types/timeline";
 import { renderText } from "../renderer/text";
+import { renderElement } from "../renderer/element";
 
 type ImageTempType = {
   elementId: string;
@@ -285,11 +286,12 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "text") {
-            renderText(
+            renderElement(
               ctx,
               element,
               this.timelineCursor,
               this.activeElementId === elementId,
+              renderText,
             );
           }
 

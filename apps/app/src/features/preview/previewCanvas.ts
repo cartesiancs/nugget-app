@@ -7,7 +7,6 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { KeyframeController } from "../../controllers/keyframe";
-import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
 import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element";
 import { glFilter } from "./glFilter";
@@ -17,11 +16,7 @@ import { renderText } from "../renderer/text";
 import { renderElement } from "../renderer/element";
 import { renderImage } from "../renderer/image";
 import { renderShape } from "../renderer/shape";
-
-type ImageTempType = {
-  elementId: string;
-  object: any;
-};
+import { renderGif } from "../renderer/gif";
 
 type LoadedVideo = {
   elementId: string;
@@ -60,9 +55,6 @@ export class PreviewCanvas extends LitElement {
     | "crosshair";
   isStretch: boolean;
   isEditText: boolean;
-  gifTempCanvas: HTMLCanvasElement;
-  gifCanvas: { frameImageData: any; tempCtx: any };
-  gifFrames: { key: string; frames: ParsedFrame[] }[];
   nowShapeId: string;
   loadedVideos: LoadedVideo[];
   isChangeFilter: boolean;
@@ -83,16 +75,6 @@ export class PreviewCanvas extends LitElement {
     this.activeElementId = "";
     this.mouseOrigin = { x: 0, y: 0 };
     this.elementOrigin = { x: 0, y: 0, w: 0, h: 0 };
-
-    this.gifTempCanvas = document.createElement("canvas");
-
-    this.gifCanvas = {
-      frameImageData: null,
-      tempCtx: this.gifTempCanvas.getContext("2d") as CanvasRenderingContext2D,
-    };
-
-    this.gifFrames = [];
-
     this.loadedVideos = [];
 
     this.nowShapeId = "";
@@ -125,9 +107,6 @@ export class PreviewCanvas extends LitElement {
 
   @property()
   timelineControl = this.timelineState.control;
-
-  @property()
-  loadedObjects: ImageTempType[] = [];
 
   @property()
   canvasMaxHeight = "100%";
@@ -286,7 +265,13 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "gif") {
-            this.drawGif(ctx, elementId, w, h, x, y);
+            renderElement(
+              ctx,
+              element,
+              this.timelineCursor,
+              this.activeElementId === elementId,
+              renderGif,
+            );
           }
 
           if (fileType == "video") {
@@ -624,108 +609,6 @@ export class PreviewCanvas extends LitElement {
     }
 
     ctx.globalAlpha = 1;
-  }
-
-  drawGif(
-    ctx: CanvasRenderingContext2D,
-    elementId: string,
-    w: number,
-    h: number,
-    x: number,
-    y: number,
-  ) {
-    const imageElement = this.timeline[elementId];
-    if (imageElement.filetype != "gif") {
-      return;
-    }
-    const rotation = imageElement.rotation * (Math.PI / 180);
-
-    if (
-      this.gifFrames.findIndex((item) => {
-        return item.key == elementId;
-      }) != -1
-    ) {
-      const imageIndex = this.gifFrames.findIndex((item) => {
-        return item.key == elementId;
-      });
-      ctx.globalAlpha = imageElement.opacity / 100;
-
-      const delay = this.gifFrames[imageIndex].frames[0].delay;
-
-      const index =
-        Math.round(this.timelineCursor / delay) %
-        this.gifFrames[imageIndex].frames.length;
-      const firstFrame = this.gifFrames[imageIndex].frames[index];
-
-      let dims = firstFrame.dims;
-
-      if (
-        !this.gifCanvas.frameImageData ||
-        dims.width != this.gifCanvas.frameImageData.width ||
-        dims.height != this.gifCanvas.frameImageData.height
-      ) {
-        this.gifTempCanvas.width = dims.width;
-        this.gifTempCanvas.height = dims.height;
-        this.gifCanvas.frameImageData = this.gifCanvas.tempCtx.createImageData(
-          dims.width,
-          dims.height,
-        );
-      }
-
-      this.gifCanvas.frameImageData.data.set(firstFrame.patch);
-
-      this.gifCanvas.tempCtx.putImageData(this.gifCanvas.frameImageData, 0, 0);
-
-      const centerX = x + w / 2;
-      const centerY = y + h / 2;
-
-      ctx.translate(centerX, centerY);
-      ctx.rotate(rotation);
-
-      ctx.drawImage(this.gifTempCanvas, -w / 2, -h / 2, w, h);
-      this.drawOutline(ctx, elementId, -w / 2, -h / 2, w, h, rotation);
-
-      ctx.rotate(-rotation);
-      ctx.translate(-centerX, -centerY);
-      ctx.globalAlpha = 1;
-    } else {
-      fetch(this.getPath(imageElement.localpath))
-        .then((resp) => resp.arrayBuffer())
-        .then((buff) => {
-          let gif = parseGIF(buff);
-          let frames = decompressFrames(gif, true);
-
-          const firstFrame = frames[0];
-
-          let dims = firstFrame.dims;
-
-          if (
-            !this.gifCanvas.frameImageData ||
-            dims.width != this.gifCanvas.frameImageData.width ||
-            dims.height != this.gifCanvas.frameImageData.height
-          ) {
-            this.gifTempCanvas.width = dims.width;
-            this.gifTempCanvas.height = dims.height;
-            this.gifCanvas.frameImageData =
-              this.gifCanvas.tempCtx.createImageData(dims.width, dims.height);
-          }
-
-          this.gifCanvas.frameImageData.data.set(firstFrame.patch);
-
-          this.gifCanvas.tempCtx.putImageData(
-            this.gifCanvas.frameImageData,
-            0,
-            0,
-          );
-
-          ctx.drawImage(this.gifTempCanvas, x, y, w, h);
-
-          this.gifFrames.push({
-            key: elementId,
-            frames: frames,
-          });
-        });
-    }
   }
 
   getPath(path: string) {

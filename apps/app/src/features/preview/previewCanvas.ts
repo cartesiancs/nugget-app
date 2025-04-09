@@ -7,18 +7,16 @@ import {
   renderOptionStore,
 } from "../../states/renderOptionStore";
 import { KeyframeController } from "../../controllers/keyframe";
-import { parseGIF, decompressFrames, ParsedFrame } from "gifuct-js";
 import { v4 as uuidv4 } from "uuid";
 import { elementUtils } from "../../utils/element";
 import { glFilter } from "./glFilter";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 import type { AudioElementType, VideoElementType } from "../../@types/timeline";
 import { renderText } from "../renderer/text";
-
-type ImageTempType = {
-  elementId: string;
-  object: any;
-};
+import { renderElement } from "../renderer/element";
+import { renderImage } from "../renderer/image";
+import { renderShape } from "../renderer/shape";
+import { renderGif } from "../renderer/gif";
 
 type LoadedVideo = {
   elementId: string;
@@ -57,9 +55,6 @@ export class PreviewCanvas extends LitElement {
     | "crosshair";
   isStretch: boolean;
   isEditText: boolean;
-  gifTempCanvas: HTMLCanvasElement;
-  gifCanvas: { frameImageData: any; tempCtx: any };
-  gifFrames: { key: string; frames: ParsedFrame[] }[];
   nowShapeId: string;
   loadedVideos: LoadedVideo[];
   isChangeFilter: boolean;
@@ -80,16 +75,6 @@ export class PreviewCanvas extends LitElement {
     this.activeElementId = "";
     this.mouseOrigin = { x: 0, y: 0 };
     this.elementOrigin = { x: 0, y: 0, w: 0, h: 0 };
-
-    this.gifTempCanvas = document.createElement("canvas");
-
-    this.gifCanvas = {
-      frameImageData: null,
-      tempCtx: this.gifTempCanvas.getContext("2d") as CanvasRenderingContext2D,
-    };
-
-    this.gifFrames = [];
-
     this.loadedVideos = [];
 
     this.nowShapeId = "";
@@ -122,9 +107,6 @@ export class PreviewCanvas extends LitElement {
 
   @property()
   timelineControl = this.timelineState.control;
-
-  @property()
-  loadedObjects: ImageTempType[] = [];
 
   @property()
   canvasMaxHeight = "100%";
@@ -273,11 +255,23 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "image") {
-            this.drawImage(ctx, elementId, w, h, x, y);
+            renderElement(
+              ctx,
+              element,
+              this.timelineCursor,
+              this.activeElementId === elementId,
+              renderImage,
+            );
           }
 
           if (fileType == "gif") {
-            this.drawGif(ctx, elementId, w, h, x, y);
+            renderElement(
+              ctx,
+              element,
+              this.timelineCursor,
+              this.activeElementId === elementId,
+              renderGif,
+            );
           }
 
           if (fileType == "video") {
@@ -285,16 +279,23 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "text") {
-            renderText(
+            renderElement(
               ctx,
               element,
               this.timelineCursor,
               this.activeElementId === elementId,
+              renderText,
             );
           }
 
           if (fileType == "shape") {
-            this.drawShape(ctx, elementId);
+            renderElement(
+              ctx,
+              element,
+              this.timelineCursor,
+              this.activeElementId === elementId,
+              renderShape,
+            );
           }
 
           if (this.activeElementId == elementId) {
@@ -606,370 +607,6 @@ export class PreviewCanvas extends LitElement {
         ctx.drawImage(video, x, y, w, h);
       });
     }
-
-    ctx.globalAlpha = 1;
-  }
-
-  drawImage(
-    ctx: CanvasRenderingContext2D,
-    elementId: string,
-    w: number,
-    h: number,
-    x: number,
-    y: number,
-  ) {
-    const imageElement = this.timeline[elementId];
-    if (imageElement.filetype != "image") {
-      return;
-    }
-    let scaleW = w;
-    let scaleH = h;
-    let scaleX = x;
-    let scaleY = y;
-    let compareW = 1;
-    let compareH = 1;
-    let rotation = imageElement.rotation * (Math.PI / 180);
-
-    if (
-      this.loadedObjects.findIndex((item: ImageTempType) => {
-        return item.elementId == elementId;
-      }) != -1
-    ) {
-      const img = this.loadedObjects.filter((item) => {
-        return item.elementId == elementId;
-      })[0];
-
-      ctx.globalAlpha = imageElement.opacity / 100;
-      if (imageElement.animation["opacity"].isActivate == true) {
-        let index = Math.round(this.timelineCursor / 16);
-        let indexToMs = index * 20;
-        let startTime = Number(imageElement.startTime);
-        let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-        try {
-          if (indexPoint < 0) {
-            return false;
-          }
-
-          const ax = this.findNearestY(
-            imageElement.animation["opacity"].ax,
-            this.timelineCursor - imageElement.startTime,
-          );
-
-          if (ax == null) {
-            return false;
-          }
-
-          ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-        } catch (error) {}
-      }
-
-      if (imageElement.animation["scale"].isActivate == true) {
-        const ax = this.getAnimateScale(elementId);
-        if (ax != false) {
-          scaleW = w * ax;
-          scaleH = h * ax;
-          compareW = scaleW - w;
-          compareH = scaleH - h;
-
-          scaleX = x - compareW / 2;
-          scaleY = y - compareH / 2;
-        }
-      }
-
-      if (imageElement.animation["rotation"].isActivate == true) {
-        const ax = this.getAnimateRotation(elementId);
-        if (ax != false) {
-          rotation = ax.ax;
-        }
-      }
-
-      let animationType = "position";
-
-      if (imageElement.animation[animationType].isActivate == true) {
-        if (this.isMove && this.activeElementId == elementId) {
-          ctx.drawImage(img.object, x, y, w, h);
-        } else {
-          const result = this.getAnimatePosition(elementId);
-          if (result != false) {
-            scaleX = result.ax - compareW / 2;
-            scaleY = result.ay - compareH / 2;
-
-            const centerX = scaleX + scaleW / 2;
-            const centerY = scaleY + scaleH / 2;
-
-            ctx.translate(centerX, centerY);
-            ctx.rotate(rotation);
-
-            ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
-            this.drawOutline(
-              ctx,
-              elementId,
-              -scaleW / 2,
-              -scaleH / 2,
-              scaleW,
-              scaleH,
-              rotation,
-            );
-
-            ctx.rotate(-rotation);
-            ctx.translate(-centerX, -centerY);
-            ctx.globalAlpha = 1;
-
-            return false;
-          }
-        }
-      }
-
-      const centerX = scaleX + scaleW / 2;
-      const centerY = scaleY + scaleH / 2;
-
-      ctx.translate(centerX, centerY);
-      ctx.rotate(rotation);
-
-      ctx.drawImage(img.object, -scaleW / 2, -scaleH / 2, scaleW, scaleH);
-      this.drawOutline(
-        ctx,
-        elementId,
-        -scaleW / 2,
-        -scaleH / 2,
-        scaleW,
-        scaleH,
-        rotation,
-      );
-
-      ctx.rotate(-rotation);
-      ctx.translate(-centerX, -centerY);
-    } else {
-      let img = new Image();
-      img.onload = () => {
-        this.loadedObjects.push({
-          elementId: elementId,
-          object: img,
-        });
-
-        ctx.globalAlpha = imageElement.opacity / 100;
-        ctx.drawImage(img, x, y, w, h);
-        this.drawOutline(ctx, elementId, x, y, w, h, rotation);
-      };
-
-      img.src = this.getPath(imageElement.localpath);
-    }
-
-    ctx.globalAlpha = 1;
-  }
-
-  public preloadImage(elementId: string) {
-    const imageElement = this.timeline[elementId];
-    if (imageElement.filetype != "image") {
-      return;
-    }
-    let img = new Image();
-
-    img.onload = () => {
-      if (
-        this.loadedObjects.findIndex((item: ImageTempType) => {
-          return item.elementId == elementId;
-        }) != -1
-      ) {
-        const index = this.loadedObjects.findIndex((item: ImageTempType) => {
-          return item.elementId == elementId;
-        });
-
-        this.loadedObjects[index].object = img;
-      } else {
-        this.loadedObjects.push({
-          elementId: elementId,
-          object: img,
-        });
-      }
-
-      this.drawCanvas(this.canvas);
-    };
-
-    img.src = this.getPath(imageElement.localpath);
-  }
-
-  drawGif(
-    ctx: CanvasRenderingContext2D,
-    elementId: string,
-    w: number,
-    h: number,
-    x: number,
-    y: number,
-  ) {
-    const imageElement = this.timeline[elementId];
-    if (imageElement.filetype != "gif") {
-      return;
-    }
-    const rotation = imageElement.rotation * (Math.PI / 180);
-
-    if (
-      this.gifFrames.findIndex((item) => {
-        return item.key == elementId;
-      }) != -1
-    ) {
-      const imageIndex = this.gifFrames.findIndex((item) => {
-        return item.key == elementId;
-      });
-      ctx.globalAlpha = imageElement.opacity / 100;
-
-      const delay = this.gifFrames[imageIndex].frames[0].delay;
-
-      const index =
-        Math.round(this.timelineCursor / delay) %
-        this.gifFrames[imageIndex].frames.length;
-      const firstFrame = this.gifFrames[imageIndex].frames[index];
-
-      let dims = firstFrame.dims;
-
-      if (
-        !this.gifCanvas.frameImageData ||
-        dims.width != this.gifCanvas.frameImageData.width ||
-        dims.height != this.gifCanvas.frameImageData.height
-      ) {
-        this.gifTempCanvas.width = dims.width;
-        this.gifTempCanvas.height = dims.height;
-        this.gifCanvas.frameImageData = this.gifCanvas.tempCtx.createImageData(
-          dims.width,
-          dims.height,
-        );
-      }
-
-      this.gifCanvas.frameImageData.data.set(firstFrame.patch);
-
-      this.gifCanvas.tempCtx.putImageData(this.gifCanvas.frameImageData, 0, 0);
-
-      const centerX = x + w / 2;
-      const centerY = y + h / 2;
-
-      ctx.translate(centerX, centerY);
-      ctx.rotate(rotation);
-
-      ctx.drawImage(this.gifTempCanvas, -w / 2, -h / 2, w, h);
-      this.drawOutline(ctx, elementId, -w / 2, -h / 2, w, h, rotation);
-
-      ctx.rotate(-rotation);
-      ctx.translate(-centerX, -centerY);
-      ctx.globalAlpha = 1;
-    } else {
-      fetch(this.getPath(imageElement.localpath))
-        .then((resp) => resp.arrayBuffer())
-        .then((buff) => {
-          let gif = parseGIF(buff);
-          let frames = decompressFrames(gif, true);
-
-          const firstFrame = frames[0];
-
-          let dims = firstFrame.dims;
-
-          if (
-            !this.gifCanvas.frameImageData ||
-            dims.width != this.gifCanvas.frameImageData.width ||
-            dims.height != this.gifCanvas.frameImageData.height
-          ) {
-            this.gifTempCanvas.width = dims.width;
-            this.gifTempCanvas.height = dims.height;
-            this.gifCanvas.frameImageData =
-              this.gifCanvas.tempCtx.createImageData(dims.width, dims.height);
-          }
-
-          this.gifCanvas.frameImageData.data.set(firstFrame.patch);
-
-          this.gifCanvas.tempCtx.putImageData(
-            this.gifCanvas.frameImageData,
-            0,
-            0,
-          );
-
-          ctx.drawImage(this.gifTempCanvas, x, y, w, h);
-
-          this.gifFrames.push({
-            key: elementId,
-            frames: frames,
-          });
-        });
-    }
-  }
-
-  drawShape(ctx: CanvasRenderingContext2D, elementId: string) {
-    const shapeElement = this.timeline[elementId];
-    if (shapeElement.filetype != "shape") {
-      return false;
-    }
-
-    let scaleW = shapeElement.width;
-    let scaleH = shapeElement.height;
-    let scaleX = shapeElement.location.x;
-    let scaleY = shapeElement.location.y;
-    let rotation = shapeElement.rotation * (Math.PI / 180);
-
-    ctx.globalAlpha = shapeElement.opacity / 100;
-    if (shapeElement.animation["opacity"].isActivate == true) {
-      let index = Math.round(this.timelineCursor / 16);
-      let indexToMs = index * 20;
-      let startTime = Number(shapeElement.startTime);
-      let indexPoint = Math.round((indexToMs - startTime) / 20);
-
-      try {
-        if (indexPoint < 0) {
-          return false;
-        }
-
-        const ax = this.findNearestY(
-          shapeElement.animation["opacity"].ax,
-          this.timelineCursor - shapeElement.startTime,
-        );
-
-        if (ax == null) {
-          return false;
-        }
-
-        ctx.globalAlpha = this.zeroIfNegative(ax / 100);
-      } catch (error) {}
-    }
-
-    const centerX = scaleX + scaleW / 2;
-    const centerY = scaleY + scaleH / 2;
-
-    ctx.translate(centerX, centerY);
-    ctx.rotate(rotation);
-
-    ctx.beginPath();
-
-    const ratio = shapeElement.oWidth / shapeElement.width;
-
-    for (let index = 0; index < shapeElement.shape.length; index++) {
-      const element = shapeElement.shape[index];
-      const x = element[0] / ratio + shapeElement.location.x;
-      const y = element[1] / ratio + shapeElement.location.y;
-
-      ctx.fillStyle = shapeElement.option.fillColor;
-      if (this.nowShapeId == elementId) {
-        ctx.arc(x - centerX, y - centerY, 8, 0, 5 * Math.PI);
-      }
-
-      ctx.lineTo(x - centerX, y - centerY);
-    }
-
-    ctx.closePath();
-
-    ctx.fill();
-
-    // this.drawOutline(ctx, elementId, scaleX, scaleY, scaleW, scaleH, rotation);
-
-    this.drawOutline(
-      ctx,
-      elementId,
-      -scaleW / 2,
-      -scaleH / 2,
-      scaleW,
-      scaleH,
-      rotation,
-    );
-
-    ctx.rotate(-rotation);
-    ctx.translate(-centerX, -centerY);
 
     ctx.globalAlpha = 1;
   }

@@ -6,6 +6,7 @@ import type { ElementRenderFunction } from "./type";
 
 export function renderElement<T extends VisualTimelineElement>(
   ctx: CanvasRenderingContext2D,
+  elementId: string,
   element: T,
   timelineCursor: number,
   controlOutlineEnabled: boolean,
@@ -100,7 +101,7 @@ export function renderElement<T extends VisualTimelineElement>(
   }
   ctx.globalAlpha *= opacityScaledBy100 / 100;
 
-  renderFucnction(ctx, element, timelineCursor);
+  renderFucnction(ctx, elementId, element, timelineCursor);
 
   if (controlOutlineEnabled) {
     renderControlOutline(ctx, 0, 0, width, height);

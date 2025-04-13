@@ -9,6 +9,7 @@ const tempCtx = tempCanvas.getContext("2d") as CanvasRenderingContext2D;
 
 export const renderGif: ElementRenderFunction<GifElementType> = (
   ctx,
+  elementId,
   gifElement,
   timelineCursor,
 ) => {

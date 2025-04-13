@@ -46,6 +46,7 @@ function getWrappedLines(
 
 export const renderText: ElementRenderFunction<TextElementType> = (
   ctx,
+  elementId,
   textElement,
   timelineCursor,
 ) => {

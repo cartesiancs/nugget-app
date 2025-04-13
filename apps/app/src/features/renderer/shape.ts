@@ -3,6 +3,7 @@ import type { ElementRenderFunction } from "./type";
 
 export const renderShape: ElementRenderFunction<ShapeElementType> = (
   ctx,
+  elementId,
   shapeElement,
   timelineCursor,
 ) => {

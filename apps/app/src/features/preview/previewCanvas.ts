@@ -257,6 +257,7 @@ export class PreviewCanvas extends LitElement {
           if (fileType == "image") {
             renderElement(
               ctx,
+              elementId,
               element,
               this.timelineCursor,
               this.activeElementId === elementId,
@@ -267,6 +268,7 @@ export class PreviewCanvas extends LitElement {
           if (fileType == "gif") {
             renderElement(
               ctx,
+              elementId,
               element,
               this.timelineCursor,
               this.activeElementId === elementId,
@@ -281,6 +283,7 @@ export class PreviewCanvas extends LitElement {
           if (fileType == "text") {
             renderElement(
               ctx,
+              elementId,
               element,
               this.timelineCursor,
               this.activeElementId === elementId,
@@ -291,6 +294,7 @@ export class PreviewCanvas extends LitElement {
           if (fileType == "shape") {
             renderElement(
               ctx,
+              elementId,
               element,
               this.timelineCursor,
               this.activeElementId === elementId,

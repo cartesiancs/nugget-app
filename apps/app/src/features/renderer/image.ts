@@ -5,6 +5,7 @@ import { loadedAssetStore } from "../asset/loadedAssetStore";
 
 export const renderImage: ElementRenderFunction<ImageElementType> = (
   ctx,
+  elementId,
   imageElement,
   timelineCursor,
 ) => {

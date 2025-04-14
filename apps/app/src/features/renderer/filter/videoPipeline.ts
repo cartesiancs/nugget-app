@@ -4,6 +4,7 @@ import type {
 } from "../../../@types/timeline";
 import type { VideoMetadataPerElement } from "../../asset/loadedAssetStore";
 import { createTextureNPOT, drawToTexture } from "../gl/texture";
+import { Blur } from "./blur";
 import { ChromaKey } from "./chromaKey";
 import type { Filter } from "./common";
 import { Normal } from "./normal";
@@ -19,7 +20,7 @@ export class VideoFilterPipeline {
     this.filters = {
       normal: new Normal(gl),
       chromakey: new ChromaKey(gl),
-      blur: new ChromaKey(gl),
+      blur: new Blur(gl),
       radialblur: new ChromaKey(gl),
     };
 

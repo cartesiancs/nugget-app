@@ -17,6 +17,8 @@ import { renderElement } from "../renderer/element";
 import { renderImage } from "../renderer/image";
 import { renderShape } from "../renderer/shape";
 import { renderGif } from "../renderer/gif";
+import { renderVideoWithoutWait } from "../renderer/video";
+import { loadedAssetStore } from "../asset/loadedAssetStore";
 
 type LoadedVideo = {
   elementId: string;
@@ -59,6 +61,9 @@ export class PreviewCanvas extends LitElement {
   loadedVideos: LoadedVideo[];
   isChangeFilter: boolean;
   isRotation: boolean;
+
+  @property({ type: Boolean })
+  useNewVideoRendering: boolean = true;
 
   constructor() {
     super();
@@ -277,7 +282,18 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "video") {
-            this.drawVideo(ctx, elementId, w, h, x, y, startTime);
+            if (this.useNewVideoRendering) {
+              renderElement(
+                ctx,
+                elementId,
+                element,
+                this.timelineCursor,
+                this.activeElementId === elementId,
+                renderVideoWithoutWait,
+              );
+            } else {
+              this.drawVideo(ctx, elementId, w, h, x, y, startTime);
+            }
           }
 
           if (fileType == "text") {
@@ -1057,43 +1073,52 @@ export class PreviewCanvas extends LitElement {
   }
 
   public stopPlay() {
-    for (let index = 0; index < this.loadedVideos.length; index++) {
-      try {
-        const element = this.loadedVideos[index];
-        const videoElement = this.timeline[
-          element.elementId
-        ] as VideoElementType;
-        element.isPlay = false;
-        element.object.pause();
-        element.object.currentTime =
-          (-(videoElement.startTime - this.timelineCursor) *
-            videoElement.speed) /
-          1000;
+    if (this.useNewVideoRendering) {
+      loadedAssetStore.getState().stopPlay(this.timelineCursor);
+      this.drawCanvas(this.canvas);
+    } else {
+      for (let index = 0; index < this.loadedVideos.length; index++) {
+        try {
+          const element = this.loadedVideos[index];
+          const videoElement = this.timeline[
+            element.elementId
+          ] as VideoElementType;
+          element.isPlay = false;
+          element.object.pause();
+          element.object.currentTime =
+            (-(videoElement.startTime - this.timelineCursor) *
+              videoElement.speed) /
+            1000;
 
-        this.drawCanvas(this.canvas);
-      } catch (error) {}
+          this.drawCanvas(this.canvas);
+        } catch (error) {}
+      }
     }
   }
 
   public startPlay() {
-    for (let index = 0; index < this.loadedVideos.length; index++) {
-      try {
-        const element = this.loadedVideos[index];
-        const videoElement = this.timeline[
-          element.elementId
-        ] as VideoElementType;
-        element.isPlay = true;
-        element.object.currentTime =
-          (-(videoElement.startTime - this.timelineCursor) *
-            videoElement.speed) /
-          1000;
+    if (this.useNewVideoRendering) {
+      loadedAssetStore.getState().startPlay(this.timelineCursor);
+    } else {
+      for (let index = 0; index < this.loadedVideos.length; index++) {
+        try {
+          const element = this.loadedVideos[index];
+          const videoElement = this.timeline[
+            element.elementId
+          ] as VideoElementType;
+          element.isPlay = true;
+          element.object.currentTime =
+            (-(videoElement.startTime - this.timelineCursor) *
+              videoElement.speed) /
+            1000;
 
-        element.object.playbackRate = videoElement.speed;
-        element.object.muted = true;
-        console.log(videoElement.speed);
+          element.object.playbackRate = videoElement.speed;
+          element.object.muted = true;
+          console.log(videoElement.speed);
 
-        element.object.play();
-      } catch (error) {}
+          element.object.play();
+        } catch (error) {}
+      }
     }
   }
 

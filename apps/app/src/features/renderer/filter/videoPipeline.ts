@@ -39,8 +39,8 @@ export class VideoFilterPipeline {
       return;
     }
 
-    this.gl.canvas.width = videoElement.width;
-    this.gl.canvas.height = videoElement.height;
+    this.gl.canvas.width = videoMeta.object.videoWidth;
+    this.gl.canvas.height = videoMeta.object.videoHeight;
 
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.framebufferTexture);
     this.gl.texImage2D(

@@ -282,6 +282,10 @@ export class PreviewCanvas extends LitElement {
           }
 
           if (fileType == "video") {
+            const id = `${this.useNewVideoRendering ? "new" : "old"}:${
+              element.filter.list?.[0]?.name ?? "none"
+            }`;
+            performance.mark(`start:${id}`);
             if (this.useNewVideoRendering) {
               renderElement(
                 ctx,
@@ -294,6 +298,8 @@ export class PreviewCanvas extends LitElement {
             } else {
               this.drawVideo(ctx, elementId, w, h, x, y, startTime);
             }
+            performance.mark(`end:${id}`);
+            performance.measure(id, `start:${id}`, `end:${id}`);
           }
 
           if (fileType == "text") {

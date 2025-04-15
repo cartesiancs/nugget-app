@@ -10,7 +10,7 @@ export function renderElement<T extends VisualTimelineElement>(
   element: T,
   timelineCursor: number,
   controlOutlineEnabled: boolean,
-  renderFucnction: ElementRenderFunction<T>,
+  renderFunction: ElementRenderFunction<T>,
 ): void {
   ctx.save();
 
@@ -101,7 +101,7 @@ export function renderElement<T extends VisualTimelineElement>(
   }
   ctx.globalAlpha *= opacityScaledBy100 / 100;
 
-  renderFucnction(ctx, elementId, element, timelineCursor);
+  renderFunction(ctx, elementId, element, timelineCursor);
 
   if (controlOutlineEnabled) {
     renderControlOutline(ctx, 0, 0, width, height);

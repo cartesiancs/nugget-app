@@ -1,4 +1,4 @@
-import { Filter } from "./common";
+import { BaseFilter } from "./baseFilter";
 
 const vertexShaderSource = `
   attribute vec2 a_position;
@@ -59,7 +59,7 @@ function parseRGBString(str: string) {
   return { r, g, b, f };
 }
 
-export class ChromaKey extends Filter<string> {
+export class ChromaKey extends BaseFilter<string> {
   positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
   positionBuffer: WebGLBuffer | null = null;
   a_position: number;
@@ -76,9 +76,15 @@ export class ChromaKey extends Filter<string> {
     super(gl, vertexShaderSource, fragmentShaderSource);
 
     this.positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
+
     this.a_position = gl.getAttribLocation(this.program, "a_position");
 
     this.texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.texCoords, gl.STATIC_DRAW);
+
     this.a_texCoord = gl.getAttribLocation(this.program, "a_texCoord");
 
     this.u_video = gl.getUniformLocation(this.program, "u_video");
@@ -86,7 +92,7 @@ export class ChromaKey extends Filter<string> {
     this.u_threshold = gl.getUniformLocation(this.program, "u_threshold");
   }
 
-  process(data: string, targetTexture: WebGLTexture): void {
+  draw(data: string, targetTexture: WebGLTexture): void {
     const gl = this.gl;
 
     gl.useProgram(this.program);
@@ -96,12 +102,10 @@ export class ChromaKey extends Filter<string> {
     // Quad, 텍스쳐 좌표 바인딩
     {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(this.a_position);
       gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, 0, 0);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.texCoords, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(this.a_texCoord);
       gl.vertexAttribPointer(this.a_texCoord, 2, gl.FLOAT, false, 0, 0);
     }

@@ -1,5 +1,5 @@
 import { parseBlurString } from "./blur";
-import { Filter } from "./common";
+import { BaseFilter } from "./baseFilter";
 
 const vertexShaderSource = `
   attribute vec2 a_position;
@@ -53,7 +53,7 @@ const fragmentShaderSource = `
   }
 `;
 
-export class RaidalBlur extends Filter<string> {
+export class RaidalBlur extends BaseFilter<string> {
   positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
   positionBuffer: WebGLBuffer | null = null;
   a_position: number;
@@ -80,7 +80,7 @@ export class RaidalBlur extends Filter<string> {
     this.u_mouse = gl.getUniformLocation(this.program, "u_mouse");
   }
 
-  process(data: string, targetTexture: WebGLTexture): void {
+  draw(data: string, targetTexture: WebGLTexture): void {
     const gl = this.gl;
 
     gl.useProgram(this.program);

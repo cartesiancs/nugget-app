@@ -1,4 +1,4 @@
-import { Filter } from "./common";
+import { BaseFilter } from "./baseFilter";
 
 const vertexShaderSource = `
   attribute vec2 a_position;
@@ -24,7 +24,7 @@ type RenderParam = {
   flipY?: boolean;
 };
 
-export class Normal extends Filter<RenderParam | null> {
+export class Normal extends BaseFilter<RenderParam | null> {
   positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
   positionBuffer: WebGLBuffer | null = null;
   a_position: number;
@@ -48,7 +48,7 @@ export class Normal extends Filter<RenderParam | null> {
   }
 
   // data가 null일 경우, targetTexture를 바로 렌더링
-  process(data: RenderParam | null, targetTexture: WebGLTexture): void {
+  draw(data: RenderParam | null, targetTexture: WebGLTexture): void {
     const gl = this.gl;
 
     gl.useProgram(this.program);

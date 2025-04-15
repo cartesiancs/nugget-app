@@ -1,4 +1,4 @@
-import { Filter } from "./common";
+import { BaseFilter } from "./baseFilter";
 
 const vertexShaderSource = `
   attribute vec2 a_position;
@@ -49,7 +49,7 @@ export function parseBlurString(str: string) {
   return { f };
 }
 
-export class Blur extends Filter<string> {
+export class Blur extends BaseFilter<string> {
   positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
   positionBuffer: WebGLBuffer | null = null;
   a_position: number;
@@ -76,7 +76,7 @@ export class Blur extends Filter<string> {
     this.u_blurFactor = gl.getUniformLocation(this.program, "u_blurFactor");
   }
 
-  process(data: string, targetTexture: WebGLTexture): void {
+  draw(data: string, targetTexture: WebGLTexture): void {
     const gl = this.gl;
 
     gl.useProgram(this.program);

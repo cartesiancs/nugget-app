@@ -6,12 +6,12 @@ import type { VideoMetadataPerElement } from "../../asset/loadedAssetStore";
 import { createTextureNPOT, drawToTexture } from "../gl/texture";
 import { Blur } from "./blur";
 import { ChromaKey } from "./chromaKey";
-import type { Filter } from "./common";
+import type { BaseFilter } from "./baseFilter";
 import { Normal } from "./normal";
 import { RaidalBlur } from "./radialBlur";
 
 export class VideoFilterPipeline {
-  private filters: Record<VideoFilterType["name"] | "normal", Filter<any>>;
+  private filters: Record<VideoFilterType["name"] | "normal", BaseFilter<any>>;
 
   private srcTexture: WebGLTexture;
   private framebufferTexture: WebGLTexture;
@@ -66,7 +66,7 @@ export class VideoFilterPipeline {
       this.gl.canvas.width,
       this.gl.canvas.height,
       () => {
-        normal.process(
+        normal.draw(
           {
             source: videoMeta.object,
             flipY: true, // 비디오 좌표계는 WebGL 좌표계와 반대이므로 Y축을 뒤집어야 함
@@ -86,14 +86,14 @@ export class VideoFilterPipeline {
         this.gl.canvas.width,
         this.gl.canvas.height,
         () => {
-          this.filters[name].process(value, this.srcTexture);
+          this.filters[name].draw(value, this.srcTexture);
         },
       );
       this.swapTextures();
     }
 
     // 프레임버퍼(마지막으로 swap했으므로 srcTexture에 담겨있음)를 최종적으로 gl 캔버스에 렌더링
-    normal.process(null, this.srcTexture);
+    normal.draw(null, this.srcTexture);
 
     // gl 캔버스를 메인 캔버스에 렌더링
     ctx.drawImage(

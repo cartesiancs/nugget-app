@@ -14,7 +14,7 @@ function createShader(gl: WebGLRenderingContext, type: number, source: string) {
   return shader;
 }
 
-export abstract class Filter<TParam> {
+export abstract class BaseFilter<TParam> {
   protected program!: WebGLProgram;
 
   constructor(
@@ -44,5 +44,5 @@ export abstract class Filter<TParam> {
     }
   }
 
-  abstract process(data: TParam, targetTexture: WebGLTexture): void;
+  abstract draw(data: TParam, targetTexture: WebGLTexture): void;
 }

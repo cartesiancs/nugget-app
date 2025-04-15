@@ -1,4 +1,4 @@
-import { BaseFilter } from "./baseFilter";
+import { BaseQuadFilter } from "./baseFilter";
 
 const vertexShaderSource = `
   attribute vec2 a_position;
@@ -59,35 +59,13 @@ function parseRGBString(str: string) {
   return { r, g, b, f };
 }
 
-export class ChromaKey extends BaseFilter<string> {
-  positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
-  positionBuffer: WebGLBuffer | null = null;
-  a_position: number;
-
-  texCoordBuffer: WebGLBuffer | null = null;
-  texCoords = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]);
-  a_texCoord: number;
-
-  u_video: WebGLUniformLocation | null;
+export class ChromaKey extends BaseQuadFilter<string> {
   u_keyColor: WebGLUniformLocation | null;
   u_threshold: WebGLUniformLocation | null;
 
   constructor(gl: WebGLRenderingContext) {
-    super(gl, vertexShaderSource, fragmentShaderSource);
+    super(gl, vertexShaderSource, fragmentShaderSource, "u_video");
 
-    this.positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
-
-    this.a_position = gl.getAttribLocation(this.program, "a_position");
-
-    this.texCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.texCoords, gl.STATIC_DRAW);
-
-    this.a_texCoord = gl.getAttribLocation(this.program, "a_texCoord");
-
-    this.u_video = gl.getUniformLocation(this.program, "u_video");
     this.u_keyColor = gl.getUniformLocation(this.program, "u_keyColor");
     this.u_threshold = gl.getUniformLocation(this.program, "u_threshold");
   }
@@ -95,41 +73,14 @@ export class ChromaKey extends BaseFilter<string> {
   draw(data: string, targetTexture: WebGLTexture): void {
     const gl = this.gl;
 
-    gl.useProgram(this.program);
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    this.prepareDraw(targetTexture);
 
-    // Quad, 텍스쳐 좌표 바인딩
-    {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-      gl.enableVertexAttribArray(this.a_position);
-      gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, 0, 0);
+    const parsedRgb = parseRGBString(data);
+    const keyColor = [parsedRgb.r / 255, parsedRgb.g / 255, parsedRgb.b / 255];
+    const thresholdForce = parsedRgb.f;
+    gl.uniform3fv(this.u_keyColor, keyColor);
+    gl.uniform1f(this.u_threshold, thresholdForce);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-      gl.enableVertexAttribArray(this.a_texCoord);
-      gl.vertexAttribPointer(this.a_texCoord, 2, gl.FLOAT, false, 0, 0);
-    }
-
-    // 유니폼 설정
-    {
-      let keyColor = [0.0, 1.0, 0.0]; // Green
-      let ThresholdForce = 0.5;
-      const parsedRgb = parseRGBString(data);
-
-      keyColor = [parsedRgb.r / 255, parsedRgb.g / 255, parsedRgb.b / 255];
-      ThresholdForce = parsedRgb.f;
-
-      gl.uniform3fv(this.u_keyColor, keyColor);
-      gl.uniform1f(this.u_threshold, ThresholdForce);
-    }
-
-    // 텍스처 바인딩
-    {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-      gl.uniform1i(this.u_video, 0);
-    }
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    super.draw(data, targetTexture);
   }
 }

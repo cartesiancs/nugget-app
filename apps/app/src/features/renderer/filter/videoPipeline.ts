@@ -8,7 +8,7 @@ import { Blur } from "./blur";
 import { ChromaKey } from "./chromaKey";
 import type { BaseFilter } from "./baseFilter";
 import { Normal } from "./normal";
-import { RaidalBlur } from "./radialBlur";
+import { RadialBlur } from "./radialBlur";
 
 export class VideoFilterPipeline {
   private filters: Record<VideoFilterType["name"] | "normal", BaseFilter<any>>;
@@ -22,7 +22,7 @@ export class VideoFilterPipeline {
       normal: new Normal(gl),
       chromakey: new ChromaKey(gl),
       blur: new Blur(gl),
-      radialblur: new RaidalBlur(gl),
+      radialblur: new RadialBlur(gl),
     };
 
     this.srcTexture = createTextureNPOT(gl);

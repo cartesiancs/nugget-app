@@ -1,5 +1,5 @@
 import { parseBlurString } from "./blur";
-import { BaseFilter } from "./baseFilter";
+import { BaseQuadFilter } from "./baseFilter";
 
 const vertexShaderSource = `
   attribute vec2 a_position;
@@ -53,29 +53,13 @@ const fragmentShaderSource = `
   }
 `;
 
-export class RaidalBlur extends BaseFilter<string> {
-  positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
-  positionBuffer: WebGLBuffer | null = null;
-  a_position: number;
-
-  texCoordBuffer: WebGLBuffer | null = null;
-  texCoords = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]);
-  a_texCoord: number;
-
-  u_video: WebGLUniformLocation | null;
+export class RadialBlur extends BaseQuadFilter<string> {
   u_power: WebGLUniformLocation | null;
   u_mouse: WebGLUniformLocation | null;
 
   constructor(gl: WebGLRenderingContext) {
-    super(gl, vertexShaderSource, fragmentShaderSource);
+    super(gl, vertexShaderSource, fragmentShaderSource, "u_video");
 
-    this.positionBuffer = gl.createBuffer();
-    this.a_position = gl.getAttribLocation(this.program, "a_position");
-
-    this.texCoordBuffer = gl.createBuffer();
-    this.a_texCoord = gl.getAttribLocation(this.program, "a_texCoord");
-
-    this.u_video = gl.getUniformLocation(this.program, "u_video");
     this.u_power = gl.getUniformLocation(this.program, "u_power");
     this.u_mouse = gl.getUniformLocation(this.program, "u_mouse");
   }
@@ -83,40 +67,12 @@ export class RaidalBlur extends BaseFilter<string> {
   draw(data: string, targetTexture: WebGLTexture): void {
     const gl = this.gl;
 
-    gl.useProgram(this.program);
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    this.prepareDraw(targetTexture);
 
-    // Quad, 텍스쳐 좌표 바인딩
-    {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(this.a_position);
-      gl.vertexAttribPointer(this.a_position, 2, gl.FLOAT, false, 0, 0);
+    const blurFactor = parseBlurString(data);
+    gl.uniform1f(this.u_power, blurFactor.f);
+    gl.uniform2fv(this.u_mouse, [0.5, 0.5]);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.texCoords, gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(this.a_texCoord);
-      gl.vertexAttribPointer(this.a_texCoord, 2, gl.FLOAT, false, 0, 0);
-    }
-
-    // 유니폼 설정
-    {
-      gl.uniform1i(this.u_video, 0);
-
-      const blurFactor = parseBlurString(data);
-      gl.uniform1f(this.u_power, blurFactor.f);
-
-      gl.uniform2fv(this.u_mouse, [0.5, 0.5]);
-    }
-
-    // 텍스처 바인딩
-    {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-      gl.uniform1i(this.u_video, 0);
-    }
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    super.draw(data, targetTexture);
   }
 }

@@ -4,8 +4,11 @@ export function renderControlOutline(
   y: number,
   w: number,
   h: number,
-  a: number,
 ) {
+  ctx.save();
+
+  ctx.globalAlpha = 1;
+
   const padding = 10;
   ctx.lineWidth = 3;
   ctx.strokeStyle = "#ffffff";
@@ -33,4 +36,6 @@ export function renderControlOutline(
   ctx.beginPath();
   ctx.arc(x + w / 2, y - 50, 15, 0, 2 * Math.PI);
   ctx.fill();
+
+  ctx.restore();
 }

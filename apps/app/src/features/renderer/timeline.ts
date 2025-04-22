@@ -1,5 +1,5 @@
 import type { Timeline, VisualTimelineElement } from "../../@types/timeline";
-import { isElementVisibleWhen } from "../element/time";
+import { isElementVisibleAtTime } from "../element/time";
 import { renderElement } from "./element";
 import type { ElementRenderFunction } from "./type";
 
@@ -44,7 +44,7 @@ export function renderTimelineAtTime(
       continue;
     }
 
-    if (!isElementVisibleWhen(t, timeline, element)) {
+    if (!isElementVisibleAtTime(t, timeline, element)) {
       continue;
     }
 

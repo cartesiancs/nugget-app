@@ -10,7 +10,7 @@ export function isTimeInRange(t: number, start: number, end: number): boolean {
   return t >= start && t < end;
 }
 
-export function isElementVisibleWhen(
+export function isElementVisibleAtTime(
   t: number,
   timeline: Timeline,
   element: VisualTimelineElement,

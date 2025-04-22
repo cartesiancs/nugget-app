@@ -1,15 +1,19 @@
 import type {
   AudioElementType,
   Timeline,
-  TimelineElement,
+  VisualTimelineElement,
   VideoElementType,
 } from "../../@types/timeline";
 import { elementUtils } from "../../utils/element";
 
+export function isTimeInRange(t: number, start: number, end: number): boolean {
+  return t >= start && t < end;
+}
+
 export function isElementVisibleWhen(
   t: number,
   timeline: Timeline,
-  element: TimelineElement,
+  element: VisualTimelineElement,
 ): boolean {
   const startTime =
     element.startTime + getAdditionalStartTime(timeline, element);
@@ -21,12 +25,12 @@ export function isElementVisibleWhen(
       : element.duration;
   const endTime = startTime + realDuration;
 
-  return t >= startTime && t < endTime;
+  return isTimeInRange(t, startTime, endTime);
 }
 
 function getAdditionalStartTime(
   timeline: Timeline,
-  element: TimelineElement,
+  element: VisualTimelineElement,
 ): number {
   let additionalStartTime = 0;
   if (element.filetype == "text") {

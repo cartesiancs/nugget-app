@@ -1,5 +1,6 @@
 import type { VideoElementType } from "../../@types/timeline";
 import { loadedAssetStore } from "../asset/loadedAssetStore";
+import { isTimeInRange } from "../element/time";
 import { VideoFilterPipeline } from "./filter/videoPipeline";
 import type { ElementRenderFunction } from "./type";
 
@@ -22,10 +23,13 @@ export const renderVideoWithoutWait: ElementRenderFunction<VideoElementType> = (
     );
   }
 
-  const timeInRange =
-    timelineCursor >= videoElement.trim.startTime &&
-    timelineCursor < videoElement.trim.endTime;
-  if (!timeInRange) {
+  if (
+    !isTimeInRange(
+      timelineCursor,
+      videoElement.trim.startTime,
+      videoElement.trim.endTime,
+    )
+  ) {
     loadedVideo.object.muted = true;
     return;
   }

@@ -8,21 +8,15 @@ import {
 } from "../../states/renderOptionStore";
 import { KeyframeController } from "../../controllers/keyframe";
 import { v4 as uuidv4 } from "uuid";
-import { elementUtils } from "../../utils/element";
-import type {
-  AudioElementType,
-  VideoElementType,
-  VisualTimelineElement,
-} from "../../@types/timeline";
+import type { VisualTimelineElement } from "../../@types/timeline";
 import { renderText } from "../renderer/text";
-import { renderElement } from "../renderer/element";
 import { renderImage } from "../renderer/image";
 import { renderShape } from "../renderer/shape";
 import { renderGif } from "../renderer/gif";
 import { renderVideoWithoutWait } from "../renderer/video";
 import { loadedAssetStore } from "../asset/loadedAssetStore";
 import type { ElementRenderFunction } from "../renderer/type";
-import { isElementVisibleWhen } from "../element/time";
+import { renderTimelineAtTime } from "../renderer/timeline";
 
 type RendererMap = {
   [K in VisualTimelineElement["filetype"]]: ElementRenderFunction<
@@ -201,49 +195,34 @@ export class PreviewCanvas extends LitElement {
     canvas.width = this.renderOption.previewSize.w;
     canvas.height = this.renderOption.previewSize.h;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = this.renderOption.backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const prioritySortedTimeline = Object.entries(this.timeline).sort(
-      ([, a], [, b]) => a.priority - b.priority,
-    );
-
-    for (const [elementId, element] of prioritySortedTimeline) {
-      if (element.filetype === "audio") {
-        continue;
-      }
-
-      if (!isElementVisibleWhen(this.timelineCursor, this.timeline, element)) {
-        continue;
-      }
-
-      renderElement(
-        ctx,
-        elementId,
-        element,
-        this.timelineCursor,
-        this.activeElementId === elementId,
-        this.renderers[element.filetype] as ElementRenderFunction<
-          typeof element
-        >,
-      );
-
-      if (this.activeElementId == elementId) {
-        if (this.isMove) {
-          const checkAlign = this.isAlign({
-            x: element.location.x,
-            y: element.location.y,
-            w: element.width,
-            h: element.height,
-          });
-          if (checkAlign) {
-            this.drawAlign(ctx, checkAlign.direction);
-          }
+    renderTimelineAtTime(
+      ctx,
+      this.timeline,
+      this.timelineCursor,
+      this.renderers,
+      this.renderOption.backgroundColor,
+      canvas.width,
+      canvas.height,
+      { controlOutlineEnabled: true, activeElementId: this.activeElementId },
+      (elementId, element) => {
+        if (this.activeElementId !== elementId) {
+          return;
         }
-      }
-    }
+        if (!this.isMove) {
+          return;
+        }
+
+        const checkAlign = this.isAlign({
+          x: element.location.x,
+          y: element.location.y,
+          w: element.width,
+          h: element.height,
+        });
+        if (checkAlign) {
+          this.drawAlign(ctx, checkAlign.direction);
+        }
+      },
+    );
   }
 
   drawKeyframePath(ctx: CanvasRenderingContext2D, elementId: string) {

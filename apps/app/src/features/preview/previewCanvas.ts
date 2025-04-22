@@ -22,6 +22,7 @@ import { renderGif } from "../renderer/gif";
 import { renderVideoWithoutWait } from "../renderer/video";
 import { loadedAssetStore } from "../asset/loadedAssetStore";
 import type { ElementRenderFunction } from "../renderer/type";
+import { isElementVisibleWhen } from "../element/time";
 
 type RendererMap = {
   [K in VisualTimelineElement["filetype"]]: ElementRenderFunction<
@@ -190,86 +191,55 @@ export class PreviewCanvas extends LitElement {
     return closestY;
   }
 
-  drawCanvas(canvas) {
-    let index = 1;
-
+  drawCanvas(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");
-    if (ctx) {
-      canvas.width = this.renderOption.previewSize.w;
-      canvas.height = this.renderOption.previewSize.h;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (ctx == null) {
+      return;
+    }
 
-      ctx.fillStyle = this.renderOption.backgroundColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.width = this.renderOption.previewSize.w;
+    canvas.height = this.renderOption.previewSize.h;
 
-      const sortedTimeline = Object.entries(this.timeline).sort(
-        ([, valueA], [, valueB]) => valueA.priority - valueB.priority,
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = this.renderOption.backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const prioritySortedTimeline = Object.entries(this.timeline).sort(
+      ([, a], [, b]) => a.priority - b.priority,
+    );
+
+    for (const [elementId, element] of prioritySortedTimeline) {
+      if (element.filetype === "audio") {
+        continue;
+      }
+
+      if (!isElementVisibleWhen(this.timelineCursor, this.timeline, element)) {
+        continue;
+      }
+
+      renderElement(
+        ctx,
+        elementId,
+        element,
+        this.timelineCursor,
+        this.activeElementId === elementId,
+        this.renderers[element.filetype] as ElementRenderFunction<
+          typeof element
+        >,
       );
 
-      for (const [elementId, element] of sortedTimeline) {
-        if (element.filetype != "audio") {
-          const x = element.location.x;
-          const y = element.location.y;
-          const w = element.width;
-          const h = element.height;
-
-          const fileType = element.filetype;
-          let additionalStartTime = 0;
-
-          if (fileType == "text") {
-            if (element.parentKey != "standalone") {
-              const parentStartTime =
-                this.timeline[element.parentKey].startTime;
-              additionalStartTime = parentStartTime;
-            }
-          }
-
-          const startTime = element.startTime + additionalStartTime;
-          const duration = element.duration;
-
-          const elementType = elementUtils.getElementType(fileType);
-
-          if (elementType == "static") {
-            if (
-              !(
-                this.timelineCursor >= startTime &&
-                this.timelineCursor < startTime + duration
-              )
-            ) {
-              continue;
-            }
-          } else {
-            const speed = (element as VideoElementType | AudioElementType)
-              .speed;
-            if (
-              !(
-                this.timelineCursor >= startTime &&
-                this.timelineCursor < startTime + duration / speed
-              )
-            ) {
-              continue;
-            }
-          }
-
-          renderElement(
-            ctx,
-            elementId,
-            element,
-            this.timelineCursor,
-            this.activeElementId === elementId,
-            this.renderers[element.filetype] as ElementRenderFunction<
-              typeof element
-            >,
-          );
-
-          if (this.activeElementId == elementId) {
-            if (this.isMove) {
-              const checkAlign = this.isAlign({ x: x, y: y, w: w, h: h });
-              if (checkAlign) {
-                this.drawAlign(ctx, checkAlign.direction);
-              }
-            }
+      if (this.activeElementId == elementId) {
+        if (this.isMove) {
+          const checkAlign = this.isAlign({
+            x: element.location.x,
+            y: element.location.y,
+            w: element.width,
+            h: element.height,
+          });
+          if (checkAlign) {
+            this.drawAlign(ctx, checkAlign.direction);
           }
         }
       }

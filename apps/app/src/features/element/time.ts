@@ -11,7 +11,7 @@ export function isTimeInRange(t: number, start: number, end: number): boolean {
 }
 
 export function isElementVisibleAtTime(
-  t: number,
+  timeInMs: number,
   timeline: Timeline,
   element: VisualTimelineElement,
 ): boolean {
@@ -25,7 +25,7 @@ export function isElementVisibleAtTime(
       : element.duration;
   const endTime = startTime + realDuration;
 
-  return isTimeInRange(t, startTime, endTime);
+  return isTimeInRange(timeInMs, startTime, endTime);
 }
 
 function getAdditionalStartTime(

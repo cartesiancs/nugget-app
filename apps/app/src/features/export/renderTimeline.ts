@@ -44,14 +44,14 @@ export async function renderTimeline(
 
   const totalFrames = duration * fps;
   for (let currentFrame = 0; currentFrame < totalFrames; currentFrame++) {
-    const t = (currentFrame / fps) * 1000;
+    const timeInMs = (currentFrame / fps) * 1000;
 
-    await assetStore.seek(timeline, t);
+    await assetStore.seek(timeline, timeInMs);
 
     renderTimelineAtTime(
       ctx,
       timeline,
-      t,
+      timeInMs,
       elementRenderers,
       backgroundColor,
       width,

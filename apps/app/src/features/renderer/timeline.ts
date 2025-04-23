@@ -17,7 +17,7 @@ type OutlineOption = {
 export function renderTimelineAtTime(
   ctx: CanvasRenderingContext2D,
   timeline: Timeline,
-  t: number,
+  timeInMs: number,
   renderers: TimelineRenderers,
   backgroundColor: string,
   width: number,
@@ -44,7 +44,7 @@ export function renderTimelineAtTime(
       continue;
     }
 
-    if (!isElementVisibleAtTime(t, timeline, element)) {
+    if (!isElementVisibleAtTime(timeInMs, timeline, element)) {
       continue;
     }
 
@@ -52,7 +52,7 @@ export function renderTimelineAtTime(
       ctx,
       elementId,
       element,
-      t,
+      timeInMs,
       outlineOptions.controlOutlineEnabled &&
         elementId === outlineOptions.activeElementId,
       renderers[element.filetype] as ElementRenderFunction<typeof element>,

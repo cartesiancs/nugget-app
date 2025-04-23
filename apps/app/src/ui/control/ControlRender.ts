@@ -1,8 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IProjectStore, projectStore } from "../../states/projectStore";
-import { ITimelineStore, useTimelineStore } from "../../states/timelineStore";
-import { RenderController } from "../../controllers/render";
+import { useTimelineStore } from "../../states/timelineStore";
 import { LocaleController } from "../../controllers/locale";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 import axios from "axios";
@@ -10,12 +9,19 @@ import { renderOptionStore } from "../../states/renderOptionStore";
 import { v4 as uuidv4 } from "uuid";
 import { io } from "socket.io-client";
 import { rendererModal } from "../../utils/modal";
+import { requestIPCVideoExport } from "../../features/export/ipc";
+import { renderImage } from "../../features/renderer/image";
+import { renderVideoWithWait } from "../../features/renderer/video";
+import { renderGif } from "../../features/renderer/gif";
+import { renderText } from "../../features/renderer/text";
+import { renderShape } from "../../features/renderer/shape";
+import type { ExportOptions } from "../../features/export/types";
+import { formatSeconds } from "../../utils/time";
 
 let socket;
 
 @customElement("control-ui-render")
 export class ControlRender extends LitElement {
-  private renderControl = new RenderController();
   private lc = new LocaleController(this);
 
   @property()
@@ -28,6 +34,8 @@ export class ControlRender extends LitElement {
   videoSrc = "";
   httpRenderDoneModal: any;
   hasUpdatedOnce: boolean;
+
+  renderTime: number[] = [];
 
   constructor() {
     super();
@@ -134,14 +142,74 @@ export class ControlRender extends LitElement {
     //this.renderControll.requestRender();
   }
 
-  handleClickRenderButton() {
-    this.renderControl.requestRender();
-  }
+  async handleClickRenderV2Button() {
+    const optionsWithoutDestination: Omit<ExportOptions, "videoDestination"> = {
+      ...renderOptionStore.getState().options,
+      videoDuration: renderOptionStore.getState().options.duration,
+      videoBitrate: Number(document.querySelector("#videoBitrate").value),
+    };
 
-  handleClickRenderV2Button() {
+    const elementRenderers = {
+      image: renderImage,
+      video: renderVideoWithWait,
+      gif: renderGif,
+      text: renderText,
+      shape: renderShape,
+    };
+
     const env = getLocationEnv();
     if (env == "electron") {
-      this.renderControl.requestRenderV2();
+      const projectFolder = document.querySelector("#projectFolder").value;
+      if (projectFolder == "") {
+        document
+          .querySelector("toast-box")
+          .showToast({ message: "Select a project folder", delay: "4000" });
+        return;
+      }
+
+      const ipc = window.electronAPI.req;
+
+      const videoDestination = await ipc.dialog.exportVideo();
+      if (videoDestination == null) {
+        return;
+      }
+
+      const fileExists = await ipc.filesystem.existFile(videoDestination);
+      if (fileExists) {
+        await ipc.filesystem.removeFile(videoDestination);
+      }
+
+      const options = {
+        ...optionsWithoutDestination,
+        videoDestination,
+      };
+
+      requestIPCVideoExport(
+        useTimelineStore.getState().timeline,
+        elementRenderers,
+        options,
+        (currentFrame, totalFrames) => {
+          const progressTo100 = (currentFrame / totalFrames) * 100;
+          this.renderTime.push(Date.now());
+
+          document.querySelector("#progress").style.width = `${progressTo100}%`;
+          document.querySelector("#progress").innerHTML = `${Math.round(
+            progressTo100,
+          )}%`;
+          rendererModal.progressModal.show();
+
+          // TODO: Show proper ffmpeg progress
+          if (this.renderTime.length > 2) {
+            this.renderTime.shift();
+            const rm = (this.renderTime[1] - this.renderTime[0]) / 100;
+            document.querySelector(
+              "#remainingTime",
+            ).innerHTML = `${formatSeconds(
+              Math.round(rm * (100 - progressTo100)),
+            )} left`;
+          }
+        },
+      );
     } else {
       this.requestHttpRender();
     }
@@ -190,11 +258,6 @@ export class ControlRender extends LitElement {
           <label class="form-check-label">높음</label>
         </div>
       </div> -->
-
-      <!-- <button class="btn btn-blue-fill" @click=${this
-        .handleClickRenderButton}>
-        ${this.lc.t("setting.export")}
-      </button> -->
 
       <button
         class="btn btn-blue-fill ${getLocationEnv() == "demo" ? "d-none" : ""}"

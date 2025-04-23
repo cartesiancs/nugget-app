@@ -23,7 +23,7 @@ export type VideoMetadataPerElement = {
   isPlay: boolean;
 };
 
-interface ILoadedAssetStore {
+export interface ILoadedAssetStore {
   // path, image
   _loadedImage: Record<string, HTMLImageElement>;
 
@@ -56,6 +56,7 @@ interface ILoadedAssetStore {
     filter: ((element: VisualTimelineElement) => boolean) | null,
   ) => Promise<void>;
 
+  seek: (timeline: Timeline, time: number) => Promise<void>;
   startPlay: (timelineCursor: number) => void;
   stopPlay: (timelineCursor: number) => void;
 }
@@ -81,18 +82,18 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
       img.addEventListener(
         "load",
         () => {
-        set((state) => ({
-          _loadedImage: { ...state._loadedImage, [localpath]: img },
-        }));
-        resolve();
+          set((state) => ({
+            _loadedImage: { ...state._loadedImage, [localpath]: img },
+          }));
+          resolve();
         },
         { once: true },
       );
       img.addEventListener(
         "error",
         (e) => {
-        console.error("Failed to load image:", e);
-        reject(e);
+          console.error("Failed to load image:", e);
+          reject(e);
         },
         { once: true },
       );
@@ -140,24 +141,24 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
       video.addEventListener(
         "loadeddata",
         () => {
-        video.currentTime = 0;
-        this._loadedElementVideo[elementId] = {
-          elementId,
-          element: videoElement,
-          path: getPath(videoElement.localpath),
-          canvas: canvas,
-          object: video,
-          isPlay: false,
-        };
-        resolve();
+          video.currentTime = 0;
+          this._loadedElementVideo[elementId] = {
+            elementId,
+            element: videoElement,
+            path: getPath(videoElement.localpath),
+            canvas: canvas,
+            object: video,
+            isPlay: false,
+          };
+          resolve();
         },
         { once: true },
       );
       video.addEventListener(
         "error",
         (e) => {
-        console.error("Failed to load video:", e);
-        reject(e);
+          console.error("Failed to load video:", e);
+          reject(e);
         },
         { once: true },
       );
@@ -206,6 +207,33 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
       return null;
     });
     await Promise.all(loadPromises.filter((x) => x != null));
+  },
+
+  async seek(timeline, time) {
+    const videoMetas = Object.values(get()._loadedElementVideo);
+    const visibleVideoMetas = videoMetas.filter((meta) => {
+      const element = meta.element;
+      return isElementVisibleAtTime(time, timeline, element);
+    });
+    const seekPromises = visibleVideoMetas.map(
+      (meta) =>
+        new Promise<void>((resolve, reject) => {
+          const video = meta.object;
+          video.currentTime =
+            (-(meta.element.startTime - time) * meta.element.speed) / 1000;
+          video.playbackRate = meta.element.speed;
+
+          video.addEventListener(
+            "seeked",
+            () => {
+              resolve();
+            },
+            { once: true },
+          );
+        }),
+    );
+
+    await Promise.all(seekPromises);
   },
 
   startPlay(timelineCursor: number) {

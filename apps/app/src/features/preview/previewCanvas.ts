@@ -8,21 +8,16 @@ import {
 } from "../../states/renderOptionStore";
 import { KeyframeController } from "../../controllers/keyframe";
 import { v4 as uuidv4 } from "uuid";
-import type { VisualTimelineElement } from "../../@types/timeline";
 import { renderText } from "../renderer/text";
 import { renderImage } from "../renderer/image";
 import { renderShape } from "../renderer/shape";
 import { renderGif } from "../renderer/gif";
 import { renderVideoWithoutWait } from "../renderer/video";
 import { loadedAssetStore } from "../asset/loadedAssetStore";
-import type { ElementRenderFunction } from "../renderer/type";
-import { renderTimelineAtTime } from "../renderer/timeline";
-
-type RendererMap = {
-  [K in VisualTimelineElement["filetype"]]: ElementRenderFunction<
-    Extract<VisualTimelineElement, { filetype: K }>
-  >;
-};
+import {
+  renderTimelineAtTime,
+  type TimelineRenderers,
+} from "../renderer/timeline";
 
 @customElement("preview-canvas")
 export class PreviewCanvas extends LitElement {
@@ -56,7 +51,7 @@ export class PreviewCanvas extends LitElement {
   nowShapeId: string;
   isRotation: boolean;
 
-  renderers: RendererMap = {
+  renderers: TimelineRenderers = {
     image: renderImage,
     video: renderVideoWithoutWait,
     gif: renderGif,

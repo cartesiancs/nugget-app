@@ -10,6 +10,25 @@ export const renderVideoWithoutWait: ElementRenderFunction<VideoElementType> = (
   videoElement,
   timelineCursor,
 ) => {
+  _renderVideo(ctx, elementId, videoElement, timelineCursor, false);
+};
+
+export const renderVideoWithWait: ElementRenderFunction<VideoElementType> = (
+  ctx,
+  elementId,
+  videoElement,
+  timelineCursor,
+) => {
+  _renderVideo(ctx, elementId, videoElement, timelineCursor, true);
+};
+
+export const _renderVideo = (
+  ctx: CanvasRenderingContext2D,
+  elementId: string,
+  videoElement: VideoElementType,
+  timelineCursor: number,
+  waitFilter: boolean,
+) => {
   const store = loadedAssetStore.getState();
   const loadedVideo = store.getElementVideo(elementId);
   if (loadedVideo == null) {
@@ -36,7 +55,12 @@ export const renderVideoWithoutWait: ElementRenderFunction<VideoElementType> = (
   loadedVideo.object.muted = false;
 
   if (videoElement.filter.enable) {
-    store.videoFilterPipeline.render(ctx, videoElement, loadedVideo);
+    store.videoFilterPipeline.render(
+      ctx,
+      videoElement,
+      loadedVideo,
+      waitFilter,
+    );
   } else {
     ctx.drawImage(
       loadedVideo.object,

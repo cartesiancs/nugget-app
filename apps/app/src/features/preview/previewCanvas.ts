@@ -195,6 +195,9 @@ export class PreviewCanvas extends LitElement {
     canvas.width = this.renderOption.previewSize.w;
     canvas.height = this.renderOption.previewSize.h;
 
+    loadedAssetStore
+      .getState()
+      .loadAssetsNeededAtTime(this.timelineCursor, this.timeline);
     renderTimelineAtTime(
       ctx,
       this.timeline,

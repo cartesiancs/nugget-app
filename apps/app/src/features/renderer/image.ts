@@ -10,10 +10,12 @@ export const renderImage: ElementRenderFunction<ImageElementType> = (
   timelineCursor,
 ) => {
   const { width, height } = imageElement;
-  const loadedImage =
-    loadedAssetStore.getState().loadedImage[imageElement.localpath];
+  const loadedImage = loadedAssetStore
+    .getState()
+    .getImage(imageElement.localpath);
+
   if (loadedImage == null) {
-    loadedAssetStore.getState().loadImage(imageElement.localpath);
+    // Can render skeleton here
     return;
   }
   ctx.drawImage(loadedImage, 0, 0, width, height);

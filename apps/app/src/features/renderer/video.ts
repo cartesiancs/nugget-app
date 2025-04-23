@@ -11,9 +11,9 @@ export const renderVideoWithoutWait: ElementRenderFunction<VideoElementType> = (
   timelineCursor,
 ) => {
   const store = loadedAssetStore.getState();
-  const loadedVideo = store.loadedElementVideo[elementId];
+  const loadedVideo = store.getElementVideo(elementId);
   if (loadedVideo == null) {
-    store.loadElementVideo(elementId, videoElement);
+    // Can render skeleton here
     return;
   }
 

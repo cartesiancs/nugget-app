@@ -13,9 +13,9 @@ export const renderGif: ElementRenderFunction<GifElementType> = (
   gifElement,
   timelineCursor,
 ) => {
-  const loadedGif = loadedAssetStore.getState().loadedGif[gifElement.localpath];
+  const loadedGif = loadedAssetStore.getState().getGif(gifElement.localpath);
   if (loadedGif == null) {
-    loadedAssetStore.getState().loadGif(gifElement.localpath);
+    // Can render skeleton here
     return;
   }
   const delay = loadedGif[0].parsedFrame.delay;

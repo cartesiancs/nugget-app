@@ -47,7 +47,7 @@ const project = {
       return 0;
     }
 
-    window.electronAPI.req.dialog.openFile([".ngt"]).then((path) => {
+    window.electronAPI.req.dialog.openFile(["ngt"]).then((path) => {
       console.log("saved!", path);
 
       timelineStore.clearTimeline();

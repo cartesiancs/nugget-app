@@ -78,20 +78,24 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.src = getPath(localpath);
-      img.onload = () => {
+      img.addEventListener(
+        "load",
+        () => {
         set((state) => ({
           _loadedImage: { ...state._loadedImage, [localpath]: img },
         }));
-        img.onload = null;
-        img.onerror = null;
         resolve();
-      };
-      img.onerror = (e) => {
+        },
+        { once: true },
+      );
+      img.addEventListener(
+        "error",
+        (e) => {
         console.error("Failed to load image:", e);
-        img.onload = null;
-        img.onerror = null;
         reject(e);
-      };
+        },
+        { once: true },
+      );
     });
   },
   getImage(localpath) {
@@ -133,7 +137,9 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
 
       video.src = videoElement.localpath;
 
-      video.onloadeddata = () => {
+      video.addEventListener(
+        "loadeddata",
+        () => {
         video.currentTime = 0;
         this._loadedElementVideo[elementId] = {
           elementId,
@@ -143,16 +149,18 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
           object: video,
           isPlay: false,
         };
-        video.onloadeddata = null;
-        video.onerror = null;
         resolve();
-      };
-      video.onerror = (e) => {
+        },
+        { once: true },
+      );
+      video.addEventListener(
+        "error",
+        (e) => {
         console.error("Failed to load video:", e);
-        video.onloadeddata = null;
-        video.onerror = null;
         reject(e);
-      };
+        },
+        { once: true },
+      );
     });
   },
   getElementVideo(elementId) {

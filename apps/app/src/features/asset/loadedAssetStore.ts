@@ -49,7 +49,12 @@ interface ILoadedAssetStore {
   ) => Promise<void>;
   getElementVideo: (elementId: string) => VideoMetadataPerElement | null;
 
+  loadEntireTimeline: (timeline: Timeline) => Promise<void>;
   loadAssetsNeededAtTime: (t: number, timeline: Timeline) => Promise<void>;
+  _loadAssetsWithFilter: (
+    timeline: Timeline,
+    filter: ((element: VisualTimelineElement) => boolean) | null,
+  ) => Promise<void>;
 
   startPlay: (timelineCursor: number) => void;
   stopPlay: (timelineCursor: number) => void;
@@ -154,13 +159,19 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
     return get()._loadedElementVideo[elementId] ?? null;
   },
 
+  async loadEntireTimeline(timeline: Timeline) {
+    await this._loadAssetsWithFilter(timeline, null);
+  },
   async loadAssetsNeededAtTime(t: number, timeline: Timeline) {
+    await this._loadAssetsWithFilter(timeline, (element) => {
+      return isElementVisibleAtTime(t, timeline, element);
+    });
+  },
+  async _loadAssetsWithFilter(timeline, filter) {
     const idElementPairs = Object.entries(timeline);
     const visibleElements = idElementPairs.filter(
       (x): x is [string, VisualTimelineElement] => {
-        return (
-          x[1].filetype !== "audio" && isElementVisibleAtTime(t, timeline, x[1])
-        );
+        return x[1].filetype !== "audio" && (filter?.(x[1]) ?? true);
       },
     );
 

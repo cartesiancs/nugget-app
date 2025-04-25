@@ -5,10 +5,7 @@ import type {
   VideoElementType,
 } from "../../@types/timeline";
 import { elementUtils } from "../../utils/element";
-
-export function isTimeInRange(t: number, start: number, end: number): boolean {
-  return t >= start && t < end;
-}
+import { isTimeInRange } from "../../utils/time";
 
 export function isElementVisibleAtTime(
   timeInMs: number,

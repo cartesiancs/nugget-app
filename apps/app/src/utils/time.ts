@@ -20,3 +20,7 @@ export function formatSeconds(seconds: number) {
   const remainingSeconds = seconds % 60;
   return `${minutes}m ${remainingSeconds}s`;
 }
+
+export function isTimeInRange(t: number, start: number, end: number): boolean {
+  return t >= start && t < end;
+}

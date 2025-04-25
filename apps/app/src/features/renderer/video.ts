@@ -1,6 +1,6 @@
 import type { VideoElementType } from "../../@types/timeline";
+import { isTimeInRange } from "../../utils/time";
 import { loadedAssetStore } from "../asset/loadedAssetStore";
-import { isTimeInRange } from "../element/time";
 import { VideoFilterPipeline } from "./filter/videoPipeline";
 import type { ElementRenderFunction } from "./type";
 

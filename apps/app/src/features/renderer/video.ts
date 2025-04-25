@@ -22,7 +22,7 @@ export const renderVideoWithWait: ElementRenderFunction<VideoElementType> = (
   _renderVideo(ctx, elementId, videoElement, timelineCursor, true);
 };
 
-export const _renderVideo = (
+const _renderVideo = (
   ctx: CanvasRenderingContext2D,
   elementId: string,
   videoElement: VideoElementType,

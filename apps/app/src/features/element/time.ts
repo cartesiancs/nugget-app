@@ -22,7 +22,22 @@ export function isElementVisibleAtTime(
       : element.duration;
   const endTime = startTime + realDuration;
 
+  if (element.filetype === "video") {
+    return isVideoElementVisibleAtTime(timeInMs, element);
+  }
+
   return isTimeInRange(timeInMs, startTime, endTime);
+}
+
+export function isVideoElementVisibleAtTime(
+  timeInMs: number,
+  videoElement: VideoElementType,
+) {
+  return isTimeInRange(
+    timeInMs,
+    videoElement.startTime + videoElement.trim.startTime,
+    videoElement.startTime + videoElement.trim.endTime,
+  );
 }
 
 function getAdditionalStartTime(

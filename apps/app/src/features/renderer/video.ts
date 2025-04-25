@@ -1,6 +1,6 @@
 import type { VideoElementType } from "../../@types/timeline";
-import { isTimeInRange } from "../../utils/time";
 import { loadedAssetStore } from "../asset/loadedAssetStore";
+import { isVideoElementVisibleAtTime } from "../element/time";
 import { VideoFilterPipeline } from "./filter/videoPipeline";
 import type { ElementRenderFunction } from "./type";
 
@@ -42,13 +42,7 @@ const _renderVideo = (
     );
   }
 
-  if (
-    !isTimeInRange(
-      timelineCursor,
-      videoElement.trim.startTime,
-      videoElement.trim.endTime,
-    )
-  ) {
+  if (!isVideoElementVisibleAtTime(timelineCursor, videoElement)) {
     loadedVideo.object.muted = true;
     return;
   }

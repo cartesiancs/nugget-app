@@ -18,6 +18,7 @@ import {
   renderTimelineAtTime,
   type TimelineRenderers,
 } from "../renderer/timeline";
+import { isVisualTimelineElement } from "../../@types/timeline";
 
 @customElement("preview-canvas")
 export class PreviewCanvas extends LitElement {
@@ -663,7 +664,7 @@ export class PreviewCanvas extends LitElement {
 
     for (const elementId of Object.keys(sortedTimeline)) {
       const element = this.timeline[elementId];
-      if (element.filetype != "audio") {
+      if (isVisualTimelineElement(element)) {
         const x = element.location.x;
         const y = element.location.y;
         const w = element.width;
@@ -1007,7 +1008,7 @@ export class PreviewCanvas extends LitElement {
     this.updateCursor();
 
     const activeElement = this.timeline[this.activeElementId];
-    if (activeElement == undefined || activeElement.filetype == "audio") {
+    if (activeElement == undefined || !isVisualTimelineElement(activeElement)) {
       return;
     }
 
@@ -1255,7 +1256,7 @@ export class PreviewCanvas extends LitElement {
 
     for (const elementId of Object.keys(this.timeline)) {
       const element = this.timeline[elementId];
-      if (element.filetype != "audio") {
+      if (isVisualTimelineElement(element)) {
         const x = element.location.x;
         const y = element.location.y;
         const w = element.width;

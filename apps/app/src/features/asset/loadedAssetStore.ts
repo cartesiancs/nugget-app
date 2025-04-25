@@ -1,10 +1,11 @@
 import { createStore } from "zustand/vanilla";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 import { decompressFrames, parseGIF, type ParsedFrame } from "gifuct-js";
-import type {
-  Timeline,
-  VideoElementType,
-  VisualTimelineElement,
+import {
+  isVisualTimelineElement,
+  type Timeline,
+  type VideoElementType,
+  type VisualTimelineElement,
 } from "../../@types/timeline";
 import { VideoFilterPipeline } from "../renderer/filter/videoPipeline";
 import { isElementVisibleAtTime } from "../element/time";
@@ -180,7 +181,7 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
     const idElementPairs = Object.entries(timeline);
     const visibleElements = idElementPairs.filter(
       (x): x is [string, VisualTimelineElement] => {
-        return x[1].filetype !== "audio" && (filter?.(x[1]) ?? true);
+        return isVisualTimelineElement(x[1]) && (filter?.(x[1]) ?? true);
       },
     );
 

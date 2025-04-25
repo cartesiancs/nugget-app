@@ -1,4 +1,8 @@
-import type { Timeline, VisualTimelineElement } from "../../@types/timeline";
+import {
+  isVisualTimelineElement,
+  type Timeline,
+  type VisualTimelineElement,
+} from "../../@types/timeline";
 import { isElementVisibleAtTime } from "../element/time";
 import { renderElement } from "./element";
 import type { ElementRenderFunction } from "./type";
@@ -40,7 +44,7 @@ export function renderTimelineAtTime(
   );
 
   for (const [elementId, element] of prioritySortedTimeline) {
-    if (element.filetype === "audio") {
+    if (!isVisualTimelineElement(element)) {
       continue;
     }
 

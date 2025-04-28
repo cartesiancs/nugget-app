@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 
-type Options = {
+export type RenderOptions = {
   previewSize: {
     w: number;
     h: number;
@@ -11,8 +11,8 @@ type Options = {
 };
 
 export interface IRenderOptionStore {
-  options: Options;
-  updateOptions: (options: Options) => void;
+  options: RenderOptions;
+  updateOptions: (options: RenderOptions) => void;
 }
 
 export const renderOptionStore = createStore<IRenderOptionStore>((set) => ({
@@ -26,6 +26,6 @@ export const renderOptionStore = createStore<IRenderOptionStore>((set) => ({
     backgroundColor: "#000000",
   },
 
-  updateOptions: (options: Options) =>
+  updateOptions: (options: RenderOptions) =>
     set((state) => ({ options: { ...options } })),
 }));

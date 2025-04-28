@@ -164,6 +164,12 @@ export type TimelineElement =
 
 export type VisualTimelineElement = Exclude<TimelineElement, AudioElementType>;
 
+export function isVisualTimelineElement(
+  element: TimelineElement,
+): element is VisualTimelineElement {
+  return element.filetype !== "audio";
+}
+
 export interface Timeline {
   [elementId: string]: TimelineElement;
 }

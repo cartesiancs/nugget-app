@@ -1,8 +1,14 @@
 import { createStore } from "zustand/vanilla";
 import { getLocationEnv } from "../../functions/getLocationEnv";
 import { decompressFrames, parseGIF, type ParsedFrame } from "gifuct-js";
-import type { VideoElementType } from "../../@types/timeline";
+import {
+  isVisualTimelineElement,
+  type Timeline,
+  type VideoElementType,
+  type VisualTimelineElement,
+} from "../../@types/timeline";
 import { VideoFilterPipeline } from "../renderer/filter/videoPipeline";
+import { isElementVisibleAtTime } from "../element/time";
 
 type GifMetadata = {
   imageData: ImageData;
@@ -18,32 +24,48 @@ export type VideoMetadataPerElement = {
   isPlay: boolean;
 };
 
-interface ILoadedAssetStore {
+export interface ILoadedAssetStore {
   // path, image
-  loadedImage: Record<string, HTMLImageElement>;
+  _loadedImage: Record<string, HTMLImageElement>;
 
   // path, gif
-  loadedGif: Record<string, GifMetadata[]>;
+  _loadedGif: Record<string, GifMetadata[]>;
 
   // elementId, video
-  loadedElementVideo: Record<string, VideoMetadataPerElement>;
+  _loadedElementVideo: Record<string, VideoMetadataPerElement>;
 
   gifCanvasCtx: CanvasRenderingContext2D;
   videoFilterCanvasCtx: WebGLRenderingContext;
   videoFilterPipeline: VideoFilterPipeline | null;
 
-  loadImage: (localpath: string) => void;
-  loadGif: (localpath: string) => void;
-  loadElementVideo: (elementId: string, videoElement: VideoElementType) => void;
+  loadImage: (localpath: string) => Promise<void>;
+  getImage: (localpath: string) => HTMLImageElement | null;
 
+  loadGif: (localpath: string) => Promise<void>;
+  getGif: (localpath: string) => GifMetadata[] | null;
+
+  loadElementVideo: (
+    elementId: string,
+    videoElement: VideoElementType,
+  ) => Promise<void>;
+  getElementVideo: (elementId: string) => VideoMetadataPerElement | null;
+
+  loadEntireTimeline: (timeline: Timeline) => Promise<void>;
+  loadAssetsNeededAtTime: (t: number, timeline: Timeline) => Promise<void>;
+  _loadAssetsWithFilter: (
+    timeline: Timeline,
+    filter: ((element: VisualTimelineElement) => boolean) | null,
+  ) => Promise<void>;
+
+  seek: (timeline: Timeline, time: number) => Promise<void>;
   startPlay: (timelineCursor: number) => void;
   stopPlay: (timelineCursor: number) => void;
 }
 
 export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
-  loadedImage: {},
-  loadedGif: {},
-  loadedElementVideo: {},
+  _loadedImage: {},
+  _loadedGif: {},
+  _loadedElementVideo: {},
 
   gifCanvasCtx: document
     .createElement("canvas")
@@ -54,63 +76,169 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
   }) as WebGLRenderingContext,
   videoFilterPipeline: null,
 
-  loadImage(localpath) {
-    const img = new Image();
-    img.src = getPath(localpath);
-    img.onload = () => {
-      set((state) => ({
-        loadedImage: { ...state.loadedImage, [localpath]: img },
-      }));
-    };
-  },
-
-  loadGif(localpath) {
-    fetch(getPath(localpath))
-      .then((resp) => resp.arrayBuffer())
-      .then((buff) => {
-        const gif = parseGIF(buff);
-        const frames = decompressFrames(gif, true);
-        const drawnFrames = frames.map((frame) => {
-          const { width, height } = frame.dims;
-          const imageData = this.gifCanvasCtx.createImageData(width, height);
-          imageData.data.set(frame.patch);
-          return {
-            imageData,
-            parsedFrame: frame,
-          };
-        });
-
-        set((state) => ({
-          loadedGif: { ...state.loadedGif, [localpath]: drawnFrames },
-        }));
-      });
-  },
-
-  loadElementVideo(elementId, videoElement) {
-    const video = document.createElement("video");
-    video.playbackRate = videoElement.speed;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = videoElement.width;
-    canvas.height = videoElement.height;
-
-    this.loadedElementVideo[elementId] = {
-      elementId,
-      element: videoElement,
-      path: getPath(videoElement.localpath),
-      canvas: canvas,
-      object: video,
-      isPlay: false,
-    };
-    video.src = videoElement.localpath;
-
-    video.addEventListener("loadeddata", () => {
-      video.currentTime = 0;
+  loadImage(localpath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = getPath(localpath);
+      img.addEventListener(
+        "load",
+        () => {
+          set((state) => ({
+            _loadedImage: { ...state._loadedImage, [localpath]: img },
+          }));
+          resolve();
+        },
+        { once: true },
+      );
+      img.addEventListener(
+        "error",
+        (e) => {
+          console.error("Failed to load image:", e);
+          reject(e);
+        },
+        { once: true },
+      );
     });
+  },
+  getImage(localpath) {
+    return get()._loadedImage[localpath] ?? null;
+  },
+
+  async loadGif(localpath) {
+    const response = await fetch(getPath(localpath));
+    const buffer = await response.arrayBuffer();
+
+    const gif = parseGIF(buffer);
+    const frames = decompressFrames(gif, true);
+    const drawnFrames = frames.map((frame) => {
+      const { width, height } = frame.dims;
+      const imageData = this.gifCanvasCtx.createImageData(width, height);
+      imageData.data.set(frame.patch);
+      return {
+        imageData,
+        parsedFrame: frame,
+      };
+    });
+
+    set((state) => ({
+      _loadedGif: { ...state._loadedGif, [localpath]: drawnFrames },
+    }));
+  },
+  getGif(localpath) {
+    return get()._loadedGif[localpath] ?? null;
+  },
+
+  async loadElementVideo(elementId, videoElement) {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.playbackRate = videoElement.speed;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = videoElement.width;
+      canvas.height = videoElement.height;
+
+      video.src = videoElement.localpath;
+
+      video.addEventListener(
+        "loadeddata",
+        () => {
+          video.currentTime = 0;
+          this._loadedElementVideo[elementId] = {
+            elementId,
+            element: videoElement,
+            path: getPath(videoElement.localpath),
+            canvas: canvas,
+            object: video,
+            isPlay: false,
+          };
+          resolve();
+        },
+        { once: true },
+      );
+      video.addEventListener(
+        "error",
+        (e) => {
+          console.error("Failed to load video:", e);
+          reject(e);
+        },
+        { once: true },
+      );
+    });
+  },
+  getElementVideo(elementId) {
+    return get()._loadedElementVideo[elementId] ?? null;
+  },
+
+  async loadEntireTimeline(timeline: Timeline) {
+    await this._loadAssetsWithFilter(timeline, null);
+  },
+  async loadAssetsNeededAtTime(t: number, timeline: Timeline) {
+    await this._loadAssetsWithFilter(timeline, (element) => {
+      return isElementVisibleAtTime(t, timeline, element);
+    });
+  },
+  async _loadAssetsWithFilter(timeline, filter) {
+    const idElementPairs = Object.entries(timeline);
+    const visibleElements = idElementPairs.filter(
+      (x): x is [string, VisualTimelineElement] => {
+        return isVisualTimelineElement(x[1]) && (filter?.(x[1]) ?? true);
+      },
+    );
+
+    const store = get();
+    const loadPromises = visibleElements.map(([elementId, element]) => {
+      switch (element.filetype) {
+        case "image":
+          if (store._loadedImage[element.localpath] == null) {
+            return store.loadImage(element.localpath);
+          }
+          break;
+        case "gif":
+          if (store._loadedGif[element.localpath] == null) {
+            return store.loadGif(element.localpath);
+          }
+          break;
+        case "video":
+          if (store._loadedElementVideo[elementId] == null) {
+            return store.loadElementVideo(elementId, element);
+          }
+          break;
+      }
+
+      return null;
+    });
+    await Promise.all(loadPromises.filter((x) => x != null));
+  },
+
+  async seek(timeline, time) {
+    const videoMetas = Object.values(get()._loadedElementVideo);
+    const visibleVideoMetas = videoMetas.filter((meta) => {
+      const element = meta.element;
+      return isElementVisibleAtTime(time, timeline, element);
+    });
+    const seekPromises = visibleVideoMetas.map(
+      (meta) =>
+        new Promise<void>((resolve, reject) => {
+          const video = meta.object;
+          video.currentTime =
+            (-(meta.element.startTime - time) * meta.element.speed) / 1000;
+          video.playbackRate = meta.element.speed;
+
+          video.addEventListener(
+            "seeked",
+            () => {
+              resolve();
+            },
+            { once: true },
+          );
+        }),
+    );
+
+    await Promise.all(seekPromises);
   },
 
   startPlay(timelineCursor: number) {
-    const videoMetas = Object.values(get().loadedElementVideo);
+    const videoMetas = Object.values(get()._loadedElementVideo);
     for (const meta of videoMetas) {
       meta.object.currentTime =
         (-(meta.element.startTime - timelineCursor) * meta.element.speed) /
@@ -123,7 +251,7 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
   },
 
   stopPlay(timelineCursor: number) {
-    const videoMetas = Object.values(get().loadedElementVideo);
+    const videoMetas = Object.values(get()._loadedElementVideo);
     for (const meta of videoMetas) {
       meta.isPlay = false;
       meta.object.pause();

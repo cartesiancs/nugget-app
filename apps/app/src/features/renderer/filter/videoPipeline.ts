@@ -34,6 +34,7 @@ export class VideoFilterPipeline {
     ctx: CanvasRenderingContext2D,
     videoElement: VideoElementType,
     videoMeta: VideoMetadataPerElement,
+    isBlocking: boolean,
   ): void {
     if (videoElement.filter.enable === false) {
       return;
@@ -94,6 +95,10 @@ export class VideoFilterPipeline {
 
     // 프레임버퍼(마지막으로 swap했으므로 srcTexture에 담겨있음)를 최종적으로 gl 캔버스에 렌더링
     normal.draw(null, this.srcTexture);
+
+    if (isBlocking) {
+      this.gl.finish();
+    }
 
     // gl 캔버스를 메인 캔버스에 렌더링
     ctx.drawImage(

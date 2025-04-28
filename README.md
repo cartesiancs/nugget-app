@@ -102,4 +102,4 @@ Please refer to the [roadmap file](./docs/ROADMAP.md) for more details.
 
 ## License
 
-We are adopting the GPL 3.0 license. [license file](./LICENSE)
+We are adopting the MIT license. [license file](./LICENSE)

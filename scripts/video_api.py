@@ -103,40 +103,23 @@ def api_video_stabilization(request: VideoStabilizationRequest) -> VideoStabiliz
 
 @router.get("/api/image/remove-bg")
 def api_video_background_removal():
-<<<<<<< HEAD
-    pass
-
-
-@router.get("/api/image/color-grading")
-=======
     """Placeholder endpoint for background removal functionality."""
     pass 
 
 
 @router.get("api/image/color-grading")
->>>>>>> origin/image
 def api_video_color_grading():
     """Placeholder endpoint for color grading functionality."""
     pass
 
 
-<<<<<<< HEAD
-@router.get("/api/image/portrait-effect")
-=======
 @router.get("api/image/portrait-effect")
->>>>>>> origin/image
 def api_video_portrait_effect():
     """Placeholder endpoint for portrait effect functionality."""
     pass
 
 
-<<<<<<< HEAD
-@router.get("/api/image/super-resolution")
-def api_video_super_resolution():
-    pass
-=======
 @router.get("api/image/super-resolution")
 def api_video_super_resolution():
     """Placeholder endpoint for super resolution functionality."""
     pass
->>>>>>> origin/image

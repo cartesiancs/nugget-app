@@ -1148,7 +1148,6 @@ export class elementTimelineCanvas extends LitElement {
     currentUIState.setThinking();
 
     window.electronAPI.req.quartz.directToolRemoveBg(thefp).then((result) => {
-    
         let timelineState = useTimelineStore.getState();
         let timeline = timelineState.timeline;
         timeline[currentlySelected].localpath = result.absolute_path;
@@ -1158,6 +1157,8 @@ export class elementTimelineCanvas extends LitElement {
         this.drawCanvas();
 
     }).catch((error) => {
+        currentUIState.unsetThinking();
+        currentUIState.setBigError("Error removing background. Please try again.");
         console.error("Error removing background:", error)
     });
   }

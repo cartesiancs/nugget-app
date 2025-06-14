@@ -19,6 +19,8 @@ export interface IUIStore {
   };
   thinking: boolean;
   topBarTitle: string;
+  error: boolean;
+  bigError: string;
   updateTimelineVertical: (px: number) => void;
   setChatSidebar: (width: number) => void;
   updateVertical: (criteria: number) => void;
@@ -26,6 +28,8 @@ export interface IUIStore {
   setTopBarTitle: (topBarTitle: string) => void;
   setThinking: () => void;
   unsetThinking: () => void;
+  setBigError: (error: string) => void;
+  unsetBigError: () => void;
 }
 
 export const uiStore = createStore<IUIStore>((set) => ({
@@ -46,6 +50,8 @@ export const uiStore = createStore<IUIStore>((set) => ({
   },
   topBarTitle: "Quartz",
   thinking: false,
+  bigError: "",
+  error: false,
 
   setChatSidebar: (width) =>
     set((state) => ({
@@ -95,6 +101,16 @@ export const uiStore = createStore<IUIStore>((set) => ({
       thinking: false,
     })),
 
+  setBigError: (error) =>
+    set((state) => ({
+      error: true,
+      bigError: error,
+    })),
+  unsetBigError: () =>
+    set((state) => ({
+      error: false,
+      bigError: "",
+    })),
   updateHorizontal: (criteria, panel: "panel" | "preview") =>
     set((state) => {
       if (panel == "panel") {

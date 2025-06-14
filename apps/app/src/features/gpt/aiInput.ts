@@ -51,7 +51,7 @@ export class AiInput extends LitElement {
         else{
           try {
             if (window.electronAPI?.req?.quartz?.LLMResponse) {
-              let context = {}
+              let context = {data:"epic"}
               window.electronAPI.req.quartz.LLMResponse(command,context)
                 .then((response) => {
                   console.log(response)

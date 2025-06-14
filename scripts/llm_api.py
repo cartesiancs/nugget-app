@@ -21,14 +21,14 @@ async def getResponseFromLlama3(request: LLMRequest):
         # )
         # print("response from llm:", response)
         llm_response = {
-            "tool_name": "add_shape",
+            "tool_name": "add_slide",
             "params": {
-                "shape": "rectangle",
-                # "locationX": 1920 /,
-                # "locationY": 100,
-                # "width": 1050,
-                # "height": 1050,
-                "fillColor": "#00ff00",
+                "text": "Welcome to Qualcomm Hack",
+                # "textColor": "#ffffff",
+                "position": "NULL",
+                # "bgColor": "#00ff00",
+                # "duration": 3000,
+                # "animation": True,
             },
         }
         return llm_response

@@ -1,3 +1,6 @@
+// Helper function to convert "NULL" to null
+const handleNull = (value: any) => value === "NULL" ? null : value;
+
 export function addShapeElement(params: any): boolean {
     try {
         const PreviewCanvas = document.querySelector("preview-canvas") as any;
@@ -9,14 +12,14 @@ export function addShapeElement(params: any): boolean {
 
         // Create the shape element with all parameters
         const elementId = PreviewCanvas.createShapeWithParams({
-            x: params?.locationX || 960,
-            y: params?.locationY || 540,
-            width: params?.width || 800,
-            height: params?.height || 800,
-            fillColor: params?.fillColor || "#ffffff",
-            startTime: params?.startTime || 0,
-            duration: params?.duration || 3000,
-            shape: params?.shape || "rectangle"
+            x: handleNull(params?.locationX) ?? 0,
+            y: handleNull(params?.locationY) ?? 0,
+            width: handleNull(params?.width) ?? 800,
+            height: handleNull(params?.height) ?? 800,
+            fillColor: handleNull(params?.fillColor) ?? "#ffffff",
+            startTime: handleNull(params?.startTime) ?? 0,
+            duration: handleNull(params?.duration) ?? 3000,
+            shape: handleNull(params?.shape) ?? "rectangle"
         });
 
         if (!elementId) {

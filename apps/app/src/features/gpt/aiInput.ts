@@ -63,9 +63,11 @@ export class AiInput extends LitElement {
           timeline: {
             cursor: timelineLatest.cursor / 1000,
             selected: elementTimelineCanvasObject.targetIdHistorical,
+            selectedData: timelineLatest.timeline[elementTimelineCanvasObject.targetIdHistorical]
           },
           preview: {
             selected: canvasLatestObject.activeElementId,
+            selectedData: timelineLatest.timeline[canvasLatestObject.activeElementId],
           },
         };
 
@@ -85,8 +87,9 @@ export class AiInput extends LitElement {
                   addShapeElement(response.params);
                 } else if (response.tool_name == "video") {
                   console.log("Video response from LLM.");
-                } else if (response.tool_name == "sr") {
-                  renderNewImage(response.params);
+                } else if (response.type == "sr") {
+                  console.log(response.data);
+                  renderNewImage(response.data);
                 } else {
                   console.log("Unknown tool:", response.tool_name);
                 }

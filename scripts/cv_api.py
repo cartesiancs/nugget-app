@@ -201,7 +201,7 @@ async def api_image_super_resolution(file: UploadFile = File(...)) -> Dict[str, 
         # Construct public download URL
         download_url = f"/api/assets/public/{unique_filename}"
 
-        return {"link": download_url}
+        return {"link": download_url, "path": f"/Users/pjr/Projects/hackqualcomm/Quartz/scripts/assets/public/{unique_filename}"}
 
     except HTTPException:
         raise
@@ -408,8 +408,9 @@ async def api_image_portrait_effect(file: UploadFile = File(...)) -> Dict[str, A
         
         # Construct public download URL
         download_url = f"/api/assets/public/{unique_filename}"
+        path =  f"/Users/pjr/Projects/hackqualcomm/Quartz/scripts/assets/public/{unique_filename}"
         
-        return {"link": download_url}
+        return {"link": download_url, "path": path}
         
     except HTTPException:
         raise

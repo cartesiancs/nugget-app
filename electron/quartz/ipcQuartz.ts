@@ -6,9 +6,8 @@ export const ipcQuartz = {
     try {
       const response = await axios.post("http://localhost:8000/api/llm", {
         command,
-        context,
+        context
       });
-
       return response.data;
     } catch (error) {
       console.error("Error handling LLM response:", error);

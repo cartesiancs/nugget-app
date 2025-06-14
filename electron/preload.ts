@@ -130,6 +130,9 @@ const response = {
     forceClose: (callback) => ipcRenderer.on("WHEN_CLOSE_EVENT", callback),
     getAppPath: (callback) => ipcRenderer.on("GET_PATH", callback),
   },
+  quartz: {
+    addTextElement: (callback) => ipcRenderer.on("quartz:addTextElement", callback),
+  },
   auth: {
     loginSuccess: (callback) => ipcRenderer.on("LOGIN_SUCCESS", callback),
   },

@@ -84,6 +84,7 @@ export class AiInput extends LitElement {
                 } else if (response.type == "video") {
                   console.log("Video response from LLM.");
                 } else if (response.type == "sr") {
+                  console.log(response.data);
                   renderNewImage(response.data);
                 } else {
                   console.log("TODO Else");

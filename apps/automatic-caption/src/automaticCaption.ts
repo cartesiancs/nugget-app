@@ -200,7 +200,7 @@ export class AutomaticCaption extends LitElement {
         console.log(result);
         
         // UI CHANGE
-
+        
 
 
         this.analyzingVideoModal.hide();

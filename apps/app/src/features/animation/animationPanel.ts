@@ -152,6 +152,7 @@ export class AnimationPanelItem extends HTMLElement {
 
   connectedCallback() {
     this.render();
+
     this.addEventListener("mouseup", this.handleMouseup.bind(this));
   }
 

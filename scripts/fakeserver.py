@@ -1,16 +1,36 @@
+from http.client import HTTPException
+from pydantic import BaseModel
 from requests import Request
-from fastapi import FastAPI
+import requests
+from fastapi import APIRouter
 from typing import Optional, Dict, Any
-import uvicorn
 
-app = FastAPI()
+router = APIRouter()
 
 
-@app.post("/api/llm", response_model=None)
-async def process(request: Request):
-    data = await request.json();
+class LLMRequest(BaseModel):
+    command: str
+    context: Optional[dict] = None
+
+
+@router.post("/api/llm")
+async def getResponseFromLlama3(request: LLMRequest):
+    try:
+        print("request for llm:", request.command, request.context)
+
+        
+
+        return {"type": "text", "data": f"Processed command: {request.command}"}
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error communicating with LLM service: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     print("Starting FastAPI processing server on http://localhost:5000")
-    uvicorn.run(app, host="0.0.0.0", port=5001)
+    uvicorn.run(router, host="0.0.0.0", port=5001)

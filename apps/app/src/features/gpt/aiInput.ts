@@ -62,9 +62,11 @@ export class AiInput extends LitElement {
           timeline: {
             cursor: timelineLatest.cursor / 1000,
             selected: elementTimelineCanvasObject.targetIdHistorical,
+            selectedData: timelineLatest.timeline[elementTimelineCanvasObject.targetIdHistorical]
           },
           preview: {
             selected: canvasLatestObject.activeElementId,
+            selectedData: timelineLatest.timeline[canvasLatestObject.activeElementId],
           },
         };
 

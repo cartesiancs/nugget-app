@@ -124,7 +124,6 @@ export class elementTimelineCanvas extends LitElement {
     canvasVerticalScroll: 0,
     panelOptions: [],
   };
-  
 
   cutElement(id: string, whereMs: number) {
     const originalElement = this.timeline[id];
@@ -1075,14 +1074,63 @@ export class elementTimelineCanvas extends LitElement {
     return index != -1;
   }
 
-  showMenuDropdown({ x, y }) {
+  showMenuDropdown({ x, y, targetType }) {
+    console.log(targetType);
+
+    // now basically we have 4 types of targetType
+
+    let videoDropDownElements = [
+      {
+        onClick:
+          "document.querySelector('element-timeline-canvas').removeSeletedElements()",
+        itemName: "remove",
+      },
+      {
+        onClick: `document.querySelector('timeline-ui').handleCutClick('${this.targetIdDuringRightClick}')`,
+        itemName: "cut",
+      },
+      {
+        onClick: "document.querySelector('element-timeline-canvas).stabilise()",
+        itemName: "stabilise",
+      },
+      {
+        onClick:
+          "document.querySelector('element-timeline-canvas).removeBackground()",
+        itemName: "remove background",
+      },
+    ];
+
+    let imageDropDownElements = [
+      {
+        onClick:
+          "document.querySelector('element-timeline-canvas').removeSeletedElements()",
+        itemName: "remove",
+      },
+      {
+        onClick: `document.querySelector('timeline-ui').handleCutClick('${this.targetIdDuringRightClick}')`,
+        itemName: "cut",
+      },
+      {
+        onClick:
+          "document.querySelector('element-timeline-canvas).removeBackground()",
+        itemName: "remove background",
+      },
+    ];
+
+    let menuDropDownElements =
+      targetType == "video" ? videoDropDownElements : imageDropDownElements;
+
     document.querySelector("#menuRightClick").innerHTML = `
         <menu-dropdown-body top="${y}" left="${x}">
         ${this.animationPanelDropdownTemplate()}
-          <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="remove"> </menu-dropdown-item>
-          <menu-dropdown-item onclick="document.querySelector('timeline-ui').handleCutClick('${
-            this.targetIdDuringRightClick
-          }')" item-name="cut"> </menu-dropdown-item>
+        ${menuDropDownElements
+          .map(
+            (item) => `
+          <menu-dropdown-item onclick="${item.onClick}" item-name="${item.itemName}"></menu-dropdown-item>
+        `,
+          )
+          .join("")}
+
         </menu-dropdown-body>`;
   }
 
@@ -1128,6 +1176,7 @@ export class elementTimelineCanvas extends LitElement {
     this.showMenuDropdown({
       x: e.clientX,
       y: e.clientY,
+      targetType: this.timeline[this.targetIdDuringRightClick[0]].filetype,
     });
   }
 
@@ -1323,7 +1372,7 @@ export class elementTimelineCanvas extends LitElement {
       }
 
       console.log("__HandleMouseDown - setting targetId", this.targetId[0]);
-      
+
       this.timelineState.updateSelected(this.targetId[0]);
 
       this.showSideOption(this.targetId[0]);
@@ -1370,7 +1419,6 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   _handleKeydown(event) {
-
     // arrowUp
 
     if (event.keyCode == 38) {

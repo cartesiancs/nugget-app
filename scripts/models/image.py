@@ -725,6 +725,7 @@ def object_segmentation(img: ImageType) -> np.ndarray:
     except Exception as e:
         raise RuntimeError(f"Object segmentation failed: {str(e)}")
 
+
 def _convert_to_lab(img: np.ndarray) -> np.ndarray:
     """Convert BGR image to LAB color space."""
     return cv2.cvtColor(img, cv2.COLOR_BGR2LAB).astype("float32")

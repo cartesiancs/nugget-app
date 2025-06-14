@@ -1,4 +1,4 @@
-device: "mps"
+device: "cpu"
 image:
   portrait_effect:
     depth_threshold: 0.65

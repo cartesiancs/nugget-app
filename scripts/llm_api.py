@@ -83,17 +83,18 @@ async def getResponseFromLlama3(request: LLMRequest):
                 
                 # Custom logic for 'add_text' can go here. For now, just return.
                 if tool_name == "add_text" or tool_name == "add_shape" or tool_name == "add_slide":
-                    return {"tool": tool_name, "text": get_random_conversational_response(), "params": extracted_params}
+                    return {"tool_name": tool_name, "text": get_random_conversational_response(), "params": extracted_params}
 
             except (json.JSONDecodeError, KeyError, IndexError) as e:
                 raise HTTPException(status_code=500, detail=f"Could not parse parameter extraction response: {e}")
 
         elif tool_name == "NULL":
-            return {"tool": "NULL", "message": "No specific tool identified for the command."}
+            # print("HI, I AM NOT CALING ANY TOOLS BECAUES FU")
+            return {"tool_name": "NULL", "message": "No specific tool identified for the command."}
             
         else:
             # Handle unknown or not-yet-implemented tools
-            return {"tool": tool_name, "message": "Tool identified, but not yet implemented."}
+            return {"tool_name": tool_name, "message": "Tool identified, but not yet implemented."}
 
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Error communicating with LLM service: {str(e)}")

@@ -5,7 +5,6 @@ from typing import Dict, Any
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from PIL import Image
 
-from main import router
 from models.image import get_super_resolution
 from data_models import (
     ImageRequest,
@@ -30,6 +29,7 @@ from utils.image_helpers import (
     generate_filename_from_path
 )
 
+router = APIRouter()
 
 @router.post("/api/image/super-resolution")
 async def api_image_super_resolution(request: ImageRequest) -> SuperResolutionResponse:

@@ -164,23 +164,12 @@ const response = {
     get: (callback) => ipcRenderer.on("timeline:get", callback),
     add: (callback) => ipcRenderer.on("timeline:add", callback),
   },
-  addTextElement: (callback) => ipcRenderer.on("execute-add-text-element-ipc", (_event, ...args) => callback(...args)),
 };
 
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld("electronAPI", {
-      req: {
-        app: {
-          forceClose: () => ipcRenderer.send("app:forceClose"),
-          restart: () => ipcRenderer.send("app:restart"),
-          getResourcesPath: () => ipcRenderer.invoke("app:getResourcesPath"),
-          getTempPath: () => ipcRenderer.invoke("app:getTempPath"),
-          getAppInfo: () => ipcRenderer.invoke("app:getAppInfo"),
-        },
-        // Added: Expose sendAddTextCommand
-        sendAddTextCommand: (data) => ipcRenderer.send("sendAddTextCommand", data),
-      },
+      req: request,
       res: response,
     });
   } catch (error) {

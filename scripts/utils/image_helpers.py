@@ -40,6 +40,65 @@ def load_config() -> Dict[str, Any]:
 CONFIG = load_config()
 
 
+def validate_image_path(image_path: str) -> None:
+    """
+    Validate that the image path exists and is a valid image file.
+    
+    Args:
+        image_path: Path to the image file
+        
+    Raises:
+        HTTPException: If file doesn't exist or is not a valid image
+    """
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail=f"Image file not found: {image_path}")
+    
+    if not os.path.isfile(image_path):
+        raise HTTPException(status_code=400, detail=f"Path is not a file: {image_path}")
+    
+    # Check if it's a valid image extension
+    valid_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp'}
+    file_ext = Path(image_path).suffix.lower()
+    if file_ext not in valid_extensions:
+        raise HTTPException(status_code=400, detail=f"Invalid image format. Supported formats: {valid_extensions}")
+
+
+def load_image_from_path(image_path: str) -> Image.Image:
+    """
+    Load image from file path.
+    
+    Args:
+        image_path: Path to the image file
+        
+    Returns:
+        PIL Image object
+        
+    Raises:
+        HTTPException: If image cannot be loaded
+    """
+    try:
+        return Image.open(image_path).convert('RGB')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to load image from {image_path}: {str(e)}")
+
+
+def generate_filename_from_path(image_path: str, prefix: str = "processed") -> str:
+    """
+    Generate unique filename based on original file path.
+    
+    Args:
+        image_path: Original image path
+        prefix: Prefix for the generated filename
+        
+    Returns:
+        Unique filename
+    """
+    original_name = Path(image_path).stem
+    extension = Path(image_path).suffix
+    unique_id = str(uuid.uuid4())[:8]
+    return f"{prefix}_{original_name}_{unique_id}{extension}"
+
+
 def validate_uploaded_file(file: UploadFile) -> None:
     """
     Validate uploaded file type and size constraints.

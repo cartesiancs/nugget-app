@@ -7,13 +7,14 @@ This module provides implementations for various image processing tasks includin
 - Super resolution (Real-ESRGAN x4plus)
 - Background/object segmentation (RMBG-1.4 from BRIA AI, YOLOv8)
 - Background removal (RMBG-1.4 state-of-the-art model)
-- Inpainting (LaMa dilated)
+- Inpainting (LaMa dilated from Qualcomm AI Hub)
 - Image generation (Stable Diffusion 2.1)
 - Image classification
 
 All functions are implemented with modular design and proper type hints.
 
 Installation requirements:
+- qai-hub-models[lama-dilated] for LaMa inpainting model
 """
 
 import argparse
@@ -201,8 +202,12 @@ def _process_rmbg_output(pillow_mask, original_size):
 
 
 def _load_lama_model():
-    """Load LaMa inpainting model from HuggingFace."""
-    return pipeline("fill-mask", model="microsoft/DialoGPT-medium")
+    """Load LaMa dilated inpainting model from Qualcomm AI Hub."""
+    try:
+        from qai_hub_models.models.lama_dilated import Model
+        return Model.from_pretrained()
+    except ImportError as e:
+        raise RuntimeError(f"Failed to import LaMa model from qai-hub-models. Make sure qai-hub-models[lama-dilated] is installed: {str(e)}")
 
 
 def _load_stable_diffusion_model():
@@ -472,7 +477,7 @@ def background_segmentation(img: ImageType) -> np.ndarray:
 
 def inpainting(img: ImageType, mask: np.ndarray) -> np.ndarray:
     """
-    Perform image inpainting using LaMa dilated model.
+    Perform image inpainting using LaMa dilated model from Qualcomm AI Hub.
     
     Args:
         img: Input image as PIL Image or numpy array
@@ -493,14 +498,88 @@ def inpainting(img: ImageType, mask: np.ndarray) -> np.ndarray:
         if img_array.shape[:2] != mask.shape[:2]:
             raise ValueError("Mask dimensions must match image dimensions")
         
-        # Fallback implementation using OpenCV inpainting
-        console.print("[bold cyan]Performing fallback inpainting using OpenCV...[/bold cyan]")
-        inpaint_mask = (1 - mask).astype(np.uint8) * 255
-        result = cv2.inpaint(img_array, inpaint_mask, 3, cv2.INPAINT_TELEA)
-        console.print("[bold green]Inpainting completed successfully.[/bold green]")
-        return result
+        # Load LaMa dilated model from Qualcomm AI Hub
+        console.print("[bold cyan]Loading LaMa dilated model from Qualcomm AI Hub...[/bold cyan]")
+        model = _load_lama_model()
+        
+        # Prepare inputs for LaMa model
+        console.print("[bold cyan]Preparing inputs for LaMa model...[/bold cyan]")
+        
+        # Convert to RGB if necessary
+        if pil_img.mode != 'RGB':
+            pil_img = pil_img.convert('RGB')
+        
+        # Resize image to 512x512 (LaMa expected input size)
+        original_size = pil_img.size
+        resized_img = pil_img.resize((512, 512), Image.Resampling.LANCZOS)
+        
+        # Resize mask to match
+        resized_mask = cv2.resize(mask.astype(np.uint8), (512, 512), interpolation=cv2.INTER_NEAREST)
+        
+        # Convert mask: LaMa expects 0 for areas to keep, 1 for areas to inpaint
+        # Our input mask is 0 for areas to inpaint, 1 for areas to preserve
+        # So we need to invert it
+        lama_mask = (1 - resized_mask).astype(np.uint8) * 255
+        
+        # Convert to PIL Image for mask
+        mask_pil = Image.fromarray(lama_mask, mode='L')
+        
+        # Prepare model inputs
+        console.print("[bold cyan]Running LaMa dilated inference...[/bold cyan]")
+        sample_inputs = model.sample_inputs()
+        
+        # Get the input specification
+        input_spec = model.get_input_spec()
+        
+        # Convert PIL images to tensors in the format expected by the model
+        import torch
+        import torchvision.transforms as transforms
+        
+        # Transform for image: normalize to [0, 1] and convert to tensor
+        img_transform = transforms.Compose([
+            transforms.ToTensor(),
+        ])
+        
+        # Transform for mask: convert to tensor
+        mask_transform = transforms.Compose([
+            transforms.ToTensor(),
+        ])
+        
+        # Apply transforms
+        img_tensor = img_transform(resized_img).unsqueeze(0)  # Add batch dimension
+        mask_tensor = mask_transform(mask_pil).unsqueeze(0)   # Add batch dimension
+        
+        # Run inference
+        with torch.no_grad():
+            # The model expects image and mask inputs
+            result = model(img_tensor, mask_tensor)
+        
+        # Process output
+        console.print("[bold cyan]Processing inpainting result...[/bold cyan]")
+        
+        # Convert result tensor back to numpy array
+        if isinstance(result, torch.Tensor):
+            result_array = result.squeeze(0).permute(1, 2, 0).cpu().numpy()
+        else:
+            # If result is a tuple/list, take the first element
+            result_array = result[0].squeeze(0).permute(1, 2, 0).cpu().numpy()
+        
+        # Denormalize from [0, 1] to [0, 255]
+        result_array = np.clip(result_array * 255, 0, 255).astype(np.uint8)
+        
+        # Resize back to original dimensions
+        result_pil = Image.fromarray(result_array)
+        final_result = result_pil.resize(original_size, Image.Resampling.LANCZOS)
+        
+        console.print("[bold green]LaMa dilated inpainting completed successfully.[/bold green]")
+        return np.array(final_result)
+        
+    except ImportError as e:
+        console.print(f"[bold red]Error: LaMa model not available. {str(e)}[/bold red]")
+        raise RuntimeError(f"LaMa dilated model is required for inpainting. Please install with: pip install 'qai-hub-models[lama-dilated]'. Error: {str(e)}")
         
     except Exception as e:
+        console.print(f"[bold red]Error: Inpainting failed. {str(e)}[/bold red]")
         raise RuntimeError(f"Inpainting failed: {str(e)}")
 
 

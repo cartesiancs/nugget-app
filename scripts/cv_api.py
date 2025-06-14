@@ -1,9 +1,20 @@
+import os
+from pathlib import Path
 from typing import Dict, Any
 
 from fastapi import UploadFile, File, HTTPException
+from PIL import Image
 
 from main import router
 from models.image import get_super_resolution
+from data_models import (
+    ImageRequest,
+    ColorTransferRequest,
+    SuperResolutionResponse,
+    BackgroundRemovalResponse,
+    ColorTransferResponse,
+    PortraitEffectResponse
+)
 from utils.image_helpers import (
     validate_uploaded_file,
     process_image_upload,
@@ -13,45 +24,47 @@ from utils.image_helpers import (
     perform_color_transfer,
     save_processed_image_png,
     generate_bg_removal_filename,
-    perform_background_removal
+    perform_background_removal,
+    validate_image_path,
+    load_image_from_path,
+    generate_filename_from_path
 )
 
 
 @router.post("/api/image/super-resolution")
-async def api_image_super_resolution(file: UploadFile = File(...)) -> Dict[str, Any]:
+async def api_image_super_resolution(request: ImageRequest) -> SuperResolutionResponse:
     """
-    Apply super resolution enhancement to uploaded image.
+    Apply super resolution enhancement to image specified by path.
     
-    Accepts an uploaded image file, processes it using Real-ESRGAN x4plus model,
+    Accepts an image path, processes it using Real-ESRGAN x4plus model,
     and returns a download link to the enhanced image in assets/public directory.
     
     Args:
-        file: Uploaded image file (JPEG, PNG, etc.)
+        request: ImageRequest containing the absolute path to the image file
         
     Returns:
-        JSON object containing download link to processed image
+        SuperResolutionResponse containing download link and absolute path to processed image
         
     Raises:
         HTTPException: If file validation or processing fails
     """
     try:
-        # Validate uploaded file format and constraints
-        validate_uploaded_file(file)
-        
-        # Process uploaded file to PIL Image
-        pil_image = process_image_upload(file)
+        # Validate image path and load image
+        validate_image_path(request.image_path)
+        pil_image = load_image_from_path(request.image_path)
         
         # Apply super resolution using models/image function
         enhanced_array = get_super_resolution(pil_image)
         
         # Generate unique filename and save processed image
-        unique_filename = generate_unique_filename(file.filename)
+        unique_filename = generate_filename_from_path(request.image_path, "sr")
         saved_path = save_processed_image(enhanced_array, unique_filename)
         
-        # Construct public download URL
+        # Construct public download URL and absolute path
         download_url = f"/api/assets/public/{unique_filename}"
+        absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return {"link": download_url}
+        return SuperResolutionResponse(link=download_url, absolute_path=absolute_path)
         
     except HTTPException:
         raise
@@ -60,41 +73,40 @@ async def api_image_super_resolution(file: UploadFile = File(...)) -> Dict[str, 
 
 
 @router.post("/api/image/remove-bg")
-async def api_image_background_removal(file: UploadFile = File(...)) -> Dict[str, Any]:
+async def api_image_background_removal(request: ImageRequest) -> BackgroundRemovalResponse:
     """
-    Remove background from uploaded image using RMBG-1.4 model.
+    Remove background from image specified by path using RMBG-1.4 model.
     
-    Accepts an uploaded image file, removes the background using state-of-the-art
+    Accepts an image path, removes the background using state-of-the-art
     RMBG-1.4 model, and returns a download link to the PNG image with transparent
     background in assets/public directory.
     
     Args:
-        file: Uploaded image file (JPEG, PNG, etc.)
+        request: ImageRequest containing the absolute path to the image file
         
     Returns:
-        JSON object containing download link to background-removed PNG image
+        BackgroundRemovalResponse containing download link and absolute path to background-removed PNG image
         
     Raises:
         HTTPException: If file validation or processing fails
     """
     try:
-        # Validate uploaded file format and constraints
-        validate_uploaded_file(file)
-        
-        # Process uploaded file to PIL Image
-        pil_image = process_image_upload(file)
+        # Validate image path and load image
+        validate_image_path(request.image_path)
+        pil_image = load_image_from_path(request.image_path)
         
         # Apply background removal using models/image function
         rgba_array = perform_background_removal(pil_image)
         
         # Generate unique PNG filename and save processed image
-        unique_filename = generate_bg_removal_filename(file.filename)
+        unique_filename = generate_filename_from_path(request.image_path, "bg_removed").replace('.jpg', '.png').replace('.jpeg', '.png')
         saved_path = save_processed_image_png(rgba_array, unique_filename)
         
-        # Construct public download URL
+        # Construct public download URL and absolute path
         download_url = f"/api/assets/public/{unique_filename}"
+        absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return {"link": download_url}
+        return BackgroundRemovalResponse(link=download_url, absolute_path=absolute_path)
         
     except HTTPException:
         raise
@@ -103,49 +115,44 @@ async def api_image_background_removal(file: UploadFile = File(...)) -> Dict[str
 
 
 @router.post("/api/image/color-transfer")
-async def api_image_color_transfer(
-    reference_file: UploadFile = File(..., description="Reference image for color grading"),
-    target_file: UploadFile = File(..., description="Target image to apply color transfer")
-) -> Dict[str, Any]:
+async def api_image_color_transfer(request: ColorTransferRequest) -> ColorTransferResponse:
     """
     Apply color transfer from reference image to target image.
     
-    Accepts two uploaded image files - a reference image providing the color palette
+    Accepts paths to two images - a reference image providing the color palette
     and a target image to receive the color transfer. Uses LAB color space statistics
     matching to transfer color characteristics while preserving image structure.
     Returns download link to the processed image in assets/public directory.
     
     Args:
-        reference_file: Reference image file for color palette (JPEG, PNG, etc.)
-        target_file: Target image file to receive color transfer (JPEG, PNG, etc.)
+        request: ColorTransferRequest containing paths to reference and target image files
         
     Returns:
-        JSON object containing download link to color-transferred image
+        ColorTransferResponse containing download link and absolute path to color-transferred image
         
     Raises:
         HTTPException: If file validation or processing fails
     """
     try:
-        # Validate both uploaded files
-        validate_uploaded_file(reference_file)
-        validate_uploaded_file(target_file)
+        # Validate both image paths and load images
+        validate_image_path(request.reference_image_path)
+        validate_image_path(request.image_path)
         
-        # Process uploaded files to PIL Images
-        reference_image = process_image_upload(reference_file)
-        target_image = process_image_upload(target_file)
+        reference_image = load_image_from_path(request.reference_image_path)
+        target_image = load_image_from_path(request.image_path)
         
         # Apply color transfer from reference to target
         transferred_array = perform_color_transfer(reference_image, target_image)
         
         # Generate unique filename and save processed image
-        unique_filename = generate_unique_filename(target_file.filename)
-        unique_filename = unique_filename.replace("sr_", "color_transfer_")
+        unique_filename = generate_filename_from_path(request.image_path, "color_transfer")
         saved_path = save_processed_image(transferred_array, unique_filename)
         
-        # Construct public download URL
+        # Construct public download URL and absolute path
         download_url = f"/api/assets/public/{unique_filename}"
+        absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return {"link": download_url}
+        return ColorTransferResponse(link=download_url, absolute_path=absolute_path)
         
     except HTTPException:
         raise
@@ -160,42 +167,40 @@ def api_image_generate_image():
 
 
 @router.post("/api/image/portrait-effect")
-async def api_image_portrait_effect(file: UploadFile = File(...)) -> Dict[str, Any]:
+async def api_image_portrait_effect(request: ImageRequest) -> PortraitEffectResponse:
     """
-    Apply portrait effect with depth-based background blur to uploaded image.
+    Apply portrait effect with depth-based background blur to image specified by path.
     
-    Accepts an uploaded image file, generates depth map, and applies Gaussian blur
+    Accepts an image path, generates depth map, and applies Gaussian blur
     to background areas (depth < 0.65) while keeping foreground subjects sharp.
     Returns download link to the processed image in assets/public directory.
     
     Args:
-        file: Uploaded image file (JPEG, PNG, etc.)
+        request: ImageRequest containing the absolute path to the image file
         
     Returns:
-        JSON object containing download link to processed portrait image
+        PortraitEffectResponse containing download link and absolute path to processed portrait image
         
     Raises:
         HTTPException: If file validation or processing fails
     """
     try:
-        # Validate uploaded file format and constraints
-        validate_uploaded_file(file)
-        
-        # Process uploaded file to PIL Image
-        pil_image = process_image_upload(file)
+        # Validate image path and load image
+        validate_image_path(request.image_path)
+        pil_image = load_image_from_path(request.image_path)
         
         # Apply portrait effect using depth-based blur
         portrait_array = create_portrait_effect(pil_image)
         
         # Generate unique filename and save processed image
-        unique_filename = generate_unique_filename(file.filename)
-        unique_filename = unique_filename.replace("sr_", "portrait_")
+        unique_filename = generate_filename_from_path(request.image_path, "portrait")
         saved_path = save_processed_image(portrait_array, unique_filename)
         
-        # Construct public download URL
+        # Construct public download URL and absolute path
         download_url = f"/api/assets/public/{unique_filename}"
+        absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return {"link": download_url}
+        return PortraitEffectResponse(link=download_url, absolute_path=absolute_path)
         
     except HTTPException:
         raise

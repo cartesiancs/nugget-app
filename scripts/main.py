@@ -15,6 +15,9 @@ if os.path.exists("assets/public"):
 # Import cv_api to register image processing endpoints
 import cv_api
 
+# Import video_api to register video processing endpoints
+import video_api
+
 @router.get("/api/health")
 def health() -> Dict[str, Union[int, str]]:
     """

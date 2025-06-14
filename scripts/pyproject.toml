@@ -23,4 +23,6 @@ dependencies = [
     "transformers>=4.20.0",
     "ultralytics>=8.0.0",
     "uvicorn>=0.34.3",
+    "vidstab>=1.7.4",
+    "yt-dlp>=2025.6.9",
 ]

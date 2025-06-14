@@ -48,10 +48,26 @@ export class AiInput extends LitElement {
           this.isEnter = false;
           return;
         }
+
         else{
+          
+          const timelineLatest = useTimelineStore.getState();
+          const canvasLatestObject = document.querySelector("preview-canvas");
+          const elementTimelineCanvasObject = document.querySelector("element-timeline-canvas");
+          
+          const context = {
+            timeline: {
+              cursor: timelineLatest.cursor / 1000,
+              selected: elementTimelineCanvasObject.targetIdHistorical,
+            },
+            preview: {
+              selected: canvasLatestObject.activeElementId,
+            }
+          }
+
           try {
             if (window.electronAPI?.req?.quartz?.LLMResponse) {
-              window.electronAPI.req.quartz.LLMResponse(command)
+              window.electronAPI.req.quartz.LLMResponse(command, context)
                 .then((response) => {
                   console.log(response)
                   if(response.type == "text"){

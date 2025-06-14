@@ -14,6 +14,7 @@ dependencies = [
     "opencv-python>=4.11.0.86",
     "pillow>=11.2.1",
     "soundfile>=0.13.1",
+    "suno-bark>=0.1.5",
     "torch>=2.7.1",
     "torchvision>=0.22.1",
     "transformers>=4.52.4",

@@ -20,6 +20,9 @@ from pathlib import Path
 from typing import Union, Optional, Tuple
 import warnings
 from df import enhance, init_df
+from transformers import AutoProcessor, BarkModel
+from torch.serialization import safe_globals
+
 
 # Suppress warnings for cleaner output
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -28,6 +31,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # Type aliases for better readability
 AudioType = Union[str, Path, np.ndarray]
 AudioArray = np.ndarray
+
 def _validate_audio_input(audio: AudioType) -> Tuple[np.ndarray, int]:
     """
     Validate and convert audio input to numpy array format.
@@ -116,19 +120,63 @@ def remove_noise(audio: AudioType, output_path: Optional[str] = None) -> Union[n
     except Exception as e:
         raise RuntimeError(f"Noise removal failed: {str(e)}")
 
+def _load_bark_model():
+    """Load Bark model and processor for text-to-speech."""
+    processor = AutoProcessor.from_pretrained("suno/bark")
+    model = BarkModel.from_pretrained("suno/bark")
+    return processor, model
+
+def text_to_speech(text: str, output_path: Optional[str] = None, speaker: str = "v2/en_speaker_6") -> Union[np.ndarray, str]:
+    """
+    Convert text to speech using Bark.
+    
+    Args:
+        text: Input text to convert to speech
+        output_path: Optional path to save the generated audio
+        speaker: Speaker voice to use (default: v2/en_speaker_6)
+        
+    Returns:
+        If output_path is provided, returns the path to the saved audio file
+        Otherwise, returns the generated audio as numpy array
+        
+    Raises:
+        RuntimeError: If text-to-speech processing fails
+    """
+    try:
+        # Load Bark model and processor
+        processor, model = _load_bark_model()
+        
+        # Process text and generate audio
+        inputs = processor(text, voice_preset=speaker)
+        audio_array = model.generate(**inputs)
+        audio_array = audio_array.cpu().numpy().squeeze()
+        
+        if output_path:
+            sf.write(output_path, audio_array, 24000)  # Bark uses 24kHz sample rate
+            return output_path
+        else:
+            return audio_array
+            
+    except Exception as e:
+        raise RuntimeError(f"Text-to-speech failed: {str(e)}")
+
 def main() -> None:
     """Main function for testing the module."""
     import argparse
     
     parser = argparse.ArgumentParser(description="Audio processing module")
-    parser.add_argument("--input", required=True, help="Input audio file path")
+    parser.add_argument("--input", required=True, help="Input audio file path or text for TTS")
     parser.add_argument("--output", help="Output audio file path")
-    parser.add_argument("--task", choices=["remove-noise"], required=True, help="Task to perform")
+    parser.add_argument("--task", choices=["remove-noise", "text-to-speech"], required=True, help="Task to perform")
+    parser.add_argument("--speaker", default="v2/en_speaker_6", help="Speaker voice for TTS (default: v2/en_speaker_6)")
     
     args = parser.parse_args()
     
     if args.task == "remove-noise":
         result = remove_noise(args.input, args.output)
+        print(f"Processing complete. Result saved to: {result}")
+    elif args.task == "text-to-speech":
+        result = text_to_speech(args.input, args.output, args.speaker)
         print(f"Processing complete. Result saved to: {result}")
 
 if __name__ == "__main__":

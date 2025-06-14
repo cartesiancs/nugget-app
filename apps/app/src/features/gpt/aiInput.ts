@@ -6,7 +6,7 @@ import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
 import { actionParsor, parseCommands } from "./resultParser";
 import { getLocationEnv } from "../../functions/getLocationEnv";
-import { addTextElement,addShapeElement } from "../../../reponseHandlers";
+import { addTextElement,addShapeElement, renderNewImage } from "../../../reponseHandlers";
 
 @customElement("ai-input")
 export class AiInput extends LitElement {
@@ -51,7 +51,8 @@ export class AiInput extends LitElement {
         else{
           try {
             if (window.electronAPI?.req?.quartz?.LLMResponse) {
-              window.electronAPI.req.quartz.LLMResponse(command)
+              let context = {}
+              window.electronAPI.req.quartz.LLMResponse(command,context)
                 .then((response) => {
                   console.log(response)
                   if(response.type == "text"){
@@ -63,6 +64,9 @@ export class AiInput extends LitElement {
                   }
                   else if(response.type == "video"){
                     console.log("Video response from LLM.")
+                  }
+                  else if (response.type == "sr") {
+                    renderNewImage(response.data);
                   }
                   else{
                     console.log("TODO Else")

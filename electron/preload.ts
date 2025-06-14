@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 const request = {
   quartz:{
-    LLMResponse: (options: any) => ipcRenderer.invoke("quartz:LLMResponse", options),
+    LLMResponse: (command,context) => ipcRenderer.invoke("quartz:LLMResponse", command,context),
   },
   app: {
     forceClose: () => ipcRenderer.send("app:forceClose"),

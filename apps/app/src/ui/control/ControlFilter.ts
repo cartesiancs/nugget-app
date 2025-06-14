@@ -1,14 +1,12 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { LocaleController } from "../../controllers/locale";
-import "../../features/gif/gifPreset";
-
 @customElement("control-ui-filter")
 export class ControlUiFilter extends LitElement {
   private lc = new LocaleController(this);
 
   @property()
-  activePanel = "gif";
+  activePanel = "tranistion"; // Default active panel
 
   createRenderRoot() {
     return this;
@@ -22,14 +20,6 @@ export class ControlUiFilter extends LitElement {
   render() {
     return html` <div class="row px-2">
       <div class="d-flex col gap-2 overflow-scroll">
-        <button
-          class="btn btn-sm ${this.activePanel == "gif"
-            ? "btn-primary"
-            : "btn-default"} text-light mt-1"
-          @click=${() => this._handleClickChangePanel("gif")}
-        >
-          gif
-        </button>
         <button
           class="btn btn-sm ${this.activePanel == "transition"
             ? "btn-primary"
@@ -56,9 +46,6 @@ export class ControlUiFilter extends LitElement {
         </button>
       </div>
 
-      <div class="${this.activePanel == "gif" ? "" : "d-none"}">
-        <gif-preset></gif-preset>
-      </div>
     </div>`;
   }
 }

@@ -29,8 +29,6 @@ import { ipcOverlayRecord } from "./ipc/ipcOverlayRecord.js";
 import "./render/renderFrame.js";
 import { ipcRenderV2 } from "./render/renderFrame.js";
 import { ipcMedia } from "./ipc/ipcMedia.js";
-import { runServer } from "./webServer.js";
-import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
 import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
 import { ipcAi } from "./ipc/ipcAi.js";
 import { ipcYtdlp } from "./ipc/ipcYtdlp.js";
@@ -75,7 +73,7 @@ ipcMain.on("CLIENT_READY", async (evt) => {
 ipcMain.handle("GET_METADATA", async (evt, bloburl, mediapath) => {
   const result = new Promise((resolve, reject) => {
     ffmpeg.ffprobe(mediapath, (err, metadata) => {
-      console.log(mediapath, metadata, bloburl);
+      // console.log(mediapath, metadata, bloburl);
       resolve({
         bloburl: bloburl,
         metadata: metadata,
@@ -139,7 +137,7 @@ ipcMain.handle("overlayRecord:show", ipcOverlayRecord.show);
 ipcMain.handle("extension:open:file", ipcExtension.openFile);
 ipcMain.handle("extension:open:dir", ipcExtension.openDir);
 
-ipcMain.handle("selfhosted:run", ipcSelfhosted.run);
+// ipcMain.handle("selfhosted:run", ipcSelfhosted.run);
 
 ipcMain.handle("ai:stt", ipcAi.stt);
 ipcMain.handle("ai:text", ipcAi.text);

@@ -34,62 +34,29 @@ from utils.image_helpers import (
 @router.post("/api/image/super-resolution")
 async def api_image_super_resolution(request: ImageRequest) -> SuperResolutionResponse:
     """
-<<<<<<< HEAD
-    Apply super resolution enhancement to uploaded image.
-
-    Accepts an uploaded image file, processes it using Real-ESRGAN x4plus model,
-=======
     Apply super resolution enhancement to image specified by path.
     
     Accepts an image path, processes it using Real-ESRGAN x4plus model,
->>>>>>> origin/image
     and returns a download link to the enhanced image in assets/public directory.
 
     Args:
-<<<<<<< HEAD
-        file: Uploaded image file (JPEG, PNG, etc.)
-
-    Returns:
-        JSON object containing download link to processed image
-
-=======
         request: ImageRequest containing the absolute path to the image file
         
     Returns:
         SuperResolutionResponse containing download link and absolute path to processed image
         
->>>>>>> origin/image
     Raises:
         HTTPException: If file validation or processing fails
     """
     try:
-<<<<<<< HEAD
-        # Validate uploaded file format and constraints
-        _validate_uploaded_file(file)
-
-        # Process uploaded file to PIL Image
-        pil_image = _process_image_upload(file)
-
-=======
         # Validate image path and load image
         validate_image_path(request.image_path)
         pil_image = load_image_from_path(request.image_path)
         
->>>>>>> origin/image
         # Apply super resolution using models/image function
         enhanced_array = get_super_resolution(pil_image)
 
         # Generate unique filename and save processed image
-<<<<<<< HEAD
-        unique_filename = _generate_unique_filename(file.filename)
-        saved_path = _save_processed_image(enhanced_array, unique_filename)
-
-        # Construct public download URL
-        download_url = f"/api/assets/public/{unique_filename}"
-
-        return {"link": download_url, "path": f"/Users/pjr/Projects/hackqualcomm/Quartz/scripts/assets/public/{unique_filename}"}
-
-=======
         unique_filename = generate_filename_from_path(request.image_path, "sr")
         saved_path = save_processed_image(enhanced_array, unique_filename)
         
@@ -99,25 +66,14 @@ async def api_image_super_resolution(request: ImageRequest) -> SuperResolutionRe
         
         return SuperResolutionResponse(link=download_url, absolute_path=absolute_path)
         
->>>>>>> origin/image
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 
-<<<<<<< HEAD
-@router.get("/api/image/remove-bg")
-def api_image_background_removal():
-    """Placeholder endpoint for background removal functionality."""
-    pass
-
-
-def _convert_to_lab_color_space(image_array: np.ndarray) -> np.ndarray:
-=======
 @router.post("/api/image/remove-bg")
 async def api_image_background_removal(request: ImageRequest) -> BackgroundRemovalResponse:
->>>>>>> origin/image
     """
     Remove background from image specified by path using RMBG-1.4 model.
     
@@ -242,15 +198,9 @@ async def api_image_portrait_effect(request: ImageRequest) -> PortraitEffectResp
         
         # Construct public download URL and absolute path
         download_url = f"/api/assets/public/{unique_filename}"
-<<<<<<< HEAD
-        path =  f"/Users/pjr/Projects/hackqualcomm/Quartz/scripts/assets/public/{unique_filename}"
-        
-        return {"link": download_url, "path": path}
-=======
         absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
         return PortraitEffectResponse(link=download_url, absolute_path=absolute_path)
->>>>>>> origin/image
         
     except HTTPException:
         raise

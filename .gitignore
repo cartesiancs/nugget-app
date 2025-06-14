@@ -9,3 +9,8 @@
 /temp
 /apps/app/dist
 .DS_Store
+
+__pycache__/*
+bin/*
+
+temp_*

@@ -1,7 +1,8 @@
 import { addTextElement } from "./text_handlers";
 import { addShapeElement } from "./shape_handlers";
 import { useTimelineStore } from "../src/states/timelineStore";
-
+import { addImageSlide } from "./element_handlers";
+import { projectStore } from "../src/states/projectStore";
 // Helper function to convert "NULL" to null
 const handleNull = (value: any) => value === "NULL" ? null : value;
 
@@ -9,12 +10,13 @@ export function addSlideElement(params: any): boolean {
     try {
         let startTime = 0;
         const timelineLatest = useTimelineStore.getState();
-        
+        const projectDir = projectStore.getState().nowDirectory;
+
         // First create the background shape
-        if(params?.position === "begin"){
+        if (params?.position === "begin") {
             startTime = 0;
         }
-        else if (params?.position === "end"){
+        else if (params?.position === "end") {
             // Get the end time of the last element in timeline
             const timeline = timelineLatest.timeline;
             const lastElementId = Object.keys(timeline).pop();
@@ -37,13 +39,17 @@ export function addSlideElement(params: any): boolean {
             duration: handleNull(params?.duration) ?? 3000,
             shape: "rectangle"
         };
-
+        // if(!handleNull(params?.bgColor)){
+        //     const filename = `${projectDir}/assets/images/132.png` // get the path for this file from the asset folder
+        //     addImageSlide(filename)
+        // }
+        // else{
         const shapeSuccess = addShapeElement(bgShapeParams);
         if (!shapeSuccess) {
             console.error("Failed to create background shape");
             return false;
         }
-
+        // }
         // Calculate text box dimensions
         const textWidth = 1600;
         const textHeight = 200;
@@ -79,6 +85,7 @@ export function addSlideElement(params: any): boolean {
             console.error("Failed to create text element");
             return false;
         }
+
         console.log("Slide created successfully:", params);
         return true;
     } catch (error) {
@@ -86,4 +93,3 @@ export function addSlideElement(params: any): boolean {
         return false;
     }
 }
-  

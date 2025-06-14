@@ -12,10 +12,18 @@ export function renderNewImage(absolute_path: string, superRes?: boolean): boole
   let timeline = timelineState.timeline;
   console.log(timeline);
   timeline[ide].localpath = absolute_path;
-  let oldwidth = timeline[ide].width;
-  let oldheight = timeline[ide].height;
-  timeline[ide].width = oldwidth * 4;
-  timeline[ide].height = oldheight * 4;
+  
+  // Only scale dimensions if superRes is true
+  if (superRes) {
+    const element = timeline[ide];
+    if ('width' in element && 'height' in element) {
+      const oldwidth = element.width;
+      const oldheight = element.height;
+      element.width = oldwidth * 4;
+      element.height = oldheight * 4;
+    }
+  }
+  
   timelineState.patchTimeline(timeline);
 
   previewCanvas.drawCanvas();
@@ -23,17 +31,3 @@ export function renderNewImage(absolute_path: string, superRes?: boolean): boole
   return false;
 }
 
-
-export function addImageElement(data: { outpath: string }) {
-  const elementControlComponent = document.querySelector("element-control") as any;
-      
-  if (!elementControlComponent) {
-      console.error("Element control component not found. Make sure the component is loaded first.");
-      return false;
-  }
-  const timelineLatest = useTimelineStore.getState();
-  let startTime = timelineLatest.cursor;
-  const AssetList = document.querySelector("asset-list");
-  console.log(AssetList.map)
-  // elementControlComponent.addImage()
-}

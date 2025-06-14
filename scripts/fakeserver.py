@@ -18,15 +18,8 @@ async def getResponseFromLlama3(request: LLMRequest):
     try:
         print("request for llm:", request.command, request.context)
 
-        # TODO: Uncomment and configure the actual LLM service URL
-        # response = requests.post(
-        #     "http://192.168.46.138:3001/llm",
-        #     json={"command": request.command, "context": request.context}
-        # )
-        # print("response from llm:", response)
-        # return response.json()
+        
 
-        # Temporary mock response for testing
         return {"type": "text", "data": f"Processed command: {request.command}"}
     except requests.RequestException as e:
         raise HTTPException(

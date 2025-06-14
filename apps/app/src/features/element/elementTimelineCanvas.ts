@@ -1112,6 +1112,10 @@ export class elementTimelineCanvas extends LitElement {
         itemName: "cut",
       },
       {
+        onClick: `document.querySelector('element-timeline-canvas').potraitBlur()`,
+        itemName: "add potrait effect",
+      },
+      {
         onClick:
           "document.querySelector('element-timeline-canvas').removeBackground()",
         itemName: "remove background",
@@ -1134,32 +1138,87 @@ export class elementTimelineCanvas extends LitElement {
 
         </menu-dropdown-body>`;
   }
+  potraitBlur() {
+    console.log("potrait blur");
 
+    const currentlySelected = this.targetIdDuringRightClick;
+
+    const timeline = useTimelineStore.getState().timeline;
+    let thefp;
+    if (timeline[currentlySelected]["localpath"].startsWith("file://")) {
+      thefp = timeline[currentlySelected]["localpath"].slice(7);
+    } else {
+      thefp = timeline[currentlySelected]["localpath"];
+    }
+    console.log(timeline, thefp);
+
+    const currentUIState = uiStore.getState();
+    currentUIState.setThinking();
+
+    window.electronAPI.req.quartz
+      .directToolPotraitBlur(thefp)
+      .then((result) => {
+        let timelineState = useTimelineStore.getState();
+        let timeline = timelineState.timeline;
+        timeline[currentlySelected].localpath = result.absolute_path;
+        currentUIState.unsetThinking();
+        timelineState.patchTimeline(timeline);
+        timelineState.checkPointTimeline();
+        this.drawCanvas();
+      })
+      .catch((error) => {
+        currentUIState.unsetThinking();
+        // TODO: use toast
+        currentUIState.setBigError(
+          "Error removing background. Please try again.",
+        );
+        console.error("Error removing background:", error);
+      });
+  }
   removeBackground() {
     console.log("remove bg");
 
     const currentlySelected = this.targetIdDuringRightClick;
 
     const timeline = useTimelineStore.getState().timeline;
-    const thefp = timeline[currentlySelected]["localpath"].slice(7)
-    console.log(timeline, thefp)
+    let thefp;
+    if (timeline[currentlySelected]["localpath"].startsWith("file://")) {
+      thefp = timeline[currentlySelected]["localpath"].slice(7);
+    } else {
+      thefp = timeline[currentlySelected]["localpath"];
+    }
+
+    console.log(timeline, thefp);
 
     const currentUIState = uiStore.getState();
     currentUIState.setThinking();
 
-    window.electronAPI.req.quartz.directToolRemoveBg(thefp).then((result) => {
-    
-        let timelineState = useTimelineStore.getState();
-        let timeline = timelineState.timeline;
-        timeline[currentlySelected].localpath = result.absolute_path;
-         currentUIState.unsetThinking();
-        timelineState.patchTimeline(timeline);
-        timelineState.checkPointTimeline();
-        this.drawCanvas();
-
-    }).catch((error) => {
-        console.error("Error removing background:", error)
-    });
+    try {
+      window.electronAPI.req.quartz
+        .directToolRemoveBg(thefp)
+        .then((result) => {
+          let timelineState = useTimelineStore.getState();
+          let timeline = timelineState.timeline;
+          timeline[currentlySelected].localpath = result.absolute_path;
+          currentUIState.unsetThinking();
+          timelineState.patchTimeline(timeline);
+          timelineState.checkPointTimeline();
+          this.drawCanvas();
+        })
+        .catch((error) => {
+          currentUIState.unsetThinking();
+          // TODO: use toast
+          currentUIState.setBigError(
+            "Error removing background. Please try again.",
+          );
+          console.error("Error removing background:", error);
+        });
+    } catch (error) {
+      currentUIState.unsetThinking();
+      document
+        .querySelector("toast-box")
+        .showToast({ message: "remove bg failed!" });
+    }
   }
 
   showSideOption(elementId: string) {

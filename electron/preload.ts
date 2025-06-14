@@ -5,6 +5,7 @@ const request = {
     LLMResponse: (command: string, context: any) => ipcRenderer.invoke("quartz:LLMResponse", command, context),
     transcribeAudio: (audioData: any) => ipcRenderer.invoke("quartz:transcribeAudio", audioData),
     directToolRemoveBg: (imagePath: any) => ipcRenderer.invoke("quartz:directToolRemoveBg", imagePath),
+    directToolPotraitBlur: (imagePath: any) => ipcRenderer.invoke("quartz:directToolPotraitBlur", imagePath),
   },
   app: {
     forceClose: () => ipcRenderer.send("app:forceClose"),

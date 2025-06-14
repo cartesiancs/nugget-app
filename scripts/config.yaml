@@ -2,7 +2,7 @@ device: "mps"
 image:
   portrait_effect:
     depth_threshold: 0.65
-    blur_kernel: 8
+    blur_kernel: 32
   super_resolution:
     target_size: 128
     scale_factor: 1.5

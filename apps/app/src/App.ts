@@ -16,13 +16,14 @@ export class App extends LitElement {
   topBarTitle = this.uiState.topBarTitle;
 
   freeze = false;
+  error = "";
 
   createRenderRoot() {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
       this.topBarTitle = state.topBarTitle;
       this.freeze = state.thinking;
-
+      this.error = state.bigError;
       this.requestUpdate();
     });
 
@@ -31,6 +32,13 @@ export class App extends LitElement {
 
   _handleClick() {
     this.uiState.updateVertical(this.resize.vertical.bottom + 2);
+  }
+
+  _dismissError() {
+    this.error = "";
+    // Optionally, also clear from uiStore if that's where error is set
+    uiStore.getState().unsetBigError();
+    this.requestUpdate();
   }
 
   render() {
@@ -67,11 +75,51 @@ export class App extends LitElement {
         }
 
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .error-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.95);
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          color: #fff;
+          font-size: 1.5em;
+        }
+        .error-dismiss-btn {
+          margin-top: 2em;
+          padding: 0.5em 2em;
+          font-size: 1em;
+          background: #e74c3c;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
         }
       </style>
-      ${this.freeze ? html`<div class="ghost-overlay"><div class="spinner"></div></div>` : ""}
+      ${this.error
+        ? html`
+            <div class="error-overlay">
+              <div>${this.error}</div>
+              <button class="error-dismiss-btn" @click="${this._dismissError}">Dismiss</button>
+            </div>
+          `
+        : ""}
+      ${this.freeze && !this.error
+        ? html`<div class="ghost-overlay"><div class="spinner"></div></div>`
+        : ""}
       <asset-upload-drop></asset-upload-drop>
       <tutorial-group>
         <tutorial-popover

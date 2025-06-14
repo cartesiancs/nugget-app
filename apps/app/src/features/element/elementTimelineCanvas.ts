@@ -1113,7 +1113,7 @@ export class elementTimelineCanvas extends LitElement {
       },
       {
         onClick: `document.querySelector('element-timeline-canvas').potraitBlur()`,
-        itemName: "add bokeh effect",
+        itemName: "add potrait effect",
       },
       {
         onClick:
@@ -1187,7 +1187,7 @@ export class elementTimelineCanvas extends LitElement {
     } else {
       thefp = timeline[currentlySelected]["localpath"];
     }
-    
+
     console.log(timeline, thefp);
 
     const currentUIState = uiStore.getState();

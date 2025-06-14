@@ -2,13 +2,12 @@
 import axios from "axios";
 
 export const ipcQuartz = {
-  handleLLMResponse: async (options: any) => {
+  handleLLMResponse: async (event: any, command: string) => {
     try {
-      const response = await axios.get("http://192.168.46.138:3001/api/llm", {
-        params: options
-      });
-      console.log("Response from LLM",response)
-      return response.data;
+          const response = await axios.get("http://0.0.0.0:8000/api/llm", {
+            params: { command }
+          });
+          return response.data;
     } catch (error) {
       console.error("Error handling LLM response:", error);
       throw error;

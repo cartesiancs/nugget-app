@@ -35,7 +35,7 @@ from utils.image_helpers import (
 router = APIRouter()
 
 @router.post("/api/image/super-resolution")
-async def api_image_super_resolution(request: ImageRequest) -> SuperResolutionResponse:
+async def api_image_super_resolution(request: ImageRequest):
     """
     Apply super resolution enhancement to image specified by path.
     
@@ -75,16 +75,17 @@ async def api_image_super_resolution(request: ImageRequest) -> SuperResolutionRe
         download_url = f"/api/assets/public/{unique_filename}"
         absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return SuperResolutionResponse(link=download_url, absolute_path=absolute_path)
+        response_data = SuperResolutionResponse(link=download_url, absolute_path=absolute_path)
+        return {"success": True, "data": response_data}
         
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        return {"success": False, "error": e.detail}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        return {"success": False, "error": f"Processing failed: {str(e)}"}
 
 
 @router.post("/api/image/remove-bg")
-async def api_image_background_removal(request: ImageRequest) -> BackgroundRemovalResponse:
+async def api_image_background_removal(request: ImageRequest):
     """
     Remove background from image specified by path using RMBG-1.4 model.
     
@@ -117,16 +118,17 @@ async def api_image_background_removal(request: ImageRequest) -> BackgroundRemov
         download_url = f"/api/assets/public/{unique_filename}"
         absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return BackgroundRemovalResponse(link=download_url, absolute_path=absolute_path)
+        response_data = BackgroundRemovalResponse(link=download_url, absolute_path=absolute_path)
+        return {"success": True, "data": response_data}
         
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        return {"success": False, "error": e.detail}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Background removal failed: {str(e)}") 
+        return {"success": False, "error": f"Background removal failed: {str(e)}"}
 
 
 @router.post("/api/image/color-transfer")
-async def api_image_color_transfer(request: ColorTransferRequest) -> ColorTransferResponse:
+async def api_image_color_transfer(request: ColorTransferRequest):
     """
     Apply color transfer from reference image to target image.
     
@@ -163,12 +165,13 @@ async def api_image_color_transfer(request: ColorTransferRequest) -> ColorTransf
         download_url = f"/api/assets/public/{unique_filename}"
         absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return ColorTransferResponse(link=download_url, absolute_path=absolute_path)
+        response_data = ColorTransferResponse(link=download_url, absolute_path=absolute_path)
+        return {"success": True, "data": response_data}
         
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        return {"success": False, "error": e.detail}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Color transfer processing failed: {str(e)}")
+        return {"success": False, "error": f"Color transfer processing failed: {str(e)}"}
 
 
 @router.get("/api/image/image-generation")
@@ -178,7 +181,7 @@ def api_image_generate_image():
 
 
 @router.post("/api/image/portrait-effect")
-async def api_image_portrait_effect(request: ImageRequest) -> PortraitEffectResponse:
+async def api_image_portrait_effect(request: ImageRequest):
     """
     Apply portrait effect with depth-based background blur to image specified by path.
     
@@ -211,12 +214,13 @@ async def api_image_portrait_effect(request: ImageRequest) -> PortraitEffectResp
         download_url = f"/api/assets/public/{unique_filename}"
         absolute_path = os.path.join(os.getcwd(), "assets", "public", unique_filename)
         
-        return PortraitEffectResponse(link=download_url, absolute_path=absolute_path)
+        response_data = PortraitEffectResponse(link=download_url, absolute_path=absolute_path)
+        return {"success": True, "data": response_data}
         
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        return {"success": False, "error": e.detail}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Portrait effect processing failed: {str(e)}")
+        return {"success": False, "error": f"Portrait effect processing failed: {str(e)}"}
 
 
 def process_image_with_patches(image_array: np.ndarray, patch_size: int = 128, overlap: int = 0) -> np.ndarray:

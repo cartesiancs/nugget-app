@@ -3,6 +3,7 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any
 import yaml
+import concurrent.futures
 
 from fastapi import UploadFile, HTTPException
 from PIL import Image
@@ -197,7 +198,10 @@ def apply_depth_based_blur(image_array: np.ndarray, depth_map: np.ndarray,
 
 def create_portrait_effect(pil_image: Image.Image) -> np.ndarray:
     """
-    Create portrait effect by applying depth-based background blur.
+    Create portrait effect by applying depth-based background blur in parallel.
+    
+    This function speeds up the process by running the two most time-consuming
+    operations—depth map generation and Gaussian blurring—concurrently.
     
     Args:
         pil_image: Input PIL Image object
@@ -209,16 +213,29 @@ def create_portrait_effect(pil_image: Image.Image) -> np.ndarray:
         RuntimeError: If depth estimation or blur processing fails
     """
     try:
-        # Generate depth map for the image
-        depth_map = get_depth_map(pil_image)
-        
-        # Convert PIL image to numpy array
         image_array = np.array(pil_image)
+        blur_kernel = CONFIG["image"]["portrait_effect"]["blur_kernel"]
+        depth_threshold = CONFIG["image"]["portrait_effect"]["depth_threshold"]
+
+        def _blur_image(img_arr, kernel):
+            """Helper function to run Gaussian blur."""
+            return cv2.GaussianBlur(img_arr, (kernel * 2 + 1, kernel * 2 + 1), 0)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit depth map and blur operations to run in parallel
+            future_depth_map = executor.submit(get_depth_map, pil_image)
+            future_blurred_image = executor.submit(_blur_image, image_array, blur_kernel)
+
+            # Retrieve results once both tasks are complete
+            depth_map = future_depth_map.result()
+            blurred_image = future_blurred_image.result()
+
+        # Combine the results
+        blur_mask = depth_map < depth_threshold
+        portrait_result = np.where(blur_mask[..., np.newaxis], blurred_image, image_array)
         
-        # Apply depth-based blur with specified parameters
-        portrait_result = apply_depth_based_blur(image_array, depth_map)
-        return portrait_result
-        
+        return portrait_result.astype(np.uint8)
+
     except Exception as e:
         raise RuntimeError(f"Portrait effect processing failed: {str(e)}")
 

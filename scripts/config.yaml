@@ -7,3 +7,6 @@ image:
     target_size: 128
     scale_factor: 1.5
     upscale_factor: 4
+  background_removal:
+    confidence_threshold: 0.5
+    use_fp16: false  # Disabled for MPS compatibility

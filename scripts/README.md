@@ -39,6 +39,15 @@ curl -X POST "http://localhost:8000/api/image/color-transfer" \
     -F "target_file=@assets/mountains.jpg"
 ```
 
+### /api/image/background-removal/
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/image/remove-bg" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@assets/barbie.jpg"
+```
+
 ### /api/image/image-generation/
 ```bash
 uv run python models/image.py generate_image -p "a beautiful sunset over mountains" -o test_generation.png --steps 20

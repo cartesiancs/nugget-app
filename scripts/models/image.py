@@ -3,11 +3,12 @@
 Image processing models for computer vision tasks.
 
 This module provides implementations for various image processing tasks including:
-- Depth estimation (MiDaS)
+- Depth estimation (MiDaS from Qualcomm AI Hub)
 - Super resolution (Real-ESRGAN x4plus)
-- Background/object segmentation (SAM, YOLOv8)
+- Background/object segmentation (RMBG-1.4 from BRIA AI, YOLOv8)
+- Background removal (RMBG-1.4 state-of-the-art model)
 - Inpainting (LaMa dilated)
-- Image generation (Stable Diffusion 1.5)
+- Image generation (Stable Diffusion 2.1)
 - Image classification
 
 All functions are implemented with modular design and proper type hints.
@@ -65,6 +66,10 @@ def load_config() -> Dict[str, Any]:
                     "target_size": 128,
                     "scale_factor": 1.5,
                     "upscale_factor": 4
+                },
+                "background_removal": {
+                    "confidence_threshold": 0.5,
+                    "use_fp16": True
                 }
             }
         }
@@ -142,6 +147,57 @@ def _load_esrgan_model() -> pipeline:
 def _load_sam_model():
     """Load SAM segmentation model from HuggingFace."""
     return pipeline("mask-generation", model="facebook/sam-vit-base")
+
+
+def _load_rmbg_model():
+    """Load RMBG-1.4 background removal model from BRIA AI."""
+    device = CONFIG.get("device", "cpu")
+    use_fp16 = CONFIG.get("image", {}).get("background_removal", {}).get("use_fp16", True)
+    
+    # Check device availability and raise error if not available
+    if device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA device requested but not available")
+    elif device == "mps" and not torch.backends.mps.is_available():
+        raise RuntimeError("MPS device requested but not available")
+    
+    # For MPS, disable fp16 to avoid precision issues
+    if device == "mps":
+        torch_dtype = torch.float32
+        console.print("[yellow]Using fp32 on MPS to avoid precision issues[/yellow]")
+    elif use_fp16 and device == "cuda":
+        torch_dtype = torch.float16
+    else:
+        torch_dtype = torch.float32
+    
+    console.print(f"[cyan]Loading RMBG-1.4 on device: {device} with dtype: {torch_dtype}[/cyan]")
+    
+    return pipeline(
+        "image-segmentation", 
+        model="briaai/RMBG-1.4", 
+        trust_remote_code=True,
+        device=device,
+        torch_dtype=torch_dtype
+    )
+
+
+def _process_rmbg_output(pillow_mask, original_size):
+    """Process RMBG model output to segmentation mask."""
+    # Get confidence threshold from config
+    confidence_threshold = CONFIG.get("image", {}).get("background_removal", {}).get("confidence_threshold", 0.5)
+    threshold_value = int(confidence_threshold * 255)
+    
+    # Convert PIL mask to numpy array
+    mask_array = np.array(pillow_mask)
+    
+    # Convert to binary mask (1 for foreground, 0 for background)
+    if len(mask_array.shape) == 3:
+        # If RGB mask, convert to grayscale
+        mask_array = cv2.cvtColor(mask_array, cv2.COLOR_RGB2GRAY)
+    
+    # Apply configurable threshold
+    binary_mask = (mask_array > threshold_value).astype(np.uint8)
+    
+    return binary_mask
 
 
 def _load_lama_model():
@@ -375,7 +431,12 @@ def get_super_resolution(img: ImageType) -> np.ndarray:
 
 def background_segmentation(img: ImageType) -> np.ndarray:
     """
-    Perform background segmentation using SAM ViT base model.
+    Perform background segmentation using RMBG-1.4 model from BRIA AI.
+    
+    RMBG-1.4 is a state-of-the-art background removal model designed to effectively 
+    separate foreground from background across various categories including objects, 
+    people, animals, and text. It was trained on over 12,000 high-quality, manually 
+    labeled images.
     
     Args:
         img: Input image as PIL Image or numpy array
@@ -390,11 +451,20 @@ def background_segmentation(img: ImageType) -> np.ndarray:
     try:
         pil_img = _validate_image_input(img)
         
-        # Fallback implementation using simple thresholding
-        # Convert to grayscale and apply Otsu's thresholding
-        gray = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2GRAY)
-        _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        return (mask / 255).astype(np.uint8)
+        # Load RMBG-1.4 model from BRIA AI
+        console.print("[bold cyan]Loading RMBG-1.4 model from BRIA AI...[/bold cyan]")
+        pipe = _load_rmbg_model()
+        
+        # Run inference to get mask
+        console.print("[bold cyan]Running RMBG-1.4 inference for background segmentation...[/bold cyan]")
+        pillow_mask = pipe(pil_img, return_mask=True)
+        
+        # Process output to get segmentation mask
+        console.print("[bold cyan]Processing segmentation mask...[/bold cyan]")
+        mask = _process_rmbg_output(pillow_mask, pil_img.size)
+        
+        console.print("[bold green]Background segmentation completed successfully using RMBG-1.4.[/bold green]")
+        return mask
         
     except Exception as e:
         raise RuntimeError(f"Background segmentation failed: {str(e)}")
@@ -490,6 +560,50 @@ def generate_image(prompt: str, negative_prompt: Optional[str] = None,
         
     except Exception as e:
         raise RuntimeError(f"Image generation failed: {str(e)}")
+
+
+def remove_background(img: ImageType, return_mask: bool = False) -> Union[np.ndarray, Image.Image]:
+    """
+    Remove background from images using RMBG-1.4 model from BRIA AI.
+    
+    This function uses the RMBG-1.4 model to segment the foreground from the background
+    across various categories (objects, people, animals, text) and returns an image 
+    with transparent background or the segmentation mask.
+    
+    Args:
+        img: Input image as PIL Image or numpy array
+        return_mask: If True, return the segmentation mask instead of the processed image
+        
+    Returns:
+        If return_mask=False: Image with transparent background as numpy array (RGBA)
+        If return_mask=True: Segmentation mask as numpy array (1 for foreground, 0 for background)
+        
+    Raises:
+        TypeError: If input image format is not supported
+        RuntimeError: If background removal fails
+    """
+    try:
+        pil_img = _validate_image_input(img)
+        
+        if return_mask:
+            # Get segmentation mask using RMBG-1.4
+            console.print("[bold cyan]Generating segmentation mask for background removal...[/bold cyan]")
+            mask = background_segmentation(pil_img)
+            return mask
+        
+        # Use RMBG-1.4 model directly for background removal
+        console.print("[bold cyan]Loading RMBG-1.4 model for background removal...[/bold cyan]")
+        pipe = _load_rmbg_model()
+        
+        # Get image with background removed (applies mask automatically)
+        console.print("[bold cyan]Running RMBG-1.4 inference for background removal...[/bold cyan]")
+        no_bg_image = pipe(pil_img)  # Returns PIL image with transparent background
+        
+        console.print("[bold green]Background removal completed successfully using RMBG-1.4.[/bold green]")
+        return np.array(no_bg_image)
+        
+    except Exception as e:
+        raise RuntimeError(f"Background removal failed: {str(e)}")
 
 
 def object_segmentation(img: ImageType) -> np.ndarray:
@@ -655,6 +769,8 @@ def main() -> None:
     Examples:
         python models/image.py get_depth_map -i assets/test_image.jpg
         python models/image.py background_segmentation -i assets/test_image.jpg
+        python models/image.py remove_background -i assets/photo.jpg
+        python models/image.py remove_background -i assets/photo.jpg --return-mask
         python models/image.py inpainting -m assets/mask.png -i assets/test_image.jpg
         python models/image.py color_transfer -i assets/target.jpg -r assets/reference.jpg
         python models/image.py generate_image -p "a beautiful sunset over mountains"
@@ -666,8 +782,8 @@ def main() -> None:
     )
     parser.add_argument("task", choices=[
         "get_depth_map", "get_super_resolution", "background_segmentation",
-        "inpainting", "generate_image", "object_segmentation", "image_classification",
-        "color_transfer"
+        "remove_background", "inpainting", "generate_image", "object_segmentation", 
+        "image_classification", "color_transfer"
     ], help="Image processing task to perform")
     
     parser.add_argument("-i", "--image", type=str, help="Input image path")
@@ -681,6 +797,7 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=512, help="Output width (default: 512)")
     parser.add_argument("--height", type=int, default=512, help="Output height (default: 512)")
     parser.add_argument("--seed", type=int, help="Random seed for reproducible results")
+    parser.add_argument("--return-mask", action="store_true", help="Return segmentation mask instead of processed image (for remove_background)")
     
     args = parser.parse_args()
     
@@ -733,8 +850,11 @@ def main() -> None:
                 "object_segmentation": object_segmentation,
                 "image_classification": image_classification,
             }
-
-            if args.task in task_map:
+            
+            # Special handling for remove_background with return_mask option
+            if args.task == "remove_background":
+                result = remove_background(img, return_mask=args.return_mask)
+            elif args.task in task_map:
                 result = task_map[args.task](img)
             else:
                 # This path should not be reached due to argparse `choices`
@@ -763,6 +883,14 @@ def main() -> None:
             
             if len(result.shape) == 2:
                 Image.fromarray(result, mode='L').save(args.output)
+            elif len(result.shape) == 3 and result.shape[2] == 4:
+                # RGBA image (e.g., from remove_background)
+                # Force PNG format for transparency support
+                output_path = args.output
+                if not output_path.lower().endswith('.png'):
+                    output_path = output_path.rsplit('.', 1)[0] + '.png'
+                    console.print(f"[yellow]Changing output format to PNG for transparency support: {output_path}[/yellow]")
+                Image.fromarray(result, mode='RGBA').save(output_path)
             else:
                 Image.fromarray(result).save(args.output)
         

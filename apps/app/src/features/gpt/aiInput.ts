@@ -197,7 +197,7 @@ export class AiInput extends LitElement {
                   console.log("Video response from LLM.");
                 } else if (response.type == "super_resolution") {
                   console.log(response.data);
-                  renderNewImage(response.data.absolute_path);
+                  renderNewImage(response.data.absolute_path, true);
                 } else if (response.type == "remove_background") {
                   console.log(response.data);
                   renderNewImage(response.data.absolute_path);

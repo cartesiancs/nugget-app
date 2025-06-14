@@ -6,7 +6,6 @@ import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
 import { actionParsor, parseCommands } from "./resultParser";
 import { getLocationEnv } from "../../functions/getLocationEnv";
-
 @customElement("ai-input")
 export class AiInput extends LitElement {
   isEnter: boolean;
@@ -30,7 +29,6 @@ export class AiInput extends LitElement {
     // console.log(parser);
 
     // actionParsor(parser);
-
     if (getLocationEnv() != "electron") {
       this.classList.add("d-none");
     }
@@ -43,8 +41,36 @@ export class AiInput extends LitElement {
       if (!this.isEnter) {
         this.isEnter = true;
         event.preventDefault();
-        this.executeFunction(event.target.value);
-        document.querySelector("#chatLLMInput").value = "";
+        if (event.target.value == "") {
+          this.toast.show("Please enter a command", 2000);
+          this.isEnter = false; // Reset flag
+          return;
+        }
+        if (event.target.value.includes("add text")) {
+          const textMatch = event.target.value.match(/"([^"]*)"/);
+          const text = textMatch ? textMatch[1] : "Default text from AI Input"; // Provide a default if no text in quotes
+
+          // Send IPC message to main process
+          const ipcData = {
+            text: text,
+            textcolor: "#ff0000", // Example hardcoded value
+            fontsize: 24, // Example hardcoded value
+          };
+
+          if (window.electronAPI && window.electronAPI.req && window.electronAPI.req.sendAddTextCommand) {
+            window.electronAPI.req.sendAddTextCommand(ipcData);
+            console.log("Sent IPC message to main process with data:", ipcData);
+          } else {
+            console.error("IPC method 'sendAddTextCommand' is not available. Check preload.ts.");
+          }
+
+          // Clear the input field after sending the command
+          if (event.target) {
+            (event.target as HTMLInputElement).value = "";
+          }
+        } else {
+          console.log("Command does not include 'add text', not sending IPC message. Implement other command logic if needed.");
+        }
 
         setTimeout(() => {
           this.isEnter = false;
@@ -174,7 +200,7 @@ export class AiInput extends LitElement {
           type="text"
           class="form-control bg-default text-light bg-darker"
           placeholder="Ask me anything..."
-          value=""
+          value=""  
           id="chatLLMInput"
           @keydown="${this.handleEnter}"
           @click=${this.handleClickInput}

@@ -161,9 +161,9 @@ ipcMain.on("render:offscreen:start", httpFFmpegRenderV2.start);
 ipcMain.on("render:offscreen:sendFrame", httpFFmpegRenderV2.sendFrame);
 ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
-// ipcMain.on("overlayRecord:stop:res", async (evt) => {
-//   mainWindow.webContents.send("overlayRecord:stop:res", "");
-// });
+ipcMain.on("quartz:addTextElement", async (evt, options) => {
+  console.log("addTextElement", options);
+});
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

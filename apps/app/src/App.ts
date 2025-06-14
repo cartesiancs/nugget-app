@@ -15,10 +15,15 @@ export class App extends LitElement {
   @property()
   topBarTitle = this.uiState.topBarTitle;
 
+  freeze = false;
+
   createRenderRoot() {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
       this.topBarTitle = state.topBarTitle;
+      this.freeze = state.thinking;
+
+      this.requestUpdate();
     });
 
     return this;
@@ -30,6 +35,29 @@ export class App extends LitElement {
 
   render() {
     return html`
+      <style>
+        .ghost-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(
+            0,
+            0,
+            0,
+            0.5
+          ); /* Semi-transparent background */
+          backdrop-filter: blur(5px); /* Blur effect */
+          z-index: 9999; /* High z-index to be on top */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: white;
+          font-size: 2em;
+        }
+      </style>
+      ${this.freeze ? html`<div class="ghost-overlay">thinking...</div>` : ""}
       <asset-upload-drop></asset-upload-drop>
       <tutorial-group>
         <tutorial-popover

@@ -17,12 +17,15 @@ export interface IUIStore {
       leftOption: number;
     };
   };
+  thinking: boolean;
   topBarTitle: string;
   updateTimelineVertical: (px: number) => void;
   setChatSidebar: (width: number) => void;
   updateVertical: (criteria: number) => void;
   updateHorizontal: (criteria: number, panel: "panel" | "preview") => void;
   setTopBarTitle: (topBarTitle: string) => void;
+  setThinking: () => void;
+  unsetThinking: () => void;
 }
 
 export const uiStore = createStore<IUIStore>((set) => ({
@@ -41,7 +44,8 @@ export const uiStore = createStore<IUIStore>((set) => ({
       leftOption: 170,
     },
   },
-  topBarTitle: "Nugget",
+  topBarTitle: "Quartz",
+  thinking: false,
 
   setChatSidebar: (width) =>
     set((state) => ({
@@ -79,6 +83,16 @@ export const uiStore = createStore<IUIStore>((set) => ({
         horizontal: { ...state.resize.horizontal },
         timelineVertical: { ...state.resize.timelineVertical },
       },
+    })),
+
+  setThinking: () =>
+    set((state) => ({
+      thinking: true,
+    })),
+
+  unsetThinking: () =>
+    set((state) => ({
+      thinking: false,
     })),
 
   updateHorizontal: (criteria, panel: "panel" | "preview") =>

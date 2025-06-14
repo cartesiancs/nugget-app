@@ -27,6 +27,9 @@ export class AiInput extends LitElement {
   chatLLMState: IChatLLMPanelStore = chatLLMStore.getInitialState();
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
 
+  @property({ type: Boolean })
+  hideOpenButton = false;
+
   createRenderRoot() {
     // const parser = parseCommands(
     //   `ADD VIDEO "/folder/day.mp4" x=0:y=0:w=1920:h=1080:t=0:d=30 ADD TEXT "Daily Vlog" x=50:y=50:w=300:t=1:d=3 ADD TEXT "이건텍스트임" x=0:y=0:w=200:t=5:d=2 ADD TEXT "이건텍스트임" x=0:y=0:w=200:t=8:d=2`,
@@ -62,13 +65,28 @@ export class AiInput extends LitElement {
           timeline: {
             cursor: timelineLatest.cursor / 1000,
             selected: elementTimelineCanvasObject.targetIdHistorical,
-            selectedData: timelineLatest.timeline[elementTimelineCanvasObject.targetIdHistorical]
+            selectedData:
+              timelineLatest.timeline[
+                elementTimelineCanvasObject.targetIdHistorical
+              ],
           },
           preview: {
             selected: canvasLatestObject.activeElementId,
-            selectedData: timelineLatest.timeline[canvasLatestObject.activeElementId],
+            selectedData:
+              timelineLatest.timeline[canvasLatestObject.activeElementId],
           },
         };
+
+        this.panelOpen();
+
+        const chatLLMState = chatLLMStore.getState();
+        chatLLMState.addList({
+          from: "user",
+          text: command,
+          timestamp: new Date().toISOString(),
+        });
+        this.uiState = uiStore.getState();
+        this.uiState.setThinking();
 
         try {
           if (window.electronAPI?.req?.quartz?.LLMResponse) {
@@ -89,11 +107,17 @@ export class AiInput extends LitElement {
                 } else {
                   console.log("TODO Else");
                 }
+                console.log("unset complete");
               })
               .catch((error) => {
                 console.error("Error getting the response:", error);
                 this.toast.show("Error getting the response", 2000);
               });
+            // sleep for 1 second to allow the response to be processed
+            // setTimeout(() => {
+              this.uiState = uiStore.getState();
+              this.uiState.unsetThinking();
+            // }, 3000);
           } else {
             console.error("IPC method 'quartz.LLMResponse' is not available");
             this.toast.show("LLMResponse functionality not available", 2000);
@@ -218,11 +242,13 @@ export class AiInput extends LitElement {
           @keydown="${this.handleEnter}"
           @click=${this.handleClickInput}
         />
-        <span
-          @click=${this.panelOpen}
-          class="material-symbols-outlined timeline-bottom-question-icon icon-sm  text-secondary"
-          >right_panel_open</span
-        >
+        ${!this.hideOpenButton
+          ? html`<span
+              @click=${this.panelOpen}
+              class="material-symbols-outlined timeline-bottom-question-icon icon-sm text-secondary"
+              >right_panel_open</span
+            >`
+          : ""}
       </div>
     `;
   }

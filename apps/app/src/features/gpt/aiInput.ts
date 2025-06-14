@@ -108,10 +108,14 @@ export class AiInput extends LitElement {
 
       this.mediaRecorder.start();
       this.isRecording = true;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error accessing microphone or starting recording:", err);
 
-      this.toast.show("Error accessing microphone: " + err.message, 3000);
+      this.toast.show(
+        "Error accessing microphone: " +
+          (err instanceof Error ? err.message : String(err)),
+        3000,
+      );
       this.isRecording = false; // Ensure state is correct on error
       if (this.mediaRecorder) {
         // Clean up if mediaRecorder was partially initialized
@@ -205,7 +209,7 @@ export class AiInput extends LitElement {
             setTimeout(() => {
               this.uiState = uiStore.getState();
               this.uiState.unsetThinking();
-            }, 3000);
+            }, 200);
           } else {
             console.error("IPC method 'quartz.LLMResponse' is not available");
             this.toast.show("LLMResponse functionality not available", 2000);

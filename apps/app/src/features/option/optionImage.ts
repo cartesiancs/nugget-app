@@ -85,4 +85,6 @@ export class OptionImage extends LitElement {
     const previewCanvas = document.querySelector("preview-canvas");
     previewCanvas.preloadImage(this.elementId);
   }
+
+  
 }

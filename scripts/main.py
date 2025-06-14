@@ -15,23 +15,26 @@ if os.path.exists("assets/public"):
     )
 
 # Import routers with error handling
-try:
-    import cv_api
-    app.include_router(cv_api.router)
-except ImportError:
-    print("cv_api not found, skipping")
+# try:
+#     import cv_api
+#     # app.include_router(cv_api.router)
+# except ImportError:
+#     print("cv_api not found, skipping")
 
-try:
-    import llm_api
-    app.include_router(llm_api.router)
-except ImportError:
-    print("llm_api not found, skipping")
+# try:
+#     import llm_api
+#     # app.include_router(llm_api.router)
+# except ImportError:
+#     print("llm_api not found, skipping")
 
-try:
-    import video_api
-    app.include_router(video_api.router)
-except ImportError:
-    print("video_api not found, skipping")
+# try:
+#     import video_api
+#     # app.include_router(video_api.router)
+# except ImportError:
+#     print("video_api not found, skipping")
+
+import cv_api
+import llm_api
 
 # try:
 #     from fakeserver import router as fake_router

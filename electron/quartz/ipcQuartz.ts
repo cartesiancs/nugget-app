@@ -21,7 +21,7 @@ export const ipcQuartz = {
       // console.log(audioData);
       console.log("HI HI HI HIHI ")
 
-      const response = await axios.post("http://localhost:8000/api/transcribe", {
+      const response = await axios.post("http://192.168.46.138:8000/api/transcribe", {
         audioData
       });
       console.log(response);

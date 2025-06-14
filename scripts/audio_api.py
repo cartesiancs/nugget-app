@@ -8,16 +8,21 @@ from pydantic import BaseModel
 import numpy as np
 import soundfile as sf
 
-from models.audio import text_to_speech, remove_noise
+from models.audio import text_to_speech, remove_noise, transcribe_audio_to_srt, transcribe_audio_to_text
 
 # Create router
 router = APIRouter()
 
-# Request model for text-to-speech
+# Request models
 class TextToSpeechRequest(BaseModel):
     text: str
     speaker: str = "v2/en_speaker_6"
     output_path: Optional[str] = None
+
+class TranscriptionRequest(BaseModel):
+    output_format: str = "srt"  # "srt" or "text"
+    chunk_duration: float = 30.0
+    target_sample_rate: int = 16000
 
 
 def _validate_audio_file(file: UploadFile) -> None:
@@ -188,7 +193,76 @@ async def api_audio_remove_noise(file: UploadFile = File(...)) -> Dict[str, Any]
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 
-@router.get("/api/audio/transcribe")
-def api_audio_transcribe():
-    """Placeholder endpoint for audio transcription functionality."""
-    pass
+@router.post("/api/audio/transcribe")
+async def api_audio_transcribe(
+    file: UploadFile = File(...),
+    request: TranscriptionRequest = None
+) -> Dict[str, Any]:
+    """
+    Transcribe audio file to text or SRT format.
+    
+    Args:
+        file: Uploaded audio file (WAV, MP3, etc.)
+        request: TranscriptionRequest object containing:
+            - output_format: Output format ("srt" or "text")
+            - chunk_duration: Duration of each audio chunk in seconds
+            - target_sample_rate: Target sample rate for transcription
+        
+    Returns:
+        JSON object containing transcription result or download link
+        
+    Raises:
+        HTTPException: If file validation or processing fails
+    """
+    try:
+        # Validate uploaded file format
+        _validate_audio_file(file)
+        
+        # Process uploaded file to numpy array
+        audio_data, sample_rate = await _process_audio_upload(file)
+        
+        # Save audio data temporarily with .wav extension for processing
+        temp_path = f"temp_{Path(file.filename).stem}.wav"
+        sf.write(temp_path, audio_data, sample_rate)
+        
+        try:
+            if request and request.output_format == "text":
+                # Transcribe to text
+                transcript = transcribe_audio_to_text(
+                    temp_path,
+                    target_sample_rate=request.target_sample_rate
+                )
+                return {"text": transcript}
+            else:
+                # Transcribe to SRT
+                srt_path = transcribe_audio_to_srt(
+                    temp_path,
+                    chunk_duration=request.chunk_duration if request else 30.0,
+                    target_sample_rate=request.target_sample_rate if request else 16000
+                )
+                
+                # Generate unique filename for SRT with proper extension
+                unique_filename = f"transcript_{uuid.uuid4().hex[:8]}.srt"
+                output_path = Path("assets/public") / unique_filename
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Copy SRT file to public directory
+                import shutil
+                shutil.copy2(srt_path, output_path)
+                
+                # Clean up temporary SRT file
+                os.remove(srt_path)
+                
+                # Construct public download URL
+                download_url = f"/api/assets/public/{unique_filename}"
+                return {"link": download_url}
+                
+        finally:
+            # Clean up temporary audio file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")

@@ -1,1 +1,15 @@
 device: "mps"
+
+# audio settings
+"sample_rate": 16000          # Audio sample rate in Hz
+"chunk_duration": 4           # Duration of each audio chunk in seconds
+"channels": 1                 # Number of audio channels (1 for mono)
+
+# processing settings
+"max_workers": 4              # Number of parallel transcription workers
+"silence_threshold": 0.001    # Threshold for silence detection
+"queue_timeout": 1.0          # Timeout for audio queue operations
+
+# model paths
+"encoder_path": "models/whisper/WhisperEncoder.onnx"
+"decoder_path": "models/whisper/WhisperDecoder.onnx"

@@ -32,7 +32,6 @@ import torchvision.transforms as transforms
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from rich.color import Color
 
 # Suppress warnings for cleaner output
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -76,14 +75,20 @@ CONFIG = load_config()
 
 def _apply_gradient(text: Text, start_hex: str, end_hex: str):
     """Apply a gradient effect to Rich Text."""
-    start_color = Color.from_hex(start_hex).triplet
-    end_color = Color.from_hex(end_hex).triplet
+    # Parse hex colors manually
+    start_r = int(start_hex[1:3], 16)
+    start_g = int(start_hex[3:5], 16)
+    start_b = int(start_hex[5:7], 16)
+    
+    end_r = int(end_hex[1:3], 16)
+    end_g = int(end_hex[3:5], 16)
+    end_b = int(end_hex[5:7], 16)
     
     for i in range(len(text)):
         blend = i / (len(text) - 1) if len(text) > 1 else 0.5
-        r = int(start_color.red * (1 - blend) + end_color.red * blend)
-        g = int(start_color.green * (1 - blend) + end_color.green * blend)
-        b = int(start_color.blue * (1 - blend) + end_color.blue * blend)
+        r = int(start_r * (1 - blend) + end_r * blend)
+        g = int(start_g * (1 - blend) + end_g * blend)
+        b = int(start_b * (1 - blend) + end_b * blend)
         text.stylize(f"rgb({r},{g},{b})", i, i + 1)
 
 
@@ -145,8 +150,50 @@ def _load_lama_model():
 
 
 def _load_stable_diffusion_model():
-    """Load Stable Diffusion 1.5 model from HuggingFace."""
-    return pipeline("text-to-image", model="runwayml/stable-diffusion-v1-5")
+    """Load Stable Diffusion 2.1 model from HuggingFace."""
+    from diffusers import StableDiffusionPipeline
+    device = CONFIG.get("device", "cpu")
+    model_id = "stabilityai/stable-diffusion-2-1"
+    
+    # Check device availability and fallback appropriately
+    if device == "cuda" and not torch.cuda.is_available():
+        device = "cpu"
+        console.print("[yellow]CUDA not available, using CPU instead[/yellow]")
+    elif device == "mps" and not torch.backends.mps.is_available():
+        device = "cpu"
+        console.print("[yellow]MPS not available, using CPU instead[/yellow]")
+    
+    # Determine appropriate dtype based on device
+    if device == "cuda":
+        torch_dtype = torch.float16
+    elif device == "mps":
+        torch_dtype = torch.float16  # MPS supports float16
+    else:
+        torch_dtype = torch.float32
+    
+    console.print(f"[cyan]Loading Stable Diffusion 2.1 on device: {device}[/cyan]")
+    
+    pipe = StableDiffusionPipeline.from_pretrained(
+        model_id,
+        torch_dtype=torch_dtype,
+        safety_checker=None,
+        requires_safety_checker=False
+    )
+    pipe = pipe.to(device)
+    
+    # Enable memory efficient attention if available
+    if hasattr(pipe.unet, "set_attn_processor"):
+        try:
+            from diffusers.models.attention_processor import AttnProcessor2_0
+            pipe.unet.set_attn_processor(AttnProcessor2_0())
+        except ImportError:
+            pass
+    
+    # Enable memory efficient settings for MPS
+    if device == "mps":
+        pipe.enable_attention_slicing()
+    
+    return pipe
 
 
 def _load_yolo_model() -> YOLO:
@@ -387,12 +434,20 @@ def inpainting(img: ImageType, mask: np.ndarray) -> np.ndarray:
         raise RuntimeError(f"Inpainting failed: {str(e)}")
 
 
-def generate_image(prompt: str) -> np.ndarray:
+def generate_image(prompt: str, negative_prompt: Optional[str] = None, 
+                  num_inference_steps: int = 50, guidance_scale: float = 7.5,
+                  width: int = 512, height: int = 512, seed: Optional[int] = None) -> np.ndarray:
     """
-    Generate image from text prompt using Stable Diffusion 1.5.
+    Generate image from text prompt using Stable Diffusion 2.1.
     
     Args:
         prompt: Text description of desired image
+        negative_prompt: Optional negative prompt to avoid certain features
+        num_inference_steps: Number of denoising steps (default: 50)
+        guidance_scale: How closely to follow the prompt (default: 7.5)
+        width: Output image width (default: 512)
+        height: Output image height (default: 512)
+        seed: Optional random seed for reproducible results
         
     Returns:
         Generated image as numpy array
@@ -405,12 +460,33 @@ def generate_image(prompt: str) -> np.ndarray:
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
         
-        # Fallback implementation - generate simple colored image with text
-        console.print("[bold cyan]Generating fallback image...[/bold cyan]")
-        img = Image.new('RGB', (512, 512), color=(128, 128, 128))
-        # In a real implementation, this would use the Stable Diffusion pipeline
-        console.print("[bold green]Image generation completed.[/bold green]")
-        return np.array(img)
+        console.print("[bold cyan]Loading Stable Diffusion 2.1 model...[/bold cyan]")
+        pipe = _load_stable_diffusion_model()
+        
+        # Set random seed if provided
+        if seed is not None:
+            torch.manual_seed(seed)
+            np.random.seed(seed)
+        
+        console.print(f"[bold cyan]Generating image with prompt: '{prompt}'[/bold cyan]")
+        console.print(f"[cyan]Parameters: steps={num_inference_steps}, guidance={guidance_scale}, size={width}x{height}[/cyan]")
+        
+        # Generate image
+        with torch.no_grad():
+            result = pipe(
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+                width=width,
+                height=height,
+                generator=torch.Generator().manual_seed(seed) if seed is not None else None
+            )
+        
+        # Convert PIL image to numpy array
+        generated_image = result.images[0]
+        console.print("[bold green]Image generation completed successfully.[/bold green]")
+        return np.array(generated_image)
         
     except Exception as e:
         raise RuntimeError(f"Image generation failed: {str(e)}")
@@ -494,7 +570,8 @@ def main() -> None:
         python models/image.py get_depth_map -i assets/test_image.jpg
         python models/image.py background_segmentation -i assets/test_image.jpg
         python models/image.py inpainting -m assets/mask.png -i assets/test_image.jpg
-        python models/image.py generate_image -p "a beautiful sunset"
+        python models/image.py generate_image -p "a beautiful sunset over mountains"
+        python models/image.py generate_image -p "a cute cat" -n "blurry, low quality" --steps 30 --width 768 --height 768
     """
     parser = argparse.ArgumentParser(
         description="A command-line tool for various image processing tasks.",
@@ -508,7 +585,13 @@ def main() -> None:
     parser.add_argument("-i", "--image", type=str, help="Input image path")
     parser.add_argument("-m", "--mask", type=str, help="Mask image path (for inpainting)")
     parser.add_argument("-p", "--prompt", type=str, help="Text prompt (for image generation)")
+    parser.add_argument("-n", "--negative-prompt", type=str, help="Negative prompt (for image generation)")
     parser.add_argument("-o", "--output", type=str, default="output.png", help="Output path (default: output.png)")
+    parser.add_argument("--steps", type=int, default=50, help="Number of inference steps (default: 50)")
+    parser.add_argument("--guidance", type=float, default=7.5, help="Guidance scale (default: 7.5)")
+    parser.add_argument("--width", type=int, default=512, help="Output width (default: 512)")
+    parser.add_argument("--height", type=int, default=512, help="Output height (default: 512)")
+    parser.add_argument("--seed", type=int, help="Random seed for reproducible results")
     
     args = parser.parse_args()
     
@@ -522,7 +605,15 @@ def main() -> None:
             if not args.prompt:
                 console.print("[bold red]Error: --prompt is required for the 'generate_image' task.[/bold red]")
                 sys.exit(1)
-            result = generate_image(args.prompt)
+            result = generate_image(
+                prompt=args.prompt,
+                negative_prompt=args.negative_prompt,
+                num_inference_steps=args.steps,
+                guidance_scale=args.guidance,
+                width=args.width,
+                height=args.height,
+                seed=args.seed
+            )
             
         elif args.task == "inpainting":
             if not args.image or not args.mask:

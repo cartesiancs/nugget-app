@@ -1,4 +1,4 @@
-export function addTextElement(data: any): boolean {
+export function addSlideElement(data: any): boolean {
     try {
         // Wait for DOM to be ready
         const elementControlComponent = document.querySelector("element-control") as any;
@@ -8,18 +8,12 @@ export function addTextElement(data: any): boolean {
             return false;
         }
         console.log("data",data)
-        elementControlComponent.addText({
+        elementControlComponent.addSlideElement({
             text: data?.text || "Hello Quartz!",
-            textcolor: data?.textcolor || "#ff6b6b",
-            fontsize: data?.fontsize || 64,
-            locationX: data?.locationX || 100,
-            locationY: data?.locationY || 150,
-            width: data?.width || 600,
-            height: data?.height || 80,
-            startTime: data?.startTime || 0,
+            position: data?.position || "current", // begin, current (default),end
+            bgColor: data?.bgcolor || "#ff0000",
             duration: data?.duration || 3000,
-            dataAlign: data?.dataAlign || "center",
-            backgroundEnable: typeof data?.backgroundEnable === 'boolean' ? data.backgroundEnable : true
+            animation: data?.animation || "True" //  True and False
         });
       
         console.log("Text element added successfully with data:", data);

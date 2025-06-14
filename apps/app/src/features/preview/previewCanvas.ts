@@ -544,56 +544,80 @@ export class PreviewCanvas extends LitElement {
     loadedAssetStore.getState().startPlay(this.timelineCursor);
   }
 
-  createShape(x: number, y: number) {
+  createShapeWithParams(params: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    fillColor: string;
+    startTime?: number;
+    duration?: number;
+    shape?: "rectangle" | "triangle" | "circle";
+  }) {
     const elementId = uuidv4();
+    const { x, y, width, height, fillColor, startTime = 0, duration = 1000, shape = "rectangle" } = params;
 
-    const width = this.renderOption.previewSize.w;
-    const height = this.renderOption.previewSize.h;
+    // Generate shape coordinates based on type
+    let shapeCoords: [number, number][];
+    switch (shape) {
+      case "rectangle":
+        shapeCoords = [
+          [0, 0],
+          [0, height],
+          [width, height],
+          [width, 0]
+        ];
+        break;
+      case "triangle":
+        shapeCoords = [
+          [width/2, 0],
+          [0, height],
+          [width, height]
+        ];
+        break;
+      case "circle":
+        const centerX = width/2;
+        const centerY = height/2;
+        const radius = Math.min(width, height)/2;
+        const numSegments = 50;
+        shapeCoords = [];
+        for (let i = 0; i < numSegments; i++) {
+          const angle = (2 * Math.PI * i) / numSegments;
+          const px = centerX + radius * Math.cos(angle);
+          const py = centerY + radius * Math.sin(angle);
+          shapeCoords.push([px, py]);
+        }
+        break;
+      default:
+        shapeCoords = [[x, y]];
+    }
 
     this.timeline[elementId] = {
       key: elementId,
       priority: 1,
       blob: "",
-      startTime: 0,
-      duration: 1000,
+      startTime,
+      duration,
       opacity: 100,
-      location: { x: 0, y: 0 },
-      // trim: { startTime: 0, endTime: 1000 },
+      location: { x, y },
       rotation: 0,
-      width: width,
-      height: height,
+      width,
+      height,
       oWidth: width,
       oHeight: height,
       ratio: width / height,
       filetype: "shape",
       localpath: "SHAPE",
-      shape: [[x, y]],
+      shape: shapeCoords,
       option: {
-        fillColor: "#ffffff",
+        fillColor,
       },
       animation: {
-        // position: {
-        //   isActivate: false,
-        //   x: [],
-        //   y: [],
-        //   ax: [[], []],
-        //   ay: [[], []],
-        // },
         opacity: {
           isActivate: false,
           x: [],
           ax: [[], []],
         },
-        // scale: {
-        //   isActivate: false,
-        //   x: [],
-        //   ax: [[], []],
-        // },
-        // rotation: {
-        //   isActivate: false,
-        //   x: [],
-        //   ax: [[], []],
-        // },
       },
       timelineOptions: {
         color: "rgb(59, 143, 179)",
@@ -602,6 +626,17 @@ export class PreviewCanvas extends LitElement {
 
     this.timelineState.patchTimeline(this.timeline);
     return elementId;
+  }
+
+  // Keep the original createShape for backward compatibility
+  createShape(x: number, y: number) {
+    return this.createShapeWithParams({
+      x,
+      y,
+      width: this.renderOption.previewSize.w,
+      height: this.renderOption.previewSize.h,
+      fillColor: "#ffffff"
+    });
   }
 
   addShapePoint(x: number, y: number) {

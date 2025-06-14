@@ -10,24 +10,55 @@ export function addTextElement(data: any): boolean {
             console.error("Element control component not found. Make sure the component is loaded first.");
             return false;
         }
-        elementControlComponent.addText({
+
+        // Calculate animation parameters
+        const width = handleNull(data?.width) ?? 1000;
+        const locationX = handleNull(data?.locationX) ?? 800;
+        const locationY = handleNull(data?.locationY) ?? 600;
+
+        elementControlComponent.addCustomText({
+            path: data?.font?.path ?? "default",
+            name: data?.font?.name ??"notosanskr",
             text: handleNull(data?.text) ?? "Hello Quartz!",
-            textcolor: handleNull(data?.textColor) ?? "#000000",
+            textcolor: handleNull(data?.textColor) ?? "#ffffff",
             fontsize: handleNull(data?.fontsize) ?? 64,
-            locationX: handleNull(data?.locationX) ?? 100,
-            locationY: handleNull(data?.locationY) ?? 150,
-            width: handleNull(data?.width) ?? 600,
+            locationX: locationX,
+            locationY: locationY,
+            width: width,
             height: handleNull(data?.height) ?? 600,
             startTime: handleNull(data?.startTime) ?? 0,
             duration: handleNull(data?.duration) ?? 3000,
             dataAlign: handleNull(data?.dataAlign) ?? "center",
             backgroundEnable: typeof data?.backgroundEnable === 'boolean' ? data.backgroundEnable : true,
-            fontname:handleNull(data?.fontname) ?? "notosanskr",
-            fontweight:handleNull(data?.fontweight) ??"medium",
-            isBold:handleNull(data?.isBold) ??false,
-            optionsAlign:handleNull(data?.optionsAlign) ?? "left"
+            fontweight: handleNull(data?.fontweight) ?? "medium",
+            isBold: handleNull(data?.isBold) ?? false,
+            optionsAlign: handleNull(data?.optionsAlign) ?? "left",
+            animation:{
+                position: {
+                  isActivate: false,
+                  x: [],
+                  y: [],
+                  ax: [[], []],
+                  ay: [[], []],
+                },
+                opacity: {
+                  isActivate: false,
+                  x: [],
+                  ax: [[], []],
+                },
+                scale: {
+                  isActivate: false,
+                  x: [],
+                  ax: [[], []],
+                },
+                rotation: {
+                  isActivate: false,
+                  x: [],
+                  ax: [[], []],
+                },
+              },
         });
-      
+
         console.log("Text element added successfully with data:", data);
         return true;
     } catch (error) {

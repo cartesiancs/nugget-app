@@ -36,6 +36,38 @@ export class Timeline extends LitElement {
   @property()
   control = this.timelineState.control;
 
+  @property()
+  handleCutClick: (id) => void = (id) => // id parameter is not used from the template call, it's for direct calls.
+    {
+      const elementCanvas = document.querySelector("element-timeline-canvas");
+      
+      const timelinePosMs = this.timelineCursor;
+      console.log(
+        `Current timeline cursor position: ${timelinePosMs}ms (${new Date(
+          timelinePosMs
+        ).toISOString().slice(11, 23)})`
+      );
+      console.log("Target historical IDs for cutting:", elementCanvas.targetIdHistorical);
+
+      // Ensure targetIdHistorical is an array and not empty
+      if (!elementCanvas.targetIdHistorical || elementCanvas.targetIdHistorical.length === 0) {
+        console.log("No element selected to cut.");
+        return false;
+      }
+      
+      // Use the first element from targetIdHistorical for the cut operation
+      const toCutId = elementCanvas.targetIdHistorical[0]; 
+      const whereCut = timelinePosMs;
+
+      if (!toCutId) {
+        console.log("No valid element ID to cut.");
+        return false;
+      }
+      console.log(`Attempting to cut element ${toCutId} at ${whereCut}ms`);
+
+      elementCanvas.cutElement(toCutId, whereCut);
+  };
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineCursor = state.cursor;
@@ -206,6 +238,15 @@ export class Timeline extends LitElement {
         <div class="col-4">
           <div class="d-flex justify-content-start">
             ${this.togglePlayButton()}
+            <button
+              class="btn btn-xs2 btn-transparent ms-2"
+              @click=${this.handleCutClick}
+            >
+              <span class="material-symbols-outlined icon-white icon-md">
+                content_cut
+              </span>
+            </button>
+
             <button
               class="btn btn-xs2 btn-transparent ms-2"
               @click=${this._handleClickReset}

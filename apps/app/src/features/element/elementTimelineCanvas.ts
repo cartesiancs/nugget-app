@@ -45,11 +45,13 @@ export class elementTimelineCanvas extends LitElement {
   copyedTimelineData: {};
   isGuide: boolean;
   targetIdDuringRightClick: any;
+  targetIdHistorical: any;
 
   constructor() {
     super();
 
     this.targetId = [];
+    this.targetIdHistorical = [];
     this.targetIdDuringRightClick = [];
     this.targetStartTime = {};
     this.targetDuration = {};
@@ -122,6 +124,63 @@ export class elementTimelineCanvas extends LitElement {
     canvasVerticalScroll: 0,
     panelOptions: [],
   };
+  
+
+  cutElement(id: string, whereMs: number) {
+    const originalElement = this.timeline[id];
+
+    if (!originalElement || originalElement.filetype !== "video") {
+      console.error(
+        "Cut operation failed: Element not found or not a video element.",
+        id,
+      );
+      return;
+    }
+
+    // Calculate the cut point relative to the element's own start time
+    const relativeCutPointMs = whereMs - originalElement.startTime;
+
+    // Ensure the cut point is valid within the element's current trim settings
+    if (
+      relativeCutPointMs <= originalElement.trim.startTime ||
+      relativeCutPointMs >= originalElement.trim.endTime
+    ) {
+      console.error(
+        "Cut operation failed: Cut point is outside the valid trim range of the video element.",
+      );
+      return;
+    }
+
+    // Store the original trim end time before modifying it
+    const originalTrimEndTime = originalElement.trim.endTime;
+
+    // Modify the original element to end at the cut point
+    originalElement.trim.endTime = relativeCutPointMs;
+
+    // Create the new element (the second part of the cut)
+    const newElementId = uuidv4();
+    const newElement = this.deepCopy(originalElement); // Assumes deepCopy is a method in this class
+
+    // Assign new ID and update priority for the new element
+    // If your elements use a 'key' property, update it as well, e.g., newElement.key = newElementId;
+    newElement.priority = this.getNowPriority(); // Or adjust priority as needed
+
+    // Set the trim for the new element
+    newElement.trim.startTime = relativeCutPointMs;
+    newElement.trim.endTime = originalTrimEndTime; // The new element takes the original's end trim
+
+    // Add the new element to the timeline
+    this.timeline[newElementId] = newElement;
+
+    // Update the timeline state and redraw
+    this.timelineState.patchTimeline(this.timeline);
+    this.timelineState.checkPointTimeline(); // For undo/redo functionality
+    this.drawCanvas();
+
+    console.log(
+      `Element ${id} cut at ${whereMs}ms. New element ${newElementId} created.`,
+    );
+  }
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
@@ -154,6 +213,10 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleDocumentClick(e) {
     if (e.target.id != "elementTimelineCanvasRef") {
+      // this.targetId = [];
+
+      this.targetIdHistorical = this.targetId;
+
       this.targetId = [];
       this.drawCanvas();
     }
@@ -987,6 +1050,9 @@ export class elementTimelineCanvas extends LitElement {
         <menu-dropdown-body top="${y}" left="${x}">
         ${this.animationPanelDropdownTemplate()}
           <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="remove"> </menu-dropdown-item>
+          <menu-dropdown-item onclick="document.querySelector('timeline-ui').handleCutClick('${
+            this.targetIdDuringRightClick
+          }')" item-name="cut"> </menu-dropdown-item>
         </menu-dropdown-body>`;
   }
 
@@ -1003,7 +1069,7 @@ export class elementTimelineCanvas extends LitElement {
       }
     }
 
-    console.log(fileType == "text", isAllText);
+    // console.log("elementTimelineCanvas.showSideOption", fileType == "text", isAllText);
 
     if (fileType == "text" && isAllText) {
       optionGroup.showOptions({
@@ -1226,6 +1292,10 @@ export class elementTimelineCanvas extends LitElement {
         }
       }
 
+      console.log("__HandleMouseDown - setting targetId", this.targetId[0]);
+      
+      this.timelineState.updateSelected(this.targetId[0]);
+
       this.showSideOption(this.targetId[0]);
 
       this.targetId = [...new Set(this.targetId)];
@@ -1261,6 +1331,8 @@ export class elementTimelineCanvas extends LitElement {
 
       this.isDrag = true;
     }
+
+    console.log(this.targetId, "targetId");
   }
 
   _handleMouseUp(e) {

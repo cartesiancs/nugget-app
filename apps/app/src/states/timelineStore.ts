@@ -17,6 +17,7 @@ export interface ITimelineStore {
     timelineHistory: Timeline[];
     historyNow: number;
   };
+  selectedElementId: string;
 
   addTimeline: (key: string, timeline: any) => void;
   clearTimeline: () => void;
@@ -35,6 +36,7 @@ export interface ITimelineStore {
   setPlay: (isPlay: boolean) => void;
   setCursorType: (cursorType: TimelineCursorType) => void;
   updateTimeline: (targetId: any, targetArray: string[], value: any) => void;
+  updateSelected: (id: string) => void;
 }
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
@@ -51,6 +53,7 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     timelineHistory: [],
     historyNow: 0,
   },
+  selectedElementId: "",
 
   addTimeline: (key: string, timeline: any) =>
     set((state) => ({ timeline: { ...state.timeline, [key]: timeline } })),
@@ -148,4 +151,9 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     set((state) => ({
       control: { ...state.control, ["cursorType"]: cursorType },
     })),
+  updateSelected: (id: string) =>
+    set((state) => ({
+      selectedElementId: id, // This correctly updates the selectedElementId in the store.
+    })),
+  // The console.log previously here was unreachable and would not have reflected the updated state immediately even if reachable.
 }));

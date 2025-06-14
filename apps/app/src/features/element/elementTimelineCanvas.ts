@@ -1094,11 +1094,11 @@ export class elementTimelineCanvas extends LitElement {
         onClick: "document.querySelector('element-timeline-canvas).stabilise()",
         itemName: "stabilise",
       },
-      {
-        onClick:
-          "document.querySelector('element-timeline-canvas').removeBackground()",
-        itemName: "remove background",
-      },
+      // {
+      //   onClick:
+      //     "document.querySelector('element-timeline-canvas').removeBackground()",
+      //   itemName: "remove background",
+      // },
     ];
 
     let imageDropDownElements = [
@@ -1156,7 +1156,7 @@ export class elementTimelineCanvas extends LitElement {
         timelineState.patchTimeline(timeline);
         timelineState.checkPointTimeline();
         this.drawCanvas();
-        
+
     }).catch((error) => {
         console.error("Error removing background:", error)
     });

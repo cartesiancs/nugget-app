@@ -203,128 +203,125 @@ export class OptionImage extends LitElement {
     let animationType = "opacity";
 
     if (
-      this.timeline[this.elementId].animation[animationType].isActivate == true
+      this.timeline[this.elementId]?.animation?.[animationType]?.isActivate === true
     ) {
       const result = this.getAnimateOpacity(this.elementId) as any;
       if (result != false) {
         return result;
       }
-    } else {
-      return {
-        x: this.timeline[this.elementId].opacity,
-      };
     }
+    return {
+      x: this.timeline[this.elementId]?.opacity ?? 100,
+    };
   }
 
   getRotation() {
     let animationType = "rotation";
 
     if (
-      this.timeline[this.elementId].animation[animationType].isActivate == true
+      this.timeline[this.elementId]?.animation?.[animationType]?.isActivate === true
     ) {
       const result = this.getAnimateRotation(this.elementId) as any;
       if (result != false) {
         return result;
       }
-    } else {
-      return {
-        x: this.timeline[this.elementId].rotation,
-      };
     }
+    return {
+      x: this.timeline[this.elementId]?.rotation ?? 0,
+    };
   }
 
   getPosition() {
     let animationType = "position";
 
     if (
-      this.timeline[this.elementId].animation[animationType].isActivate == true
+      this.timeline[this.elementId]?.animation?.[animationType]?.isActivate === true
     ) {
       const result = this.getAnimatePosition(this.elementId) as any;
       if (result != false) {
         return result;
       }
-    } else {
-      return {
-        x: this.timeline[this.elementId].location?.x,
-        y: this.timeline[this.elementId].location?.y,
-      };
     }
+    return {
+      x: this.timeline[this.elementId]?.location?.x ?? 0,
+      y: this.timeline[this.elementId]?.location?.y ?? 0,
+    };
   }
 
   getAnimatePosition(elementId) {
-    if (this.timeline[elementId].animation["position"].isActivate == true) {
+    if (this.timeline[elementId]?.animation?.["position"]?.isActivate === true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
-      let startTime = Number(this.timeline[elementId].startTime);
+      let startTime = Number(this.timeline[elementId]?.startTime ?? 0);
       let indexPoint = Math.round((indexToMs - startTime) / 20);
 
       try {
         const ax = this.findNearestY(
-          this.timeline[elementId].animation["position"].ax,
-          this.timelineCursor - this.timeline[elementId].startTime,
+          this.timeline[elementId]?.animation?.["position"]?.ax ?? [],
+          this.timelineCursor - startTime,
         ) as any;
 
         const ay = this.findNearestY(
-          this.timeline[elementId].animation["position"].ay,
-          this.timelineCursor - this.timeline[elementId].startTime,
+          this.timeline[elementId]?.animation?.["position"]?.ay ?? [],
+          this.timelineCursor - startTime,
         ) as any;
 
         return {
-          x: ax || this.timeline[this.elementId].location?.x,
-          y: ay || this.timeline[this.elementId].location?.y,
+          x: ax ?? this.timeline[this.elementId]?.location?.x ?? 0,
+          y: ay ?? this.timeline[this.elementId]?.location?.y ?? 0,
         };
       } catch (error) {
         return {
-          x: this.timeline[this.elementId].location?.x,
-          y: this.timeline[this.elementId].location?.y,
+          x: this.timeline[this.elementId]?.location?.x ?? 0,
+          y: this.timeline[this.elementId]?.location?.y ?? 0,
         };
       }
     }
   }
 
   getAnimateOpacity(elementId) {
-    if (this.timeline[elementId].animation["opacity"].isActivate == true) {
+    if (this.timeline[elementId]?.animation?.["opacity"]?.isActivate === true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
-      let startTime = Number(this.timeline[elementId].startTime);
+      let startTime = Number(this.timeline[elementId]?.startTime ?? 0);
       let indexPoint = Math.round((indexToMs - startTime) / 20);
 
       try {
         const ax = this.findNearestY(
-          this.timeline[elementId].animation["opacity"].ax,
-          this.timelineCursor - this.timeline[elementId].startTime,
+          this.timeline[elementId]?.animation?.["opacity"]?.ax ?? [],
+          this.timelineCursor - startTime,
         ) as any;
 
         return {
-          x: ax || this.timeline[this.elementId].opacity,
+          x: ax ?? this.timeline[this.elementId]?.opacity ?? 100,
         };
       } catch (error) {
         return {
-          x: 0,
+          x: this.timeline[this.elementId]?.opacity ?? 100,
         };
       }
     }
   }
 
   getAnimateRotation(elementId) {
-    if (this.timeline[elementId].animation["rotation"].isActivate == true) {
+    if (this.timeline[elementId]?.animation?.["rotation"]?.isActivate === true) {
       let index = Math.round(this.timelineCursor / 16);
       let indexToMs = index * 20;
-      let startTime = Number(this.timeline[elementId].startTime);
+      let startTime = Number(this.timeline[elementId]?.startTime ?? 0);
       let indexPoint = Math.round((indexToMs - startTime) / 20);
 
       try {
         const ax = this.findNearestY(
-          this.timeline[elementId].animation["rotation"].ax,
-          this.timelineCursor - this.timeline[elementId].startTime,
+          this.timeline[elementId]?.animation?.["rotation"]?.ax ?? [],
+          this.timelineCursor - startTime,
         ) as any;
 
         return {
-          x: ax || this.timeline[this.elementId].rotation,
+          x: ax ?? this.timeline[this.elementId]?.rotation ?? 0,
         };
       } catch (error) {
         return {
-          x: 0,
+          x: this.timeline[this.elementId]?.rotation ?? 0,
         };
       }
     }

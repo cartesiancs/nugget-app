@@ -11,6 +11,7 @@ import {
   addShapeElement,
   renderNewImage,
   addSlideElement,
+  addImageElement,
 } from "../../../reponseHandlers";
 
 @customElement("ai-input")
@@ -153,7 +154,7 @@ export class AiInput extends LitElement {
         const elementTimelineCanvasObject = document.querySelector(
           "element-timeline-canvas",
         );
-
+        const AssetList = document.querySelector("asset-list")
         const context = {
           timeline: {
             cursor: timelineLatest.cursor / 1000,
@@ -168,10 +169,10 @@ export class AiInput extends LitElement {
             selectedData:
               timelineLatest.timeline[canvasLatestObject.activeElementId],
           },
+          files: AssetList.fileList || [],
+          current_directory: AssetList.nowDirectory
         };
-
         this.panelOpen();
-
         const chatLLMState = chatLLMStore.getState();
         chatLLMState.addList({
           from: "user",
@@ -189,17 +190,28 @@ export class AiInput extends LitElement {
                 console.log(response);
                 if (response.tool_name == "add_text") {
                   addTextElement(response.params);
-                } 
-                else if (response.tool_name == "add_slide"){
-                  addSlideElement(response.params)
-                }
-                else if (response.tool_name == "add_shape") {
+                } else if (response.tool_name == "add_slide") {
+                  addSlideElement(response.params);
+                } else if (response.tool_name == "add_shape") {
                   addShapeElement(response.params);
-                } else if (response.tool_name == "video") {
+                } 
+                else if (response.tool_name == "add_image"){
+                  addImageElement(response.params)
+                }
+                else if (response.tool_name == "video") {
                   console.log("Video response from LLM.");
-                } else if (response.type == "sr") {
+                } else if (response.type == "super_resolution") {
                   console.log(response.data);
-                  renderNewImage(response.data);
+                  renderNewImage(response.data.absolute_path, true);
+                } else if (response.type == "remove_background") {
+                  console.log(response.data);
+                  renderNewImage(response.data.absolute_path);
+                } else if (response.type == "potrait_effect") {
+                  console.log(response.data);
+                  renderNewImage(response.data.absolute_path);
+                } else if (response.type == "color_grading") {
+                  console.log(response.data);
+                  renderNewImage(response.data.absolute_path);
                 } else {
                   console.log("Unknown tool:", response.tool_name);
                 }

@@ -1,5 +1,6 @@
 import { addTextElement } from "./text_handlers";
 import { addShapeElement } from "./shape_handlers";
+import { useTimelineStore } from "../src/states/timelineStore";
 
 // Helper function to convert "NULL" to null
 const handleNull = (value: any) => value === "NULL" ? null : value;
@@ -7,16 +8,25 @@ const handleNull = (value: any) => value === "NULL" ? null : value;
 export function addSlideElement(params: any): boolean {
     try {
         let startTime = 0;
+        const timelineLatest = useTimelineStore.getState();
+        
         // First create the background shape
-        if(params?.position == "begin"){
-            startTime = 0
+        if(params?.position === "begin"){
+            startTime = 0;
         }
-        else if (params.position == "end"){
-            startTime = 0 // TODO get from the timeline information!
+        else if (params?.position === "end"){
+            // Get the end time of the last element in timeline
+            const timeline = timelineLatest.timeline;
+            const lastElementId = Object.keys(timeline).pop();
+            if (lastElementId) {
+                const lastElement = timeline[lastElementId];
+                startTime = (lastElement.startTime + lastElement.duration);
+            }
         }
-        else{
-            startTime = 0 // TODO get from timeline information!
+        else {
+            startTime = timelineLatest.cursor;
         }
+
         const bgShapeParams = {
             locationX: handleNull(params?.locationX) ?? 0,
             locationY: handleNull(params?.locationY) ?? 0,
@@ -46,18 +56,22 @@ export function addSlideElement(params: any): boolean {
         const textParams = {
             text: handleNull(params?.text) ?? "Welcome to the Hack!",
             textColor: handleNull(params?.textColor) ?? "#2A2AEA",
-            fontsize: 110,
+            fontsize: 120,
             locationX: centerX,
             locationY: centerY,
             width: textWidth,
             height: textHeight,
-            startTime: handleNull(params?.startTime) ?? 0,
+            startTime: startTime,
             duration: handleNull(params?.duration) ?? 3000,
             dataAlign: handleNull(params?.dataAlign) ?? "center",
-            backgroundEnable: false, 
-            fontname:"calibri",
-            optionsAlign:"center",
-            isBold:true,
+            backgroundEnable: false,
+            fontname: "calibri",
+            optionsAlign: "center",
+            isBold: true,
+            font: {
+                path: handleNull(params?.fontPath) ?? "default",
+                name: handleNull(params?.fontName) ?? "calibri"
+            }
         };
 
         const textSuccess = addTextElement(textParams);
@@ -65,7 +79,6 @@ export function addSlideElement(params: any): boolean {
             console.error("Failed to create text element");
             return false;
         }
-
         console.log("Slide created successfully:", params);
         return true;
     } catch (error) {

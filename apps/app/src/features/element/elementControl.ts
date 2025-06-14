@@ -600,6 +600,7 @@ export class ElementControl extends LitElement {
     fontweight = "medium",
     isBold = false,
     duration = 1000,
+    animation = null
   }) {
     const elementId = this.generateUUID();
 
@@ -638,7 +639,7 @@ export class ElementControl extends LitElement {
       width: width,
       widthInner: 200,
       opacity: 100,
-      animation: {
+      animation: animation ?? {
         position: {
           isActivate: false,
           x: [],
@@ -674,29 +675,63 @@ export class ElementControl extends LitElement {
     // this.elementTimeline.addElementBar(elementId);
   }
 
-  // NOTE: 삭제 필요
-  addCustomText(font: { path: string; name: string }) {
+  addCustomText({
+    path,
+    name,
+    text = "TITLE",
+    textcolor = "#ffffff",
+    fontsize = 52,
+    locationX = 0,
+    locationY = 0,
+    width = 1000,
+    height = 68,
+    startTime = 0,
+    duration = 1000,
+    dataAlign = "left",
+    backgroundEnable = false,
+    fontweight = "medium",
+    isBold = false,
+    optionsAlign = "left",
+    animation = null
+  }: {
+    path: string;
+    name: string;
+    text?: string;
+    textcolor?: string;
+    fontsize?: number;
+    locationX?: number;
+    locationY?: number;
+    width?: number;
+    height?: number;
+    startTime?: number;
+    duration?: number;
+    dataAlign?: string;
+    backgroundEnable?: boolean;
+    fontweight?: string;
+    isBold?: boolean;
+    optionsAlign?: string;
+    animation?: any;
+  }) {
     const elementId = this.generateUUID();
-    const fontSize = 52;
 
     this.timeline[elementId] = {
       parentKey: "standalone",
       priority: this.getNowPriority(),
-      startTime: 0,
-      duration: 1000,
-      text: "TITLE",
-      textcolor: "#ffffff",
-      fontsize: fontSize,
-      fontpath: font.path,
-      fontname: font.name,
-      fontweight: "medium",
+      startTime: startTime,
+      duration: duration,
+      text: text,
+      textcolor: textcolor,
+      fontsize: fontsize,
+      fontpath: path,
+      fontname: name,
+      fontweight: fontweight,
       fonttype: "otf",
       letterSpacing: 0,
       opacity: 100,
       options: {
-        isBold: false,
+        isBold: isBold,
         isItalic: false,
-        align: "left",
+        align: optionsAlign,
         outline: {
           enable: false,
           size: 1,
@@ -704,17 +739,17 @@ export class ElementControl extends LitElement {
         },
       },
       background: {
-        enable: false,
+        enable: backgroundEnable,
         color: "#000000",
       },
-      location: { x: 0, y: 0 },
+      location: { x: locationX, y: locationY },
       rotation: 0,
       localpath: "/TEXTELEMENT",
       filetype: "text",
-      height: fontSize + 16,
-      width: 500,
-      widthInner: 200,
-      animation: {
+      height: height,
+      width: width,
+      widthInner: 400,
+      animation: animation ?? {
         position: {
           isActivate: false,
           x: [],
@@ -745,9 +780,6 @@ export class ElementControl extends LitElement {
 
     this.timelineState.patchTimeline(this.timeline);
     this.timelineState.checkPointTimeline();
-
-    // this.showText(elementId);
-    // this.elementTimeline.addElementBar(elementId);
   }
 
   addAudio(blob, path) {

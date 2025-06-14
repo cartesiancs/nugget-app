@@ -20,7 +20,7 @@ from cv_api import api_image_background_removal, api_image_portrait_effect, api_
 from data_models import ImageRequest
 from thefuzz import process
 
-router = APIRouter()
+from main import router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -16,6 +16,7 @@ import {
   IRenderOptionStore,
   renderOptionStore,
 } from "../../states/renderOptionStore";
+import { renderNewImage } from "../../../reponseHandlers";
 
 interface ObjectClassType {
   [elementId: string]: number;
@@ -1093,11 +1094,11 @@ export class elementTimelineCanvas extends LitElement {
         onClick: "document.querySelector('element-timeline-canvas).stabilise()",
         itemName: "stabilise",
       },
-      {
-        onClick:
-          "document.querySelector('element-timeline-canvas).removeBackground()",
-        itemName: "remove background",
-      },
+      // {
+      //   onClick:
+      //     "document.querySelector('element-timeline-canvas').removeBackground()",
+      //   itemName: "remove background",
+      // },
     ];
 
     let imageDropDownElements = [
@@ -1112,7 +1113,7 @@ export class elementTimelineCanvas extends LitElement {
       },
       {
         onClick:
-          "document.querySelector('element-timeline-canvas).removeBackground()",
+          "document.querySelector('element-timeline-canvas').removeBackground()",
         itemName: "remove background",
       },
     ];
@@ -1132,6 +1133,33 @@ export class elementTimelineCanvas extends LitElement {
           .join("")}
 
         </menu-dropdown-body>`;
+  }
+
+  removeBackground() {
+    console.log("remove bg");
+
+    const currentlySelected = this.targetIdDuringRightClick;
+
+    const timeline = useTimelineStore.getState().timeline;
+    const thefp = timeline[currentlySelected]["localpath"].slice(7)
+    console.log(timeline, thefp)
+
+    const currentUIState = uiStore.getState();
+    currentUIState.setThinking();
+
+    window.electronAPI.req.quartz.directToolRemoveBg(thefp).then((result) => {
+    
+        let timelineState = useTimelineStore.getState();
+        let timeline = timelineState.timeline;
+        timeline[currentlySelected].localpath = result.absolute_path;
+         currentUIState.unsetThinking();
+        timelineState.patchTimeline(timeline);
+        timelineState.checkPointTimeline();
+        this.drawCanvas();
+
+    }).catch((error) => {
+        console.error("Error removing background:", error)
+    });
   }
 
   showSideOption(elementId: string) {

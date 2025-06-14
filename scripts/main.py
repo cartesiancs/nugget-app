@@ -4,17 +4,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-# Initialize FastAPI routerlication
+# Initialize FastAPI application
 router = FastAPI()
 
 # Mount static files directory to serve processed images
 # This allows direct download access via /api/assets/public/<filename>
 if os.path.exists("assets/public"):
-    router.mount(
-        "/api/assets/public", StaticFiles(directory="assets/public"), name="static"
-    )
+    router.mount("/api/assets/public", StaticFiles(directory="assets/public"), name="static")
 
-# Import routers
+# Import cv_api to register image processing endpoints
 import cv_api
 import llm_api
 # import video_api
@@ -32,7 +30,7 @@ import video_api
 def health() -> Dict[str, Union[int, str]]:
     """
     Health check endpoint to verify backend service status.
-
+    
     Returns:
         Dict containing status code and message indicating service health
     """

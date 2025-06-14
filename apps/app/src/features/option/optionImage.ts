@@ -5,6 +5,7 @@ import { LocaleController } from "../../controllers/locale";
 import { KeyframeController } from "../../controllers/keyframe";
 import "../filter/backgroundRemove";
 import "./controlDefaultTransform";
+import { uiStore } from "../../states/uiStore";
 
 @customElement("option-image")
 export class OptionImage extends LitElement {
@@ -77,14 +78,21 @@ export class OptionImage extends LitElement {
   }
 
   handleRemoveBackground(e) {
-    const imagePath = e.detail.path;
-    console.log(imagePath, "EEE");
-    this.timeline[this.elementId].localpath = imagePath;
-    this.timelineState.patchTimeline(this.timeline);
+    // const imagePath = e.detail.path;
+    // console.log(imagePath, "EEE");
+    // this.timeline[this.elementId].localpath = imagePath;
+    // this.timelineState.patchTimeline(this.timeline);
 
-    const previewCanvas = document.querySelector("preview-canvas");
-    previewCanvas.preloadImage(this.elementId);
+    // const previewCanvas = document.querySelector("preview-canvas");
+    // previewCanvas.preloadImage(this.elementId);
+
+
+
+    this.timeline[this.elementId].localpath = e.detail.path;
+    let uiState = uiStore.getState();
+    uiState.unsetThinking();
+
+    let timelineState = useTimelineStore.getState();
+    let timeline = timelineState.timeline;
   }
-
-  
 }

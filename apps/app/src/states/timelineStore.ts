@@ -151,11 +151,9 @@ export const useTimelineStore = createStore<ITimelineStore>((set) => ({
     set((state) => ({
       control: { ...state.control, ["cursorType"]: cursorType },
     })),
-  updateSelected(id: string) {
-    console.log("updateSelected", id); // This logs the ID passed to the function.
-    return set((state) => ({
+  updateSelected: (id: string) =>
+    set((state) => ({
       selectedElementId: id, // This correctly updates the selectedElementId in the store.
-    }));
-    // The console.log previously here was unreachable and would not have reflected the updated state immediately even if reachable.
-  },
+    })),
+  // The console.log previously here was unreachable and would not have reflected the updated state immediately even if reachable.
 }));

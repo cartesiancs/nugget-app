@@ -45,11 +45,13 @@ export class elementTimelineCanvas extends LitElement {
   copyedTimelineData: {};
   isGuide: boolean;
   targetIdDuringRightClick: any;
+  targetIdHistorical: any;
 
   constructor() {
     super();
 
     this.targetId = [];
+    this.targetIdHistorical = [];
     this.targetIdDuringRightClick = [];
     this.targetStartTime = {};
     this.targetDuration = {};
@@ -154,6 +156,10 @@ export class elementTimelineCanvas extends LitElement {
 
   _handleDocumentClick(e) {
     if (e.target.id != "elementTimelineCanvasRef") {
+      // this.targetId = [];
+
+      this.targetIdHistorical = this.targetId;
+
       this.targetId = [];
       this.drawCanvas();
     }
@@ -987,7 +993,9 @@ export class elementTimelineCanvas extends LitElement {
         <menu-dropdown-body top="${y}" left="${x}">
         ${this.animationPanelDropdownTemplate()}
           <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="remove"> </menu-dropdown-item>
-          <menu-dropdown-item onclick="document.querySelector('timeline-ui').handleCutClick('${this.targetIdDuringRightClick}')" item-name="cut"> </menu-dropdown-item>
+          <menu-dropdown-item onclick="document.querySelector('timeline-ui').handleCutClick('${
+            this.targetIdDuringRightClick
+          }')" item-name="cut"> </menu-dropdown-item>
         </menu-dropdown-body>`;
   }
 
@@ -1227,10 +1235,11 @@ export class elementTimelineCanvas extends LitElement {
         }
       }
 
-    console.log("__HandleMouseDown - setting targetId", this.targetId[0]);
-    this.timelineState.updateSelected(this.targetId[0]);
-      this.showSideOption(this.targetId[0]);
+      console.log("__HandleMouseDown - setting targetId", this.targetId[0]);
+      
+      this.timelineState.updateSelected(this.targetId[0]);
 
+      this.showSideOption(this.targetId[0]);
 
       this.targetId = [...new Set(this.targetId)];
 

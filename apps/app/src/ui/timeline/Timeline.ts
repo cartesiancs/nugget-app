@@ -39,20 +39,26 @@ export class Timeline extends LitElement {
   @property()
   handleCutClick: (id) => void = (id) =>
     {
-      const elementControlComponent = document.querySelector("element-control");
       const elementCanvas = document.querySelector("element-timeline-canvas");
       
-      console.log("print", id);
-      console.log("Cut button clicked.");
       const timelinePosMs = this.timelineCursor;
       console.log(
         `Current timeline cursor position: ${timelinePosMs}ms (${new Date(
           timelinePosMs
         ).toISOString().slice(11, 23)})`
       );
-      console.log("activeElement", elementControlComponent.activeElementId);
-      console.log("googoogaga", elementCanvas.targetId);
-      console.log(this.timelineState.selectedElementId)
+      console.log("googoogaga", elementCanvas.targetIdHistorical);
+
+      // so now, we have target id
+      let toCut = elementCanvas.targetIdHistorical;
+      let whereCut = timelinePosMs;
+
+      if (toCut == "") {
+        return false;
+      }
+      console.log(`Cutting element ${toCut} at ${whereCut}ms`);
+
+      elementCanvas.cutElement(toCut, whereCut);
   };
 
   createRenderRoot() {

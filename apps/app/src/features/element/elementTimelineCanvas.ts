@@ -987,6 +987,7 @@ export class elementTimelineCanvas extends LitElement {
         <menu-dropdown-body top="${y}" left="${x}">
         ${this.animationPanelDropdownTemplate()}
           <menu-dropdown-item onclick="document.querySelector('element-timeline-canvas').removeSeletedElements()" item-name="remove"> </menu-dropdown-item>
+          <menu-dropdown-item onclick="document.querySelector('timeline-ui').handleCutClick('${this.targetIdDuringRightClick}')" item-name="cut"> </menu-dropdown-item>
         </menu-dropdown-body>`;
   }
 
@@ -1003,7 +1004,7 @@ export class elementTimelineCanvas extends LitElement {
       }
     }
 
-    console.log(fileType == "text", isAllText);
+    // console.log("elementTimelineCanvas.showSideOption", fileType == "text", isAllText);
 
     if (fileType == "text" && isAllText) {
       optionGroup.showOptions({
@@ -1226,7 +1227,10 @@ export class elementTimelineCanvas extends LitElement {
         }
       }
 
+    console.log("__HandleMouseDown - setting targetId", this.targetId[0]);
+    this.timelineState.updateSelected(this.targetId[0]);
       this.showSideOption(this.targetId[0]);
+
 
       this.targetId = [...new Set(this.targetId)];
 
@@ -1261,6 +1265,8 @@ export class elementTimelineCanvas extends LitElement {
 
       this.isDrag = true;
     }
+
+    console.log(this.targetId, "targetId");
   }
 
   _handleMouseUp(e) {

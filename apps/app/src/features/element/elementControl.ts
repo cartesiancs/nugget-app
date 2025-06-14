@@ -83,10 +83,6 @@ export class ElementControl extends LitElement {
       this.changeTimelineRange();
     });
 
-    // document
-    //   .querySelector("#preview")
-    //   .addEventListener("click", this.handleClickPreview.bind(this));
-
     this.scroller = undefined;
     this.resizeTimeout = undefined;
     this.resizeInterval = undefined;
@@ -1336,4 +1332,13 @@ export class DragAlignmentGuide extends LitElement {
   connectedCallback() {
     this.addGuide();
   }
+
+  cut({ timelinePosition }) {
+    console.log(timelinePosition);
+    let target = document.querySelector("#video");
+    if (target == null) return;
+    // get playhead location
+
+  }
+
 }

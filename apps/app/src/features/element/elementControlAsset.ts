@@ -727,9 +727,11 @@ export class ElementControlAsset extends LitElement {
   }
 
   handleMousedown(e) {
+
     this.dragMousedown(e);
     this.activateOutline();
     this.showSideOption();
+
   }
 
   handleDoubleClick(e) {

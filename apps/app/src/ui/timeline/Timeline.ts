@@ -36,6 +36,25 @@ export class Timeline extends LitElement {
   @property()
   control = this.timelineState.control;
 
+  @property()
+  handleCutClick: (id) => void = (id) =>
+    {
+      const elementControlComponent = document.querySelector("element-control");
+      const elementCanvas = document.querySelector("element-timeline-canvas");
+      
+      console.log("print", id);
+      console.log("Cut button clicked.");
+      const timelinePosMs = this.timelineCursor;
+      console.log(
+        `Current timeline cursor position: ${timelinePosMs}ms (${new Date(
+          timelinePosMs
+        ).toISOString().slice(11, 23)})`
+      );
+      console.log("activeElement", elementControlComponent.activeElementId);
+      console.log("googoogaga", elementCanvas.targetId);
+      console.log(this.timelineState.selectedElementId)
+  };
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timelineCursor = state.cursor;
@@ -206,6 +225,15 @@ export class Timeline extends LitElement {
         <div class="col-4">
           <div class="d-flex justify-content-start">
             ${this.togglePlayButton()}
+            <button
+              class="btn btn-xs2 btn-transparent ms-2"
+              @click=${this.handleCutClick}
+            >
+              <span class="material-symbols-outlined icon-white icon-md">
+                content_cut
+              </span>
+            </button>
+
             <button
               class="btn btn-xs2 btn-transparent ms-2"
               @click=${this._handleClickReset}

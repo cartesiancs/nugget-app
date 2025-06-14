@@ -10,6 +10,7 @@ import {
   addTextElement,
   addShapeElement,
   renderNewImage,
+  addSlideElement,
 } from "../../../reponseHandlers";
 
 @customElement("ai-input")
@@ -68,23 +69,26 @@ export class AiInput extends LitElement {
           },
         };
 
-        try {
+        try{ 
           if (window.electronAPI?.req?.quartz?.LLMResponse) {
             window.electronAPI.req.quartz
               .LLMResponse(command, context)
               .then((response) => {
                 console.log(response);
-                if (response.type == "text") {
-                  addTextElement(response.data);
-                  console.log("Received response from LLM.");
-                } else if (response.type == "shape") {
-                  addShapeElement(response.data);
-                } else if (response.type == "video") {
+                if (response.tool_name == "add_text") {
+                  addTextElement(response.params);
+                } 
+                else if (response.tool_name == "add_slide"){
+                  addSlideElement(response.params)
+                }
+                else if (response.tool_name == "add_shape") {
+                  addShapeElement(response.params);
+                } else if (response.tool_name == "video") {
                   console.log("Video response from LLM.");
-                } else if (response.type == "sr") {
-                  renderNewImage(response.data);
+                } else if (response.tool_name == "sr") {
+                  renderNewImage(response.params);
                 } else {
-                  console.log("TODO Else");
+                  console.log("Unknown tool:", response.tool_name);
                 }
               })
               .catch((error) => {

@@ -1,22 +1,33 @@
-export function addShapeElement(data: any): boolean {
+export function addShapeElement(params: any): boolean {
     try {
-        // Wait for DOM to be ready
         const PreviewCanvas = document.querySelector("preview-canvas") as any;
         
         if (!PreviewCanvas) {
-            console.error("Element control component not found. Make sure the component is loaded first.");
+            console.error("Preview canvas component not found");
             return false;
         }
-        
-        // add validation steps here
 
-        // Add the text element with the provided data
-        PreviewCanvas.createShape(1,1) // TODO
-      
-        console.log("Text element added successfully with data:", data);
+        // Create the shape element with all parameters
+        const elementId = PreviewCanvas.createShapeWithParams({
+            x: params?.locationX || 960,
+            y: params?.locationY || 540,
+            width: params?.width || 800,
+            height: params?.height || 800,
+            fillColor: params?.fillColor || "#ffffff",
+            startTime: params?.startTime || 0,
+            duration: params?.duration || 3000,
+            shape: params?.shape || "rectangle"
+        });
+
+        if (!elementId) {
+            console.error("Failed to create shape element");
+            return false;
+        }
+
+        console.log("Shape element added successfully:", params);
         return true;
     } catch (error) {
-        console.error("Error adding text element:", error);
+        console.error("Error adding shape element:", error);
         return false;
     }
 }

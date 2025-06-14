@@ -6,7 +6,11 @@ import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
 import { actionParsor, parseCommands } from "./resultParser";
 import { getLocationEnv } from "../../functions/getLocationEnv";
-import { addTextElement,addShapeElement, renderNewImage } from "../../../reponseHandlers";
+import {
+  addTextElement,
+  addShapeElement,
+  renderNewImage,
+} from "../../../reponseHandlers";
 
 @customElement("ai-input")
 export class AiInput extends LitElement {
@@ -40,75 +44,71 @@ export class AiInput extends LitElement {
 
   handleEnter(event) {
     if (event.key === "Enter" && !this.isEnter) {
-        this.isEnter = true;
-        event.preventDefault();
-        const command = event.target.value.toLowerCase();
-        if (command == "") {
-          this.toast.show("Please enter a command", 2000);
-          this.isEnter = false;
-          return;
+      this.isEnter = true;
+      event.preventDefault();
+      const command = event.target.value.toLowerCase();
+      if (command == "") {
+        this.toast.show("Please enter a command", 2000);
+        this.isEnter = false;
+        return;
+      } else {
+        const timelineLatest = useTimelineStore.getState();
+        const canvasLatestObject = document.querySelector("preview-canvas");
+        const elementTimelineCanvasObject = document.querySelector(
+          "element-timeline-canvas",
+        );
+
+        const context = {
+          timeline: {
+            cursor: timelineLatest.cursor / 1000,
+            selected: elementTimelineCanvasObject.targetIdHistorical,
+          },
+          preview: {
+            selected: canvasLatestObject.activeElementId,
+          },
+        };
+
+        try {
+          if (window.electronAPI?.req?.quartz?.LLMResponse) {
+            window.electronAPI.req.quartz
+              .LLMResponse(command, context)
+              .then((response) => {
+                console.log(response);
+                if (response.type == "text") {
+                  addTextElement(response.data);
+                  console.log("Received response from LLM.");
+                } else if (response.type == "shape") {
+                  addShapeElement(response.data);
+                } else if (response.type == "video") {
+                  console.log("Video response from LLM.");
+                } else if (response.type == "sr") {
+                  renderNewImage(response.data);
+                } else {
+                  console.log("TODO Else");
+                }
+              })
+              .catch((error) => {
+                console.error("Error getting the response:", error);
+                this.toast.show("Error getting the response", 2000);
+              });
+          } else {
+            console.error("IPC method 'quartz.LLMResponse' is not available");
+            this.toast.show("LLMResponse functionality not available", 2000);
+          }
+          // Clear the input field after sending the command
+          if (event.target) {
+            (event.target as HTMLInputElement).value = "";
+          }
+        } catch (error) {
+          console.error("Error processing the command:", error);
+          this.toast.show("Error processing the command", 2000);
         }
-
-        else{
-          
-          const timelineLatest = useTimelineStore.getState();
-          const canvasLatestObject = document.querySelector("preview-canvas");
-          const elementTimelineCanvasObject = document.querySelector("element-timeline-canvas");
-          
-          const context = {
-            timeline: {
-              cursor: timelineLatest.cursor / 1000,
-              selected: elementTimelineCanvasObject.targetIdHistorical,
-            },
-            preview: {
-              selected: canvasLatestObject.activeElementId,
-            }
-          }
-
-          try {
-            if (window.electronAPI?.req?.quartz?.LLMResponse) {
-              window.electronAPI.req.quartz.LLMResponse(command, context)
-                .then((response) => {
-                  console.log(response)
-                  if(response.type == "text"){
-                    addTextElement(response.data)
-                    console.log("Received response from LLM.")
-                  }
-                  else if(response.type == "shape"){
-                    addShapeElement(response.data)
-                  }
-                  else if(response.type == "video"){
-                    console.log("Video response from LLM.")
-                  }
-                  else if (response.type == "sr") {
-                    renderNewImage(response.data);
-                  }
-                  else{
-                    console.log("TODO Else")
-                  }
-                })
-                .catch((error) => {
-                  console.error("Error getting the response:", error);
-                  this.toast.show("Error getting the response", 2000);
-                });
-            } else {
-              console.error("IPC method 'quartz.LLMResponse' is not available");
-              this.toast.show("LLMResponse functionality not available", 2000);
-            }
-              // Clear the input field after sending the command
-            if (event.target) {
-              (event.target as HTMLInputElement).value = "";
-            }
-          } catch (error) {
-            console.error("Error processing the command:", error);
-            this.toast.show("Error processing the command", 2000);
-          }
-        } 
-
-        setTimeout(() => {
-          this.isEnter = false;
-        }, 100);
       }
+
+      setTimeout(() => {
+        this.isEnter = false;
+      }, 100);
+    }
   }
 
   executeFunction(value) {
@@ -146,7 +146,6 @@ export class AiInput extends LitElement {
           resultList.push(`EXIST "${path}"`);
         }
       }
-
     });
   }
 
@@ -211,7 +210,7 @@ export class AiInput extends LitElement {
           type="text"
           class="form-control bg-default text-light bg-darker"
           placeholder="Ask me anything..."
-          value=""  
+          value=""
           id="chatLLMInput"
           @keydown="${this.handleEnter}"
           @click=${this.handleClickInput}

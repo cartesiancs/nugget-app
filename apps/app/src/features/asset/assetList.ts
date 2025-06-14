@@ -12,12 +12,15 @@ export class AssetList extends LitElement {
   blobThumbnail: {};
   nowDirectory: string;
   map: any;
+  fileList: string[] = [];
+
   constructor() {
     super();
     this.blobThumbnail = {};
     this.nowDirectory = "";
 
     this.map = [];
+    this.fileList = [];
   }
 
   @property()
@@ -75,6 +78,7 @@ export class AssetList extends LitElement {
         assetName="${filename}"
       ></asset-file>`,
     );
+    this.fileList.push(filename);
     console.log("AAA", filename);
   }
 
@@ -98,6 +102,7 @@ export class AssetList extends LitElement {
 
   clearList() {
     this.map = [];
+    this.fileList = [];
     this.isShowOption = false;
     this.requestUpdate();
   }

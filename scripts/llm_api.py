@@ -4,7 +4,7 @@ from typing import Optional
 import requests
 import json
 
-router = APIRouter()
+from main import router
 
 
 class LLMRequest(BaseModel):
@@ -19,17 +19,10 @@ async def getResponseFromLlama3(request: LLMRequest):
         #     "http://192.168.46.138:3001/api/",
         #     json={"command": request.command, "context": request.context},
         # )
-        # print("response from llm:", response)
+        print("response from llm:")
         llm_response = {
-            "tool_name": "add_slide",
-            "params": {
-                "text": "Welcome to Qualcomm Hack",
-                # "textColor": "#ffffff",
-                "position": "NULL",
-                # "bgColor": "#00ff00",
-                # "duration": 3000,
-                # "animation": True,
-            },
+            "tool_name": "add_image",
+            "params": {"file_url": "image.png"},
         }
         return llm_response
     except requests.RequestException as e:

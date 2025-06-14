@@ -11,6 +11,7 @@ import {
   addShapeElement,
   renderNewImage,
   addSlideElement,
+  addImageElement,
 } from "../../../reponseHandlers";
 
 @customElement("ai-input")
@@ -153,7 +154,7 @@ export class AiInput extends LitElement {
         const elementTimelineCanvasObject = document.querySelector(
           "element-timeline-canvas",
         );
-
+        const AssetList = document.querySelector("asset-list")
         const context = {
           timeline: {
             cursor: timelineLatest.cursor / 1000,
@@ -168,10 +169,10 @@ export class AiInput extends LitElement {
             selectedData:
               timelineLatest.timeline[canvasLatestObject.activeElementId],
           },
+          files: AssetList.fileList || [],
+          current_directory: AssetList.nowDirectory
         };
-
         this.panelOpen();
-
         const chatLLMState = chatLLMStore.getState();
         chatLLMState.addList({
           from: "user",
@@ -193,7 +194,11 @@ export class AiInput extends LitElement {
                   addSlideElement(response.params);
                 } else if (response.tool_name == "add_shape") {
                   addShapeElement(response.params);
-                } else if (response.tool_name == "video") {
+                } 
+                else if (response.tool_name == "add_image"){
+                  addImageElement(response.params)
+                }
+                else if (response.tool_name == "video") {
                   console.log("Video response from LLM.");
                 } else if (response.type == "super_resolution") {
                   console.log(response.data);

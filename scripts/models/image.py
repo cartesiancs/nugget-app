@@ -532,6 +532,92 @@ def object_segmentation(img: ImageType) -> np.ndarray:
     except Exception as e:
         raise RuntimeError(f"Object segmentation failed: {str(e)}")
 
+def _convert_to_lab(img: np.ndarray) -> np.ndarray:
+    """Convert BGR image to LAB color space."""
+    return cv2.cvtColor(img, cv2.COLOR_BGR2LAB).astype("float32")
+
+
+def _convert_to_bgr(img: np.ndarray) -> np.ndarray:
+    """Convert LAB image back to BGR color space."""
+    return cv2.cvtColor(img.astype("uint8"), cv2.COLOR_LAB2BGR)
+
+
+def _compute_color_stats(img: np.ndarray) -> Tuple[float, float, float, float, float, float]:
+    """Compute mean and standard deviation for each LAB channel."""
+    l, a, b = cv2.split(img)
+    return (l.mean(), l.std(), a.mean(), a.std(), b.mean(), b.std())
+
+
+def _apply_color_mapping(target: np.ndarray, source_stats: Tuple[float, ...], 
+                        target_stats: Tuple[float, ...]) -> np.ndarray:
+    """Apply Reinhard color transfer mapping."""
+    l_mean_src, l_std_src, a_mean_src, a_std_src, b_mean_src, b_std_src = source_stats
+    l_mean_tar, l_std_tar, a_mean_tar, a_std_tar, b_mean_tar, b_std_tar = target_stats
+    
+    l, a, b = cv2.split(target)
+    
+    # Subtract target means, scale by std ratios, add source means
+    l = (l_std_src / l_std_tar) * (l - l_mean_tar) + l_mean_src
+    a = (a_std_src / a_std_tar) * (a - a_mean_tar) + a_mean_src
+    b = (b_std_src / b_std_tar) * (b - b_mean_tar) + b_mean_src
+    
+    # Clip values and merge channels
+    l = np.clip(l, 0, 255)
+    a = np.clip(a, 0, 255)
+    b = np.clip(b, 0, 255)
+    
+    return cv2.merge([l, a, b])
+
+
+def color_transfer(target: ImageType, reference: ImageType) -> Image.Image:
+    """
+    Apply Reinhard color transfer from reference to target image.
+    
+    Uses the Reinhard et al. color transfer algorithm in LAB color space
+    to transfer color characteristics from reference to target image.
+    
+    Args:
+        target: Target image as PIL Image or numpy array
+        reference: Reference image as PIL Image or numpy array
+        
+    Returns:
+        Color-transferred image as PIL Image
+        
+    Raises:
+        TypeError: If input image format is not supported
+        RuntimeError: If color transfer fails
+    """
+    try:
+        target_pil = _validate_image_input(target)
+        reference_pil = _validate_image_input(reference)
+        
+        console.print("[bold cyan]Applying Reinhard color transfer...[/bold cyan]")
+        
+        # Convert PIL to numpy arrays in BGR format
+        target_bgr = cv2.cvtColor(np.array(target_pil), cv2.COLOR_RGB2BGR)
+        reference_bgr = cv2.cvtColor(np.array(reference_pil), cv2.COLOR_RGB2BGR)
+        
+        # Convert to LAB color space
+        target_lab = _convert_to_lab(target_bgr)
+        reference_lab = _convert_to_lab(reference_bgr)
+        
+        # Compute color statistics
+        source_stats = _compute_color_stats(reference_lab)
+        target_stats = _compute_color_stats(target_lab)
+        
+        # Apply color mapping
+        result_lab = _apply_color_mapping(target_lab, source_stats, target_stats)
+        
+        # Convert back to BGR then RGB
+        result_bgr = _convert_to_bgr(result_lab)
+        result_rgb = cv2.cvtColor(result_bgr, cv2.COLOR_BGR2RGB)
+        
+        console.print("[bold green]Color transfer completed successfully.[/bold green]")
+        return Image.fromarray(result_rgb)
+        
+    except Exception as e:
+        raise RuntimeError(f"Color transfer failed: {str(e)}")
+
 
 def image_classification(img: ImageType) -> str:
     """
@@ -570,6 +656,7 @@ def main() -> None:
         python models/image.py get_depth_map -i assets/test_image.jpg
         python models/image.py background_segmentation -i assets/test_image.jpg
         python models/image.py inpainting -m assets/mask.png -i assets/test_image.jpg
+        python models/image.py color_transfer -i assets/target.jpg -r assets/reference.jpg
         python models/image.py generate_image -p "a beautiful sunset over mountains"
         python models/image.py generate_image -p "a cute cat" -n "blurry, low quality" --steps 30 --width 768 --height 768
     """
@@ -579,10 +666,12 @@ def main() -> None:
     )
     parser.add_argument("task", choices=[
         "get_depth_map", "get_super_resolution", "background_segmentation",
-        "inpainting", "generate_image", "object_segmentation", "image_classification"
+        "inpainting", "generate_image", "object_segmentation", "image_classification",
+        "color_transfer"
     ], help="Image processing task to perform")
     
     parser.add_argument("-i", "--image", type=str, help="Input image path")
+    parser.add_argument("-r", "--reference", type=str, help="Reference image path (for color_transfer)")
     parser.add_argument("-m", "--mask", type=str, help="Mask image path (for inpainting)")
     parser.add_argument("-p", "--prompt", type=str, help="Text prompt (for image generation)")
     parser.add_argument("-n", "--negative-prompt", type=str, help="Negative prompt (for image generation)")
@@ -623,6 +712,14 @@ def main() -> None:
             mask = np.array(Image.open(args.mask).convert('L')) / 255
             result = inpainting(img, mask)
             
+        elif args.task == "color_transfer":
+            if not args.image or not args.reference:
+                console.print("[bold red]Error: --image and --reference are required for the 'color_transfer' task.[/bold red]")
+                sys.exit(1)
+            target_img = Image.open(args.image)
+            reference_img = Image.open(args.reference)
+            result = color_transfer(target_img, reference_img)
+            
         else:
             if not args.image:
                 console.print(f"[bold red]Error: --image is required for the '{args.task}' task.[/bold red]")
@@ -650,8 +747,13 @@ def main() -> None:
                 return
         
         # Save result
-        if isinstance(result, np.ndarray):
-            console.print(f"[cyan]Saving result to [bold]'{args.output}'[/bold]...[/cyan]")
+        console.print(f"[cyan]Saving result to [bold]'{args.output}'[/bold]...[/cyan]")
+        
+        if isinstance(result, Image.Image):
+            # PIL Image - save directly
+            result.save(args.output)
+        elif isinstance(result, np.ndarray):
+            # Numpy array - convert to PIL and save
             if result.dtype != np.uint8:
                 # Normalize non-uint8 arrays (e.g., depth maps)
                 if result.max() > result.min():
@@ -663,9 +765,9 @@ def main() -> None:
                 Image.fromarray(result, mode='L').save(args.output)
             else:
                 Image.fromarray(result).save(args.output)
-            
-            console.print(Panel(f"[bold green]Output successfully saved to [white]'{args.output}'[/white][/bold green]",
-                                title="[yellow]Success[/yellow]", border_style="green"))
+        
+        console.print(Panel(f"[bold green]Output successfully saved to [white]'{args.output}'[/white][/bold green]",
+                            title="[yellow]Success[/yellow]", border_style="green"))
         
     except FileNotFoundError as e:
         console.print(f"[bold red]Error: Input file not found - {e}[/bold red]")

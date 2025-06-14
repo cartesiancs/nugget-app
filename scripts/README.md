@@ -29,3 +29,7 @@ curl -X POST "http://localhost:8000/api/image/portrait-effect" \
      -H "Content-Type: multipart/form-data" \
      -F "file=@assets/mountains.jpg"
 ```
+### /api/image/image-generation/
+```bash
+uv run python models/image.py generate_image -p "a beautiful sunset over mountains" -o test_generation.png --steps 20
+```

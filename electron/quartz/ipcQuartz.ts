@@ -45,4 +45,18 @@ export const ipcQuartz = {
       throw error;
     }
   },
+  directToolPotraitBlur: async (_: any, imagePath: any) => {
+    console.log("Blurring portrait in image:", imagePath);
+    try {
+      const response = await axios.post("http://localhost:8000/api/image/portrait-effect", {
+        image_path: imagePath
+      });
+      console.log("Response from portrait blur API:", response.data);
+      return response.data;
+    }
+    catch (error) {
+      console.error("Error blurring portrait in image:", error);
+      throw error;
+    }
+  }
 };

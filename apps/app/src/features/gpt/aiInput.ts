@@ -189,17 +189,24 @@ export class AiInput extends LitElement {
                 console.log(response);
                 if (response.tool_name == "add_text") {
                   addTextElement(response.params);
-                } 
-                else if (response.tool_name == "add_slide"){
-                  addSlideElement(response.params)
-                }
-                else if (response.tool_name == "add_shape") {
+                } else if (response.tool_name == "add_slide") {
+                  addSlideElement(response.params);
+                } else if (response.tool_name == "add_shape") {
                   addShapeElement(response.params);
                 } else if (response.tool_name == "video") {
                   console.log("Video response from LLM.");
-                } else if (response.type == "sr") {
+                } else if (response.type == "super_resolution") {
                   console.log(response.data);
-                  renderNewImage(response.data);
+                  renderNewImage(response.data.absolute_path);
+                } else if (response.type == "remove_background") {
+                  console.log(response.data);
+                  renderNewImage(response.data.absolute_path);
+                } else if (response.type == "potrait_effect") {
+                  console.log(response.data);
+                  renderNewImage(response.data.absolute_path);
+                } else if (response.type == "color_grading") {
+                  console.log(response.data);
+                  renderNewImage(response.data.absolute_path);
                 } else {
                   console.log("Unknown tool:", response.tool_name);
                 }

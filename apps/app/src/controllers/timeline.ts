@@ -8,7 +8,6 @@ export class TimelineController implements ReactiveController {
   value = 0;
 
   changeValue(value) {
-    console.log(value);
     this.value += value;
   }
 

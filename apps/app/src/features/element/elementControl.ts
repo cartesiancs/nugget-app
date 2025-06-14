@@ -416,11 +416,11 @@ export class ElementControl extends LitElement {
           toastMetadata.hide();
         }, 1000);
 
-        metadata.streams.forEach((element) => {
-          if (element.codec_type == "audio") {
-            isExist = true;
-          }
-        });
+        // metadata.streams.forEach((element) => {
+        //   if (element.codec_type == "audio") {
+        //     isExist = true;
+        //   }
+        // });
 
         const nowEnv = getLocationEnv();
         const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;

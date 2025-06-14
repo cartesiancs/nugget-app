@@ -19,10 +19,9 @@ async def getResponseFromLlama3(request: LLMRequest):
         #     "http://192.168.46.138:3001/api/",
         #     json={"command": request.command, "context": request.context},
         # )
-        print("response from llm:")
         llm_response = {
-            "tool_name": "add_image",
-            "params": {"file_url": "image.png"},
+            "tool_name": "add_slide",
+            "params": {"text": "Welcome to Qualcomm", "bgColor": "NULL"},
         }
         return llm_response
     except requests.RequestException as e:

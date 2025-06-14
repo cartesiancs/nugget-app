@@ -96,6 +96,7 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
+    "@img/sharp-win32-arm64": "^0.34.2",
     "@imgly/background-removal": "^1.5.8",
     "@imgly/background-removal-node": "^1.4.5",
     "@lit/context": "^1.1.3",

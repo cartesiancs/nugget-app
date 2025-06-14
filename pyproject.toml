@@ -1,0 +1,17 @@
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+python-multipart = "^0.0.9"
+pillow = "^10.3.0"
+torch = "^2.2.2"
+numpy = "^1.26.4"
+requests = "^2.31.0"
+pyyaml = "^6.0.1"
+opencv-python = "^4.9.0.80"
+thefuzz = "^0.22.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api" 

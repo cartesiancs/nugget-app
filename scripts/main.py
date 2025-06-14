@@ -1,6 +1,9 @@
 from typing import Union, Dict
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+import os
+
+from fastapi.staticfiles import StaticFiles 
 
 # Create FastAPI app
 app = FastAPI()

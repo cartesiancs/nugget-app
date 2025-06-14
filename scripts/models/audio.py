@@ -22,7 +22,7 @@ import warnings
 import datetime
 from df import enhance, init_df
 from transformers import AutoProcessor, BarkModel
-from torch.serialization import safe_globals
+# from torch.serialization import safe_globals
 from .model import WhisperBaseEnONNX
 from .WhisperApp import WhisperApp
 

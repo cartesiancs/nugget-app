@@ -21,8 +21,42 @@ curl -X POST "http://localhost:8000/api/video/video-stabilization" \
      -H "accept: application/json" \
      -H "Content-Type: application/json" \
      -d '{
-       "video_path": "/path/to/your/video.mp4",
+       "video_path": "assets/demo_video.mp4",
        "time_stamp": [0.0, 30.0]
+     }'
+```
+
+### /api/video/remove-bg
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/video/remove-bg" \
+     -H "accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "video_path": "assets/demo_video.mp4"
+     }'
+```
+
+### /api/video/color-grading
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/video/color-grading" \
+     -H "accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "video_path": "assets/demo_video.mp4",
+       "reference_image_path": "assets/demo_reference.jpg"
+     }'
+```
+
+### /api/video/portrait-effect
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/video/portrait-effect" \
+     -H "accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "video_path": "assets/demo_video.mp4"
      }'
 ```
 ## Image

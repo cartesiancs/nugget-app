@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const request = {
+  quartz:{
+    addTextElement: (options: any) => ipcRenderer.invoke("quartz:addTextElement", options),
+  },
   app: {
     forceClose: () => ipcRenderer.send("app:forceClose"),
     restart: () => ipcRenderer.send("app:restart"),
@@ -126,6 +129,9 @@ const response = {
   app: {
     forceClose: (callback) => ipcRenderer.on("WHEN_CLOSE_EVENT", callback),
     getAppPath: (callback) => ipcRenderer.on("GET_PATH", callback),
+  },
+  quartz: {
+    addTextElement: (callback) => ipcRenderer.on("quartz:addTextElement", callback),
   },
   auth: {
     loginSuccess: (callback) => ipcRenderer.on("LOGIN_SUCCESS", callback),

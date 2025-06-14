@@ -6,7 +6,7 @@ import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
 import { actionParsor, parseCommands } from "./resultParser";
 import { getLocationEnv } from "../../functions/getLocationEnv";
-
+import { addTextElement } from "../../../reponseHandlers/text_handlers";
 @customElement("ai-input")
 export class AiInput extends LitElement {
   isEnter: boolean;
@@ -30,7 +30,6 @@ export class AiInput extends LitElement {
     // console.log(parser);
 
     // actionParsor(parser);
-
     if (getLocationEnv() != "electron") {
       this.classList.add("d-none");
     }
@@ -43,8 +42,71 @@ export class AiInput extends LitElement {
       if (!this.isEnter) {
         this.isEnter = true;
         event.preventDefault();
-        this.executeFunction(event.target.value);
-        document.querySelector("#chatLLMInput").value = "";
+        if (event.target.value == "") {
+          this.toast.show("Please enter a command", 2000);
+          this.isEnter = false;
+          return;
+        }
+
+        const command = event.target.value.toLowerCase();
+        if (command.includes("add text")) {
+          try {
+            // Parse the command to extract text and parameters
+            const textMatch = command.match(/"([^"]*)"/);
+            const text = textMatch ? textMatch[1] : "Default text from AI Input";
+            
+            // Parse additional parameters if present
+            const params = command.match(/(\w+)=([^:\s]+)/g) || [];
+            const parsedParams = params.reduce((acc, param) => {
+              const [key, value] = param.split('=');
+              return { ...acc, [key]: value };
+            }, {});
+
+            // Prepare IPC data with defaults and parsed parameters
+            const ipcData = {
+              text: text,
+              textcolor: parsedParams.color || "#ff0000",
+              fontsize: parseInt(parsedParams.fontsize) || 24,
+              locationX: parseInt(parsedParams.x) || 100,
+              locationY: parseInt(parsedParams.y) || 150,
+              width: parseInt(parsedParams.w) || 600,
+              height: parseInt(parsedParams.h) || 80,
+              startTime: parseInt(parsedParams.t) || 0,
+              duration: parseInt(parsedParams.d) || 3000,
+              optionsAlign: parsedParams.align || "center",
+              backgroundEnable: parsedParams.bg !== "false"
+            };
+
+            if (window.electronAPI?.req?.quartz?.addTextElement) {
+              window.electronAPI.req.quartz.addTextElement(ipcData)
+                .then((response) => {
+                  addTextElement(ipcData);
+                  if (response) {
+                    this.toast.show("Text element added successfully", 2000);
+                  } else {
+                    this.toast.show("Failed to add text element", 2000);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error adding text element:", error);
+                  this.toast.show("Error adding text element", 2000);
+                });
+            } else {
+              console.error("IPC method 'quartz.addTextElement' is not available");
+              this.toast.show("Text element functionality not available", 2000);
+            }
+
+            // Clear the input field after sending the command
+            if (event.target) {
+              (event.target as HTMLInputElement).value = "";
+            }
+          } catch (error) {
+            console.error("Error processing text command:", error);
+            this.toast.show("Error processing text command", 2000);
+          }
+        } else {
+          console.log("Command does not include 'add text', not sending IPC message");
+        }
 
         setTimeout(() => {
           this.isEnter = false;
@@ -153,7 +215,7 @@ export class AiInput extends LitElement {
           type="text"
           class="form-control bg-default text-light bg-darker"
           placeholder="Ask me anything..."
-          value=""
+          value=""  
           id="chatLLMInput"
           @keydown="${this.handleEnter}"
           @click=${this.handleClickInput}

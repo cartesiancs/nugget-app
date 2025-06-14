@@ -159,9 +159,41 @@ ipcMain.on("render:offscreen:start", httpFFmpegRenderV2.start);
 ipcMain.on("render:offscreen:sendFrame", httpFFmpegRenderV2.sendFrame);
 ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
-// ipcMain.on("overlayRecord:stop:res", async (evt) => {
-//   mainWindow.webContents.send("overlayRecord:stop:res", "");
-// });
+ipcMain.handle("quartz:addTextElement", async (evt, options) => {
+  try {
+    // Validate required options
+    if (!options || typeof options !== 'object') {
+      console.error("Invalid options provided for text element");
+      return false;
+    }
+
+    if (!options.text || typeof options.text !== 'string') {
+      console.error("Text content is required and must be a string");
+      return false;
+    }
+
+    // Validate numeric options
+    const numericOptions = ['fontsize', 'locationX', 'locationY', 'width', 'height', 'startTime', 'duration'];
+    for (const opt of numericOptions) {
+      if (options[opt] !== undefined && (isNaN(options[opt]) || options[opt] < 0)) {
+        console.error(`Invalid value for ${opt}: must be a non-negative number`);
+        return false;
+      }
+    }
+
+    // Forward the text data to the renderer process
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("quartz:addTextElement", options);
+      return true;
+    } else {
+      console.error("Main window is not available");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error handling text element addition:", error);
+    return false;
+  }
+});
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

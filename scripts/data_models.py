@@ -26,6 +26,40 @@ class VideoStabilizationResponse(BaseModel):
     absolute_path: str
 
 
+class VideoRequest(BaseModel):
+    """
+    Request model for video processing endpoints.
+    
+    Attributes:
+        video_path: Absolute path to the input video file
+    """
+    video_path: str
+
+
+class VideoResponse(BaseModel):
+    """
+    Response model for video processing endpoints.
+    
+    Attributes:
+        link: URL path to access the processed video file
+        absolute_path: Absolute file system path to the processed video
+    """
+    link: str
+    absolute_path: str
+
+
+class ColorGradingRequest(BaseModel):
+    """
+    Request model for color grading endpoint.
+    
+    Attributes:
+        video_path: Absolute path to the target video file
+        reference_image_path: Absolute path to the reference image file
+    """
+    video_path: str
+    reference_image_path: str
+
+
 # New request models for image processing with file paths
 class ImageRequest(BaseModel):
     """

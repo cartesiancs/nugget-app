@@ -17,10 +17,13 @@ dependencies = [
     "python-multipart>=0.0.20",
     "qai-hub-models[midas]>=0.30.4",
     "rich>=14.0.0",
+    "scikit-image>=0.25.2",
     "scikit-learn>=1.7.0",
     "torch>=1.10.0,<2.5.0",
     "torchvision>=0.16.0,<0.21.0",
     "transformers>=4.20.0",
     "ultralytics>=8.0.0",
     "uvicorn>=0.34.3",
+    "vidstab>=1.7.4",
+    "yt-dlp>=2025.6.9",
 ]

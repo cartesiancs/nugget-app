@@ -14,8 +14,21 @@ pip install uv
 
 4. run using `uv run <file>`
 
-## Testing stuff
 
+# Testing stuff
+## Video
+### /api/video/video-stabilization
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/video/video-stabilization" \
+     -H "accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "video_path": "/path/to/your/video.mp4",
+       "time_stamp": [0.0, 30.0]
+     }'
+```
+## Image
 ### /api/image/super-resolution
 
 sample request
@@ -23,8 +36,10 @@ sample request
 ```bash
 curl -X POST "http://localhost:8000/api/image/super-resolution" \
      -H "accept: application/json" \
-     -H "Content-Type: multipart/form-data" \
-     -F "file=@assets/mountains.jpg"
+     -H "Content-Type: application/json" \
+     -d '{
+       "image_path": "/absolute/path/to/your/image.jpg"
+     }'
 ```
 
 ### /api/image/portrait-effect/
@@ -34,8 +49,10 @@ sample request
 ```bash
 curl -X POST "http://localhost:8000/api/image/portrait-effect" \
      -H "accept: application/json" \
-     -H "Content-Type: multipart/form-data" \
-     -F "file=@assets/mountains.jpg"
+     -H "Content-Type: application/json" \
+     -d '{
+       "image_path": "/absolute/path/to/your/image.jpg"
+     }'
 ```
 
 ### /api/image/color-transfer/
@@ -45,9 +62,22 @@ sample request
 ```bash
 curl -X POST "http://localhost:8000/api/image/color-transfer" \
      -H "accept: application/json" \
-     -H "Content-Type: multipart/form-data" \
-    -F "reference_file=@assets/barbie.jpg" \
-    -F "target_file=@assets/mountains.jpg"
+     -H "Content-Type: application/json" \
+     -d '{
+       "image_path": "/absolute/path/to/target/image.jpg",
+       "reference_image_path": "/absolute/path/to/reference/image.jpg"
+     }'
+```
+
+### /api/image/background-removal/
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/image/remove-bg" \
+     -H "accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "image_path": "/absolute/path/to/your/image.jpg"
+     }'
 ```
 
 ### /api/image/image-generation/

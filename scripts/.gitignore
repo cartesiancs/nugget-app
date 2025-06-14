@@ -202,3 +202,7 @@ __marimo__/
 assets/public/*.jpg
 assets/public/*.png
 assets/public/*.jpeg
+assets/public/*.mov
+assets/*.*
+assets/public/*.*
+tmp/

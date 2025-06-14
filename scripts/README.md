@@ -21,3 +21,11 @@ curl -X POST "http://localhost:8000/api/image/super-resolution" \
      -H "Content-Type: multipart/form-data" \
      -F "file=@assets/mountains.jpg"
 ```
+### /api/image/portrait-effect/
+sample request
+```bash
+curl -X POST "http://localhost:8000/api/image/portrait-effect" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@assets/mountains.jpg"
+```

@@ -13,6 +13,7 @@ dependencies = [
     "pillow>=8.0.0,<12.0.0",
     "python-multipart>=0.0.20",
     "qai-hub-models[midas,midas-quantized]>=0.30.4",
+    "rich>=14.0.0",
     "torch>=1.10.0,<2.5.0",
     "torchvision>=0.16.0,<0.21.0",
     "transformers>=4.20.0",

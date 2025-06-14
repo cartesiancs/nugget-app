@@ -128,22 +128,53 @@ export class elementTimelineCanvas extends LitElement {
 
   cutElement(id: string, whereMs: number) {
     const originalElement = this.timeline[id];
-
-    if (!originalElement || originalElement.filetype !== "video") {
-      console.error(
-        "Cut operation failed: Element not found or not a video element.",
-        id,
-      );
-      return;
-    }
+    const filetype = originalElement.filetype;
 
     // Calculate the cut point relative to the element's own start time
     const relativeCutPointMs = whereMs - originalElement.startTime;
 
+    if (filetype === "image") {
+      // Only cut if the cut point is within the image's duration
+      if (
+        relativeCutPointMs <= 0 ||
+        relativeCutPointMs >= originalElement.duration
+      ) {
+        console.error(
+          "Cut operation failed: Cut point is outside the valid duration of the image element.",
+        );
+        return;
+      }
+
+      // Modify the original image to end at the cut point
+      const originalDuration = originalElement.duration;
+      originalElement.duration = relativeCutPointMs;
+
+      // Create the new image element for the remaining duration
+      const newElementId = uuidv4();
+      const newElement = this.deepCopy(originalElement);
+      newElement.startTime = originalElement.startTime + relativeCutPointMs;
+      newElement.duration = originalDuration - relativeCutPointMs;
+      newElement.priority = this.getNowPriority();
+
+      // Add the new image element to the timeline
+      this.timeline[newElementId] = newElement;
+
+      // Update the timeline state and redraw
+      this.timelineState.patchTimeline(this.timeline);
+      this.timelineState.checkPointTimeline();
+      this.drawCanvas();
+
+      console.log(
+        `Image element ${id} cut at ${whereMs}ms. New image element ${newElementId} created.`,
+      );
+      return;
+    }
+
+    // ...existing code for video/audio...
     // Ensure the cut point is valid within the element's current trim settings
     if (
-      relativeCutPointMs <= originalElement.trim.startTime ||
-      relativeCutPointMs >= originalElement.trim.endTime
+      relativeCutPointMs <= originalElement.trim?.startTime ||
+      relativeCutPointMs >= originalElement.trim?.endTime
     ) {
       console.error(
         "Cut operation failed: Cut point is outside the valid trim range of the video element.",
@@ -159,22 +190,21 @@ export class elementTimelineCanvas extends LitElement {
 
     // Create the new element (the second part of the cut)
     const newElementId = uuidv4();
-    const newElement = this.deepCopy(originalElement); // Assumes deepCopy is a method in this class
+    const newElement = this.deepCopy(originalElement);
 
     // Assign new ID and update priority for the new element
-    // If your elements use a 'key' property, update it as well, e.g., newElement.key = newElementId;
-    newElement.priority = this.getNowPriority(); // Or adjust priority as needed
+    newElement.priority = this.getNowPriority();
 
     // Set the trim for the new element
     newElement.trim.startTime = relativeCutPointMs;
-    newElement.trim.endTime = originalTrimEndTime; // The new element takes the original's end trim
+    newElement.trim.endTime = originalTrimEndTime;
 
     // Add the new element to the timeline
     this.timeline[newElementId] = newElement;
 
     // Update the timeline state and redraw
     this.timelineState.patchTimeline(this.timeline);
-    this.timelineState.checkPointTimeline(); // For undo/redo functionality
+    this.timelineState.checkPointTimeline();
     this.drawCanvas();
 
     console.log(

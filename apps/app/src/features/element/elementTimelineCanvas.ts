@@ -124,6 +124,63 @@ export class elementTimelineCanvas extends LitElement {
     canvasVerticalScroll: 0,
     panelOptions: [],
   };
+  
+
+  cutElement(id: string, whereMs: number) {
+    const originalElement = this.timeline[id];
+
+    if (!originalElement || originalElement.filetype !== "video") {
+      console.error(
+        "Cut operation failed: Element not found or not a video element.",
+        id,
+      );
+      return;
+    }
+
+    // Calculate the cut point relative to the element's own start time
+    const relativeCutPointMs = whereMs - originalElement.startTime;
+
+    // Ensure the cut point is valid within the element's current trim settings
+    if (
+      relativeCutPointMs <= originalElement.trim.startTime ||
+      relativeCutPointMs >= originalElement.trim.endTime
+    ) {
+      console.error(
+        "Cut operation failed: Cut point is outside the valid trim range of the video element.",
+      );
+      return;
+    }
+
+    // Store the original trim end time before modifying it
+    const originalTrimEndTime = originalElement.trim.endTime;
+
+    // Modify the original element to end at the cut point
+    originalElement.trim.endTime = relativeCutPointMs;
+
+    // Create the new element (the second part of the cut)
+    const newElementId = uuidv4();
+    const newElement = this.deepCopy(originalElement); // Assumes deepCopy is a method in this class
+
+    // Assign new ID and update priority for the new element
+    // If your elements use a 'key' property, update it as well, e.g., newElement.key = newElementId;
+    newElement.priority = this.getNowPriority(); // Or adjust priority as needed
+
+    // Set the trim for the new element
+    newElement.trim.startTime = relativeCutPointMs;
+    newElement.trim.endTime = originalTrimEndTime; // The new element takes the original's end trim
+
+    // Add the new element to the timeline
+    this.timeline[newElementId] = newElement;
+
+    // Update the timeline state and redraw
+    this.timelineState.patchTimeline(this.timeline);
+    this.timelineState.checkPointTimeline(); // For undo/redo functionality
+    this.drawCanvas();
+
+    console.log(
+      `Element ${id} cut at ${whereMs}ms. New element ${newElementId} created.`,
+    );
+  }
 
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {

@@ -37,7 +37,7 @@ export class Timeline extends LitElement {
   control = this.timelineState.control;
 
   @property()
-  handleCutClick: (id) => void = (id) =>
+  handleCutClick: (id) => void = (id) => // id parameter is not used from the template call, it's for direct calls.
     {
       const elementCanvas = document.querySelector("element-timeline-canvas");
       
@@ -47,18 +47,25 @@ export class Timeline extends LitElement {
           timelinePosMs
         ).toISOString().slice(11, 23)})`
       );
-      console.log("googoogaga", elementCanvas.targetIdHistorical);
+      console.log("Target historical IDs for cutting:", elementCanvas.targetIdHistorical);
 
-      // so now, we have target id
-      let toCut = elementCanvas.targetIdHistorical;
-      let whereCut = timelinePosMs;
-
-      if (toCut == "") {
+      // Ensure targetIdHistorical is an array and not empty
+      if (!elementCanvas.targetIdHistorical || elementCanvas.targetIdHistorical.length === 0) {
+        console.log("No element selected to cut.");
         return false;
       }
-      console.log(`Cutting element ${toCut} at ${whereCut}ms`);
+      
+      // Use the first element from targetIdHistorical for the cut operation
+      const toCutId = elementCanvas.targetIdHistorical[0]; 
+      const whereCut = timelinePosMs;
 
-      elementCanvas.cutElement(toCut, whereCut);
+      if (!toCutId) {
+        console.log("No valid element ID to cut.");
+        return false;
+      }
+      console.log(`Attempting to cut element ${toCutId} at ${whereCut}ms`);
+
+      elementCanvas.cutElement(toCutId, whereCut);
   };
 
   createRenderRoot() {

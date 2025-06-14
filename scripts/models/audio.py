@@ -45,7 +45,7 @@ ConfigDict = Dict[str, Any]
 # Constants
 TARGET_SAMPLE_RATE = 48000  # DeepFilter expects 48kHz audio
 WHISPER_SAMPLE_RATE = 16000  # Whisper expects 16kHz audio
-DEFAULT_CHUNK_DURATION = 30.0  # Default chunk duration for transcription
+DEFAULT_CHUNK_DURATION = 15.0  # Default chunk duration for transcription
 
 class AudioProcessingError(Exception):
     """Base exception class for audio processing errors."""

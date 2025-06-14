@@ -34,20 +34,25 @@ curl -X POST "http://localhost:8000/api/audio/text-to-speech" \
 ```
 
 ### Noise Removal API
-Remove background noise from audio files using DeepFilter.
+Remove background noise from audio or MP4 video files using DeepFilter.
 
 **Endpoint:** `POST /api/audio/remove-noise`
 
 **Request:**
 - Content-Type: `multipart/form-data`
-- Parameter: `file` (audio file)
+- Parameter: `file` (audio file or `.mp4` video file)
 
 
-**Example curl command:**
+**Example curl commands:**
 ```bash
+# Audio file noise removal
 curl -X POST "http://localhost:8000/api/audio/remove-noise" \
      -F "file=@/path/to/your/audio.wav"
-```
+
+# MP4 video noise removal (outputs a new MP4 with cleaned audio)
+curl -X POST "http://localhost:8000/api/audio/remove-noise" \
+     -F "file=@/path/to/your/video.mp4"
+``` 
 
 **Error Responses:**
 - 400 Bad Request:
@@ -62,30 +67,43 @@ curl -X POST "http://localhost:8000/api/audio/remove-noise" \
 - All processed audio files are saved in the `assets/public` 
 
 ### Transcription API
-Transcribe audio files to text or SRT format using Whisper.
+Transcribe audio or MP4 video files to text or SRT format using Whisper (extracts audio from video first).
 
 **Endpoint:** `POST /api/audio/transcribe`
 
 **Request:**
 - Content-Type: `multipart/form-data`
 - Parameters:
-  - `file`: Audio file (WAV, MP3, etc.)
+  - `file`: Audio file (WAV, MP3, etc.) or `.mp4` video file
   - `output_format`: Optional, "srt" or "text" (default: "srt")
-  - `chunk_duration`: Optional, duration of each audio chunk in seconds (default: 30.0)
+  - `chunk_duration`: Optional, duration of each audio chunk in seconds (default: 5.0)
   - `target_sample_rate`: Optional, target sample rate for transcription (default: 16000)
 
 **Example curl commands:**
 
-1. Transcribe to SRT format:
+# Audio file → SRT
 ```bash
 curl -X POST "http://localhost:8000/api/audio/transcribe" \
      -F "file=@/path/to/your/audio.wav"
 ```
 
-2. Transcribe to text format:
+# Audio file → Text
 ```bash
 curl -X POST "http://localhost:8000/api/audio/transcribe" \
      -F "file=@/path/to/your/audio.wav" \
+     -F "output_format=text"
+```
+
+# Video file → SRT (default)
+```bash
+curl -X POST "http://localhost:8000/api/audio/transcribe" \
+     -F "file=@/path/to/your/video.mp4"
+```
+
+# Video file → Text
+```bash
+curl -X POST "http://localhost:8000/api/audio/transcribe" \
+     -F "file=@/path/to/your/video.mp4" \
      -F "output_format=text"
 ```
 
@@ -117,4 +135,4 @@ curl -X POST "http://localhost:8000/api/audio/transcribe" \
 - Maximum file size is 50MB
 - Supported audio formats: WAV, MP3, M4A, OGG, FLAC
 - For large files, consider using smaller chunk durations
-- The transcription process may take longer for larger files 
+- The transcription process may take longer for larger files

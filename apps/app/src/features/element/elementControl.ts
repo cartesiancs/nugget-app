@@ -408,7 +408,7 @@ export class ElementControl extends LitElement {
       window.electronAPI.req.ffmpeg.getMetadata(blob, path).then((result) => {
         let blobdata = result.blobdata;
         let metadata = result.metadata;
-        console.log(metadata);
+        // console.log(metadata);
 
         let isExist = false;
 

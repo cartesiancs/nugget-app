@@ -75,7 +75,7 @@ ipcMain.on("CLIENT_READY", async (evt) => {
 ipcMain.handle("GET_METADATA", async (evt, bloburl, mediapath) => {
   const result = new Promise((resolve, reject) => {
     ffmpeg.ffprobe(mediapath, (err, metadata) => {
-      console.log(mediapath, metadata, bloburl);
+      // console.log(mediapath, metadata, bloburl);
       resolve({
         bloburl: bloburl,
         metadata: metadata,

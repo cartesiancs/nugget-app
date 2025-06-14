@@ -56,6 +56,7 @@ export class AiInput extends LitElement {
   executeFunction(value) {
     console.log("Entered value:", value);
     const lists = this.mapTimeline();
+    console.log("Timeline lists:", lists);
 
     console.log(`${lists.join(" ")} \n ${value}`);
 
@@ -88,28 +89,6 @@ export class AiInput extends LitElement {
         }
       }
 
-      window.electronAPI.req.ai
-        .text(
-          "gpt-4o-mini",
-          `${resultList.join("\n")} \n ${lists.join("\n")} \n ${value}`,
-        )
-        .then((result) => {
-          if (result.status == 1) {
-            this.uiState.setChatSidebar(250);
-
-            this.chatLLMState.addList(result.text.content);
-
-            const parser = parseCommands(result.text.content);
-
-            actionParsor(parser);
-
-            console.log(result.text.content);
-          } else {
-            document
-              .querySelector("toast-box")
-              .showToast({ message: "Invaild OpenAI Key", delay: "2000" });
-          }
-        });
     });
   }
 

@@ -758,9 +758,10 @@ export class AutomaticCaption extends LitElement {
   }
 
   _handleKeydown(event) {
+
     if (event.keyCode == 13) {
       // enter
-      this.splitCaption();
+      // this.splitCaption();
     }
   }
 

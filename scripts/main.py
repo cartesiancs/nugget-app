@@ -15,14 +15,14 @@ if os.path.exists("assets/public"):
     )
 
 # Import routers
-import cv_api
+# import cv_api
 import llm_api
-import video_api
+# import video_api
 
 # Include routers
-router.include_router(cv_api.router)
+# router.include_router(cv_api.router)
 router.include_router(llm_api.router)
-router.include_router(video_api.router)
+# router.include_router(video_api.router)
 
 
 @router.get("/api/health")

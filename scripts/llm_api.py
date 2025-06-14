@@ -16,7 +16,7 @@ class LLMRequest(BaseModel):
 async def getResponseFromLlama3(request: LLMRequest):
     try:
         response = requests.post(
-            "http://192.168.46.138:3001/llm",
+            "http://192.168.46.138:3001/api/",
             json={"command": request.command, "context": request.context},
         )
         print("response from llm:", response)

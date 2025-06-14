@@ -1340,7 +1340,6 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   _handleKeydown(event) {
-    console.log(event.keyCode);
 
     // arrowUp
 

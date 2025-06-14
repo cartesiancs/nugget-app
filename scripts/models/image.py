@@ -11,6 +11,10 @@ This module provides implementations for various image processing tasks includin
 - Image classification
 
 All functions are implemented with modular design and proper type hints.
+
+Installation requirements:
+- pip install transformers torch
+
 Author: Image Processing AI System
 """
 
@@ -47,14 +51,41 @@ def _validate_image_input(img: ImageType) -> Image.Image:
         raise TypeError(f"Unsupported image type: {type(img)}")
 
 
-def _load_midas_model() -> pipeline:
-    """Load MiDaS depth estimation model from HuggingFace."""
-    return pipeline("depth-estimation", model="Intel/dpt-hybrid-midas")
+def _load_midas_model():
+    """Load MiDaS depth estimation model from Qualcomm AI Hub."""
+    from qai_hub_models.models.midas import Model
+    return Model.from_pretrained()
+
+
+def _prepare_midas_input(model, img: Image.Image):
+    """Prepare input tensor for MiDaS model."""
+    # Get expected input size (256x256 for MiDaS)
+    resized_img = img.resize((256, 256))
+    # Convert to tensor format expected by the model
+    img_tensor = transforms.ToTensor()(resized_img).unsqueeze(0)
+    return img_tensor
+
+
+def _process_midas_output(output_data, original_size):
+    """Process MiDaS model output to depth map."""
+    # Convert tensor to numpy array
+    depth_map = output_data.squeeze().detach().cpu().numpy()
+    # Normalize depth values
+    depth_map = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
+    # Resize to original dimensions
+    return cv2.resize(depth_map, original_size)
+
+
+def _run_midas_inference(model, input_data):
+    """Run inference on MiDaS model."""
+    with torch.no_grad():
+        output = model(input_data)
+    return output
 
 
 def _load_esrgan_model() -> pipeline:
     """Load Real-ESRGAN super resolution model from HuggingFace."""
-    return pipeline("image-to-image", model="philz1337x/real-esrgan")
+    return pipeline("image-to-image", model="qualcomm/Real-ESRGAN-x4plus")
 
 
 def _load_sam_model():
@@ -82,18 +113,17 @@ def _load_classification_model():
     return pipeline("image-classification", model="google/vit-base-patch16-224")
 
 
-def _calculate_tile_size(image_size: Tuple[int, int], target_size: int = 128) -> Tuple[int, int]:
+def _calculate_tile_size(image_size: Tuple[int, int], *, target_size: int = 128, scale_factor = 1.5) -> Tuple[int, int]:
     """Calculate optimal tile dimensions for super resolution processing."""
-    width, height = image_size
-    scale_factor = 1.5
+    width, height = image_size 
     
     if max(width, height) <= target_size:
         return (1, 1)
     elif max(width, height) <= target_size * scale_factor:
         return (1, 1)
     else:
-        tiles_x = int(np.ceil(width / target_size))
-        tiles_y = int(np.ceil(height / target_size))
+        tiles_x = int(np.ceil((width / target_size) - 0.1))
+        tiles_y = int(np.ceil((height / target_size)-0.1))
         return (tiles_x, tiles_y)
 
 
@@ -146,23 +176,45 @@ def _merge_processed_tiles(tiles: List[np.ndarray], original_size: Tuple[int, in
 
 def get_depth_map(img: ImageType) -> np.ndarray:
     """
-    Generate depth map from input image using MiDaS model.
+    Generate depth map from input image using MiDaS model from Qualcomm AI Hub.
     
     Args:
         img: Input image as PIL Image or numpy array
         
     Returns:
-        Depth map as numpy array with normalized depth values
+        Depth map as numpy array with normalized depth values (0-1)
+        where higher values represent objects closer to the camera
         
     Raises:
         TypeError: If input image format is not supported
         RuntimeError: If depth estimation fails
     """
     try:
+        # Validate and convert input to PIL Image
         pil_img = _validate_image_input(img)
-        depth_estimator = _load_midas_model()
-        result = depth_estimator(pil_img)
-        return np.array(result["depth"])
+        
+        # Load the MiDaS model from QAI Hub
+        print("Loading MiDaS model from Qualcomm AI Hub...")
+        model = _load_midas_model()
+        
+        # Prepare input for the model
+        print("Preparing input for MiDaS model...")
+        input_data = _prepare_midas_input(model, pil_img)
+        
+        # Run inference
+        print("Running MiDaS inference...")
+        output = _run_midas_inference(model, input_data)
+        
+        # Process output to get depth map
+        print("Processing depth map output...")
+        depth_map = _process_midas_output(output, pil_img.size)
+        
+        print("Depth estimation completed successfully")
+        return depth_map
+    except ImportError as e:
+        raise RuntimeError(f"Failed to import QAI Hub MiDaS model. Make sure qai-hub-models is installed: {str(e)}")
+    except ValueError as e:
+        raise RuntimeError(f"Invalid input for MiDaS model: {str(e)}")
     except Exception as e:
         raise RuntimeError(f"Depth estimation failed: {str(e)}")
 
@@ -191,7 +243,7 @@ def get_super_resolution(img: ImageType) -> np.ndarray:
         target_size = 128
         
         # Calculate processing strategy based on image size
-        tiles = _calculate_tile_size(original_size, target_size)
+        tiles = _calculate_tile_size(original_size, target_size=target_size)
         
         if tiles == (1, 1):
             # Single tile processing
@@ -373,6 +425,7 @@ def main() -> None:
     Command line interface for image processing tasks.
     
     Examples:
+        uv run image.py get_depth_map -i input.jpg
         uv run image.py background_segmentation -i input.jpg
         uv run image.py inpainting -m mask.png -i input.jpg
         uv run image.py generate_image -p "a beautiful sunset"

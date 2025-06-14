@@ -231,10 +231,3 @@ async def getResponseFromLlama3(request: LLMRequest):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    print("Starting FastAPI processing server on http://localhost:8000")
-    uvicorn.run(router, host="0.0.0.0", port=8000)

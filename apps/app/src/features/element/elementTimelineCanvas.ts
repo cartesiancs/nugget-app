@@ -358,6 +358,7 @@ export class elementTimelineCanvas extends LitElement {
     let index = 1;
 
     const ctx = this.canvas.getContext("2d");
+
     if (ctx) {
       const dpr = window.devicePixelRatio;
       this.canvas.style.width = `${window.innerWidth}px`;

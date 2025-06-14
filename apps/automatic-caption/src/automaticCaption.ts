@@ -196,7 +196,12 @@ export class AutomaticCaption extends LitElement {
 
     if (this.sttMethod == "openai") {
       window.electronAPI.req.ai.stt(audioPath).then((result) => {
+
         console.log(result);
+        
+        // UI CHANGE
+
+
 
         this.analyzingVideoModal.hide();
 

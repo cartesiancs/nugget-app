@@ -162,6 +162,7 @@ ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
 ipcMain.handle("quartz:LLMResponse", ipcQuartz.handleLLMResponse);
 ipcMain.handle("quartz:transcribeAudio", ipcQuartz.transcribeAudio);
+ipcMain.handle("quartz:directToolRemoveBg", ipcQuartz.directToolRemoveBg);
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

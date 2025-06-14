@@ -30,5 +30,19 @@ export const ipcQuartz = {
       console.error("Error transcribing audio:");
       // throw error;
     }
-  }
+  },
+  directToolRemoveBg: async (_: any, imagePath: any) => {
+    console.log("Removing background from image:", imagePath);
+    try {
+      const response = await axios.post("http://localhost:8000/api/image/remove-bg", {
+        image_path: imagePath
+      });
+      console.log("Response from remove background API:", response.data);
+      return response.data;
+    }
+    catch (error) {
+      console.error("Error removing background from image:", error);
+      throw error;
+    }
+  },
 };

@@ -1,6 +1,8 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { LocaleController } from "../../controllers/locale";
+import { useTimelineStore } from "../../states/timelineStore";
+import { uiStore } from "../../states/uiStore";
 
 @customElement("background-remove")
 export class BackgroundRemove extends LitElement {
@@ -42,19 +44,40 @@ export class BackgroundRemove extends LitElement {
   }
 
   handleClickRemove() {
-    this.isLoad = true;
-    window.electronAPI.req.media
-      .backgroundRemove(this.imagePath)
-      .then((path) => {
-        console.log(path.path);
-        this.isLoad = false;
+    
+    console.log("remove bg");
+    
+    const currentlySelected = this.imagePath;
+
+    const currentUIState = uiStore.getState();
+    currentUIState.setThinking();
+
+    window.electronAPI.req.quartz.directToolRemoveBg(currentlySelected.slice(7)).then((result) => {
+        console.log("Background removed successfully:", result);
         this.dispatchEvent(
-          new CustomEvent("onReturn", {
-            detail: { path: path.path },
-            bubbles: true,
-            composed: true,
-          }),
+            new CustomEvent("onReturn", {
+                detail: { path: result.absolute_path },
+                bubbles: true,
+                composed: true,
+            }),
         );
-      });
+    }).catch((error) => {
+        console.error("Error removing background:", error)
+    });
+    
+    // this.isLoad = true;
+    // window.electronAPI.req.media
+    //   .backgroundRemove(this.imagePath)
+    //   .then((path) => {
+    //     console.log(path.path);
+    //     this.isLoad = false;
+    //     this.dispatchEvent(
+    //       new CustomEvent("onReturn", {
+    //         detail: { path: path.path },
+    //         bubbles: true,
+    //         composed: true,
+    //       }),
+    //     );
+    //   });
   }
 }

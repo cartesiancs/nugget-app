@@ -8,7 +8,18 @@ export interface IChatLLMPanelStore {
 }
 
 export const chatLLMStore = createStore<IChatLLMPanelStore>((set) => ({
-  list: [],
+  list: [
+    {
+      from: "agent",
+      text: "Hello, how can I help you today?",
+      timestamp: new Date().toISOString(),
+    },
+    {
+      from: "user",
+      text: "I'm doing well, thank you for asking!",
+      timestamp: new Date().toISOString(),
+    },
+  ],
   isLoad: false,
 
   addList: (list: any) => set((state) => ({ list: [...state.list, list] })),

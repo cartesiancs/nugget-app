@@ -596,6 +596,9 @@ export class ElementControl extends LitElement {
     height = 66,
     width = 500,
     startTime = 0,
+    fontname = "notosanskr",
+    fontweight = "medium",
+    isBold = false,
     duration = 1000,
   }) {
     const elementId = this.generateUUID();
@@ -609,12 +612,12 @@ export class ElementControl extends LitElement {
       textcolor: textcolor,
       fontsize: fontsize,
       fontpath: "default",
-      fontname: "notosanskr",
-      fontweight: "medium",
+      fontname: fontname,
+      fontweight: fontweight,
       fonttype: "otf",
       letterSpacing: 0,
       options: {
-        isBold: false,
+        isBold: isBold,
         isItalic: false,
         align: optionsAlign,
         outline: {

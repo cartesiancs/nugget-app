@@ -15,10 +15,15 @@ export class App extends LitElement {
   @property()
   topBarTitle = this.uiState.topBarTitle;
 
+  freeze = false;
+
   createRenderRoot() {
     uiStore.subscribe((state) => {
       this.resize = state.resize;
       this.topBarTitle = state.topBarTitle;
+      this.freeze = state.thinking;
+
+      this.requestUpdate();
     });
 
     return this;
@@ -30,6 +35,43 @@ export class App extends LitElement {
 
   render() {
     return html`
+      <style>
+        .ghost-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(
+            0,
+            0,
+            0,
+            0.5
+          ); /* Semi-transparent background */
+          backdrop-filter: blur(5px); /* Blur effect */
+          z-index: 9999; /* High z-index to be on top */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: white;
+          font-size: 2em;
+        }
+
+        .spinner {
+          border: 8px solid #f3f3f3; /* Light grey */
+          border-top: 8px solid #3498db; /* Blue */
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+      ${this.freeze ? html`<div class="ghost-overlay"><div class="spinner"></div></div>` : ""}
       <asset-upload-drop></asset-upload-drop>
       <tutorial-group>
         <tutorial-popover

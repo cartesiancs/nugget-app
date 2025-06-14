@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from "electron";
 const request = {
   quartz:{
     LLMResponse: (command: string, context: any) => ipcRenderer.invoke("quartz:LLMResponse", command, context),
+    transcribeAudio: (audioData: any) => ipcRenderer.invoke("quartz:transcribeAudio", audioData),
   },
   app: {
     forceClose: () => ipcRenderer.send("app:forceClose"),

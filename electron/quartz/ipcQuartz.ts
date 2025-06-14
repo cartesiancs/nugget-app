@@ -14,4 +14,21 @@ export const ipcQuartz = {
       throw error;
     }
   },
+  transcribeAudio: async (_: any, audioData: any) => {
+    try {
+
+      console.log("HI HI HI HI ");
+      // console.log(audioData);
+      console.log("HI HI HI HIHI ")
+
+      const response = await axios.post("http://localhost:8000/api/transcribe", {
+        audioData
+      });
+      console.log(response);
+      return response.data.data;
+    } catch (error) {
+      console.error("Error transcribing audio:");
+      // throw error;
+    }
+  }
 };

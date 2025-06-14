@@ -161,6 +161,7 @@ ipcMain.on("render:offscreen:sendFrame", httpFFmpegRenderV2.sendFrame);
 ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
 ipcMain.handle("quartz:LLMResponse", ipcQuartz.handleLLMResponse);
+ipcMain.handle("quartz:transcribeAudio", ipcQuartz.transcribeAudio);
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {

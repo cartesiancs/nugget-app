@@ -16,9 +16,19 @@ import {
 @customElement("ai-input")
 export class AiInput extends LitElement {
   isEnter: boolean;
+  isRecording: boolean;
+  mediaRecorder: MediaRecorder | null;
+  audioChunks: Blob[];
+
+  @property({ type: String })
+  textContent: string = "";
+
   constructor() {
     super();
     this.isEnter = false;
+    this.isRecording = false;
+    this.mediaRecorder = null;
+    this.audioChunks = [];
   }
 
   toast = new ToastController(this);
@@ -27,6 +37,9 @@ export class AiInput extends LitElement {
   uiState: IUIStore = uiStore.getInitialState();
   chatLLMState: IChatLLMPanelStore = chatLLMStore.getInitialState();
   timelineState: ITimelineStore = useTimelineStore.getInitialState();
+
+  @property({ type: Boolean })
+  hideOpenButton = false;
 
   createRenderRoot() {
     // const parser = parseCommands(
@@ -43,11 +56,93 @@ export class AiInput extends LitElement {
     return this;
   }
 
+  async toggleRecording() {
+    if (this.isRecording) {
+      this.stopRecording();
+    } else {
+      await this.startRecording();
+    }
+    this.requestUpdate(); // Ensure LitElement re-renders
+  }
+
+  async startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.audioChunks = [];
+
+      const options = MediaRecorder.isTypeSupported("audio/wav")
+        ? { mimeType: "audio/wav" }
+        : {};
+
+      this.mediaRecorder = new MediaRecorder(stream, options);
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(this.audioChunks, {
+          type: this.mediaRecorder?.mimeType || "audio/webm",
+        });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          window.electronAPI.req.quartz
+            .transcribeAudio(base64data)
+            .then((transcription) => {
+              this.textContent = transcription || "";
+              this.isRecording = false;
+            })
+            .catch((err) => {
+              this.toast.show("Transcription failed", 2000);
+              this.isRecording = false;
+            })
+            .finally(() => {
+              stream.getTracks().forEach((track) => track.stop());
+              this.mediaRecorder = null;
+            });
+        };
+      };
+
+      this.mediaRecorder.start();
+      this.isRecording = true;
+    } catch (err: unknown) {
+      console.error("Error accessing microphone or starting recording:", err);
+
+      this.toast.show(
+        "Error accessing microphone: " +
+          (err instanceof Error ? err.message : String(err)),
+        3000,
+      );
+      this.isRecording = false; // Ensure state is correct on error
+      if (this.mediaRecorder) {
+        // Clean up if mediaRecorder was partially initialized
+        this.mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+        this.mediaRecorder = null;
+      }
+    }
+    this.requestUpdate();
+  }
+
+  stopRecording() {
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+      this.mediaRecorder.stop();
+      // onstop event will handle state changes and cleanup
+    } else {
+      // Fallback if stopRecording is called unexpectedly
+      this.isRecording = false;
+      this.requestUpdate();
+    }
+  }
+
   handleEnter(event) {
     if (event.key === "Enter" && !this.isEnter) {
       this.isEnter = true;
       event.preventDefault();
-      const command = event.target.value.toLowerCase();
+      const command = (event.target.value || "").toLowerCase();
       if (command == "") {
         this.toast.show("Please enter a command", 2000);
         this.isEnter = false;
@@ -63,15 +158,30 @@ export class AiInput extends LitElement {
           timeline: {
             cursor: timelineLatest.cursor / 1000,
             selected: elementTimelineCanvasObject.targetIdHistorical,
-            selectedData: timelineLatest.timeline[elementTimelineCanvasObject.targetIdHistorical]
+            selectedData:
+              timelineLatest.timeline[
+                elementTimelineCanvasObject.targetIdHistorical
+              ],
           },
           preview: {
             selected: canvasLatestObject.activeElementId,
-            selectedData: timelineLatest.timeline[canvasLatestObject.activeElementId],
+            selectedData:
+              timelineLatest.timeline[canvasLatestObject.activeElementId],
           },
         };
 
-        try{ 
+        this.panelOpen();
+
+        const chatLLMState = chatLLMStore.getState();
+        chatLLMState.addList({
+          from: "user",
+          text: command,
+          timestamp: new Date().toISOString(),
+        });
+        this.uiState = uiStore.getState();
+        this.uiState.setThinking();
+
+        try {
           if (window.electronAPI?.req?.quartz?.LLMResponse) {
             window.electronAPI.req.quartz
               .LLMResponse(command, context)
@@ -93,11 +203,17 @@ export class AiInput extends LitElement {
                 } else {
                   console.log("Unknown tool:", response.tool_name);
                 }
+                console.log("unset complete");
               })
               .catch((error) => {
                 console.error("Error getting the response:", error);
                 this.toast.show("Error getting the response", 2000);
               });
+            // sleep for 1 second to allow the response to be processed
+            setTimeout(() => {
+              this.uiState = uiStore.getState();
+              this.uiState.unsetThinking();
+            }, 200);
           } else {
             console.error("IPC method 'quartz.LLMResponse' is not available");
             this.toast.show("LLMResponse functionality not available", 2000);
@@ -105,6 +221,7 @@ export class AiInput extends LitElement {
           // Clear the input field after sending the command
           if (event.target) {
             (event.target as HTMLInputElement).value = "";
+            this.textContent = "";
           }
         } catch (error) {
           console.error("Error processing the command:", error);
@@ -210,6 +327,10 @@ export class AiInput extends LitElement {
     this.uiState.setChatSidebar(250);
   }
 
+  handleInput(event) {
+    this.textContent = event.target.value;
+  }
+
   render() {
     return html`
       <div class="input-group input-group-sm d-flex align-items-center gap-2">
@@ -217,16 +338,32 @@ export class AiInput extends LitElement {
           type="text"
           class="form-control bg-default text-light bg-darker"
           placeholder="Ask me anything..."
-          value=""
+          .value="${this.textContent}"
           id="chatLLMInput"
           @keydown="${this.handleEnter}"
+          @input="${this.handleInput}"
           @click=${this.handleClickInput}
         />
-        <span
-          @click=${this.panelOpen}
-          class="material-symbols-outlined timeline-bottom-question-icon icon-sm  text-secondary"
-          >right_panel_open</span
+        <button
+          class="btn btn-sm p-0"
+          @click="${this.toggleRecording}"
+          title="${this.isRecording ? "Stop recording" : "Start recording"}"
         >
+          <span
+            class="material-symbols-outlined icon-sm ${this.isRecording
+              ? "text-danger"
+              : "text-secondary"}"
+          >
+            ${this.isRecording ? "stop_circle" : "mic"}
+          </span>
+        </button>
+        ${!this.hideOpenButton
+          ? html`<span
+              @click=${this.panelOpen}
+              class="material-symbols-outlined timeline-bottom-question-icon icon-sm text-secondary"
+              >right_panel_open</span
+            >`
+          : ""}
       </div>
     `;
   }

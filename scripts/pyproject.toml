@@ -9,6 +9,7 @@ dependencies = [
     "argparse>=1.4.0",
     "diffusers>=0.33.1",
     "fastapi>=0.115.12",
+    "ffmpeg-python>=0.2.0",
     "huggingface-hub>=0.33.0",
     "numpy>=1.23.5,<2.0.0",
     "opencv-python>=4.5.0",

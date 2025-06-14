@@ -77,7 +77,6 @@ export class ElementTimelineRange extends LitElement {
     const x = parseFloat(e.target.value);
     const rx = (1 / (1 + Math.pow(Math.E, -x))) * 10;
     this.timelineState.setRange(rx);
-
     //this.timelineState.setRange(parseFloat(e.target.value));
   }
 }

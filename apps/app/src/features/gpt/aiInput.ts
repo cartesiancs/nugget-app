@@ -6,7 +6,8 @@ import { chatLLMStore, IChatLLMPanelStore } from "../../states/chatLLM";
 import { ToastController } from "../../controllers/toast";
 import { actionParsor, parseCommands } from "./resultParser";
 import { getLocationEnv } from "../../functions/getLocationEnv";
-import { addTextElement } from "../../../reponseHandlers/text_handlers";
+import { addTextElement,addShapeElement } from "../../../reponseHandlers";
+
 @customElement("ai-input")
 export class AiInput extends LitElement {
   isEnter: boolean;
@@ -38,81 +39,57 @@ export class AiInput extends LitElement {
   }
 
   handleEnter(event) {
-    if (event.key === "Enter") {
-      if (!this.isEnter) {
+    if (event.key === "Enter" && !this.isEnter) {
         this.isEnter = true;
         event.preventDefault();
-        if (event.target.value == "") {
+        const command = event.target.value.toLowerCase();
+        if (command == "") {
           this.toast.show("Please enter a command", 2000);
           this.isEnter = false;
           return;
         }
-
-        const command = event.target.value.toLowerCase();
-        if (command.includes("add text")) {
+        else{
           try {
-            // Parse the command to extract text and parameters
-            const textMatch = command.match(/"([^"]*)"/);
-            const text = textMatch ? textMatch[1] : "Default text from AI Input";
-            
-            // Parse additional parameters if present
-            const params = command.match(/(\w+)=([^:\s]+)/g) || [];
-            const parsedParams = params.reduce((acc, param) => {
-              const [key, value] = param.split('=');
-              return { ...acc, [key]: value };
-            }, {});
-
-            // Prepare IPC data with defaults and parsed parameters
-            const ipcData = {
-              text: text,
-              textcolor: parsedParams.color || "#ff0000",
-              fontsize: parseInt(parsedParams.fontsize) || 24,
-              locationX: parseInt(parsedParams.x) || 100,
-              locationY: parseInt(parsedParams.y) || 150,
-              width: parseInt(parsedParams.w) || 600,
-              height: parseInt(parsedParams.h) || 80,
-              startTime: parseInt(parsedParams.t) || 0,
-              duration: parseInt(parsedParams.d) || 3000,
-              optionsAlign: parsedParams.align || "center",
-              backgroundEnable: parsedParams.bg !== "false"
-            };
-
-            if (window.electronAPI?.req?.quartz?.addTextElement) {
-              window.electronAPI.req.quartz.addTextElement(ipcData)
+            if (window.electronAPI?.req?.quartz?.LLMResponse) {
+              window.electronAPI.req.quartz.LLMResponse(command)
                 .then((response) => {
-                  addTextElement(ipcData);
-                  if (response) {
-                    this.toast.show("Text element added successfully", 2000);
-                  } else {
-                    this.toast.show("Failed to add text element", 2000);
+                  console.log(response)
+                  if(response.type == "text"){
+                    addTextElement(response.data)
+                    console.log("Received response from LLM.")
+                  }
+                  else if(response.type == "shape"){
+                    addShapeElement(response.data)
+                  }
+                  else if(response.type == "video"){
+                    console.log("Video response from LLM.")
+                  }
+                  else{
+                    console.log("TODO Else")
                   }
                 })
                 .catch((error) => {
-                  console.error("Error adding text element:", error);
-                  this.toast.show("Error adding text element", 2000);
+                  console.error("Error getting the response:", error);
+                  this.toast.show("Error getting the response", 2000);
                 });
             } else {
-              console.error("IPC method 'quartz.addTextElement' is not available");
-              this.toast.show("Text element functionality not available", 2000);
+              console.error("IPC method 'quartz.LLMResponse' is not available");
+              this.toast.show("LLMResponse functionality not available", 2000);
             }
-
-            // Clear the input field after sending the command
+              // Clear the input field after sending the command
             if (event.target) {
               (event.target as HTMLInputElement).value = "";
             }
           } catch (error) {
-            console.error("Error processing text command:", error);
-            this.toast.show("Error processing text command", 2000);
+            console.error("Error processing the command:", error);
+            this.toast.show("Error processing the command", 2000);
           }
-        } else {
-          console.log("Command does not include 'add text', not sending IPC message");
-        }
+        } 
 
         setTimeout(() => {
           this.isEnter = false;
         }, 100);
       }
-    }
   }
 
   executeFunction(value) {

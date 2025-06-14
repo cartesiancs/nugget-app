@@ -1,4 +1,4 @@
-export function addTextElement(options: any): boolean {
+export function addTextElement(data: any): boolean {
     try {
         // Wait for DOM to be ready
         const elementControlComponent = document.querySelector("element-control") as any;
@@ -8,28 +8,28 @@ export function addTextElement(options: any): boolean {
             return false;
         }
         
-        // Validate required options
-        if (!options?.text) {
+        // Validate required data
+        if (!data?.text) {
             console.error("Text content is required");
             return false;
         }
 
-        // Add the text element with the provided options
+        // Add the text element with the provided data
         elementControlComponent.addText({
-            text: options.text,
-            textcolor: options?.textcolor || "#ff6b6b",
-            fontsize: options?.fontsize || 64,
-            locationX: options?.locationX || 100,
-            locationY: options?.locationY || 150,
-            width: options?.width || 600,
-            height: options?.height || 80,
-            startTime: options?.startTime || 0,
-            duration: options?.duration || 3000,
-            optionsAlign: options?.optionsAlign || "center",
-            backgroundEnable: typeof options?.backgroundEnable === 'boolean' ? options.backgroundEnable : true
+            text: data.text,
+            textcolor: data?.textcolor || "#ff6b6b",
+            fontsize: data?.fontsize || 64,
+            locationX: data?.locationX || 100,
+            locationY: data?.locationY || 150,
+            width: data?.width || 600,
+            height: data?.height || 80,
+            startTime: data?.startTime || 0,
+            duration: data?.duration || 3000,
+            dataAlign: data?.dataAlign || "center",
+            backgroundEnable: typeof data?.backgroundEnable === 'boolean' ? data.backgroundEnable : true
         });
       
-        console.log("Text element added successfully with options:", options);
+        console.log("Text element added successfully with data:", data);
         return true;
     } catch (error) {
         console.error("Error adding text element:", error);

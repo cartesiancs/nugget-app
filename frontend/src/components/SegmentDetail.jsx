@@ -12,8 +12,28 @@ function SegmentDetail({ segment }) {
     .filter(Boolean)
     .map(section => section.trim());
 
+  // Retrieve image URL either from segment or from localStorage fallback
+  let imageUrl = segment.imageUrl;
+  if (!imageUrl) {
+    try {
+      const stored = JSON.parse(localStorage.getItem('segmentImages') || '{}');
+      imageUrl = stored[segment.id];
+    } catch (e) {
+      console.debug('segmentImages localStorage parse error', e);
+    }
+  }
+
   return (
     <div className="p-6 space-y-8 overflow-y-auto">
+      {imageUrl && (
+        <div className="w-full flex justify-center">
+          <img
+            src={imageUrl}
+            alt={`Scene ${segment.id}`}
+            className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
+          />
+        </div>
+      )}
       <div className="space-y-4">
         <h3 className="text-xl font-bold text-blue-400">Visual Description</h3>
         {visualSections.map((section, index) => {

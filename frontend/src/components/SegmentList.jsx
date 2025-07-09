@@ -17,7 +17,17 @@ function SegmentList({ segments, onSegmentClick, selectedSegmentId }) {
             >
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-sm font-bold text-blue-400">Scene {segment.id}</h3>
+                  <div className="flex items-center gap-2">
+                    {/** Thumbnail **/}
+                    {(() => {
+                      const imgMap = JSON.parse(localStorage.getItem('segmentImages') || '{}');
+                      const thumbUrl = segment.imageUrl || imgMap[segment.id];
+                      return thumbUrl ? (
+                        <img src={thumbUrl} alt={`Scene ${segment.id}`} className="w-10 h-10 object-cover rounded" />
+                      ) : null;
+                    })()}
+                    <h3 className="text-sm font-bold text-blue-400">Scene {segment.id}</h3>
+                  </div>
                   <span className="text-xs text-gray-500">{segment.id}</span>
                 </div>
                 

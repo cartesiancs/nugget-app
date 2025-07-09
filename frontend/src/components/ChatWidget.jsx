@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { segmentationApi } from '../services/api';
+import { segmentationApi, imageApi } from '../services/api';
 import SegmentList from './SegmentList';
 import ComparisonView from './ComparisonView';
 import SegmentDetail from './SegmentDetail';
@@ -17,6 +17,10 @@ function ChatWidget() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim() || loading) return;
+
+    // Clear any cached data from previous runs
+    localStorage.removeItem('segments');
+    localStorage.removeItem('segmentImages');
 
     setLoading(true);
     setError(null);
@@ -58,15 +62,57 @@ function ChatWidget() {
     }
   };
 
-  const handlePreferResponse = (option) => {
+  const handlePreferResponse = async (option) => {
     const selectedResp = option === 1 ? responses?.response1 : responses?.response2;
     console.log('Selected response:', option, selectedResp); // Debug log
-    
-    if (selectedResp) {
-      setSelectedResponse(selectedResp);
-      setResponses(null);
-    } else {
+
+    if (!selectedResp) {
       setError('Selected response is not available');
+      return;
+    }
+
+    // Update UI states immediately
+    setSelectedResponse(selectedResp);
+    setResponses(null);
+    setSelectedSegment(null);
+
+    try {
+      // Save segments to localStorage for later use
+      localStorage.setItem('segments', JSON.stringify(selectedResp.segments));
+
+      // Trigger image generation for every segment in parallel
+      setLoading(true);
+
+      const imageResults = await Promise.all(
+        selectedResp.segments.map((segment) => imageApi.generateImage(segment.visual))
+      );
+
+      const imagesMap = {};
+      selectedResp.segments.forEach((segment, idx) => {
+        const res = imageResults[idx];
+        const url = res?.images?.[0]?.url;
+        if (url) {
+          imagesMap[segment.id] = url;
+        }
+      });
+
+      // Persist generated image URLs in localStorage
+      localStorage.setItem('segmentImages', JSON.stringify(imagesMap));
+
+      console.log('Image generation completed for all segments', imagesMap);
+
+      // Attach generated image URLs to the selected response for immediate UI use
+      const updatedSegments = selectedResp.segments.map((segment) => ({
+        ...segment,
+        imageUrl: imagesMap[segment.id],
+      }));
+
+      setSelectedResponse({ ...selectedResp, segments: updatedSegments });
+    } catch (err) {
+      console.error('Error during image generation:', err);
+      setError(err.message || 'Failed to generate images. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,6 +195,14 @@ function ChatWidget() {
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  // Prevent timeline keyboard shortcuts (e.g., spacebar play) from triggering
+                  e.stopPropagation();
+                  // Some libraries listen at the document level; also stop immediate propagation
+                  if (e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
+                    e.nativeEvent.stopImmediatePropagation();
+                  }
+                }}
                 placeholder="Enter your prompt for segmentation..."
                 className="flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500"
                 disabled={loading}

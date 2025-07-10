@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { segmentationApi, imageApi } from '../services/api';
+import { segmentationApi, imageApi, videoApi } from '../services/api';
 import SegmentList from './SegmentList';
 import ComparisonView from './ComparisonView';
 import SegmentDetail from './SegmentDetail';
@@ -18,7 +18,6 @@ function ChatWidget() {
     e.preventDefault();
     if (!prompt.trim() || loading) return;
 
-    // Clear any cached data from previous runs
     localStorage.removeItem('segments');
     localStorage.removeItem('segmentImages');
 
@@ -101,16 +100,49 @@ function ChatWidget() {
 
       console.log('Image generation completed for all segments', imagesMap);
 
-      // Attach generated image URLs to the selected response for immediate UI use
+      // Generate videos for all segments using their respective images
+      const videoResults = await Promise.all(
+        selectedResp.segments.map((segment) => {
+          const imageUrl = imagesMap[segment.id];
+          if (!imageUrl) return null;
+          return videoApi.generateVideo(
+            segment.visual,
+            imageUrl,
+            segment.narration
+          );
+        })
+      );
+
+      const videosMap = {};
+      selectedResp.segments.forEach((segment, idx) => {
+        const res = videoResults[idx];
+        const url = res?.video?.url;
+        if (url) {
+          videosMap[segment.id] = url;
+        }
+      });
+
+      // Persist video URLs in localStorage
+      localStorage.setItem('segmentVideos', JSON.stringify(videosMap));
+
+      console.log('Video generation completed for all segments', videosMap);
+
+      // Attach generated URLs to the selected response for immediate UI use
       const updatedSegments = selectedResp.segments.map((segment) => ({
         ...segment,
         imageUrl: imagesMap[segment.id],
+        videoUrl: videosMap[segment.id],
       }));
 
       setSelectedResponse({ ...selectedResp, segments: updatedSegments });
+      
+      // Select the first segment
+      if (updatedSegments.length > 0) {
+        setSelectedSegment(updatedSegments[0]);
+      }
     } catch (err) {
-      console.error('Error during image generation:', err);
-      setError(err.message || 'Failed to generate images. Please try again.');
+      console.error('Error during generation:', err);
+      setError(err.message || 'Failed to generate content. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -196,9 +228,7 @@ function ChatWidget() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={(e) => {
-                  // Prevent timeline keyboard shortcuts (e.g., spacebar play) from triggering
                   e.stopPropagation();
-                  // Some libraries listen at the document level; also stop immediate propagation
                   if (e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
                     e.nativeEvent.stopImmediatePropagation();
                   }

@@ -1,16 +1,7 @@
 const API_BASE_URL = "https://backend.usuals.ai";
 
-interface SegmentationResponse {
-  segments: Array<{
-    id: string;
-    visual: string;
-    narration: string;
-  }>;
-  style: string;
-}
-
 export const segmentationApi = {
-  getSegmentation: async (prompt: string): Promise<SegmentationResponse> => {
+  getSegmentation: async (prompt) => {
     try {
       const response = await fetch(`${API_BASE_URL}/segmentation`, {
         method: "POST",
@@ -39,20 +30,9 @@ export const segmentationApi = {
   },
 };
 
-// New types for image generation response
-interface ImageGenerationResponse {
-  images: Array<{
-    url: string;
-    content_type: string;
-    file_name: string;
-    file_size: number;
-  }>;
-  seed: number;
-}
-
 // Image generation API wrapper
 export const imageApi = {
-  generateImage: async (visual_prompt: string): Promise<ImageGenerationResponse> => {
+  generateImage: async (visual_prompt) => {
     try {
       const response = await fetch(`${API_BASE_URL}/image-gen`, {
         method: "POST",
@@ -71,6 +51,36 @@ export const imageApi = {
       return data;
     } catch (error) {
       console.error("Error in generateImage:", error);
+      throw error;
+    }
+  },
+};
+
+// Video generation API wrapper
+export const videoApi = {
+  generateVideo: async (animation_prompt, image_url, narration_prompt) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/video-gen`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          animation_prompt,
+          image_url,
+          narration_prompt,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate video: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Video generation response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in generateVideo:", error);
       throw error;
     }
   },

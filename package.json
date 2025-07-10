@@ -11,9 +11,9 @@
     "bundle": "npm run bundle:src",
     "bundle:src": "webpack --mode=development --watch",
     "bundle:prod:src": "webpack --mode=production",
-    "build:osx": "npm run bundle:prod:src && cross-env GH_TOKEN=<TOKEN> electron-builder build --mac -p always",
-    "build:win": "npm run bundle:prod:src && cross-env GH_TOKEN=<TOKEN> electron-builder build --win --x64 -p always",
-    "build": "npm run build:osx && npm run build:win"
+    "build:win": "npm run bundle:prod:src && electron-builder build --win --x64",
+    "build:mac": "npm run bundle:prod:src && electron-builder build --mac",
+    "build": "npm run build:win"
   },
   "repository": {
     "type": "git",
@@ -46,52 +46,59 @@
       ]
     },
     "mac": {
-      "publish": {
-        "provider": "github",
-        "owner": "cartesiancs",
-        "repo": "nugget-app"
-      },
       "target": [
         "dmg"
       ],
       "icon": "assets/icons/mac/icon.icns",
-      "asarUnpack": "**/*.node",
-      "notarize": true
+      "category": "public.app-category.video",
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "dmg": {
-      "internetEnabled": true
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
     "win": {
-      "certificateFile": "/Users/devent.pfx",
-      "certificatePassword": "<>",
-      "verifyUpdateCodeSignature": true,
-      "publish": {
-        "provider": "github",
-        "owner": "cartesiancs",
-        "repo": "nugget-app"
-      },
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "./assets/icons/win/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
     },
     "directories": {
-      "buildResources": "./assets/",
-      "output": "./dist/",
-      "app": "."
+      "buildResources": "assets",
+      "output": "dist"
     },
     "files": [
-      "!src/*",
-      "!electron/*"
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "cartesiancs"
-    }
+      "main/**/*",
+      "assets/**/*",
+      "frontend/dist/**/*",
+      "package.json"
+    ]
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

@@ -14,5 +14,5 @@ if (typeof window !== 'undefined' && (window as any).process === undefined) {
 // (lit-based Electron renderer, plain HTML, etc.).
 customElements.define(
   'react-chat-widget',
-  reactToWebComponent(ChatWidget, React, ReactDOM, { shadow: false })
+  reactToWebComponent(ChatWidget, React, ReactDOM, {})
 ); 

@@ -35,12 +35,15 @@ export const segmentationApi = {
 export const imageApi = {
   generateImage: async ({ visual_prompt, art_style, uuid }) => {
     try {
+      const payload = { visual_prompt, uuid };
+      payload.art_style = art_style && art_style.trim() ? art_style.trim() : "realistic";
+
       const response = await fetch(`${API_BASE_URL}/image-gen`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ visual_prompt, art_style, uuid }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -61,12 +64,15 @@ export const imageApi = {
 export const videoApi = {
   generateVideo: async ({ animation_prompt, art_style, imageS3Key, uuid }) => {
     try {
+      const payload = { animation_prompt, imageS3Key, uuid };
+      payload.art_style = art_style && art_style.trim() ? art_style.trim() : "realistic";
+
       const response = await fetch(`${API_BASE_URL}/video-gen`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ animation_prompt, art_style, imageS3Key, uuid }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

@@ -176,3 +176,24 @@ if (process.contextIsolated) {
     console.error(error);
   }
 }
+
+// Add extension bridge so frontend (ChatWidget) can use window.api.ext.timeline.addByUrl
+const extension = {
+  timeline: {
+    get: () => ipcRenderer.invoke("extension:timeline:get"),
+    add: (timelineElement) =>
+      ipcRenderer.invoke("extension:timeline:add", timelineElement),
+    addByUrl: (list) =>
+      ipcRenderer.invoke("extension:timeline:addByUrl", list),
+  },
+};
+
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld("api", {
+      ext: extension,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   segmentationApi,
   imageApi,
@@ -22,147 +22,34 @@ function ChatWidget() {
   const [selectedSegment, setSelectedSegment] = useState(null);
   const [error, setError] = useState(null);
   const [concepts, setConcepts] = useState(null);
-  const [selectedConcept, setSelectedConcept] = useState(null);
+  const [selectedConcept, setSelectedConcept] = useState(null); // eslint-disable-line no-unused-vars
   const [askImageConfirm, setAskImageConfirm] = useState(false);
   const [askVideoConfirm, setAskVideoConfirm] = useState(false);
   const [generationProgress, setGenerationProgress] = useState({});
+  const [videosReady, setVideosReady] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
+  const [storedVideosMap, setStoredVideosMap] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("segmentVideos") || "{}");
+    } catch (e) {
+      console.error(e);
+      return {};
+    }
+  });
 
-  //previous flow
+  useEffect(() => {
+    const handleStorage = () => {
+      try {
+        setStoredVideosMap(JSON.parse(localStorage.getItem("segmentVideos") || "{}"));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!prompt.trim() || loading) return;
-
-  //   localStorage.removeItem('segments');
-  //   localStorage.removeItem('segmentImages');
-
-  //   setLoading(true);
-  //   setError(null);
-  //   setResponses(null); // Reset responses
-
-  //   try {
-  //     console.log('Sending parallel requests...'); // Debug log
-
-  //     // Make two parallel requests
-  //     const results = await Promise.all([
-  //       segmentationApi.getSegmentation(prompt),
-  //       segmentationApi.getSegmentation(prompt)
-  //     ]);
-
-  //     console.log('Received both responses:', results); // Debug log
-
-  //     // Validate responses
-  //     if (!results[0] || !results[1]) {
-  //       throw new Error('One or both responses are empty');
-  //     }
-
-  //     setResponses({
-  //       response1: results[0],
-  //       response2: results[1]
-  //     });
-
-  //     console.log('Set responses state:', {
-  //       response1: results[0],
-  //       response2: results[1]
-  //     }); // Debug log
-
-  //     setSelectedResponse(null);
-  //     setSelectedSegment(null);
-  //   } catch (error) {
-  //     console.error('Error in handleSubmit:', error);
-  //     setError(error.message || 'Failed to generate segments. Please try again.');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const handlePreferResponse = async (option) => {
-  //   const selectedResp = option === 1 ? responses?.response1 : responses?.response2;
-  //   console.log('Selected response:', option, selectedResp); // Debug log
-
-  //   if (!selectedResp) {
-  //     setError('Selected response is not available');
-  //     return;
-  //   }
-
-  //   // Update UI states immediately
-  //   setSelectedResponse(selectedResp);
-  //   setResponses(null);
-  //   setSelectedSegment(null);
-
-  //   try {
-  //     // Save segments to localStorage for later use
-  //     localStorage.setItem('segments', JSON.stringify(selectedResp.segments));
-
-  //     // Trigger image generation for every segment in parallel
-  //     setLoading(true);
-
-  //     const imageResults = await Promise.all(
-  //       selectedResp.segments.map((segment) => imageApi.generateImage(segment.visual))
-  //     );
-
-  //     const imagesMap = {};
-  //     selectedResp.segments.forEach((segment, idx) => {
-  //       const res = imageResults[idx];
-  //       const url = res?.images?.[0]?.url;
-  //       if (url) {
-  //         imagesMap[segment.id] = url;
-  //       }
-  //     });
-
-  //     // Persist generated image URLs in localStorage
-  //     localStorage.setItem('segmentImages', JSON.stringify(imagesMap));
-
-  //     console.log('Image generation completed for all segments', imagesMap);
-
-  //     // Generate videos for all segments using their respective images
-  //     const videoResults = await Promise.all(
-  //       selectedResp.segments.map((segment) => {
-  //         const imageUrl = imagesMap[segment.id];
-  //         if (!imageUrl) return null;
-  //         return videoApi.generateVideo(
-  //           segment.visual,
-  //           imageUrl,
-  //           segment.narration
-  //         );
-  //       })
-  //     );
-
-  //     const videosMap = {};
-  //     selectedResp.segments.forEach((segment, idx) => {
-  //       const res = videoResults[idx];
-  //       const url = res?.video?.url;
-  //       if (url) {
-  //         videosMap[segment.id] = url;
-  //       }
-  //     });
-
-  //     // Persist video URLs in localStorage
-  //     localStorage.setItem('segmentVideos', JSON.stringify(videosMap));
-
-  //     console.log('Video generation completed for all segments', videosMap);
-
-  //     // Attach generated URLs to the selected response for immediate UI use
-  //     const updatedSegments = selectedResp.segments.map((segment) => ({
-  //       ...segment,
-  //       imageUrl: imagesMap[segment.id],
-  //       videoUrl: videosMap[segment.id],
-  //     }));
-
-  //     setSelectedResponse({ ...selectedResp, segments: updatedSegments });
-
-  //     // Select the first segment
-  //     if (updatedSegments.length > 0) {
-  //       setSelectedSegment(updatedSegments[0]);
-  //     }
-  //   } catch (err) {
-  //     console.error('Error during generation:', err);
-  //     setError(err.message || 'Failed to generate content. Please try again.');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  // -- Removed legacy “previous flow” block --
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -415,8 +302,13 @@ function ChatWidget() {
       // Update segments
       setSelectedResponse((prev) => ({ ...prev, segments: segmentsWithData }));
 
-      // Select first segment and add completion message
-      if (segmentsWithData.length > 0) {
+      // Update selected segment if it exists
+      if (selectedSegment) {
+        const updatedSelectedSegment = segmentsWithData.find(s => s.id === selectedSegment.id);
+        if (updatedSelectedSegment) {
+          setSelectedSegment(updatedSelectedSegment);
+        }
+      } else if (segmentsWithData.length > 0) {
         setSelectedSegment(segmentsWithData[0]);
       }
 
@@ -522,6 +414,18 @@ function ChatWidget() {
         segments: segmentsWithVideos,
       }));
 
+      // Update selected segment if it exists
+      if (selectedSegment) {
+        const updatedSelectedSegment = segmentsWithVideos.find(s => s.id === selectedSegment.id);
+        if (updatedSelectedSegment) {
+          setSelectedSegment(updatedSelectedSegment);
+        }
+      }
+
+      // Determine if all segments now have videos
+      const allReady = segmentsWithVideos.every((s) => s.videoUrl);
+      setVideosReady(allReady);
+
       // Add completion message without showing all videos
       setChatMessages((prev) => [
         ...prev,
@@ -537,6 +441,64 @@ function ChatWidget() {
       setAskVideoConfirm(false);
     }
   };
+
+  /* ------------------------------------------------------------------ */
+  /*  SEND VIDEOS TO TIMELINE                                           */
+  /* ------------------------------------------------------------------ */
+  const sendVideosToTimeline = async () => {
+    if (!canSendTimeline) return;
+
+    let payload = [];
+    if (selectedResponse) {
+      payload = selectedResponse.segments
+        .filter((s) => s.videoUrl)
+        .sort((a, b) => a.id - b.id)
+        .map((s) => ({ id: s.id, url: s.videoUrl }));
+    }
+
+    if (payload.length === 0) {
+      const localVideos = JSON.parse(localStorage.getItem("segmentVideos")||"{}");
+      payload = Object.entries(localVideos).map(([id,url])=>({id:Number(id),url})).sort((a,b)=>a.id-b.id);
+    }
+
+    if (payload.length === 0) {
+      setChatMessages((p) => [
+        ...p,
+        { type: "assistant", content: "❌ No videos to add." },
+      ]);
+      return;
+    }
+
+    let success = false;
+    try {
+      const addByUrlFn = window?.api?.ext?.timeline?.addByUrl;
+      if (addByUrlFn) {
+        await addByUrlFn(payload);
+        success = true;
+      } else if (window.require) {
+        // Fallback for Vite-in-Electron renderer where contextBridge is absent but nodeIntegration is on
+        const { ipcRenderer } = window.require("electron");
+        await ipcRenderer.invoke("extension:timeline:addByUrl", payload);
+        success = true;
+      }
+    } catch (err) {
+      console.error("timeline add failed", err);
+    }
+
+    if (success) {
+      setChatMessages((prev) => [
+        ...prev,
+        { type: "assistant", content: "✅ Videos added to timeline!" },
+      ]);
+    } else {
+      setChatMessages((prev) => [
+        ...prev,
+        { type: "assistant", content: "❌ Failed to add videos to timeline" },
+      ]);
+    }
+  };
+
+  const canSendTimeline = videosReady || Object.keys(storedVideosMap).length > 0;
 
   return (
     <div className="z-10">
@@ -606,31 +568,24 @@ function ChatWidget() {
               {!askImageConfirm &&
                 !askVideoConfirm &&
                 (loading ? (
-                  <LoadingSpinner />
-                ) : error ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-red-400 text-center p-4">
-                      <p>{error}</p>
-                      <button
-                        onClick={() => setError(null)}
-                        className="mt-2 text-sm text-blue-400 hover:text-blue-300"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
+                <LoadingSpinner />
+              ) : error ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-red-400 text-center p-4">
+                    <p>{error}</p>
+                    <button 
+                      onClick={() => setError(null)}
+                      className="mt-2 text-sm text-blue-400 hover:text-blue-300"
+                    >
+                      Dismiss
+                    </button>
                   </div>
-                ) : selectedResponse && chatMessages.length === 0 ? (
-                  <div className="p-4 space-y-4">
-                    <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-blue-400 mb-2">
-                        Ready to Generate Content
-                      </h3>
-                      <p className="text-gray-300 mb-4">
-                        I've created {selectedResponse.segments.length} segments
-                        for your content. Would you like me to generate images
-                        and videos?
-                      </p>
-                      <div className="flex gap-3">
+                </div>
+                ) : selectedResponse ? (
+                  <div className="flex flex-col h-full">
+                    {/* Action Bar */}
+                    {!loading && (
+                      <div className="p-4 border-b border-gray-800 bg-gray-900 flex gap-3">
                         <button
                           onClick={triggerImageGeneration}
                           className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium"
@@ -644,136 +599,24 @@ function ChatWidget() {
                               ? "bg-green-600 hover:bg-green-500 text-white"
                               : "bg-gray-600 text-gray-400 cursor-not-allowed"
                           }`}
-                          disabled={
-                            !selectedResponse.segments.some((s) => s.imageUrl)
-                          }
+                          disabled={!selectedResponse.segments.some((s) => s.imageUrl)}
                         >
-                          Generate Videos{" "}
-                          {!selectedResponse.segments.some((s) => s.imageUrl) &&
-                            "(Images Required)"}
+                          Generate Videos
                         </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : chatMessages.length > 0 ? (
-                  <div className="p-4 space-y-4">
-                    {chatMessages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${
-                          message.type === "user"
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-lg p-3 ${
-                            message.type === "user"
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-700 text-gray-200"
+                        <button
+                          onClick={sendVideosToTimeline}
+                          disabled={!canSendTimeline}
+                          className={`px-3 py-2 rounded-md font-medium ${
+                            canSendTimeline
+                              ? "bg-purple-600 hover:bg-purple-500 text-white"
+                              : "bg-gray-700 text-gray-400 cursor-not-allowed"
                           }`}
                         >
-                          <div>{message.content}</div>
-                          {message.images && message.images.length > 0 && (
-                            <div className="mt-3 space-y-2">
-                              {message.images.map((imageUrl, imgIndex) => (
-                                <img 
-                                  key={imgIndex}
-                                  src={imageUrl} 
-                                  alt={`Generated image ${imgIndex + 1}`}
-                                  className="rounded-lg max-w-full h-auto max-h-48 object-cover"
-                                />
-                              ))}
-                            </div>
-                          )}
-                          {message.videos && message.videos.length > 0 && (
-                            <div className="mt-3 space-y-2">
-                              {message.videos.map((videoUrl, vidIndex) => (
-                                <video 
-                                  key={vidIndex}
-                                  src={videoUrl} 
-                                  controls
-                                  className="rounded-lg max-w-full h-auto max-h-48"
-                                >
-                                  Your browser does not support the video tag.
-                                </video>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {selectedResponse && !loading && (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                        <h3 className="text-lg font-semibold text-gray-300 mb-2">
-                          Actions
-                        </h3>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={triggerImageGeneration}
-                            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium"
-                          >
-                            Generate Images
-                          </button>
-                          <button
-                            onClick={triggerVideoGeneration}
-                            className={`px-4 py-2 rounded-md font-medium ${
-                              selectedResponse.segments.some((s) => s.imageUrl)
-                                ? "bg-green-600 hover:bg-green-500 text-white"
-                                : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                            }`}
-                            disabled={
-                              !selectedResponse.segments.some((s) => s.imageUrl)
-                            }
-                          >
-                            Generate Videos{" "}
-                            {!selectedResponse.segments.some(
-                              (s) => s.imageUrl
-                            ) && "(Images Required)"}
-                          </button>
-                        </div>
+                          ➕ Add Videos to Timeline
+                        </button>
                       </div>
                     )}
-                  </div>
-                ) : concepts ? (
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold mb-4 text-white">
-                      Choose a Concept
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {concepts.map((concept, index) => (
-                        <div
-                          key={index}
-                          onClick={() => handleConceptSelect(concept)}
-                          className="bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-700 hover:border-gray-600 transition-colors"
-                        >
-                          <h4 className="text-white font-medium text-lg mb-2">
-                            {concept.title}
-                          </h4>
-                          <p className="text-gray-300 text-sm mb-3">
-                            {concept.concept}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded">
-                              Tone: {concept.tone}
-                            </span>
-                            <span className="px-2 py-1 bg-green-600 text-green-100 text-xs rounded">
-                              Goal: {concept.goal}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : responses ? (
-                  <ComparisonView
-                    response1={responses.response1}
-                    response2={responses.response2}
-                    onPreferResponse={handlePreferResponse}
-                  />
-                ) : selectedResponse ? (
-                  <div className="flex flex-col h-full">
+
                     {/* Progress Display */}
                     {Object.keys(generationProgress).length > 0 && (
                       <div className="p-4 border-b border-gray-800 bg-gray-900">
@@ -832,11 +675,83 @@ function ChatWidget() {
                       <SegmentDetail segment={selectedSegment} />
                     </div>
                   </div>
-                ) : (
-                  <div className="p-4 text-gray-400">
-                    Enter a prompt to start the pipeline (web-info → concept
-                    selection → segmentation).
+                ) : chatMessages.length > 0 ? (
+                  <div className="p-4 space-y-4">
+                    {chatMessages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${
+                          message.type === "user"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-lg p-3 ${
+                            message.type === "user"
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-700 text-gray-200"
+                          }`}
+                        >
+                          <div>{message.content}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+              ) : concepts ? (
+                <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-4 text-white">
+                      Choose a Concept
+                    </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {concepts.map((concept, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleConceptSelect(concept)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-700 hover:border-gray-600 transition-colors"
+                      >
+                          <h4 className="text-white font-medium text-lg mb-2">
+                            {concept.title}
+                          </h4>
+                          <p className="text-gray-300 text-sm mb-3">
+                            {concept.concept}
+                          </p>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded">
+                            Tone: {concept.tone}
+                          </span>
+                          <span className="px-2 py-1 bg-green-600 text-green-100 text-xs rounded">
+                            Goal: {concept.goal}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : responses ? (
+                <ComparisonView
+                  response1={responses.response1}
+                  response2={responses.response2}
+                  onPreferResponse={handlePreferResponse}
+                />
+                ) : (
+                  <div className="p-4 space-y-4">
+                    <p className="text-gray-400">
+                      Enter a prompt to start the pipeline (web-info → concept
+                      selection → segmentation).
+                    </p>
+                    <button
+                      onClick={sendVideosToTimeline}
+                      disabled={!canSendTimeline}
+                      className={`px-3 py-2 rounded-md font-medium ${
+                        canSendTimeline
+                          ? "bg-purple-600 hover:bg-purple-500 text-white"
+                          : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      ➕ Add Videos to Timeline
+                    </button>
+                </div>
                 ))}
             </div>
 
@@ -867,7 +782,6 @@ function ChatWidget() {
                 className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
-                disabled={loading}
               >
                 {loading ? "Processing..." : "Start Pipeline"}
               </button>
@@ -879,4 +793,4 @@ function ChatWidget() {
   );
 }
 
-export default ChatWidget;
+export default ChatWidget; 

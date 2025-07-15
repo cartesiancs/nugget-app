@@ -9,8 +9,8 @@ function SegmentDetail({ segment }) {
   const [segmentImageUrl, setSegmentImageUrl] = useState(null);
   const [segmentVideoUrl, setSegmentVideoUrl] = useState(null);
 
-  // Initialize chat messages when segment changes
-  useEffect(() => {
+  // Function to load segment data
+  const loadSegmentData = () => {
     if (segment) {
       // Load segment-specific data from localStorage
       const storedImages = JSON.parse(localStorage.getItem('segmentImages') || '{}');
@@ -59,10 +59,25 @@ function SegmentDetail({ segment }) {
 
       setChatMessages(messages);
     }
+  };
+
+  // Initialize chat messages when segment changes
+  useEffect(() => {
+    loadSegmentData();
+  }, [segment]);
+
+  // Listen for localStorage changes to update segment data
+  useEffect(() => {
+    const handleStorageChange = () => {
+      loadSegmentData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [segment]);
 
   const handleRetryVideo = async () => {
-    if (!segment?.imageUrl || !segment?.narration) {
+    if (!segmentImageUrl || !segment?.narration) {
       setError('Required data missing for video generation');
       return;
     }
@@ -91,8 +106,8 @@ function SegmentDetail({ segment }) {
         storedVideos[segment.id] = videoUrl;
         localStorage.setItem('segmentVideos', JSON.stringify(storedVideos));
 
-        // Update the segment with the new video URL
-        segment.videoUrl = videoUrl;
+        // Update state variables
+        setSegmentVideoUrl(videoUrl);
 
         // Add success message with video
         setChatMessages(prev => [...prev, {

@@ -85,3 +85,55 @@ export const videoApi = {
     }
   },
 };
+
+// Web-info API wrapper
+export const webInfoApi = {
+  processWebInfo: async (prompt) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/get-web-info`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to process web-info request: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Web-info response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in processWebInfo:", error);
+      throw error;
+    }
+  },
+};
+
+// Concept-writer API wrapper
+export const conceptWriterApi = {
+  generateConcepts: async (prompt, web_info) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/concept-writer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt, web_info }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate concepts: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Concept-writer response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in generateConcepts:", error);
+      throw error;
+    }
+  },
+};

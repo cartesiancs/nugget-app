@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { segmentationApi, imageApi, videoApi } from '../services/api';
+import { segmentationApi, imageApi, videoApi, webInfoApi, conceptWriterApi } from '../services/api';
 import SegmentList from './SegmentList';
 import ComparisonView from './ComparisonView';
 import SegmentDetail from './SegmentDetail';
@@ -13,6 +13,145 @@ function ChatWidget() {
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [selectedSegment, setSelectedSegment] = useState(null);
   const [error, setError] = useState(null);
+  const [concepts, setConcepts] = useState(null);
+  const [selectedConcept, setSelectedConcept] = useState(null);
+
+
+  //previous flow 
+  
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!prompt.trim() || loading) return;
+
+  //   localStorage.removeItem('segments');
+  //   localStorage.removeItem('segmentImages');
+
+  //   setLoading(true);
+  //   setError(null);
+  //   setResponses(null); // Reset responses
+    
+  //   try {
+  //     console.log('Sending parallel requests...'); // Debug log
+      
+  //     // Make two parallel requests
+  //     const results = await Promise.all([
+  //       segmentationApi.getSegmentation(prompt),
+  //       segmentationApi.getSegmentation(prompt)
+  //     ]);
+      
+  //     console.log('Received both responses:', results); // Debug log
+      
+  //     // Validate responses
+  //     if (!results[0] || !results[1]) {
+  //       throw new Error('One or both responses are empty');
+  //     }
+      
+  //     setResponses({
+  //       response1: results[0],
+  //       response2: results[1]
+  //     });
+      
+  //     console.log('Set responses state:', {
+  //       response1: results[0],
+  //       response2: results[1]
+  //     }); // Debug log
+      
+  //     setSelectedResponse(null);
+  //     setSelectedSegment(null);
+  //   } catch (error) {
+  //     console.error('Error in handleSubmit:', error);
+  //     setError(error.message || 'Failed to generate segments. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const handlePreferResponse = async (option) => {
+  //   const selectedResp = option === 1 ? responses?.response1 : responses?.response2;
+  //   console.log('Selected response:', option, selectedResp); // Debug log
+
+  //   if (!selectedResp) {
+  //     setError('Selected response is not available');
+  //     return;
+  //   }
+
+  //   // Update UI states immediately
+  //   setSelectedResponse(selectedResp);
+  //   setResponses(null);
+  //   setSelectedSegment(null);
+
+  //   try {
+  //     // Save segments to localStorage for later use
+  //     localStorage.setItem('segments', JSON.stringify(selectedResp.segments));
+
+  //     // Trigger image generation for every segment in parallel
+  //     setLoading(true);
+
+  //     const imageResults = await Promise.all(
+  //       selectedResp.segments.map((segment) => imageApi.generateImage(segment.visual))
+  //     );
+
+  //     const imagesMap = {};
+  //     selectedResp.segments.forEach((segment, idx) => {
+  //       const res = imageResults[idx];
+  //       const url = res?.images?.[0]?.url;
+  //       if (url) {
+  //         imagesMap[segment.id] = url;
+  //       }
+  //     });
+
+  //     // Persist generated image URLs in localStorage
+  //     localStorage.setItem('segmentImages', JSON.stringify(imagesMap));
+
+  //     console.log('Image generation completed for all segments', imagesMap);
+
+  //     // Generate videos for all segments using their respective images
+  //     const videoResults = await Promise.all(
+  //       selectedResp.segments.map((segment) => {
+  //         const imageUrl = imagesMap[segment.id];
+  //         if (!imageUrl) return null;
+  //         return videoApi.generateVideo(
+  //           segment.visual,
+  //           imageUrl,
+  //           segment.narration
+  //         );
+  //       })
+  //     );
+
+  //     const videosMap = {};
+  //     selectedResp.segments.forEach((segment, idx) => {
+  //       const res = videoResults[idx];
+  //       const url = res?.video?.url;
+  //       if (url) {
+  //         videosMap[segment.id] = url;
+  //       }
+  //     });
+
+  //     // Persist video URLs in localStorage
+  //     localStorage.setItem('segmentVideos', JSON.stringify(videosMap));
+
+  //     console.log('Video generation completed for all segments', videosMap);
+
+  //     // Attach generated URLs to the selected response for immediate UI use
+  //     const updatedSegments = selectedResp.segments.map((segment) => ({
+  //       ...segment,
+  //       imageUrl: imagesMap[segment.id],
+  //       videoUrl: videosMap[segment.id],
+  //     }));
+
+  //     setSelectedResponse({ ...selectedResp, segments: updatedSegments });
+      
+  //     // Select the first segment
+  //     if (updatedSegments.length > 0) {
+  //       setSelectedSegment(updatedSegments[0]);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error during generation:', err);
+  //     setError(err.message || 'Failed to generate content. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,42 +162,40 @@ function ChatWidget() {
 
     setLoading(true);
     setError(null);
-    setResponses(null); // Reset responses
+    setResponses(null);
+    setConcepts(null);
+    setSelectedConcept(null);
     
     try {
-      console.log('Sending parallel requests...'); // Debug log
+      console.log('Starting pipeline with web-info...');
       
-      // Make two parallel requests
-      const results = await Promise.all([
-        segmentationApi.getSegmentation(prompt),
-        segmentationApi.getSegmentation(prompt)
-      ]);
+      const webInfoResult = await webInfoApi.processWebInfo(prompt);
       
-      console.log('Received both responses:', results); // Debug log
+      console.log('Web-info response:', webInfoResult);
       
-      // Validate responses
-      if (!results[0] || !results[1]) {
-        throw new Error('One or both responses are empty');
-      }
+      console.log('Calling concept-writer...');
       
-      setResponses({
-        response1: results[0],
-        response2: results[1]
-      });
+      const webInfoContent = webInfoResult.choices[0].message.content;
+      const conceptsResult = await conceptWriterApi.generateConcepts(prompt, webInfoContent);
       
-      console.log('Set responses state:', {
-        response1: results[0],
-        response2: results[1]
-      }); // Debug log
+      console.log('Concept-writer response:', conceptsResult);
       
-      setSelectedResponse(null);
-      setSelectedSegment(null);
+      setConcepts(conceptsResult.concepts);
+      
     } catch (error) {
       console.error('Error in handleSubmit:', error);
-      setError(error.message || 'Failed to generate segments. Please try again.');
+      setError(error.message || 'Failed to process request. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConceptSelect = (concept) => {
+    console.log('Selected concept:', concept);
+    setSelectedConcept(concept);
+    setConcepts(null);
+    // TODO: Next step will be segmentation with the selected concept
+    setError(`Concept selected: "${concept.title}". Next: segmentation → image/video generation`);
   };
 
   const handlePreferResponse = async (option) => {
@@ -203,6 +340,30 @@ function ChatWidget() {
                     </button>
                   </div>
                 </div>
+              ) : concepts ? (
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold mb-4 text-white">Choose a Concept</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {concepts.map((concept, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleConceptSelect(concept)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-700 hover:border-gray-600 transition-colors"
+                      >
+                        <h4 className="text-white font-medium text-lg mb-2">{concept.title}</h4>
+                        <p className="text-gray-300 text-sm mb-3">{concept.concept}</p>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded">
+                            Tone: {concept.tone}
+                          </span>
+                          <span className="px-2 py-1 bg-green-600 text-green-100 text-xs rounded">
+                            Goal: {concept.goal}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ) : responses ? (
                 <ComparisonView
                   response1={responses.response1}
@@ -213,7 +374,7 @@ function ChatWidget() {
                 <SegmentDetail segment={selectedSegment} />
               ) : (
                 <div className="p-4 text-gray-400">
-                  Enter a prompt to generate segmentation options.
+                  Enter a prompt to start the pipeline (web-info → concept selection → segmentation).
                 </div>
               )}
             </div>
@@ -233,7 +394,7 @@ function ChatWidget() {
                     e.nativeEvent.stopImmediatePropagation();
                   }
                 }}
-                placeholder="Enter your prompt for segmentation..."
+                placeholder="Enter your prompt to start the pipeline..."
                 className="flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500"
                 disabled={loading}
               />
@@ -242,7 +403,7 @@ function ChatWidget() {
                 className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={loading}
               >
-                {loading ? 'Generating...' : 'Generate'}
+                {loading ? 'Processing...' : 'Start Pipeline'}
               </button>
             </form>
           </div>

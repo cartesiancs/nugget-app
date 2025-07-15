@@ -1,5 +1,3 @@
-import React from 'react';
-
 function SegmentList({ segments, onSegmentClick, selectedSegmentId }) {
   return (
     <div className="h-full flex flex-col">
@@ -22,6 +20,8 @@ function SegmentList({ segments, onSegmentClick, selectedSegmentId }) {
                     {(() => {
                       const imgMap = JSON.parse(localStorage.getItem('segmentImages') || '{}');
                       const thumbUrl = segment.imageUrl || imgMap[segment.id];
+                      
+                      // thumbUrl is now a blob URL from S3 download
                       return thumbUrl ? (
                         <img src={thumbUrl} alt={`Scene ${segment.id}`} className="w-10 h-10 object-cover rounded" />
                       ) : null;

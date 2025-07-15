@@ -4,6 +4,10 @@ import { renderMain } from "./lib/render.js";
 import { window } from "./lib/window.js";
 import { updater } from "./lib/autoUpdater.js";
 
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 import config from "./config.json";
 
 import ffmpeg from "fluent-ffmpeg";

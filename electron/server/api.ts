@@ -12,12 +12,24 @@ router.get("/test", async function (req: Request, res: Response) {
   });
 });
 
-router.get("/directory", httpFilesystem.getDirectory);
-router.get("/file", httpFilesystem.getFile);
-router.get("/file/metadata", httpFFmpeg.getMetadata);
+router.get("/directory", (req: Request, res: Response) => {
+  httpFilesystem.getDirectory(req, res);
+});
+router.get("/file", (req: Request, res: Response) => {
+  httpFilesystem.getFile(req, res);
+});
+router.get("/file/metadata", (req: Request, res: Response) => {
+  httpFFmpeg.getMetadata(req, res);
+});
 
-router.post("/render", httpRender.start);
+router.post("/render", (req: Request, res: Response) => {
+  httpRender.start(req, res);
+});
 
-router.get("/path/temp", httpApp.getTempPath);
+router.get("/path/temp", (req: Request, res: Response) => {
+  httpApp.getTempPath(req, res);
+});
+
+
 
 export default router;

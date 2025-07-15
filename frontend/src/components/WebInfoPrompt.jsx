@@ -1,12 +1,11 @@
 import { useState } from 'react';
+import { webInfoApi } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 
 function WebInfoPrompt({ onWebInfoResponse, onError }) {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const API_BASE_URL = "https://backend.usuals.ai";
 
   const handleWebInfoRequest = async (userPrompt) => {
     if (!userPrompt.trim()) {
@@ -20,19 +19,7 @@ function WebInfoPrompt({ onWebInfoResponse, onError }) {
     try {
       console.log('Sending web-info request...'); // Debug log
       
-      const response = await fetch(`${API_BASE_URL}/web-info`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: userPrompt }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to process web-info request: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await webInfoApi.processWebInfo(userPrompt);
       console.log("Web-info response:", data);
 
       // Call the callback function to handle the response
@@ -114,32 +101,6 @@ function WebInfoPrompt({ onWebInfoResponse, onError }) {
   );
 }
 
-// Export both the component and the API function for reuse
-export const webInfoApi = {
-  processWebInfo: async (prompt) => {
-    const API_BASE_URL = "https://backend.usuals.ai";
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/web-info`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
 
-      if (!response.ok) {
-        throw new Error(`Failed to process web-info request: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Web-info response:", data);
-      return data;
-    } catch (error) {
-      console.error("Error in web-info request:", error);
-      throw error;
-    }
-  },
-};
 
 export default WebInfoPrompt; 

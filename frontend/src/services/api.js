@@ -1,14 +1,15 @@
+// CloudFront URL wrapper for images and videos
 const API_BASE_URL = "https://backend.usuals.ai";
 
 export const segmentationApi = {
-  getSegmentation: async (prompt) => {
+  getSegmentation: async ({ prompt, concept = "", negative_prompt = "" }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/segmentation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, concept, negative_prompt }),
       });
 
       if (!response.ok) {
@@ -32,14 +33,14 @@ export const segmentationApi = {
 
 // Image generation API wrapper
 export const imageApi = {
-  generateImage: async (visual_prompt) => {
+  generateImage: async ({ visual_prompt, art_style, uuid }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/image-gen`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ visual_prompt }),
+        body: JSON.stringify({ visual_prompt, art_style, uuid }),
       });
 
       if (!response.ok) {
@@ -58,18 +59,14 @@ export const imageApi = {
 
 // Video generation API wrapper
 export const videoApi = {
-  generateVideo: async (animation_prompt, image_url, narration_prompt) => {
+  generateVideo: async ({ animation_prompt, art_style, imageS3Key, uuid }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/video-gen`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          animation_prompt,
-          image_url,
-          narration_prompt,
-        }),
+        body: JSON.stringify({ animation_prompt, art_style, imageS3Key, uuid }),
       });
 
       if (!response.ok) {
@@ -133,6 +130,61 @@ export const conceptWriterApi = {
       return data;
     } catch (error) {
       console.error("Error in generateConcepts:", error);
+      throw error;
+    }
+  },
+};
+
+export const voiceApi = {
+  generateVoice: async (narration_prompt) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/voiceover`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ narration_prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate voice: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Voiceover response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in generateVoice:", error);
+      throw error;
+    }
+  },
+};
+
+
+
+export const s3Api = {
+  downloadImage: async (s3Key) => {
+    try {
+      // Construct CloudFront URL directly from S3 key
+      const cloudfrontUrl = `https://ds0fghatf06yb.cloudfront.net/${s3Key}`;
+      
+      console.log("Image CloudFront URL:", cloudfrontUrl);
+      return cloudfrontUrl;
+    } catch (error) {
+      console.error("Error in downloadImage:", error);
+      throw error;
+    }
+  },
+
+  downloadVideo: async (s3Key) => {
+    try {
+      // Construct CloudFront URL directly from S3 key
+      const cloudfrontUrl = `https://ds0fghatf06yb.cloudfront.net/${s3Key}`;
+      
+      console.log("Video CloudFront URL:", cloudfrontUrl);
+      return cloudfrontUrl;
+    } catch (error) {
+      console.error("Error in downloadVideo:", error);
       throw error;
     }
   },

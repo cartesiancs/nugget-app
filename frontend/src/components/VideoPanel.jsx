@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { videoApi } from '../services/api';
+import { videoApi, s3Api } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 
 function VideoPanel({ segment, onClose }) {
@@ -23,16 +23,19 @@ function VideoPanel({ segment, onClose }) {
     setError(null);
 
     try {
-      const result = await videoApi.generateVideo(
-        currentSegment.visual, 
-        currentSegment.imageUrl,
-        currentSegment.narration
-      );
+      const result = await videoApi.generateVideo({
+        animation_prompt: currentSegment.animation || currentSegment.visual,
+        art_style: currentSegment.artStyle || '',
+        imageS3Key: currentSegment.imageUrl,
+        uuid: currentSegment.id
+      });
       
-      if (result.video?.url) {
+      if (result.s3Keys && result.s3Keys.length > 0) {
+        // Download video from S3 and create blob URL
+        const videoUrl = await s3Api.downloadVideo(result.s3Keys[0]);
         setVideos(prev => ({
           ...prev,
-          [currentSegment.id]: result.video.url
+          [currentSegment.id]: videoUrl
         }));
       } else {
         throw new Error('No video URL in response');

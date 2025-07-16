@@ -9,6 +9,7 @@ import {
 } from "../../@types/timeline";
 import { VideoFilterPipeline } from "../renderer/filter/videoPipeline";
 import { isElementVisibleAtTime } from "../element/time";
+import { useTimelineStore } from "../../states/timelineStore";
 
 type GifMetadata = {
   imageData: ImageData;
@@ -147,6 +148,15 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
       console.log("[Asset] loadElementVideo START", elementId, videoElement.localpath);
 
       (async () => {
+        // 1. If timeline already contains a blob URL (manual import or previously
+        //    loaded), use it immediately – avoids one extra network call and
+        //    guarantees same-origin for canvas.
+        if (videoElement.blob) {
+          console.log("[Asset] use cached blob", videoElement.blob);
+          video.src = videoElement.blob;
+          return;
+        }
+
         const safeUri = getPath(videoElement.localpath);
         try {
           console.log("[Asset] fetch", safeUri);
@@ -154,9 +164,82 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
           const blobURL = URL.createObjectURL(await response.blob());
           console.log("[Asset] blobURL", blobURL);
           video.src = blobURL;
+
+          // Update timeline element with blob so templateVideo uses it
+          const timelineStore = useTimelineStore.getState();
+          const elementInTimeline = timelineStore.timeline[elementId];
+          if (elementInTimeline && (elementInTimeline as any).blob !== blobURL) {
+            timelineStore.patchTimeline({
+              ...timelineStore.timeline,
+              [elementId]: {
+                ...elementInTimeline,
+                blob: blobURL,
+              },
+            });
+          }
         } catch (err) {
-          console.error("[Asset] fetch FAILED", err);
-          video.src = safeUri; // fallback – may fail for canvas draw but at least plays
+          // If we are running inside Electron the fetch of a file:/// URL is
+          // blocked by Chromium for security reasons.  Instead of falling back
+          // to the raw file URI (which taints the canvas and prevents
+          // drawImage), read the file through the preload filesystem bridge
+          // and convert it to a Blob URL so it is same-origin.
+
+          console.warn("[Asset] fetch FAILED – attempting IPC fallback", safeUri);
+
+          try {
+            // `videoElement.localpath` should be an absolute OS path here.
+            const buffer = (await (window as any).electronAPI?.req?.filesystem?.readFile(
+              videoElement.localpath,
+            )) as ArrayBuffer | Uint8Array | null;
+
+            if (buffer) {
+              // Heuristically determine MIME type from file extension so the
+              // browser can pick the right decoder – without this some codecs
+              // refuse to initialise and no frame is produced for drawImage.
+              const ext = (videoElement.localpath.split(".").pop() || "").toLowerCase();
+              let mimeType = "video/*";
+              if (ext === "webm") mimeType = "video/webm";
+              else if (ext === "mp4" || ext === "m4v") mimeType = "video/mp4";
+              else if (ext === "mov") mimeType = "video/quicktime";
+
+              const blobURL = URL.createObjectURL(
+                new Blob([buffer as BlobPart], { type: mimeType }),
+              );
+              console.log("[Asset] IPC blobURL", blobURL);
+              video.src = blobURL;
+
+              // Blob URLs are same-origin; remove any crossOrigin hint that
+              // could prevent the media element from decoding.
+              try {
+                video.removeAttribute("crossorigin");
+              } catch {}
+
+              // Update timeline element with blob so templateVideo uses it
+              const timelineStore = useTimelineStore.getState();
+              const elementInTimeline = timelineStore.timeline[elementId];
+              if (
+                elementInTimeline &&
+                (elementInTimeline as any).blob !== blobURL
+              ) {
+                timelineStore.patchTimeline({
+                  ...timelineStore.timeline,
+                  [elementId]: {
+                    ...elementInTimeline,
+                    blob: blobURL,
+                  },
+                });
+              }
+            } else {
+              console.error(
+                "[Asset] IPC filesystem.readFile returned empty buffer for",
+                videoElement.localpath,
+              );
+              video.src = safeUri; // last-ditch fallback
+            }
+          } catch (ipcErr) {
+            console.error("[Asset] IPC fallback failed", ipcErr);
+            video.src = safeUri; // last-ditch fallback – may still play but canvas will be tainted
+          }
         }
       })();
 
@@ -182,6 +265,7 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
             preview2?.drawCanvas?.(preview2.canvas);
           };
           video.addEventListener("timeupdate", handleFirstFrame, { once: true });
+
 
           set((state) => ({
             _loadedElementVideo: {
@@ -293,14 +377,18 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
     console.log("[Asset] startPlay", timelineCursor);
     const videoMetas = Object.values(get()._loadedElementVideo);
     for (const meta of videoMetas) {
-      console.log("[Asset] play", meta.elementId, "offset", (-(meta.element.startTime - timelineCursor))/1000);
-      meta.object.currentTime =
-        (-(meta.element.startTime - timelineCursor) * meta.element.speed) /
-        1000;
+      const offsetSec = (-(meta.element.startTime - timelineCursor) * meta.element.speed) / 1000;
+      console.log("[Asset] play", meta.elementId, "offset", offsetSec);
+      meta.object.currentTime = offsetSec;
       meta.object.playbackRate = meta.element.speed;
       meta.object.muted = true;
       meta.isPlay = true;
-      meta.object.play();
+	  const playPromise = meta.object.play();
+	  if (playPromise?.catch) {
+	    playPromise.catch((err) => {
+	      console.warn("[Asset] video play blocked", meta.elementId, err);
+	    });
+	  }
     }
   },
 

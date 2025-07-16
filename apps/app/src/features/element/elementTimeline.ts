@@ -110,11 +110,13 @@ export class ElementTimeline extends LitElement {
 
   async patchElementInTimeline({ elementId, element }) {
     if (element.filetype == "image") {
-      let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
+      const encodedPath = encodeURI(element.localpath);
+      let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showImage(elementId);
     } else if (element.filetype == "video") {
-      let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
+      const encodedPath = encodeURI(element.localpath);
+      let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showVideo(elementId);
       // Ensure video elements that just became available are made visible immediately
@@ -128,7 +130,8 @@ export class ElementTimeline extends LitElement {
 
       this.elementControl.showText(elementId);
     } else if (element.filetype == "audio") {
-      let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
+      const encodedPath = encodeURI(element.localpath);
+      let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showAudio(elementId);
     }

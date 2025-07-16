@@ -744,7 +744,7 @@ export class ElementControlAsset extends LitElement {
   templateVideo() {
     const element = this.timeline[this.elementId];
     return html`<video
-      src="${this.getPath(element.localpath) || ""}"
+      src="${element.blob || this.getPath(element.localpath) || ""}"
       muted
       draggable="false"
       style="width:100%;height:100%"

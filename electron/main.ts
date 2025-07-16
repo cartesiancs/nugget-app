@@ -4,6 +4,9 @@ import { renderMain } from "./lib/render.js";
 import { window } from "./lib/window.js";
 import { updater } from "./lib/autoUpdater.js";
 
+// Node core modules that need to be available before runtime statements
+import path from "path";
+
 // Load environment variables from .env file
 import dotenv from 'dotenv';
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -12,7 +15,6 @@ import config from "./config.json";
 
 import ffmpeg from "fluent-ffmpeg";
 
-import path from "path";
 import isDev from "electron-is-dev";
 import log from "electron-log";
 

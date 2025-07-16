@@ -1,4 +1,6 @@
 import { rendererModal } from "./utils/modal";
+import { loadedAssetStore } from "./features/asset/loadedAssetStore";
+import { useTimelineStore } from "./states/timelineStore";
 
 window.electronAPI.res.render.progressing((evt, prog) => {
   rendererModal.progressModal.show();
@@ -58,6 +60,7 @@ window.electronAPI.res.timeline.get((event) => {
 });
 
 window.electronAPI.res.timeline.add(async (event, timeline) => {
+  console.log("[Renderer] timeline:add", Object.keys(timeline));
   for (const timelineId in timeline) {
     if (Object.hasOwnProperty.call(timeline, timelineId)) {
       const element = timeline[timelineId];
@@ -69,6 +72,16 @@ window.electronAPI.res.timeline.add(async (event, timeline) => {
         element: element,
       });
     }
+  }
+
+  // Ensure preview canvas shows first frames immediately
+  const preview = document.querySelector("preview-canvas");
+  if (preview) {
+    const { cursor, timeline } = useTimelineStore.getState();
+    await loadedAssetStore.getState().loadAssetsNeededAtTime(cursor, timeline);
+    await loadedAssetStore.getState().seek(timeline, cursor);
+    // Force immediate draw so first frame appears
+    preview.drawCanvas(preview.canvas);
   }
 });
 

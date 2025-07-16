@@ -6,10 +6,13 @@
   "author": "cartesiancs",
   "scripts": {
     "start": "electron .",
+    "dev:electron": "concurrently \"npm run compile\" \"npm run bundle:src\" \"cross-env NODE_ENV=development electron .\"",
     "dev": "concurrently \"npm run compile\" \"npm run bundle:src\"",
     "compile": "tsc -w -p ./.tsconfig",
     "bundle": "npm run bundle:src",
     "bundle:src": "webpack --mode=development --watch",
+    "watch:widget": "npm --prefix ./frontend run build:widget -- --watch",
+    "dev:watch": "concurrently \"npm run compile\" \"npm run bundle:src\" \"npm run watch:widget\"",
     "bundle:prod:src": "webpack --mode=production",
     "build:win": "npm run bundle:prod:src && electron-builder build --win --x64",
     "build:mac": "npm run bundle:prod:src && electron-builder build --mac",

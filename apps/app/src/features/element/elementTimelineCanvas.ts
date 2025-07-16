@@ -355,6 +355,8 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   drawCanvas() {
+    if (!this.canvas) return;
+
     let index = 1;
 
     const ctx = this.canvas.getContext("2d");
@@ -363,10 +365,25 @@ export class elementTimelineCanvas extends LitElement {
       this.canvas.style.width = `${window.innerWidth}px`;
 
       this.canvas.width = window.innerWidth * dpr;
-      this.canvas.height =
-        document.querySelector("element-timeline").offsetHeight * dpr;
+
+      // Ensure displayed size follows internal resolution
+
+      // Use parent timeline element height, but fall back to a sensible default
+      const parentTimeline = document.querySelector("element-timeline");
+      let parentHeight = parentTimeline?.offsetHeight ?? 0;
+      if (parentHeight === 0) {
+        // If layout hasn’t happened yet, estimate height from number of elements.
+        const rows = Math.max(1, Object.keys(this.timeline).length);
+        parentHeight = rows * 36; // ~30px bar * 1.2 spacing
+      }
+      this.canvas.height = parentHeight * dpr;
+
+      // Reflect calculated height in CSS so the element is actually visible
+      this.canvas.style.height = `${parentHeight}px`;
 
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      // Reset any existing transform before applying new scaling to avoid cumulative scaling.
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
 
       const sortedTimeline = Object.fromEntries(

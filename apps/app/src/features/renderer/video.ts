@@ -48,6 +48,7 @@ const _renderVideo = (
   }
   loadedVideo.object.muted = false;
 
+  console.log("[Canvas] drawVideo", elementId, "t(ms)=", timelineCursor, "currentTime=", loadedVideo.object.currentTime.toFixed(3), "readyState=", loadedVideo.object.readyState, "filter=", videoElement.filter.enable);
   if (videoElement.filter.enable) {
     store.videoFilterPipeline.render(
       ctx,

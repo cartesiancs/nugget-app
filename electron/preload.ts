@@ -120,6 +120,11 @@ const request = {
   selfhosted: {
     run: () => ipcRenderer.invoke("selfhosted:run"),
   },
+  // Expose timeline helpers so any renderer (React widget) can invoke even if custom bridge is missing
+  timeline: {
+    addByUrl: (list) => ipcRenderer.invoke("extension:timeline:addByUrl", list),
+    addByUrlWithDir: (list) => ipcRenderer.invoke("extension:timeline:addByUrlWithDir", list),
+  },
 };
 
 const response = {
@@ -185,15 +190,21 @@ const extension = {
       ipcRenderer.invoke("extension:timeline:add", timelineElement),
     addByUrl: (list) =>
       ipcRenderer.invoke("extension:timeline:addByUrl", list),
+    addByUrlWithDir: (list) =>
+      ipcRenderer.invoke("extension:timeline:addByUrlWithDir", list),
   },
 };
 
-if (process.contextIsolated) {
-  try {
+try {
+  if (process.contextIsolated) {
     contextBridge.exposeInMainWorld("api", {
       ext: extension,
     });
-  } catch (error) {
-    console.error(error);
+  } else {
+    // When contextIsolation is disabled, we can assign directly.
+    // This covers dev environments where the flag is off.
+    (window as any).api = { ext: extension };
   }
+} catch (error) {
+  console.error("Failed to expose api in preload", error);
 }

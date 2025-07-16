@@ -130,35 +130,87 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
 
   async loadElementVideo(elementId, videoElement) {
     return new Promise((resolve, reject) => {
+      // Prevent duplicate loads
+      if (get()._loadedElementVideo[elementId]) {
+        console.log("[Asset] already loaded", elementId);
+        return resolve();
+      }
+
       const video = document.createElement("video");
       video.playbackRate = videoElement.speed;
+      video.crossOrigin = "anonymous"; // allow canvas read
 
       const canvas = document.createElement("canvas");
       canvas.width = videoElement.width;
       canvas.height = videoElement.height;
 
-      video.src = videoElement.localpath;
+      console.log("[Asset] loadElementVideo START", elementId, videoElement.localpath);
 
+      (async () => {
+        const safeUri = getPath(videoElement.localpath);
+        try {
+          console.log("[Asset] fetch", safeUri);
+          const response = await fetch(safeUri);
+          const blobURL = URL.createObjectURL(await response.blob());
+          console.log("[Asset] blobURL", blobURL);
+          video.src = blobURL;
+        } catch (err) {
+          console.error("[Asset] fetch FAILED", err);
+          video.src = safeUri; // fallback – may fail for canvas draw but at least plays
+        }
+      })();
+
+      // Wait for first frame to be decodable
       video.addEventListener(
-        "loadeddata",
+        "canplay",
         () => {
-          video.currentTime = 0;
-          this._loadedElementVideo[elementId] = {
-            elementId,
-            element: videoElement,
-            path: getPath(videoElement.localpath),
-            canvas: canvas,
-            object: video,
-            isPlay: false,
+          console.log("[Asset] canplay", elementId, "readyState=", video.readyState);
+
+          // Force a tiny play to decode first frame (some codecs need this)
+          video.currentTime = 0.04;
+          video.muted = true;
+          const playPromise = video.play();
+          if (playPromise?.catch) playPromise.catch(() => {});
+
+          const handleFirstFrame = () => {
+            video.pause();
+            video.removeEventListener("timeupdate", handleFirstFrame);
+
+            // Redraw once the actual frame is available
+            const preview2 = document.querySelector("preview-canvas");
+            // @ts-ignore
+            preview2?.drawCanvas?.(preview2.canvas);
           };
+          video.addEventListener("timeupdate", handleFirstFrame, { once: true });
+
+          set((state) => ({
+            _loadedElementVideo: {
+              ...state._loadedElementVideo,
+              [elementId]: {
+                elementId,
+                element: videoElement,
+                path: video.currentSrc,
+                canvas: canvas,
+                object: video,
+                isPlay: false,
+              },
+            },
+          }));
+
+          // Redraw preview now that frame is ready
+          const preview = document.querySelector("preview-canvas");
+          // @ts-ignore
+          preview?.drawCanvas?.(preview.canvas);
+
           resolve();
         },
         { once: true },
       );
+
       video.addEventListener(
         "error",
         (e) => {
-          console.error("Failed to load video:", e);
+          console.error("[Asset] video error", elementId, e);
           reject(e);
         },
         { once: true },
@@ -238,8 +290,10 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
   },
 
   startPlay(timelineCursor: number) {
+    console.log("[Asset] startPlay", timelineCursor);
     const videoMetas = Object.values(get()._loadedElementVideo);
     for (const meta of videoMetas) {
+      console.log("[Asset] play", meta.elementId, "offset", (-(meta.element.startTime - timelineCursor))/1000);
       meta.object.currentTime =
         (-(meta.element.startTime - timelineCursor) * meta.element.speed) /
         1000;
@@ -265,12 +319,14 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
 function getPath(path: string) {
   const nowEnv = getLocationEnv();
   let filepath = path;
-  if (nowEnv == "electron") {
-    filepath = path;
-  } else if (nowEnv == "web") {
+  if (nowEnv === "electron") {
+    // Ensure we have a proper file URI (encode spaces etc.)
+    if (!filepath.startsWith("file://")) {
+      filepath = `file://${filepath}`;
+    }
+    filepath = encodeURI(filepath);
+  } else if (nowEnv === "web") {
     filepath = `/api/file?path=${path}`;
-  } else {
-    filepath = path;
   }
 
   return filepath;

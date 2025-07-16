@@ -117,6 +117,8 @@ export class ElementTimeline extends LitElement {
       let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showVideo(elementId);
+      // Ensure video elements that just became available are made visible immediately
+      this.elementControl.appearAllElementInTime();
     } else if (element.filetype == "text") {
       document.querySelector("select-font").applyFontStyle({
         fontName: element.fontname,
@@ -130,6 +132,10 @@ export class ElementTimeline extends LitElement {
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showAudio(elementId);
     }
+
+    // NEW: propagate timeline change to the global store so dependent components redraw
+    // This ensures timeline bars become visible after elements are injected from the extension.
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   async getBlobUrl(url) {

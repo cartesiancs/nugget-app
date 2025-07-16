@@ -12,6 +12,9 @@ import SegmentList from "./SegmentList";
 import ComparisonView from "./ComparisonView";
 import SegmentDetail from "./SegmentDetail";
 import LoadingSpinner from "./LoadingSpinner";
+import AddTestVideosButton from "./AddTestVideosButton";
+
+// Test helper moved to AddTestVideosButton component
 
 function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -36,6 +39,7 @@ function ChatWidget() {
       return {};
     }
   });
+  const [timelineProgress, setTimelineProgress] = useState({expected:0, added:0});
 
   useEffect(() => {
     const handleStorage = () => {
@@ -47,6 +51,14 @@ function ChatWidget() {
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  useEffect(() => {
+    if (window?.electronAPI?.res?.timeline?.add) {
+      window.electronAPI.res.timeline.add((_evt, payload) => {
+        setTimelineProgress((prev)=>({...prev, added: prev.added + Object.keys(payload||{}).length}));
+      });
+    }
   }, []);
 
   // -- Removed legacy “previous flow” block --
@@ -219,6 +231,9 @@ function ChatWidget() {
       );
     }
   };
+
+  // ---------------- Test helper: send hard-coded videos ----------------
+  // Test helper moved to AddTestVideosButton component
 
   const generateImagesSequentially = async (segments, artStyle) => {
     try {
@@ -471,21 +486,41 @@ function ChatWidget() {
 
     let success = false;
     try {
+      // Prefer path that asks for directory
+      const addByUrlWithDir = window?.api?.ext?.timeline?.addByUrlWithDir;
       const addByUrlFn = window?.api?.ext?.timeline?.addByUrl;
       if (addByUrlFn) {
-        await addByUrlFn(payload);
+        console.log("[ChatWidget] Using contextBridge addByUrl", payload);
+        if (addByUrlWithDir) {
+          console.log("[ChatWidget] Using contextBridge addByUrlWithDir", payload);
+          await addByUrlWithDir(payload);
+        } else {
+          await addByUrlFn(payload);
+        }
+        success = true;
+      } else if (window?.electronAPI?.req?.timeline?.addByUrl) {
+        console.log("[ChatWidget] Falling back to electronAPI.req.timeline.addByUrl", payload);
+        if (window.electronAPI.req.timeline.addByUrlWithDir) {
+          await window.electronAPI.req.timeline.addByUrlWithDir(payload);
+        } else {
+          await window.electronAPI.req.timeline.addByUrl(payload);
+        }
         success = true;
       } else if (window.require) {
-        // Fallback for Vite-in-Electron renderer where contextBridge is absent but nodeIntegration is on
+        console.log("[ChatWidget] contextBridge missing, falling back to ipcRenderer.invoke", payload);
         const { ipcRenderer } = window.require("electron");
-        await ipcRenderer.invoke("extension:timeline:addByUrl", payload);
+        await ipcRenderer.invoke("extension:timeline:addByUrlWithDir", payload);
         success = true;
+      } else {
+        console.warn("[ChatWidget] Neither window.api nor window.require found – Electron bridge unavailable.");
       }
     } catch (err) {
       console.error("timeline add failed", err);
     }
 
     if (success) {
+      setTimelineProgress({expected: payload.length, added: 0});
+      setChatMessages((prev)=>[...prev,{type:"assistant",content:`📥 Downloading 0/${payload.length} clips...`}]);
       setChatMessages((prev) => [
         ...prev,
         { type: "assistant", content: "✅ Videos added to timeline!" },
@@ -493,12 +528,22 @@ function ChatWidget() {
     } else {
       setChatMessages((prev) => [
         ...prev,
-        { type: "assistant", content: "❌ Failed to add videos to timeline" },
+        { type: "assistant", content: "❌ Failed to add videos to timeline (bridge unavailable or error). Check console logs." },
       ]);
     }
   };
 
   const canSendTimeline = videosReady || Object.keys(storedVideosMap).length > 0;
+
+  useEffect(()=>{
+    if(timelineProgress.expected>0){
+      if(timelineProgress.added<timelineProgress.expected){
+        setChatMessages((prev)=>[...prev.filter(m=>!m.content.startsWith("📥")),{type:"assistant",content:`📥 Downloading ${timelineProgress.added}/${timelineProgress.expected} clips...` }]);
+      }else if(timelineProgress.added===timelineProgress.expected){
+        setChatMessages((prev)=>[...prev,{type:"assistant",content:"✅ All clips added to timeline!"}]);
+      }
+    }
+  },[timelineProgress]);
 
   return (
     <div className="z-10">
@@ -614,6 +659,9 @@ function ChatWidget() {
                         >
                           ➕ Add Videos to Timeline
                         </button>
+                        <AddTestVideosButton addChatMessage={(msg) =>
+                          setChatMessages((prev) => [...prev, msg])
+                        } />
                       </div>
                     )}
 

@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import ChatWidget from './components/ChatWidget'
+import AddTestVideosButton from './components/AddTestVideosButton'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -27,6 +28,10 @@ function App() {
         </p>
       </div>
       <ChatWidget />
+      {/* Stand-alone test button to push sample videos to timeline */}
+      <div className="mt-6">
+        <AddTestVideosButton />
+      </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>

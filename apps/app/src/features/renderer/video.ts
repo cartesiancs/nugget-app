@@ -48,6 +48,24 @@ const _renderVideo = (
   }
   loadedVideo.object.muted = false;
 
+  if (loadedVideo.object.readyState < 2) {
+    // Frame not available yet – paint last cached frame to avoid black flicker
+    ctx.drawImage(
+      loadedVideo.canvas,
+      0,
+      0,
+      videoElement.width,
+      videoElement.height,
+    );
+    return;
+  }
+
+  // Guarantee full opacity every frame – prevents momentary blackouts if some
+  // other part of the UI sets element.opacity to 0.
+  if (videoElement.opacity !== 100) {
+    videoElement.opacity = 100;
+  }
+
   console.log("[Canvas] drawVideo", elementId, "t(ms)=", timelineCursor, "currentTime=", loadedVideo.object.currentTime.toFixed(3), "readyState=", loadedVideo.object.readyState, "filter=", videoElement.filter.enable);
   if (videoElement.filter.enable) {
     store.videoFilterPipeline.render(
@@ -64,5 +82,16 @@ const _renderVideo = (
       videoElement.width,
       videoElement.height,
     );
+    // Update cached canvas with latest frame
+    try {
+      const cacheCtx = loadedVideo.canvas.getContext("2d");
+      cacheCtx?.drawImage(
+        loadedVideo.object,
+        0,
+        0,
+        videoElement.width,
+        videoElement.height,
+      );
+    } catch {}
   }
 };

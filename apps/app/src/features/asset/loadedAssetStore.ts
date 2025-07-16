@@ -259,10 +259,17 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
             video.pause();
             video.removeEventListener("timeupdate", handleFirstFrame);
 
-            // Redraw once the actual frame is available
-            const preview2 = document.querySelector("preview-canvas");
-            // @ts-ignore
-            preview2?.drawCanvas?.(preview2.canvas);
+            // Jump past potential black initial GOP frame and decode a real frame
+            video.currentTime = 0.5;
+            video.addEventListener(
+              "seeked",
+              () => {
+                const preview2 = document.querySelector("preview-canvas");
+                // @ts-ignore
+                preview2?.drawCanvas?.(preview2.canvas);
+              },
+              { once: true },
+            );
           };
           video.addEventListener("timeupdate", handleFirstFrame, { once: true });
 

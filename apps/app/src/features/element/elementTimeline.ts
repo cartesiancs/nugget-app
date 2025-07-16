@@ -109,6 +109,21 @@ export class ElementTimeline extends LitElement {
   }
 
   async patchElementInTimeline({ elementId, element }) {
+    // If opacity animation accidentally set to active with zero value from external sources, reset.
+    if (
+      element.animation &&
+      "opacity" in element.animation &&
+      (element.animation.opacity?.isActivate ?? false)
+    ) {
+      element.animation.opacity.isActivate = false;
+      element.animation.opacity.x = [];
+      element.animation.opacity.ax = [[], []];
+    }
+    // Likewise ensure element.opacity is 100
+    if (element.opacity == null || element.opacity < 100) {
+      element.opacity = 100;
+    }
+
     if (element.filetype == "image") {
       const encodedPath = encodeURI(element.localpath);
       let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);

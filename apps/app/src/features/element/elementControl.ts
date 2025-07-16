@@ -9,6 +9,7 @@ import {
 } from "../../states/renderOptionStore";
 import { decompressFrames, parseGIF } from "gifuct-js";
 import { getLocationEnv } from "../../functions/getLocationEnv";
+import { loadedAssetStore } from "../asset/loadedAssetStore";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -1242,6 +1243,17 @@ export class ElementControl extends LitElement {
         this.isPlay[elementId] = false;
       }
     }
+
+    // Seek dynamic videos to the exact stop position and redraw preview
+    (async () => {
+      try {
+        await loadedAssetStore.getState().seek(this.timeline, this.progressTime);
+        const preview = document.querySelector("preview-canvas") as any;
+        preview?.drawCanvas?.(preview.canvas);
+      } catch (e) {
+        console.warn("[Control] seek after stop failed", e);
+      }
+    })();
 
     this.pauseAllDynamicElements();
   }

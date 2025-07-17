@@ -12,7 +12,6 @@ import SegmentList from "./SegmentList";
 import ComparisonView from "./ComparisonView";
 import SegmentDetail from "./SegmentDetail";
 import LoadingSpinner from "./LoadingSpinner";
-import AddTestVideosButton from "./AddTestVideosButton";
 
 // Test helper moved to AddTestVideosButton component
 
@@ -40,6 +39,7 @@ function ChatWidget() {
     }
   });
   const [timelineProgress, setTimelineProgress] = useState({expected:0, added:0});
+  const [addingTimeline, setAddingTimeline] = useState(false); // show loader while adding
 
   useEffect(() => {
     const handleStorage = () => {
@@ -69,6 +69,8 @@ function ChatWidget() {
 
     localStorage.removeItem("segments");
     localStorage.removeItem("segmentImages");
+    localStorage.removeItem("segmentVideos");
+    setStoredVideosMap({}); // reset cache so button hides until new videos ready
 
     setLoading(true);
     setError(null);
@@ -461,7 +463,7 @@ function ChatWidget() {
   /*  SEND VIDEOS TO TIMELINE                                           */
   /* ------------------------------------------------------------------ */
   const sendVideosToTimeline = async () => {
-    if (!canSendTimeline) return;
+    if (addingTimeline) return; // guard
 
     let payload = [];
     if (selectedResponse) {
@@ -485,6 +487,7 @@ function ChatWidget() {
     }
 
     let success = false;
+    setAddingTimeline(true);
     try {
       // Prefer path that asks for directory
       const addByUrlWithDir = window?.api?.ext?.timeline?.addByUrlWithDir;
@@ -531,6 +534,7 @@ function ChatWidget() {
         { type: "assistant", content: "❌ Failed to add videos to timeline (bridge unavailable or error). Check console logs." },
       ]);
     }
+    setAddingTimeline(false);
   };
 
   const canSendTimeline = videosReady || Object.keys(storedVideosMap).length > 0;
@@ -648,20 +652,24 @@ function ChatWidget() {
                         >
                           Generate Videos
                         </button>
-                        <button
-                          onClick={sendVideosToTimeline}
-                          disabled={!canSendTimeline}
-                          className={`px-3 py-2 rounded-md font-medium ${
-                            canSendTimeline
-                              ? "bg-purple-600 hover:bg-purple-500 text-white"
-                              : "bg-gray-700 text-gray-400 cursor-not-allowed"
-                          }`}
-                        >
-                          ➕ Add Videos to Timeline
-                        </button>
-                        <AddTestVideosButton addChatMessage={(msg) =>
-                          setChatMessages((prev) => [...prev, msg])
-                        } />
+                        {canSendTimeline && (
+                          <button
+                            onClick={sendVideosToTimeline}
+                            disabled={addingTimeline}
+                            className="px-3 py-2 rounded-md font-medium flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50"
+                          >
+                            {addingTimeline ? (
+                              <>
+                                <div className="w-4 h-4">
+                                  <LoadingSpinner />
+                                </div>
+                                <span>Adding…</span>
+                              </>
+                            ) : (
+                              "➕ Add Videos to Timeline"
+                            )}
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -788,17 +796,7 @@ function ChatWidget() {
                       Enter a prompt to start the pipeline (web-info → concept
                       selection → segmentation).
                     </p>
-                    <button
-                      onClick={sendVideosToTimeline}
-                      disabled={!canSendTimeline}
-                      className={`px-3 py-2 rounded-md font-medium ${
-                        canSendTimeline
-                          ? "bg-purple-600 hover:bg-purple-500 text-white"
-                          : "bg-gray-700 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      ➕ Add Videos to Timeline
-                    </button>
+                    {/* Removed duplicate Add-to-Timeline button to avoid double display */}
                 </div>
                 ))}
             </div>

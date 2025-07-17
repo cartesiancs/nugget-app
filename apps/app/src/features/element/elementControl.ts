@@ -1198,6 +1198,25 @@ export class ElementControl extends LitElement {
     }
   }
 
+  /**
+   * Return maximum end-time (ms) of all elements on the timeline so we can
+   * stop the play-head automatically once the project finishes.
+   */
+  _getTimelineEnd(): number {
+    let max = 0;
+    for (const id in this.timeline) {
+      if (!Object.prototype.hasOwnProperty.call(this.timeline, id)) continue;
+      const el: any = this.timeline[id];
+
+      if (el.filetype === "video" || el.filetype === "audio") {
+        max = Math.max(max, el.startTime + (el.trim?.endTime ?? 0));
+      } else {
+        max = Math.max(max, el.startTime + (el.duration ?? 0));
+      }
+    }
+    return max;
+  }
+
   step() {
     const elapsed = Date.now() - this.startTime;
 
@@ -1209,11 +1228,17 @@ export class ElementControl extends LitElement {
 
     this.progress = nowTimelineProgress;
     this.progressTime = elapsed;
-    this.timelineState.setCursor(elapsed);
 
-    if ((this.innerWidth as number) + this.offsetWidth >= this.offsetWidth) {
+    // Prevent play-head from moving beyond the last element in the timeline
+    const timelineEnd = this._getTimelineEnd();
+    if (elapsed >= timelineEnd) {
+      // Clamp cursor at exact end and stop playback
+      this.timelineState.setCursor(timelineEnd);
       this.stop();
+      return;
     }
+
+    this.timelineState.setCursor(elapsed);
 
     this.appearAllElementInTime();
 

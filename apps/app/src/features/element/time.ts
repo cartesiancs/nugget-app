@@ -38,9 +38,6 @@ export function isVideoElementVisibleAtTime(
     videoElement.startTime + videoElement.trim.startTime,
     videoElement.startTime + videoElement.trim.endTime,
   );
-  if (!visible) {
-    console.log("[Visibility] skip", videoElement.key, "cursor", timeInMs, "window", videoElement.startTime + videoElement.trim.startTime, videoElement.startTime + videoElement.trim.endTime);
-  }
   return visible;
 }
 

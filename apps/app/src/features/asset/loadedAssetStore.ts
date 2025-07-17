@@ -259,11 +259,42 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
             video.pause();
             video.removeEventListener("timeupdate", handleFirstFrame);
 
+            // -----------------------------------------------------------------
+            // Capture the first decoded frame to the element-specific cache
+            // canvas so the renderer can immediately paint something while
+            // readyState is still < 2.  This prevents a brief flash
+            // (transparent frame) when switching between sequential clips.
+            // -----------------------------------------------------------------
+            try {
+              const cacheCtx = canvas.getContext("2d");
+              cacheCtx?.drawImage(
+                video,
+                0,
+                0,
+                videoElement.width,
+                videoElement.height,
+              );
+            } catch {}
+
             // Jump past potential black initial GOP frame and decode a real frame
             video.currentTime = 0.5;
             video.addEventListener(
               "seeked",
               () => {
+                // Update cached canvas again with the keyframe at 0.5s – this
+                // will usually be more representative than the very first GOP
+                // frame we captured above.
+                try {
+                  const cacheCtx = canvas.getContext("2d");
+                  cacheCtx?.drawImage(
+                    video,
+                    0,
+                    0,
+                    videoElement.width,
+                    videoElement.height,
+                  );
+                } catch {}
+
                 const preview2 = document.querySelector("preview-canvas");
                 // @ts-ignore
                 preview2?.drawCanvas?.(preview2.canvas);

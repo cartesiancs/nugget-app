@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "build:widget": "vite build --config vite.widget.config.ts",
+    "build:flow-widget": "vite build --config vite.flow-widget.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@xyflow/react": "^12.8.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-to-webcomponent": "^1.7.0"

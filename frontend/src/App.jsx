@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import ChatWidget from './components/ChatWidget'
+import FlowWidget from './components/FlowWidget'
 import AddTestVideosButton from './components/AddTestVideosButton'
 import LoginLogoutButton from './components/LoginLogoutButton'
 import { AuthProvider } from './context/AuthContext'
@@ -52,6 +53,7 @@ function App() {
           </div>
           
           <ChatWidget />
+          <FlowWidget />
           
           {/* Stand-alone test button to push sample videos to timeline */}
           <div className="mt-6 text-center">

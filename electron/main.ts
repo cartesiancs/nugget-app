@@ -40,6 +40,7 @@ import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
 import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
 import { ipcAi } from "./ipc/ipcAi.js";
 import { ipcYtdlp } from "./ipc/ipcYtdlp.js";
+import { ipcAuth } from "./ipc/ipcAuth.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -153,7 +154,10 @@ ipcMain.handle("ai:setKey", ipcAi.setKey);
 ipcMain.handle("ai:getKey", ipcAi.getKey);
 ipcMain.handle("ai:runMcpServer", ipcAi.runMcpServer);
 
-
+ipcMain.handle("auth:initiateLogin", ipcAuth.initiateLogin);
+ipcMain.handle("auth:checkStatus", ipcAuth.checkAuthStatus);
+ipcMain.handle("auth:logout", ipcAuth.logout);
+ipcMain.handle("auth:getToken", ipcAuth.getToken);
 
 ipcMain.handle("ytdlp:downloadVideo", ipcYtdlp.downloadVideo);
 

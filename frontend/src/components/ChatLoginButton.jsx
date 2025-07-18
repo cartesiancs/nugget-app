@@ -1,39 +1,22 @@
 import { useAuth } from '../hooks/useAuth';
 
 const ChatLoginButton = () => {
-  const { login, loading, error, isAuthenticated, user } = useAuth();
-
-  if (isAuthenticated) {
-    return (
-      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
-        <span className="text-sm text-green-700">
-          ✓ Signed in as {user?.name || user?.email}
-        </span>
-      </div>
-    );
-  }
+  const { login, loading, error } = useAuth();
 
   return (
-    <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-      <div className="text-center mb-3">
-        <h3 className="text-sm font-medium text-blue-900 mb-1">
-          Sign in to use chat features
-        </h3>
-        <p className="text-xs text-blue-700">
-          Get AI-powered assistance and advanced features
-        </p>
-      </div>
-      
+    <div className="text-center">
       {error && (
-        <div className="text-red-600 text-xs bg-red-50 p-2 rounded mb-3 border border-red-200">
-          {error}
+        <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
+          <p className="text-red-300 text-sm">
+            {error}
+          </p>
         </div>
       )}
       
       <button
         onClick={login}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
           <>

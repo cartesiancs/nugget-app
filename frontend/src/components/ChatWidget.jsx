@@ -15,10 +15,8 @@ import LoadingSpinner from "./LoadingSpinner";
 import { useAuth } from "../hooks/useAuth";
 import ChatLoginButton from "./ChatLoginButton";
 
-// Test helper moved to AddTestVideosButton component
-
 function ChatWidget() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -573,13 +571,44 @@ function ChatWidget() {
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Segmentation Assistant</h2>
-          <button
-            className="text-white text-xl focus:outline-none"
-            aria-label="Close chat"
-            onClick={() => setOpen(false)}
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            {isAuthenticated && user && (
+              <div className="flex items-center gap-2">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="Profile"
+                    className="w-6 h-6 rounded-full border border-gray-600"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">
+                      {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                )}
+                <span className="text-gray-300 text-sm hidden sm:block">
+                  {user.name || user.email}
+                </span>
+              </div>
+            )}
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                title="Sign Out"
+              >
+                Sign Out
+              </button>
+            )}
+            <button
+              className="text-white text-xl focus:outline-none"
+              aria-label="Close chat"
+              onClick={() => setOpen(false)}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -758,8 +787,18 @@ function ChatWidget() {
                     ))}
                   </div>
               ) : !isAuthenticated ? (
-                <div className="p-4">
-                  <ChatLoginButton />
+                <div className="p-4 space-y-4">
+                  <div className="text-center p-6 bg-gray-800 border border-gray-700 rounded-lg">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        Welcome to Usuals.ai
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        Sign in to access AI-powered video creation features
+                      </p>
+                    </div>
+                    <ChatLoginButton />
+                  </div>
                 </div>
               ) : concepts ? (
                 <div className="p-4">
@@ -799,47 +838,45 @@ function ChatWidget() {
                 />
                 ) : (
                   <div className="p-4 space-y-4">
-                    <p className="text-gray-400">
-                      Enter a prompt to start the pipeline (web-info → concept
-                      selection → segmentation).
+                    <p className="text-gray-400 text-center">
+                      Enter a prompt to start creating your video content
                     </p>
-                    {/* Removed duplicate Add-to-Timeline button to avoid double display */}
                 </div>
                 ))}
             </div>
 
             {/* Input area */}
             {isAuthenticated ? (
-              <form
-                className="p-4 border-t border-gray-800 bg-gray-900 flex gap-2"
-                onSubmit={handleSubmit}
+            <form
+              className="p-4 border-t border-gray-800 bg-gray-900 flex gap-2"
+              onSubmit={handleSubmit}
+            >
+              <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (
+                    e.nativeEvent &&
+                    typeof e.nativeEvent.stopImmediatePropagation === "function"
+                  ) {
+                    e.nativeEvent.stopImmediatePropagation();
+                  }
+                }}
+                placeholder="Describe your video idea..."
+                className="flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500"
+                disabled={loading}
+              />
+              <button
+                type="submit"
+                className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                <input
-                  type="text"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    e.stopPropagation();
-                    if (
-                      e.nativeEvent &&
-                      typeof e.nativeEvent.stopImmediatePropagation === "function"
-                    ) {
-                      e.nativeEvent.stopImmediatePropagation();
-                    }
-                  }}
-                  placeholder="Enter your prompt to start the pipeline..."
-                  className="flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500"
-                  disabled={loading}
-                />
-                <button
-                  type="submit"
-                  className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? "Processing..." : "Start Pipeline"}
-                </button>
-              </form>
+                {loading ? "Processing..." : "Create Video"}
+              </button>
+            </form>
             ) : (
               <div className="p-4 border-t border-gray-800 bg-gray-900">
                 <p className="text-gray-400 text-sm text-center">

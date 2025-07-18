@@ -153,6 +153,8 @@ ipcMain.handle("ai:setKey", ipcAi.setKey);
 ipcMain.handle("ai:getKey", ipcAi.getKey);
 ipcMain.handle("ai:runMcpServer", ipcAi.runMcpServer);
 
+
+
 ipcMain.handle("ytdlp:downloadVideo", ipcYtdlp.downloadVideo);
 
 ipcMain.on("render:v2:start", ipcRenderV2.start);

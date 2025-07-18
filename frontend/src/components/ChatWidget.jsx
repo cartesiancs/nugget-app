@@ -12,10 +12,13 @@ import SegmentList from "./SegmentList";
 import ComparisonView from "./ComparisonView";
 import SegmentDetail from "./SegmentDetail";
 import LoadingSpinner from "./LoadingSpinner";
+import { useAuth } from "../hooks/useAuth";
+import ChatLoginButton from "./ChatLoginButton";
 
 // Test helper moved to AddTestVideosButton component
 
 function ChatWidget() {
+  const { isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -754,6 +757,10 @@ function ChatWidget() {
                       </div>
                     ))}
                   </div>
+              ) : !isAuthenticated ? (
+                <div className="p-4">
+                  <ChatLoginButton />
+                </div>
               ) : concepts ? (
                 <div className="p-4">
                     <h3 className="text-lg font-semibold mb-4 text-white">
@@ -802,36 +809,44 @@ function ChatWidget() {
             </div>
 
             {/* Input area */}
-            <form
-              className="p-4 border-t border-gray-800 bg-gray-900 flex gap-2"
-              onSubmit={handleSubmit}
-            >
-              <input
-                type="text"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  e.stopPropagation();
-                  if (
-                    e.nativeEvent &&
-                    typeof e.nativeEvent.stopImmediatePropagation === "function"
-                  ) {
-                    e.nativeEvent.stopImmediatePropagation();
-                  }
-                }}
-                placeholder="Enter your prompt to start the pipeline..."
-                className="flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500"
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+            {isAuthenticated ? (
+              <form
+                className="p-4 border-t border-gray-800 bg-gray-900 flex gap-2"
+                onSubmit={handleSubmit}
               >
-                {loading ? "Processing..." : "Start Pipeline"}
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (
+                      e.nativeEvent &&
+                      typeof e.nativeEvent.stopImmediatePropagation === "function"
+                    ) {
+                      e.nativeEvent.stopImmediatePropagation();
+                    }
+                  }}
+                  placeholder="Enter your prompt to start the pipeline..."
+                  className="flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500"
+                  disabled={loading}
+                />
+                <button
+                  type="submit"
+                  className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {loading ? "Processing..." : "Start Pipeline"}
+                </button>
+              </form>
+            ) : (
+              <div className="p-4 border-t border-gray-800 bg-gray-900">
+                <p className="text-gray-400 text-sm text-center">
+                  Sign in to use chat features
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

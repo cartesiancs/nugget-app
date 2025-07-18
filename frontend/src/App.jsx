@@ -4,12 +4,13 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import ChatWidget from './components/ChatWidget'
 import AddTestVideosButton from './components/AddTestVideosButton'
+import { AuthProvider } from './context/AuthContext'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <>
+    <AuthProvider>
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
@@ -35,7 +36,7 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-    </>
+    </AuthProvider>
   )
 }
 

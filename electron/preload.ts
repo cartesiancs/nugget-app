@@ -95,6 +95,12 @@ const request = {
     getKey: () => ipcRenderer.invoke("ai:getKey"),
     runMcpServer: () => ipcRenderer.invoke("ai:runMcpServer"),
   },
+  auth: {
+    initiateLogin: () => ipcRenderer.invoke("auth:initiateLogin"),
+    checkStatus: () => ipcRenderer.invoke("auth:checkStatus"),
+    logout: () => ipcRenderer.invoke("auth:logout"),
+    getToken: () => ipcRenderer.invoke("auth:getToken"),
+  },
   stream: {
     saveBufferToVideo: (arrayBuffer) =>
       ipcRenderer.invoke("stream:saveBufferToVideo", arrayBuffer),

@@ -1,14 +1,40 @@
 // CloudFront URL wrapper for images and videos
 const API_BASE_URL = "https://backend.usuals.ai";
 
+// Helper function to get auth token
+const getAuthToken = async () => {
+  if (typeof window !== 'undefined' && window.electronAPI?.req?.auth) {
+    // In Electron, get token from store
+    try {
+      const result = await window.electronAPI.req.auth.getToken();
+      return result.status === 1 ? result.token : null;
+    } catch (error) {
+      console.error('Failed to get token from Electron:', error);
+      return null;
+    }
+  } else {
+    // In web browser, get from localStorage
+    return localStorage.getItem('authToken');
+  }
+};
+
+// Helper function to create headers with auth
+const createHeaders = async (additionalHeaders = {}) => {
+  const token = await getAuthToken();
+  return {
+    "Content-Type": "application/json",
+    ...(token && { "Authorization": `Bearer ${token}` }),
+    ...additionalHeaders,
+  };
+};
+
 export const segmentationApi = {
   getSegmentation: async ({ prompt, concept = "", negative_prompt = "" }) => {
     try {
+      const headers = await createHeaders();
       const response = await fetch(`${API_BASE_URL}/segmentation`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ prompt, concept, negative_prompt }),
       });
 
@@ -38,11 +64,10 @@ export const imageApi = {
       const payload = { visual_prompt, uuid };
       payload.art_style = art_style && art_style.trim() ? art_style.trim() : "realistic";
 
+      const headers = await createHeaders();
       const response = await fetch(`${API_BASE_URL}/image-gen`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -67,11 +92,10 @@ export const videoApi = {
       const payload = { animation_prompt, imageS3Key, uuid };
       payload.art_style = art_style && art_style.trim() ? art_style.trim() : "realistic";
 
+      const headers = await createHeaders();
       const response = await fetch(`${API_BASE_URL}/video-gen`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -93,11 +117,10 @@ export const videoApi = {
 export const webInfoApi = {
   processWebInfo: async (prompt) => {
     try {
+      const headers = await createHeaders();
       const response = await fetch(`${API_BASE_URL}/get-web-info`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ prompt }),
       });
 
@@ -119,11 +142,10 @@ export const webInfoApi = {
 export const conceptWriterApi = {
   generateConcepts: async (prompt, web_info) => {
     try {
+      const headers = await createHeaders();
       const response = await fetch(`${API_BASE_URL}/concept-writer`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ prompt, web_info }),
       });
 
@@ -144,11 +166,10 @@ export const conceptWriterApi = {
 export const voiceApi = {
   generateVoice: async (narration_prompt) => {
     try {
+      const headers = await createHeaders();
       const response = await fetch(`${API_BASE_URL}/voiceover`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ narration_prompt }),
       });
 

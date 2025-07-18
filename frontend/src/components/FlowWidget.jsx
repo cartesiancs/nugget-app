@@ -10,7 +10,6 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  MarkerType,
   Handle,
   Position,
 } from "@xyflow/react";

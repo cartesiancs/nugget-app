@@ -360,7 +360,7 @@ export class ElementTimelineLeftOption extends LitElement {
                 .canvasVerticalScroll}px;"
               class="element-left-option "
             >
-              <span class="element-left-option-text">${text}</span>
+              <span class="element-left-option-text d-none">${text}</span>
 
               <div class="gap-1 justify-content-end">
                 <button

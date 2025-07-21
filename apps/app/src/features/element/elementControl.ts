@@ -486,6 +486,7 @@ export class ElementControl extends LitElement {
           timelineOptions: {
             color: "rgb(71, 59, 179)",
           },
+          trackIndex: 0, // Default to first track
         };
 
         this.timelineState.patchTimeline(this.timeline);
@@ -588,6 +589,7 @@ export class ElementControl extends LitElement {
           timelineOptions: {
             color: "rgb(71, 59, 179)",
           },
+          trackIndex: 0, // Default to first track
         };
 
         this.timelineState.patchTimeline(this.timeline);

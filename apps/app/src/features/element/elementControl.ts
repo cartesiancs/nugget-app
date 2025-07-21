@@ -435,7 +435,9 @@ export class ElementControl extends LitElement {
         this.timeline[elementId] = {
           priority: this.getNowPriority(),
           blob: blob,
-          startTime: 0,
+          // Make this clip start right after the last timeline element so
+          // that videos are arranged sequentially on a single track.
+          startTime: this._getTimelineEnd(),
           duration: duration,
           opacity: 100,
           location: { x: 0, y: 0 },
@@ -536,7 +538,8 @@ export class ElementControl extends LitElement {
         this.timeline[elementId] = {
           priority: this.getNowPriority(),
           blob: blob,
-          startTime: 0,
+          // Sequential placement – append to the timeline end.
+          startTime: this._getTimelineEnd(),
           duration: duration,
           opacity: 100,
           location: { x: 0, y: 0 },

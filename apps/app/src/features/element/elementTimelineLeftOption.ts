@@ -106,6 +106,9 @@ export class ElementTimelineLeftOption extends LitElement {
           let splitedFilepath = this.timeline[elementId].localpath.split("/");
           let text = splitedFilepath[splitedFilepath.length - 1];
 
+          // Disable clip name labels to keep timeline minimalistic.
+          // Left here in case future small-tooltip behaviour is desired.
+          /*
           if (this.resize.timelineVertical.leftOption > 50) {
             const fontSize = 14;
             ctx.fillStyle = "#ffffff";
@@ -119,6 +122,7 @@ export class ElementTimelineLeftOption extends LitElement {
               this.resize.timelineVertical.leftOption,
             );
           }
+          */
 
           if (
             elementUtils.getElementType(this.timeline[elementId].filetype) ==
@@ -158,6 +162,8 @@ export class ElementTimelineLeftOption extends LitElement {
               );
               ctx.fill();
 
+              // Suppress animation panel label as well.
+              /*
               const fontSize = 14;
               ctx.fillStyle = "#ffffff";
               ctx.lineWidth = 0;
@@ -169,6 +175,7 @@ export class ElementTimelineLeftOption extends LitElement {
                 panelTop + fontSize + 4,
                 this.resize.timelineVertical.leftOption,
               );
+              */
             }
           }
 

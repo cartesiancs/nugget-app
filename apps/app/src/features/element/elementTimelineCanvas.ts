@@ -372,8 +372,8 @@ export class elementTimelineCanvas extends LitElement {
       const parentTimeline = document.querySelector("element-timeline");
       let parentHeight = parentTimeline?.offsetHeight ?? 0;
       if (parentHeight === 0) {
-        // If layout hasn’t happened yet, estimate height from number of elements.
-        const rows = Math.max(1, Object.keys(this.timeline).length);
+        // Force a single-row timeline UI regardless of element count.
+        const rows = 1;
         parentHeight = rows * 36; // ~30px bar * 1.2 spacing
       }
       this.canvas.height = parentHeight * dpr;
@@ -396,7 +396,8 @@ export class elementTimelineCanvas extends LitElement {
       for (const elementId in sortedTimeline) {
         if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
           const height = 30;
-          const top = index * height * 1.2 - this.canvasVerticalScroll;
+          // Render every element on the same vertical track.
+          const top = height * 1.2 - this.canvasVerticalScroll;
           const left =
             this.millisecondsToPx(this.timeline[elementId].startTime) -
             this.timelineScroll;
@@ -424,13 +425,10 @@ export class elementTimelineCanvas extends LitElement {
 
             const finalLeft = left + additionalLeft;
 
-            ctx.fillStyle = this.timelineColor[elementId];
             ctx.strokeStyle = this.timelineColor[elementId];
-            ctx.lineWidth = 0;
-
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.rect(finalLeft, top, width, height);
-            ctx.fill();
             ctx.stroke();
 
             if (this.targetId.includes(elementId)) {
@@ -442,47 +440,17 @@ export class elementTimelineCanvas extends LitElement {
                 this.timeline[elementId].speed,
             );
 
-            const startTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.startTime,
-            );
-            const endTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.endTime,
-            );
-            const duration = this.millisecondsToPx(
-              this.timeline[elementId].duration /
-                this.timeline[elementId].speed,
-            );
-
-            ctx.fillStyle = this.timelineColor[elementId];
             ctx.strokeStyle = this.timelineColor[elementId];
-            ctx.lineWidth = 0;
+            ctx.lineWidth = 2;
 
             ctx.beginPath();
             ctx.rect(left, top, width, height);
-            ctx.fill();
+            ctx.stroke();
 
             if (this.targetId.includes(elementId)) {
               this.drawActive(ctx, elementId, left, top, width, height);
             }
-
-            const darkenRate = 0.8;
-
-            ctx.lineWidth = 0;
-            ctx.fillStyle = darkenColor(
-              this.timelineColor[elementId],
-              darkenRate,
-            );
-            ctx.beginPath();
-            ctx.rect(left, top, startTime, height);
-            ctx.fill();
-
-            ctx.fillStyle = darkenColor(
-              this.timelineColor[elementId],
-              darkenRate,
-            );
-            ctx.beginPath();
-            ctx.rect(left + endTime, top, duration - endTime, height);
-            ctx.fill();
+            // Skip shading for trimmed areas since we no longer fill bars.
           }
 
           const isActive = this.isActiveAnimationPanel(elementId);
@@ -875,7 +843,8 @@ export class elementTimelineCanvas extends LitElement {
         }
 
         const defaultHeight = 30;
-        const startY = index * defaultHeight * 1.2 - this.canvasVerticalScroll;
+        // All clips share the same vertical track, so Y is constant.
+        const startY = defaultHeight * 1.2 - this.canvasVerticalScroll;
         const startX =
           this.millisecondsToPx(this.timeline[elementId].startTime) -
           this.timelineScroll +

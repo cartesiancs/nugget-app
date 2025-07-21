@@ -4,11 +4,17 @@ import { renderMain } from "./lib/render.js";
 import { window } from "./lib/window.js";
 import { updater } from "./lib/autoUpdater.js";
 
+// Node core modules that need to be available before runtime statements
+import path from "path";
+
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 import config from "./config.json";
 
 import ffmpeg from "fluent-ffmpeg";
 
-import path from "path";
 import isDev from "electron-is-dev";
 import log from "electron-log";
 
@@ -34,6 +40,7 @@ import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
 import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
 import { ipcAi } from "./ipc/ipcAi.js";
 import { ipcYtdlp } from "./ipc/ipcYtdlp.js";
+import { ipcAuth } from "./ipc/ipcAuth.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -146,6 +153,11 @@ ipcMain.handle("ai:text", ipcAi.text);
 ipcMain.handle("ai:setKey", ipcAi.setKey);
 ipcMain.handle("ai:getKey", ipcAi.getKey);
 ipcMain.handle("ai:runMcpServer", ipcAi.runMcpServer);
+
+ipcMain.handle("auth:initiateLogin", ipcAuth.initiateLogin);
+ipcMain.handle("auth:checkStatus", ipcAuth.checkAuthStatus);
+ipcMain.handle("auth:logout", ipcAuth.logout);
+ipcMain.handle("auth:getToken", ipcAuth.getToken);
 
 ipcMain.handle("ytdlp:downloadVideo", ipcYtdlp.downloadVideo);
 

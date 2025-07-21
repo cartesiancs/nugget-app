@@ -19,6 +19,16 @@
         "url": "https://cdn.nugget.cartesiancs.com/ffprobe.exe",
         "filename": "ffprobe.exe"
       }
+    },
+    "linux": {
+      "ffmpeg": {
+        "url": "file://./bin/ffmpeg-linux",
+        "filename": "ffmpeg"
+      },
+      "ffprobe": {
+        "url": "file://./bin/ffprobe-linux",
+        "filename": "ffprobe"
+      }
     }
   }
 }

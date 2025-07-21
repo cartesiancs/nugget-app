@@ -109,14 +109,33 @@ export class ElementTimeline extends LitElement {
   }
 
   async patchElementInTimeline({ elementId, element }) {
+    // If opacity animation accidentally set to active with zero value from external sources, reset.
+    if (
+      element.animation &&
+      "opacity" in element.animation &&
+      (element.animation.opacity?.isActivate ?? false)
+    ) {
+      element.animation.opacity.isActivate = false;
+      element.animation.opacity.x = [];
+      element.animation.opacity.ax = [[], []];
+    }
+    // Likewise ensure element.opacity is 100
+    if (element.opacity == null || element.opacity < 100) {
+      element.opacity = 100;
+    }
+
     if (element.filetype == "image") {
-      let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
+      const encodedPath = encodeURI(element.localpath);
+      let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showImage(elementId);
     } else if (element.filetype == "video") {
-      let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
+      const encodedPath = encodeURI(element.localpath);
+      let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showVideo(elementId);
+      // Ensure video elements that just became available are made visible immediately
+      this.elementControl.appearAllElementInTime();
     } else if (element.filetype == "text") {
       document.querySelector("select-font").applyFontStyle({
         fontName: element.fontname,
@@ -126,10 +145,15 @@ export class ElementTimeline extends LitElement {
 
       this.elementControl.showText(elementId);
     } else if (element.filetype == "audio") {
-      let blobUrl = await this.getBlobUrl(`file://${element.localpath}`);
+      const encodedPath = encodeURI(element.localpath);
+      let blobUrl = await this.getBlobUrl(`file://${encodedPath}`);
       this.timeline[elementId].blob = String(blobUrl);
       this.elementControl.showAudio(elementId);
     }
+
+    // NEW: propagate timeline change to the global store so dependent components redraw
+    // This ensures timeline bars become visible after elements are injected from the extension.
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   async getBlobUrl(url) {

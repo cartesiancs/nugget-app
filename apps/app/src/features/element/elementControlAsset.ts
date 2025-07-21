@@ -44,8 +44,9 @@ export class ElementControlAsset extends LitElement {
 
     this.elementControl = document.querySelector("element-control");
 
-    // this.elementId = this.getAttribute("element-id");
-    // this.elementFiletype = this.getAttribute("element-filetype") || "image";
+    this.elementId = this.getAttribute("element-id");
+    const attrType = this.getAttribute("element-filetype");
+    if (attrType) this.elementFiletype = attrType;
 
     this.isDrag = false;
     this.isResize = false;
@@ -82,6 +83,8 @@ export class ElementControlAsset extends LitElement {
     // }
     if (this.elementFiletype == "audio") {
       template = html`${this.templateAudio()}`;
+    } else if (this.elementFiletype == "video") {
+      template = html`${this.templateVideo()} ${this.templateResize()}`;
     }
 
     this.classList.add("element-drag");
@@ -160,8 +163,10 @@ export class ElementControlAsset extends LitElement {
 
   getPath(path) {
     const nowEnv = getLocationEnv();
-    const filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
-
+    let filepath = nowEnv == "electron" ? path : `/api/file?path=${path}`;
+    if(nowEnv==="electron" && !filepath.startsWith("file://")){
+      filepath = `file://${filepath}`;
+    }
     return filepath;
   }
 
@@ -734,5 +739,21 @@ export class ElementControlAsset extends LitElement {
 
   handleDoubleClick(e) {
     //this.showSideOption()
+  }
+
+  templateVideo() {
+    const element = this.timeline[this.elementId];
+    return html`<video
+      src="${element.blob || this.getPath(element.localpath) || ""}"
+      muted
+      draggable="false"
+      style="width:100%;height:100%"
+      @loadedmetadata=${() => console.log(`[video] ${this.elementId} metadata ready`)}
+      @error=${(e:any)=>console.error(`[video] ${this.elementId} error`,e)}
+      @canplay=${(e:any)=>{
+        const v=e.currentTarget as HTMLVideoElement;v.play().catch(()=>{});
+        console.log(`[video] ${this.elementId} playing`);
+      }}
+    ></video>`;
   }
 }

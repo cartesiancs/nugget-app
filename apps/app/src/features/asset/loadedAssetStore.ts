@@ -9,6 +9,7 @@ import {
 } from "../../@types/timeline";
 import { VideoFilterPipeline } from "../renderer/filter/videoPipeline";
 import { isElementVisibleAtTime } from "../element/time";
+import { useTimelineStore } from "../../states/timelineStore";
 
 type GifMetadata = {
   imageData: ImageData;
@@ -130,35 +131,208 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
 
   async loadElementVideo(elementId, videoElement) {
     return new Promise((resolve, reject) => {
+      // Prevent duplicate loads
+      if (get()._loadedElementVideo[elementId]) {
+        console.log("[Asset] already loaded", elementId);
+        return resolve();
+      }
+
       const video = document.createElement("video");
       video.playbackRate = videoElement.speed;
+      video.crossOrigin = "anonymous"; // allow canvas read
 
       const canvas = document.createElement("canvas");
       canvas.width = videoElement.width;
       canvas.height = videoElement.height;
 
-      video.src = videoElement.localpath;
+      console.log("[Asset] loadElementVideo START", elementId, videoElement.localpath);
 
+      (async () => {
+        // 1. If timeline already contains a blob URL (manual import or previously
+        //    loaded), use it immediately – avoids one extra network call and
+        //    guarantees same-origin for canvas.
+        if (videoElement.blob) {
+          console.log("[Asset] use cached blob", videoElement.blob);
+          video.src = videoElement.blob;
+          return;
+        }
+
+        const safeUri = getPath(videoElement.localpath);
+        try {
+          console.log("[Asset] fetch", safeUri);
+          const response = await fetch(safeUri);
+          const blobURL = URL.createObjectURL(await response.blob());
+          console.log("[Asset] blobURL", blobURL);
+          video.src = blobURL;
+
+          // Update timeline element with blob so templateVideo uses it
+          const timelineStore = useTimelineStore.getState();
+          const elementInTimeline = timelineStore.timeline[elementId];
+          if (elementInTimeline && (elementInTimeline as any).blob !== blobURL) {
+            timelineStore.patchTimeline({
+              ...timelineStore.timeline,
+              [elementId]: {
+                ...elementInTimeline,
+                blob: blobURL,
+              },
+            });
+          }
+        } catch (err) {
+          // If we are running inside Electron the fetch of a file:/// URL is
+          // blocked by Chromium for security reasons.  Instead of falling back
+          // to the raw file URI (which taints the canvas and prevents
+          // drawImage), read the file through the preload filesystem bridge
+          // and convert it to a Blob URL so it is same-origin.
+
+          console.warn("[Asset] fetch FAILED – attempting IPC fallback", safeUri);
+
+          try {
+            // `videoElement.localpath` should be an absolute OS path here.
+            const buffer = (await (window as any).electronAPI?.req?.filesystem?.readFile(
+              videoElement.localpath,
+            )) as ArrayBuffer | Uint8Array | null;
+
+            if (buffer) {
+              // Heuristically determine MIME type from file extension so the
+              // browser can pick the right decoder – without this some codecs
+              // refuse to initialise and no frame is produced for drawImage.
+              const ext = (videoElement.localpath.split(".").pop() || "").toLowerCase();
+              let mimeType = "video/*";
+              if (ext === "webm") mimeType = "video/webm";
+              else if (ext === "mp4" || ext === "m4v") mimeType = "video/mp4";
+              else if (ext === "mov") mimeType = "video/quicktime";
+
+              const blobURL = URL.createObjectURL(
+                new Blob([buffer as BlobPart], { type: mimeType }),
+              );
+              console.log("[Asset] IPC blobURL", blobURL);
+              video.src = blobURL;
+
+              // Blob URLs are same-origin; remove any crossOrigin hint that
+              // could prevent the media element from decoding.
+              try {
+                video.removeAttribute("crossorigin");
+              } catch {}
+
+              // Update timeline element with blob so templateVideo uses it
+              const timelineStore = useTimelineStore.getState();
+              const elementInTimeline = timelineStore.timeline[elementId];
+              if (
+                elementInTimeline &&
+                (elementInTimeline as any).blob !== blobURL
+              ) {
+                timelineStore.patchTimeline({
+                  ...timelineStore.timeline,
+                  [elementId]: {
+                    ...elementInTimeline,
+                    blob: blobURL,
+                  },
+                });
+              }
+            } else {
+              console.error(
+                "[Asset] IPC filesystem.readFile returned empty buffer for",
+                videoElement.localpath,
+              );
+              video.src = safeUri; // last-ditch fallback
+            }
+          } catch (ipcErr) {
+            console.error("[Asset] IPC fallback failed", ipcErr);
+            video.src = safeUri; // last-ditch fallback – may still play but canvas will be tainted
+          }
+        }
+      })();
+
+      // Wait for first frame to be decodable
       video.addEventListener(
-        "loadeddata",
+        "canplay",
         () => {
-          video.currentTime = 0;
-          this._loadedElementVideo[elementId] = {
-            elementId,
-            element: videoElement,
-            path: getPath(videoElement.localpath),
-            canvas: canvas,
-            object: video,
-            isPlay: false,
+          console.log("[Asset] canplay", elementId, "readyState=", video.readyState);
+
+          // Force a tiny play to decode first frame (some codecs need this)
+          video.currentTime = 0.04;
+          video.muted = true;
+          const playPromise = video.play();
+          if (playPromise?.catch) playPromise.catch(() => {});
+
+          const handleFirstFrame = () => {
+            video.pause();
+            video.removeEventListener("timeupdate", handleFirstFrame);
+
+            // -----------------------------------------------------------------
+            // Capture the first decoded frame to the element-specific cache
+            // canvas so the renderer can immediately paint something while
+            // readyState is still < 2.  This prevents a brief flash
+            // (transparent frame) when switching between sequential clips.
+            // -----------------------------------------------------------------
+            try {
+              const cacheCtx = canvas.getContext("2d");
+              cacheCtx?.drawImage(
+                video,
+                0,
+                0,
+                videoElement.width,
+                videoElement.height,
+              );
+            } catch {}
+
+            // Jump past potential black initial GOP frame and decode a real frame
+            video.currentTime = 0.5;
+            video.addEventListener(
+              "seeked",
+              () => {
+                // Update cached canvas again with the keyframe at 0.5s – this
+                // will usually be more representative than the very first GOP
+                // frame we captured above.
+                try {
+                  const cacheCtx = canvas.getContext("2d");
+                  cacheCtx?.drawImage(
+                    video,
+                    0,
+                    0,
+                    videoElement.width,
+                    videoElement.height,
+                  );
+                } catch {}
+
+                const preview2 = document.querySelector("preview-canvas");
+                // @ts-ignore
+                preview2?.drawCanvas?.(preview2.canvas);
+              },
+              { once: true },
+            );
           };
+          video.addEventListener("timeupdate", handleFirstFrame, { once: true });
+
+
+          set((state) => ({
+            _loadedElementVideo: {
+              ...state._loadedElementVideo,
+              [elementId]: {
+                elementId,
+                element: videoElement,
+                path: video.currentSrc,
+                canvas: canvas,
+                object: video,
+                isPlay: false,
+              },
+            },
+          }));
+
+          // Redraw preview now that frame is ready
+          const preview = document.querySelector("preview-canvas");
+          // @ts-ignore
+          preview?.drawCanvas?.(preview.canvas);
+
           resolve();
         },
         { once: true },
       );
+
       video.addEventListener(
         "error",
         (e) => {
-          console.error("Failed to load video:", e);
+          console.error("[Asset] video error", elementId, e);
           reject(e);
         },
         { once: true },
@@ -238,15 +412,21 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
   },
 
   startPlay(timelineCursor: number) {
+    console.log("[Asset] startPlay", timelineCursor);
     const videoMetas = Object.values(get()._loadedElementVideo);
     for (const meta of videoMetas) {
-      meta.object.currentTime =
-        (-(meta.element.startTime - timelineCursor) * meta.element.speed) /
-        1000;
+      const offsetSec = (-(meta.element.startTime - timelineCursor) * meta.element.speed) / 1000;
+      console.log("[Asset] play", meta.elementId, "offset", offsetSec);
+      meta.object.currentTime = offsetSec;
       meta.object.playbackRate = meta.element.speed;
       meta.object.muted = true;
       meta.isPlay = true;
-      meta.object.play();
+	  const playPromise = meta.object.play();
+	  if (playPromise?.catch) {
+	    playPromise.catch((err) => {
+	      console.warn("[Asset] video play blocked", meta.elementId, err);
+	    });
+	  }
     }
   },
 
@@ -265,12 +445,14 @@ export const loadedAssetStore = createStore<ILoadedAssetStore>((set, get) => ({
 function getPath(path: string) {
   const nowEnv = getLocationEnv();
   let filepath = path;
-  if (nowEnv == "electron") {
-    filepath = path;
-  } else if (nowEnv == "web") {
+  if (nowEnv === "electron") {
+    // Ensure we have a proper file URI (encode spaces etc.)
+    if (!filepath.startsWith("file://")) {
+      filepath = `file://${filepath}`;
+    }
+    filepath = encodeURI(filepath);
+  } else if (nowEnv === "web") {
     filepath = `/api/file?path=${path}`;
-  } else {
-    filepath = path;
   }
 
   return filepath;

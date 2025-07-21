@@ -28,6 +28,18 @@
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
 
         <script src="dist/index.js"></script>
+        <!-- Polyfill Node process for browser -->
+        <script>window.process = { env: { NODE_ENV: 'production' } };</script>
+        <!-- ChatWidget styles -->
+        <link rel="stylesheet" href="dist/widget/frontend.css" />
+        <!-- React ChatWidget bundle -->
+        <script src="dist/widget/chat-widget.umd.js"></script>
+        <!-- React FlowWidget bundle -->
+        <script src="dist/widget/flow-widget.umd.js"></script>
+
+        <!-- Place widget elements (bottom-right fixed) -->
+        <react-chat-widget></react-chat-widget>
+        <react-flow-widget></react-flow-widget>
 
 
     </body>

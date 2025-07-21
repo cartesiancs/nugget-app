@@ -85,6 +85,26 @@ export const imageApi = {
       throw error;
     }
   },
+  regenerateImage: async ({ id, visual_prompt, art_style, s3_key }) => {
+    try {
+      const body = { visual_prompt, art_style };
+      if (s3_key) body.s3_key = s3_key;
+      const response = await fetch(`${API_BASE_URL}/image-gen/${id}`, {
+        method: "PATCH",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to regenerate image: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Image regeneration response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in regenerateImage:", error);
+      throw error;
+    }
+  },
 };
 
 // Video generation API wrapper
@@ -109,6 +129,26 @@ export const videoApi = {
       return data;
     } catch (error) {
       console.error("Error in generateVideo:", error);
+      throw error;
+    }
+  },
+  regenerateVideo: async ({ id, animation_prompt, art_style, imageS3Key }) => {
+    try {
+      const body = { animation_prompt, art_style };
+      if (imageS3Key) body.imageS3Key = imageS3Key;
+      const response = await fetch(`${API_BASE_URL}/video-gen/${id}`, {
+        method: "PATCH",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to regenerate video: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Video regeneration response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in regenerateVideo:", error);
       throw error;
     }
   },
@@ -236,6 +276,32 @@ export const testApi = {
       return data;
     } catch (error) {
       console.error("Error in testAuth:", error);
+      throw error;
+    }
+  },
+};
+
+// Project API wrapper
+export const projectApi = {
+  getProjectById: async (projectId = "cmd8n2z28001jp04wtw1263zi") => {
+    try {
+      const headers = await getAuthHeaders();
+      console.log("Fetching project with headers:", headers);
+
+      const response = await fetch(`${API_BASE_URL}/projects/${projectId}/full`, {
+        method: "GET",
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch project: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Project data response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in getProjectById:", error);
       throw error;
     }
   },

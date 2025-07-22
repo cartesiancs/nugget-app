@@ -153,20 +153,21 @@ function FlowWidget() {
     try {
       // Always use the s3_key of the connected image for imageS3Key
       const imageS3Key = flowData.imageDetails?.[segmentData.id]?.s3Key || segmentData.imageS3Key;
-      // 1. Overwrite the video in S3 (generate new video)
+      
       const genResponse = await videoApi.generateVideo({
         animation_prompt: segmentData.animation,
         art_style: segmentData.artStyle,
         imageS3Key,
         uuid: `seg-${segmentData.id}`,
       });
-      // 2. PATCH to update metadata with s3_key
-      if (genResponse && genResponse.s3_key) {
+      if (genResponse && genResponse.s3Keys && genResponse.s3Keys.length > 0) {
+        console.log("🔄 Video re-generation response:", genResponse.s3Keys);
         await videoApi.regenerateVideo({
           id: videoId,
           animation_prompt: segmentData.animation,
           art_style: segmentData.artStyle,
-          imageS3Key: genResponse.s3_key,
+          image_s3_key: imageS3Key,
+          video_s3_keys: [...genResponse.s3Keys],
         });
       }
       // 3. Refresh project data to get the updated video

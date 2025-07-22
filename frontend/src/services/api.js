@@ -132,10 +132,9 @@ export const videoApi = {
       throw error;
     }
   },
-  regenerateVideo: async ({ id, animation_prompt, art_style, imageS3Key }) => {
+  regenerateVideo: async ({ id, animation_prompt, art_style, image_s3_key, video_s3_keys }) => {
     try {
-      const body = { animation_prompt, art_style };
-      if (imageS3Key) body.imageS3Key = imageS3Key;
+      const body = { animation_prompt, art_style, video_s3_keys, image_s3_key };
       const response = await fetch(`${API_BASE_URL}/video-gen/${id}`, {
         method: "PATCH",
         headers: await getAuthHeaders(),

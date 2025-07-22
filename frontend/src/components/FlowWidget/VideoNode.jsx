@@ -31,16 +31,24 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
     setEditError("");
     setEditSuccess("");
     try {
-      // PATCH to update metadata with new animation_prompt (same imageS3Key)
-      await videoApi.regenerateVideo({
-        id: data.videoId,
+      // 1. Generate new video with the new animation prompt
+      const videoGenResponse = await videoApi.generateVideo({
         animation_prompt: editPrompt,
         art_style: data.segmentData.artStyle,
         imageS3Key: data.segmentData.imageS3Key,
+        uuid: `seg-${data.segmentId}`,
       });
-      // POST to generate new video with new animation_prompt (simulate, if needed)
-      // Not implemented here, as video generation may be async/triggered elsewhere
-      setEditSuccess("Video prompt updated!");
+      // 2. Regenerate video with new animation prompt and new video s3_keys
+      if (videoGenResponse && videoGenResponse.s3Keys && videoGenResponse.s3Keys.length > 0) {
+        await videoApi.regenerateVideo({
+          id: data.videoId,
+          animation_prompt: editPrompt,
+          art_style: data.segmentData.artStyle,
+          image_s3_key: data.segmentData.imageS3Key,
+          video_s3_keys: [...videoGenResponse.s3Keys],
+        });
+      }
+      setEditSuccess("Video updated and regenerated!");
       setTimeout(() => {
         setEditOpen(false);
         if (typeof onAfterEdit === 'function') onAfterEdit();

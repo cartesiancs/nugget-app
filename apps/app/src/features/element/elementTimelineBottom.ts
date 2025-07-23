@@ -136,22 +136,22 @@ export class ElementTimelineBottomScroll extends LitElement {
           <div class="modal-content modal-dark modal-darker">
             <div class="modal-body modal-body-dark">
               <h6 class="modal-title text-light font-weight-lg mb-2">
-                Nugget Info
+                Usuals.ai Info
               </h6>
               <span
                 @click=${() =>
                   window.electronAPI.req.url.openUrl(
-                    "https://github.com/cartesiancs/nugget-app",
+                    "https://github.com/cartesiancs/usuals-ai",
                   )}
                 class="text-secondary"
                 style="font-size: 13px; cursor: pointer;"
-                >GitHub: https://github.com/cartesiancs/nugget-app</span
+                                  >GitHub: https://github.com/cartesiancs/usuals-ai</span
               >
               <br />
               <span
                 @click=${() =>
                   window.electronAPI.req.url.openUrl(
-                    "https://github.com/cartesiancs/nugget-app/issues",
+                    "https://github.com/cartesiancs/usuals-ai/issues",
                   )}
                 class="text-secondary"
                 style="font-size: 13px; cursor: pointer;"

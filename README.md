@@ -1,14 +1,14 @@
-# Nugget
+# Usuals.ai
 
 ![plot](./.github/screenshotv1.png)
 
 <p align='center'>
 
-<a href="#"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/cartesiancs/nugget-app?style=for-the-badge" /></a>
+<a href="#"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/cartesiancs/usuals-ai?style=for-the-badge" /></a>
 &nbsp;
-<a href="#"><img alt="GitHub Repo stars" src="https://img.shields.io/github/license/cartesiancs/nugget-app?style=for-the-badge" /></a>
+<a href="#"><img alt="GitHub Repo stars" src="https://img.shields.io/github/license/cartesiancs/usuals-ai?style=for-the-badge" /></a>
 &nbsp;
-<img alt="GitHub Release" src="https://img.shields.io/github/v/release/cartesiancs/nugget-app?style=for-the-badge">
+<img alt="GitHub Release" src="https://img.shields.io/github/v/release/cartesiancs/usuals-ai?style=for-the-badge">
 
 </p>
 
@@ -19,7 +19,7 @@ English | <a href="./docs/README.ko.md">한국어</a>
 </p>
 
 <p align='center'>
-<a href="https://www.youtube.com/watch?v=Bh06VOYSMIM">View Demo</a> · <a href="https://github.com/cartesiancs/nugget-app/issues">Report Bugs</a> · <a href="https://github.com/cartesiancs/nugget-app/releases"><b>Download</b></a> · <a href="https://github.com/cartesiancs/nugget-app/issues/new">Suggest Features </a>
+<a href="https://www.youtube.com/watch?v=Bh06VOYSMIM">View Demo</a> · <a href="https://github.com/cartesiancs/usuals-ai/issues">Report Bugs</a> · <a href="https://github.com/cartesiancs/usuals-ai/releases"><b>Download</b></a> · <a href="https://github.com/cartesiancs/usuals-ai/issues/new">Suggest Features </a>
 </p>
 
 #
@@ -41,7 +41,7 @@ https://github.com/user-attachments/assets/922a8a7d-ec58-4141-bb4a-5b016da268a8
 
 
 
-_This video is made of Nugget._
+_This video is made of Usuals.ai._
 
 You can check out a limited demo of the website at the [following link](https://demo.nugget.cartesiancs.com/).
 
@@ -96,8 +96,8 @@ Please refer to the [roadmap file](./docs/ROADMAP.md) for more details.
 
 ## Contributors
 
- <a href = "https://github.com/cartesiancs/nugget-app/graphs/contributors">
-   <img src = "https://contrib.rocks/image?repo=cartesiancs/nugget-app"/>
+ <a href = "https://github.com/cartesiancs/usuals-ai/graphs/contributors">
+<img src = "https://contrib.rocks/image?repo=cartesiancs/usuals-ai"/>
  </a>
 
 ## License

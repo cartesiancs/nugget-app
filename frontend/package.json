@@ -15,7 +15,8 @@
     "@xyflow/react": "^12.8.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-to-webcomponent": "^1.7.0"
+    "react-to-webcomponent": "^1.7.0",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

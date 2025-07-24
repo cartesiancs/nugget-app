@@ -1,5 +1,3 @@
-import React from 'react';
-
 function ConfirmationPrompt({ message, onConfirm, onCancel, loading }) {
   return (
     <div className="p-4 flex flex-col items-center text-center">

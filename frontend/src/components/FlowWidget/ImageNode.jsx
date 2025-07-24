@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
-import { imageApi } from "../../services/api";
+import { imageApi } from "../../services/image";
 
 /**
  * ImageNode props:

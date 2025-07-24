@@ -1,5 +1,3 @@
-import React from 'react';
-
 function SegmentPreview({ segment }) {
   // Extract visual and audio descriptions
   const visualDesc = segment.visual;

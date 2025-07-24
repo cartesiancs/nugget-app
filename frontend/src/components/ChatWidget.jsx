@@ -12,6 +12,7 @@ import SegmentList from "./SegmentList";
 import ComparisonView from "./ComparisonView";
 import SegmentDetail from "./SegmentDetail";
 import LoadingSpinner from "./LoadingSpinner";
+import CharacterGenerator from "./CharacterGenerator";
 import { useAuth } from "../hooks/useAuth";
 import ChatLoginButton from "./ChatLoginButton";
 
@@ -41,6 +42,7 @@ function ChatWidget() {
   });
   const [timelineProgress, setTimelineProgress] = useState({expected:0, added:0});
   const [addingTimeline, setAddingTimeline] = useState(false); // show loader while adding
+  const [showCharacterGenerator, setShowCharacterGenerator] = useState(false);
 
   useEffect(() => {
     const handleStorage = () => {
@@ -572,6 +574,16 @@ function ChatWidget() {
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Segmentation Assistant</h2>
           <div className="flex items-center gap-3">
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowCharacterGenerator(true)}
+                className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors flex items-center gap-1"
+                title="Generate Character"
+              >
+                <span>👤</span>
+                <span className="hidden sm:inline">Character</span>
+              </button>
+            )}
             {isAuthenticated && user && (
               <div className="flex items-center gap-2">
                 {user.avatar ? (
@@ -887,6 +899,12 @@ function ChatWidget() {
           </div>
         </div>
       </div>
+
+      {/* Character Generator Modal */}
+      <CharacterGenerator
+        isOpen={showCharacterGenerator}
+        onClose={() => setShowCharacterGenerator(false)}
+      />
     </div>
   );
 }

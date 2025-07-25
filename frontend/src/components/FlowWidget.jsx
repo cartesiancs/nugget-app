@@ -41,13 +41,21 @@ function FlowWidget() {
    * closed from inside this component.
    * --------------------------------------------------*/
   useEffect(() => {
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    const handleOpen = () => {
+      console.log("🎯 FlowWidget: Received flowWidget:open event");
+      setOpen(true);
+    };
+    const handleClose = () => {
+      console.log("🎯 FlowWidget: Received flowWidget:close event");
+      setOpen(false);
+    };
 
+    console.log("🎯 FlowWidget: Setting up event listeners");
     window.addEventListener("flowWidget:open", handleOpen);
     window.addEventListener("flowWidget:close", handleClose);
 
     return () => {
+      console.log("🎯 FlowWidget: Cleaning up event listeners");
       window.removeEventListener("flowWidget:open", handleOpen);
       window.removeEventListener("flowWidget:close", handleClose);
     };
@@ -428,7 +436,8 @@ function FlowWidget() {
       <div
         className={`fixed inset-0 h-screen w-screen bg-[#0d0d0d] text-white ${
           open ? "flex" : "hidden"
-        } z-[9999] flex-col shadow-xl`}
+        } z-[9999] flex-col shadow-xl transition-opacity duration-300`}
+        style={{ opacity: open ? 1 : 0, visibility: open ? 'visible' : 'hidden' }}
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Video Creation Flow</h2>

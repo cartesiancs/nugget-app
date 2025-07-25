@@ -231,7 +231,7 @@ export class PreviewTopBar extends LitElement {
         }
       </style>
 
-      <div class="top-toggle-bar">
+      <div class="top-toggle-bar" style="padding-top:2.5rem;">
         <button
           @click=${() => this._handleClickViewMode("sandbox")}
           class="btn btn-xxs ${this.viewMode == "sandbox" ? "btn-active" : "btn-default"} text-light preview-top-button m-0"

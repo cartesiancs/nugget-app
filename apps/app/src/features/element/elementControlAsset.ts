@@ -72,48 +72,48 @@ export class ElementControlAsset extends LitElement {
 
   render() {
     let template;
-    // if (this.elementFiletype == "image") {
-    //   // NOTE: this.templateRotate() 는 사이드 잘림 문제로 추후 업데이트 필요
-    //   template = html`${this.templateImage()} ${this.templateResize()}`; //+ this.templateRotate()
-    // } else if (this.elementFiletype == "video") {
-    //   template = html`${this.templateVideo()} ${this.templateResize()}`;
-    // }
-    // else if (this.elementFiletype == "text") {
-    //   template = html`${this.templateText()} ${this.templateResize("horizon")}`;
-    // }
-    if (this.elementFiletype == "audio") {
-      template = html`${this.templateAudio()}`;
-    } else if (this.elementFiletype == "video") {
+    if (this.elementFiletype == "video") {
       template = html`${this.templateVideo()} ${this.templateResize()}`;
+    } else if (this.elementFiletype == "text") {
+      template = html`${this.templateText()} ${this.templateResize("horizon")}`;
+    } else if (this.elementFiletype == "audio") {
+      template = html`${this.templateAudio()}`;
     }
 
     this.classList.add("element-drag");
     this.setAttribute("id", `element-${this.elementId}`);
 
-    // if (this.elementFiletype !== "text") {
-    //   this.setAttribute(
-    //     "style",
-    //     `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${
-    //       resizeElement.x
-    //     }px; height: ${resizeElement.h}px; transform: rotate(${
-    //       this.timeline[this.elementId].rotation
-    //     }deg);`,
-    //   );
-    // if (this.elementFiletype == "text") {
-    //   let resizeRatio = this.elementControl.previewRatio;
-    //   let resizeText = this.timeline[this.elementId].fontsize / resizeRatio;
+    const element = this.timeline[this.elementId];
 
-    //   this.setAttribute(
-    //     "style",
-    //     `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeText}px; font-size: ${resizeText}px;`,
-    //   );
-    //   this.elementControl.changeTextFont({
-    //     elementId: this.elementId,
-    //     fontPath: this.timeline[this.elementId].fontpath,
-    //     fontType: this.timeline[this.elementId].fonttype,
-    //     fontName: this.timeline[this.elementId].fontname,
-    //   });
-    // }
+    if (element.filetype === "audio") {
+      // Audio elements don't have visual properties
+      return html`${template}`;
+    }
+
+    const visualElement = element as import("../../@types/timeline").VisualTimelineElement;
+    const resizeElement = this.convertRelativeToAbsoluteSize({
+      x: visualElement.location.x,
+      y: visualElement.location.y,
+      w: visualElement.width,
+      h: visualElement.height,
+    });
+
+    if (this.elementFiletype !== "text") {
+      this.setAttribute(
+        "style",
+        `width: ${resizeElement.w}px; top: ${resizeElement.y}px; left: ${
+          resizeElement.x
+        }px; height: ${resizeElement.h}px; transform: rotate(${
+          visualElement.rotation
+        }deg);`,
+      );
+    } else if (this.elementFiletype == "text") {
+      // Simplified text element positioning to prevent errors
+      this.setAttribute(
+        "style",
+        `width: ${resizeElement.w}px; left: ${resizeElement.x}px; top: ${resizeElement.y}px; height: ${resizeElement.h}px;`,
+      );
+    }
 
     //this.setPriority();
 
@@ -170,13 +170,18 @@ export class ElementControlAsset extends LitElement {
     return filepath;
   }
 
-  // templateText() {
-  //   return html`<input-text
-  //     elementId="${this.elementId}"
-  //     initValue="${this.timeline[this.elementId].text || ""}"
-  //     initColor="${this.timeline[this.elementId].textcolor || ""}"
-  //   ></input-text>`;
-  // }
+  templateText() {
+    const element = this.timeline[this.elementId];
+    if (element.filetype !== "text") {
+      return html``;
+    }
+    const textElement = element as import("../../@types/timeline").TextElementType;
+    return html`<input-text
+      elementId="${this.elementId}"
+      initValue="${textElement.text || ""}"
+      initColor="${textElement.textcolor || ""}"
+    ></input-text>`;
+  }
 
   templateResize(type = "full") {
     // full horizon vertical

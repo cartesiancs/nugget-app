@@ -21,11 +21,75 @@ export class App extends LitElement {
       this.topBarTitle = state.topBarTitle;
     });
 
+    // Add the publish button to the document body after a short delay
+    setTimeout(() => {
+      const existingButton = document.getElementById('publish-button');
+      if (!existingButton) {
+        const publishButton = document.createElement('button');
+        publishButton.id = 'publish-button';
+        publishButton.innerHTML = `
+          <span class="material-symbols-outlined" style="color: #000000; margin-right: 5px; font-size: 18px;">upload</span>
+          Publish
+        `;
+        publishButton.style.cssText = `
+          position: fixed;
+          top: 50px;
+          right: 25px;
+          background-color: #F9D312;
+          color: #000000;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-weight: 500;
+          cursor: pointer;
+          z-index: 10000;
+          font-family: inherit;
+        `;
+        publishButton.onclick = () => {
+          console.log('Publish button clicked! Starting video export...');
+
+          // Try to find and click the render button
+          const renderButton = document.querySelector('control-ui-render button[class*="btn-blue-fill"]');
+          if (renderButton) {
+            console.log('Found render button, clicking it...');
+            (renderButton as HTMLElement).click();
+          } else {
+            console.log('Render button not found, trying direct method...');
+            // Try to find the control render component and call its method directly
+            const controlRender = document.querySelector('control-ui-render');
+            if (controlRender) {
+              console.log('Found control render component');
+              const component = controlRender as any;
+              if (component.handleClickRenderV2Button) {
+                console.log('Calling handleClickRenderV2Button...');
+                component.handleClickRenderV2Button();
+              } else if (component.requestHttpRender) {
+                console.log('Calling requestHttpRender...');
+                component.requestHttpRender();
+              } else {
+                console.log('No render methods found on component');
+                alert('Render functionality not available');
+              }
+            } else {
+              console.log('Control render component not found');
+              alert('Render component not found');
+            }
+          }
+        };
+        document.body.appendChild(publishButton);
+      }
+    }, 1000);
+
     return this;
   }
 
   _handleClick() {
     this.uiState.updateVertical(this.resize.vertical.bottom + 2);
+  }
+
+    _handlePublishClick() {
+    console.log('Publish button clicked!');
+    alert('Publish button clicked!');
   }
 
   render() {
@@ -40,7 +104,7 @@ export class App extends LitElement {
         ></tutorial-popover>
       </tutorial-group>
 
-      <div class="top-bar">
+      <div class="top-bar d-flex justify-content-between align-items-center">
         <b>${this.topBarTitle}</b>
       </div>
 

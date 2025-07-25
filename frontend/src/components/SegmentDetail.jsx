@@ -9,13 +9,30 @@ function SegmentDetail({ segment }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [segmentImageUrl, setSegmentImageUrl] = useState(null);
   const [segmentVideoUrl, setSegmentVideoUrl] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(() => {
+    try {
+      const stored = localStorage.getItem('project-store-selectedProject');
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  });
 
   // Function to load segment data
   const loadSegmentData = () => {
     if (segment) {
       // Load segment-specific data from localStorage
-      const storedImages = JSON.parse(localStorage.getItem('segmentImages') || '{}');
-      const storedVideos = JSON.parse(localStorage.getItem('segmentVideos') || '{}');
+      let storedImages = {};
+      let storedVideos = {};
+      
+      if (selectedProject) {
+        storedImages = JSON.parse(localStorage.getItem(`project-store-images`) || '{}');
+        storedVideos = JSON.parse(localStorage.getItem(`project-store-videos`) || '{}');
+      } else {
+        storedImages = JSON.parse(localStorage.getItem('segmentImages') || '{}');
+        storedVideos = JSON.parse(localStorage.getItem('segmentVideos') || '{}');
+      }
       
       // Get this segment's specific image and video URLs
       const currentImageUrl = segment.imageUrl || storedImages[segment.id];
@@ -70,6 +87,14 @@ function SegmentDetail({ segment }) {
   // Listen for localStorage changes to update segment data
   useEffect(() => {
     const handleStorageChange = () => {
+      // Update selected project when localStorage changes
+      try {
+        const stored = localStorage.getItem('project-store-selectedProject');
+        const newSelectedProject = stored ? JSON.parse(stored) : null;
+        setSelectedProject(newSelectedProject);
+      } catch (e) {
+        console.error(e);
+      }
       loadSegmentData();
     };
 
@@ -97,15 +122,25 @@ function SegmentDetail({ segment }) {
         animation_prompt: segment.animation || segment.visual,
         art_style: segment.artStyle || '',
         imageS3Key: segment.s3Key,
-        uuid: segment.id
+        uuid: segment.id,
+        project_id: selectedProject?.id
       });
       
       if (result.s3Keys && result.s3Keys.length > 0) {
         // Get CloudFront URL directly
         const videoUrl = await s3Api.downloadVideo(result.s3Keys[0]);
-        const storedVideos = JSON.parse(localStorage.getItem('segmentVideos') || '{}');
-        storedVideos[segment.id] = videoUrl;
-        localStorage.setItem('segmentVideos', JSON.stringify(storedVideos));
+        
+        // Save to project-specific storage
+        let storedVideos = {};
+        if (selectedProject) {
+          storedVideos = JSON.parse(localStorage.getItem(`project-store-videos`) || '{}');
+          storedVideos[segment.id] = videoUrl;
+          localStorage.setItem(`project-store-videos`, JSON.stringify(storedVideos));
+        } else {
+          storedVideos = JSON.parse(localStorage.getItem('segmentVideos') || '{}');
+          storedVideos[segment.id] = videoUrl;
+          localStorage.setItem('segmentVideos', JSON.stringify(storedVideos));
+        }
 
         // Update state variables
         setSegmentVideoUrl(videoUrl);

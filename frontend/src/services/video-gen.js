@@ -3,9 +3,9 @@ import { getAuthHeaders } from "./api";
 
 // Video generation API wrapper
 export const videoApi = {
-  generateVideo: async ({ animation_prompt, art_style, imageS3Key, uuid }) => {
+  generateVideo: async ({ animation_prompt, art_style, imageS3Key, uuid, project_id }) => {
     try {
-      const payload = { animation_prompt, imageS3Key, uuid };
+      const payload = { animation_prompt, imageS3Key, uuid, projectId: project_id };
       payload.art_style =
         art_style && art_style.trim() ? art_style.trim() : "realistic";
 

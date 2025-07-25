@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { projectApi } from "../services/project";
 
-export const useProjectStore = create((set, get) => ({
+const storeImpl = (set, get) => ({
   projects: [],
   selectedProject: null,
-
   conversations: [],
   concepts: [],
   images: [],
@@ -13,7 +12,6 @@ export const useProjectStore = create((set, get) => ({
   segmentations: [],
   summaries: [],
   research: [],
-
   loading: false,
   loadingData: {
     conversations: false,
@@ -26,7 +24,6 @@ export const useProjectStore = create((set, get) => ({
     research: false,
   },
   error: null,
-
   setProjects: (projects) => set({ projects }),
   setSelectedProject: (project) => {
     set({ selectedProject: project });
@@ -36,7 +33,6 @@ export const useProjectStore = create((set, get) => ({
   },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
-
   setConversations: (conversations) => set({ conversations }),
   setConcepts: (concepts) => set({ concepts }),
   setImages: (images) => set({ images }),
@@ -45,7 +41,6 @@ export const useProjectStore = create((set, get) => ({
   setSegmentations: (segmentations) => set({ segmentations }),
   setSummaries: (summaries) => set({ summaries }),
   setResearch: (research) => set({ research }),
-
   fetchProjects: async (page = 1, limit = 10) => {
     set({ loading: true, error: null });
     try {
@@ -55,17 +50,14 @@ export const useProjectStore = create((set, get) => ({
       set({ error: e.message || "Failed to fetch projects", loading: false });
     }
   },
-
   fetchProjectEssentials: async (projectId) => {
     const { setSegmentations, setImages, setVideos } = get();
-
     try {
       const [segmentationsRes, imagesRes, videosRes] = await Promise.all([
         projectApi.getProjectSegmentations(projectId, { page: 1, limit: 50 }),
         projectApi.getProjectImages(projectId, { page: 1, limit: 100 }),
         projectApi.getProjectVideos(projectId, { page: 1, limit: 100 }),
       ]);
-
       setSegmentations(segmentationsRes.data || []);
       setImages(imagesRes.data || []);
       setVideos(videosRes.data || []);
@@ -74,7 +66,6 @@ export const useProjectStore = create((set, get) => ({
       set({ error: error.message || "Failed to fetch project data" });
     }
   },
-
   fetchConversations: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, conversations: true },
@@ -98,7 +89,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchConcepts: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, concepts: true },
@@ -122,7 +112,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchImages: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, images: true },
@@ -146,7 +135,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchVideos: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, videos: true },
@@ -170,7 +158,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchVoiceovers: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, voiceovers: true },
@@ -194,7 +181,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchSegmentations: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, segmentations: true },
@@ -218,7 +204,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchSummaries: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, summaries: true },
@@ -242,7 +227,6 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   fetchResearch: async (projectId, page = 1, limit = 10) => {
     set((state) => ({
       loadingData: { ...state.loadingData, research: true },
@@ -266,14 +250,12 @@ export const useProjectStore = create((set, get) => ({
       throw e;
     }
   },
-
   refreshSelectedProjectData: async () => {
     const { selectedProject } = get();
     if (selectedProject?.id) {
       await get().fetchProjectEssentials(selectedProject.id);
     }
   },
-
   clearProjectData: () => {
     set({
       conversations: [],
@@ -287,4 +269,11 @@ export const useProjectStore = create((set, get) => ({
       selectedProject: null,
     });
   },
-}));
+});
+
+export const useProjectStore =
+  window.__MY_GLOBAL_PROJECT_STORE__ || create(storeImpl);
+
+if (!window.__MY_GLOBAL_PROJECT_STORE__) {
+  window.__MY_GLOBAL_PROJECT_STORE__ = useProjectStore;
+}

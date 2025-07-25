@@ -3,9 +3,9 @@ import { getAuthHeaders } from "./api";
 
 // Image generation API wrapper
 export const imageApi = {
-  generateImage: async ({ visual_prompt, art_style, uuid }) => {
+  generateImage: async ({ visual_prompt, art_style, uuid, project_id }) => {
     try {
-      const payload = { visual_prompt, uuid };
+      const payload = { visual_prompt, uuid, projectId: project_id };
       payload.art_style =
         art_style && art_style.trim() ? art_style.trim() : "realistic";
 

@@ -1294,18 +1294,103 @@ export class PreviewCanvas extends LitElement {
   }
 
   protected render() {
-    this.style.margin = "10px";
-    return html` <canvas
-      id="elementPreviewCanvasRef"
-      class="preview"
-      style="width: 100%; max-height: calc(${this
-        .canvasMaxHeight}px - 40px); cursor: ${this.cursorType};"
-      width="1920"
-      height="1080"
-      onclick="${this.handleClickCanvas()}"
-      @mousedown=${this._handleMouseDown}
-      @mousemove=${this._handleMouseMove}
-      @mouseup=${this._handleMouseUp}
-    ></canvas>`;
+    this.style.margin = "0";
+    return html`
+      <canvas
+        id="elementPreviewCanvasRef"
+        class="preview"
+        style="width: 100%; max-height: ${this.canvasMaxHeight}px; cursor: ${this.cursorType};"
+        width="2200"
+        height="1300"
+        onclick="${this.handleClickCanvas()}"
+        @mousedown=${this._handleMouseDown}
+        @mousemove=${this._handleMouseMove}
+        @mouseup=${this._handleMouseUp}
+        @dblclick=${this._handleDblClick}
+      ></canvas>
+      ${this.isEditText && this.activeElementId ? this.renderTextInput() : ''}
+    `;
+  }
+
+  private renderTextInput() {
+    const element = this.timeline[this.activeElementId];
+    if (!element || element.filetype !== "text") {
+      return html``;
+    }
+
+    const textElement = element as import("../../@types/timeline").TextElementType;
+    const resizeElement = {
+      x: textElement.location.x / this.previewRatio,
+      y: textElement.location.y / this.previewRatio,
+      w: textElement.width / this.previewRatio,
+      h: textElement.height / this.previewRatio,
+    };
+
+    return html`
+      <div
+        style="
+          position: absolute;
+          left: ${resizeElement.x}px;
+          top: ${resizeElement.y}px;
+          width: ${resizeElement.w}px;
+          height: ${resizeElement.h}px;
+          z-index: 1000;
+          background: transparent;
+          border: 2px solid #ffffff;
+          pointer-events: auto;
+        "
+      >
+        <textarea
+          style="
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: ${textElement.textcolor};
+            font-size: ${textElement.fontsize / this.previewRatio}px;
+            font-family: ${textElement.fontname};
+            font-weight: ${textElement.options.isBold ? 'bold' : 'normal'};
+            font-style: ${textElement.options.isItalic ? 'italic' : 'normal'};
+            text-align: ${textElement.options.align};
+            letter-spacing: ${textElement.letterSpacing}px;
+            resize: none;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+          "
+          .value="${textElement.text}"
+          @input=${this._handleTextInput}
+          @blur=${this._handleTextBlur}
+          @keydown=${this._handleTextKeydown}
+        ></textarea>
+      </div>
+    `;
+  }
+
+  private _handleTextInput(e: Event) {
+    const target = e.target as HTMLTextAreaElement;
+    const element = this.timeline[this.activeElementId];
+    if (element && element.filetype === "text") {
+      const textElement = element as import("../../@types/timeline").TextElementType;
+      textElement.text = target.value;
+      this.timelineState.patchTimeline(this.timeline);
+      this.drawCanvas(this.canvas);
+    }
+  }
+
+  private _handleTextBlur() {
+    this.isEditText = false;
+    this.activeElementId = "";
+    this.requestUpdate();
+  }
+
+  private _handleTextKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      this.isEditText = false;
+      this.activeElementId = "";
+      this.requestUpdate();
+    }
   }
 }

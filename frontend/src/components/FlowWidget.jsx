@@ -24,12 +24,45 @@ function FlowWidget() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [flowMessages, setFlowMessages] = useState([]);
+  // We only track messages via setter; value itself not needed for UI rendering
+  const [, setFlowMessages] = useState([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [projectData, setProjectData] = useState(null);
   const [regeneratingImages, setRegeneratingImages] = useState(new Set());
   const [regeneratingVideos, setRegeneratingVideos] = useState(new Set());
+
+  /* ----------------------------------------------------
+   * Global open / close handlers so external scripts
+   * (e.g. the Lit previewTopBar sandbox toggle) can
+   * show or hide the FlowWidget without reaching into
+   * React internals. We listen for custom events and
+   * also emit them whenever the sidebar is opened or
+   * closed from inside this component.
+   * --------------------------------------------------*/
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    window.addEventListener("flowWidget:open", handleOpen);
+    window.addEventListener("flowWidget:close", handleClose);
+
+    return () => {
+      window.removeEventListener("flowWidget:open", handleOpen);
+      window.removeEventListener("flowWidget:close", handleClose);
+    };
+  }, []);
+
+  // Notify outer world when widget visibility changes
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(open ? "flowWidget:opened" : "flowWidget:closed"));
+
+    // Toggle attribute on the custom element so we can style it via CSS
+    const hostEl = document.querySelector("react-flow-widget");
+    if (hostEl) {
+      hostEl.setAttribute("data-open", open ? "true" : "false");
+    }
+  }, [open]);
 
   // Load data from API (no localStorage fallback)
   const flowData = useMemo(() => {
@@ -197,12 +230,7 @@ function FlowWidget() {
     const newNodes = [];
     const newEdges = [];
     
-    // Create custom node types with regeneration callback
-    const nodeTypes = {
-      segmentNode: SegmentNode,
-      imageNode: (props) => <ImageNode {...props} onRegenerateImage={handleRegenerateImage} regeneratingImages={regeneratingImages} />,
-      videoNode: VideoNode,
-    };
+    // NodeTypes are defined later with hooks; local reference not necessary here
 
     if (flowData.segments && flowData.segments.length > 0) {
       console.log("📊 Creating nodes for", flowData.segments.length, "segments");
@@ -396,23 +424,11 @@ function FlowWidget() {
 
   return (
     <div className="z-10">
-      {/* Floating button */}
-      {!open && (
-        <button
-          className="fixed bottom-10 right-24 w-16 h-16 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]"
-          aria-label="Open flow widget"
-          onClick={() => setOpen(true)}
-          style={{ boxShadow: "0 4px 12px rgba(147, 51, 234, 0.3)" }}
-        >
-          REACT FLOW
-        </button>
-      )}
-
-      {/* Sliding sidebar */}
+      {/* Full-screen overlay; hidden when not open */}
       <div
-        className={`fixed top-0 right-0 h-screen w-[80vw] max-w-[1200px] bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
-          open ? "translate-x-0" : "translate-x-full"
-        } z-[1000] flex flex-col shadow-xl`}
+        className={`fixed inset-0 h-screen w-screen bg-[#0d0d0d] text-white ${
+          open ? "flex" : "hidden"
+        } z-[9999] flex-col shadow-xl`}
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Video Creation Flow</h2>

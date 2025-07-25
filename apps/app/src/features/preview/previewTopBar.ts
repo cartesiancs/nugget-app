@@ -62,17 +62,19 @@ export class PreviewTopBar extends LitElement {
     return this;
   }
 
-  /** Handle external close events from overlay to switch back to timeline */
+  /** Ensure component sets initial state */
   connectedCallback() {
     super.connectedCallback();
 
-    try {
-      (window as any).electronAPI?.res?.overlayRecord?.stop?.(() => {
-        this._handleClickViewMode("timeline");
-      });
-    } catch (e) {
-      /* ignore if bridge missing */
-    }
+    // Listen for FlowWidget close events so Timeline view is restored automatically
+    window.addEventListener("flowWidget:closed", () => {
+      this._handleClickViewMode("timeline");
+    });
+
+    // Listen for FlowWidget open events (e.g., from its own floating button)
+    window.addEventListener("flowWidget:opened", () => {
+      this._handleClickViewMode("sandbox");
+    });
   }
 
   createShape(shape) {
@@ -183,21 +185,22 @@ export class PreviewTopBar extends LitElement {
   _handleClickViewMode(mode: "timeline" | "sandbox") {
     this.viewMode = mode;
 
+    console.log("PreviewTopBar: switching to", mode);
     if (mode === "sandbox") {
       // Hide timeline area
       uiStore.getState().updateVertical(0);
 
-      // Attempt to show the flow editor overlay via Electron.
-      try {
-        (window as any).electronAPI?.req?.overlayRecord?.show?.();
-      } catch (e) {
-        // Silently ignore if API is unavailable (e.g., in browser preview)
-        console.warn("Electron overlay call failed", e);
-      }
+      // Ask FlowWidget to open inside the same window
+      console.log("Dispatching flowWidget:open");
+      window.dispatchEvent(new CustomEvent("flowWidget:open"));
     } else {
       // Restore timeline area height
       const height = this.defaultTimelineHeight > 0 ? this.defaultTimelineHeight : 40;
       uiStore.getState().updateVertical(height);
+
+      // Ask FlowWidget to close
+      console.log("Dispatching flowWidget:close");
+      window.dispatchEvent(new CustomEvent("flowWidget:close"));
     }
   }
 

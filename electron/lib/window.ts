@@ -35,7 +35,7 @@ const window = {
       indexFile: "apps/app/index.html",
     });
 
-    autoUpdater.checkForUpdatesAndNotify();
+    // autoUpdater.checkForUpdatesAndNotify(); // Disabled to prevent E013 error
     Menu.setApplicationMenu(menu);
 
     session.defaultSession.setDisplayMediaRequestHandler((_, callback) => {
@@ -52,6 +52,10 @@ const window = {
           }
 
           callback({ video: sources[0], audio: "loopback" });
+        })
+        .catch((error) => {
+          console.error("Failed to get desktop sources:", error);
+          callback({ video: undefined, audio: undefined });
         });
     });
 

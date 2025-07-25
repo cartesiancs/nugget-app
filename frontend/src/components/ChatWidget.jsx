@@ -4,6 +4,7 @@ import SegmentList from "./SegmentList";
 import ComparisonView from "./ComparisonView";
 import SegmentDetail from "./SegmentDetail";
 import LoadingSpinner from "./LoadingSpinner";
+import CharacterGenerator from "./CharacterGenerator";
 import { useAuth } from "../hooks/useAuth";
 import ChatLoginButton from "./ChatLoginButton";
 import { ProjectHistoryDropdown } from "./ProjectHistoryDropdown";
@@ -46,6 +47,7 @@ function ChatWidget() {
 
   const [addingTimeline, setAddingTimeline] = useState(false); // show loader while adding
   const [showProjectHistory, setShowProjectHistory] = useState(false);
+  const [showCharacterGenerator, setShowCharacterGenerator] = useState(false);
 
   useEffect(() => {
     const handleStorage = () => {
@@ -603,375 +605,394 @@ function ChatWidget() {
     }
   }, [timelineProgress]);
 
+  // Placeholder components for merge conflict resolution
+  const ProjectLoader = () => null;
+  const SelectedProjectBanner = () => null;
+
   return (
-      <div className='z-10'>
-        {/* Floating chat button */}
-        {!open && (
-          <button
-            className='fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gray-900 hover:bg-gray-700 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]'
-            aria-label='Open chat'
-            onClick={() => setOpen(true)}
-          >
-            💬
-          </button>
-        )}
-
-        {/* Sliding sidebar - now wider */}
-        <div
-          className={`fixed top-0 right-0 h-screen w-[80vw] max-w-[1200px] bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
-            open ? "translate-x-0" : "translate-x-full"
-          } z-[1000] flex flex-col shadow-xl`}
+    <div className='z-10'>
+      {/* Floating chat button */}
+      {!open && (
+        <button
+          className='fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gray-900 hover:bg-gray-700 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]'
+          aria-label='Open chat'
+          onClick={() => setOpen(true)}
         >
-          <div className='flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0 relative'>
-            <h2 className='text-lg font-semibold'>Segmentation Assistant</h2>
-            <div className='flex items-center gap-3 relative'>
-              {isAuthenticated && (
-                <>
-                  {/* Project History Dropdown (left of clock) */}
-                  {showProjectHistory && (
-                    <div className='absolute right-12 top-10 z-[1100]'>
-                      <ProjectHistoryDropdown
-                        onSelect={() => setShowProjectHistory(false)}
-                      />
-                    </div>
-                  )}
-                  <button
-                    className='text-white text-xl focus:outline-none mr-2 bg-transparent shadow-none border-none p-0 m-0 hover:bg-transparent'
-                    title='Project History'
-                    onClick={() => setShowProjectHistory((v) => !v)}
-                  >
-                    <span role='img' aria-label='history'>
-                      🕒
-                    </span>
-                  </button>
-                </>
-              )}
-              {isAuthenticated && user && (
-                <div className='flex items-center gap-2'>
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt='Profile'
-                      className='w-6 h-6 rounded-full border border-gray-600'
-                    />
-                  ) : (
-                    <div className='w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center'>
-                      <span className='text-white text-xs font-medium'>
-                        {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                      </span>
-                    </div>
-                  )}
-                  <span className='text-gray-300 text-sm hidden sm:block'>
-                    {user.name || user.email}
-                  </span>
-                </div>
-              )}
-              {isAuthenticated && (
-                <button
-                  onClick={logout}
-                  className='px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors'
-                  title='Sign Out'
-                >
-                  Sign Out
-                </button>
-              )}
-              <button
-                className='text-white text-xl focus:outline-none'
-                aria-label='Close chat'
-                onClick={() => setOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-          {/* Show selected project name if any */}
-          {isAuthenticated && (
-            <>
-              <ProjectLoader />
-              <SelectedProjectBanner />
-            </>
-          )}
+          💬
+        </button>
+      )}
 
-          <div className='flex flex-1 overflow-hidden'>
-            {/* Left panel - Segment list */}
-            {selectedResponse && (
-              <div className='w-1/4 border-r border-gray-800 flex flex-col overflow-hidden'>
-                <SegmentList
-                  segments={selectedResponse.segments}
-                  selectedSegmentId={selectedSegment?.id}
-                  onSegmentClick={setSelectedSegment}
-                />
+      {/* Sliding sidebar - now wider */}
+      <div
+        className={`fixed top-0 right-0 h-screen w-[80vw] max-w-[1200px] bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
+          open ? "translate-x-0" : "translate-x-full"
+        } z-[1000] flex flex-col shadow-xl`}
+      >
+        <div className='flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0 relative'>
+          <h2 className='text-lg font-semibold'>Segmentation Assistant</h2>
+          <div className='flex items-center gap-3 relative'>
+            {isAuthenticated && (
+              <>
+                {/* Project History Dropdown (left of clock) */}
+                {showProjectHistory && (
+                  <div className='absolute right-12 top-10 z-[1100]'>
+                    <ProjectHistoryDropdown
+                      onSelect={() => setShowProjectHistory(false)}
+                    />
+                  </div>
+                )}
+                <button
+                  className='text-white text-xl focus:outline-none mr-2 bg-transparent shadow-none border-none p-0 m-0 hover:bg-transparent'
+                  title='Project History'
+                  onClick={() => setShowProjectHistory((v) => !v)}
+                >
+                  <span role='img' aria-label='history'>
+                    🕒
+                  </span>
+                </button>
+                <button
+                  onClick={() => setShowCharacterGenerator(true)}
+                  className='px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors flex items-center gap-1'
+                  title='Generate Character'
+                >
+                  <span>👤</span>
+                  <span className='hidden sm:inline'>Character</span>
+                </button>
+              </>
+            )}
+            {isAuthenticated && user && (
+              <div className='flex items-center gap-2'>
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt='Profile'
+                    className='w-6 h-6 rounded-full border border-gray-600'
+                  />
+                ) : (
+                  <div className='w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center'>
+                    <span className='text-white text-xs font-medium'>
+                      {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                )}
+                <span className='text-gray-300 text-sm hidden sm:block'>
+                  {user.name || user.email}
+                </span>
               </div>
             )}
-
-            {/* Main content area */}
-            <div
-              className={`flex-1 flex flex-col ${
-                selectedResponse ? "w-3/4" : "w-full"
-              }`}
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                className='px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors'
+                title='Sign Out'
+              >
+                Sign Out
+              </button>
+            )}
+            <button
+              className='text-white text-xl focus:outline-none'
+              aria-label='Close chat'
+              onClick={() => setOpen(false)}
             >
-              <div className='flex-1 overflow-y-auto'>
-                {askImageConfirm && (
-                  <ConfirmationPrompt
-                    message='Proceed with image generation for all segments?'
-                    onConfirm={confirmImage}
-                    onCancel={() => setAskImageConfirm(false)}
-                    loading={loading}
-                  />
-                )}
-                {askVideoConfirm && (
-                  <ConfirmationPrompt
-                    message='Proceed with video generation for the generated images?'
-                    onConfirm={confirmVideo}
-                    onCancel={() => setAskVideoConfirm(false)}
-                    loading={loading}
-                  />
-                )}
-                {!askImageConfirm &&
-                  !askVideoConfirm &&
-                  (loading ? (
-                    <LoadingSpinner />
-                  ) : error ? (
-                    <div className='flex items-center justify-center h-full'>
-                      <div className='text-red-400 text-center p-4'>
-                        <p>{error}</p>
+              ✕
+            </button>
+          </div>
+        </div>
+        
+        {/* Show selected project name if any */}
+        {isAuthenticated && (
+          <>
+            <ProjectLoader />
+            <SelectedProjectBanner />
+          </>
+        )}
+
+        <div className='flex flex-1 overflow-hidden'>
+          {/* Left panel - Segment list */}
+          {selectedResponse && (
+            <div className='w-1/4 border-r border-gray-800 flex flex-col overflow-hidden'>
+              <SegmentList
+                segments={selectedResponse.segments}
+                selectedSegmentId={selectedSegment?.id}
+                onSegmentClick={setSelectedSegment}
+              />
+            </div>
+          )}
+
+          {/* Main content area */}
+          <div
+            className={`flex-1 flex flex-col ${
+              selectedResponse ? "w-3/4" : "w-full"
+            }`}
+          >
+            <div className='flex-1 overflow-y-auto'>
+              {askImageConfirm && (
+                <ConfirmationPrompt
+                  message='Proceed with image generation for all segments?'
+                  onConfirm={confirmImage}
+                  onCancel={() => setAskImageConfirm(false)}
+                  loading={loading}
+                />
+              )}
+              {askVideoConfirm && (
+                <ConfirmationPrompt
+                  message='Proceed with video generation for the generated images?'
+                  onConfirm={confirmVideo}
+                  onCancel={() => setAskVideoConfirm(false)}
+                  loading={loading}
+                />
+              )}
+              {!askImageConfirm &&
+                !askVideoConfirm &&
+                (loading ? (
+                  <LoadingSpinner />
+                ) : error ? (
+                  <div className='flex items-center justify-center h-full'>
+                    <div className='text-red-400 text-center p-4'>
+                      <p>{error}</p>
+                      <button
+                        onClick={() => setError(null)}
+                        className='mt-2 text-sm text-blue-400 hover:text-blue-300'
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                ) : selectedResponse ? (
+                  <div className='flex flex-col h-full'>
+                    {/* Action Bar */}
+                    {!loading && (
+                      <div className='p-4 border-b border-gray-800 bg-gray-900 flex gap-3'>
                         <button
-                          onClick={() => setError(null)}
-                          className='mt-2 text-sm text-blue-400 hover:text-blue-300'
+                          onClick={triggerImageGeneration}
+                          className='bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium'
                         >
-                          Dismiss
+                          Generate Images
                         </button>
-                      </div>
-                    </div>
-                  ) : selectedResponse ? (
-                    <div className='flex flex-col h-full'>
-                      {/* Action Bar */}
-                      {!loading && (
-                        <div className='p-4 border-b border-gray-800 bg-gray-900 flex gap-3'>
+                        <button
+                          onClick={triggerVideoGeneration}
+                          className={`px-4 py-2 rounded-md font-medium ${
+                            selectedResponse.segments.some((s) => s.imageUrl)
+                              ? "bg-green-600 hover:bg-green-500 text-white"
+                              : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                          }`}
+                          disabled={
+                            !selectedResponse.segments.some((s) => s.imageUrl)
+                          }
+                        >
+                          Generate Videos
+                        </button>
+                        {canSendTimeline && (
                           <button
-                            onClick={triggerImageGeneration}
-                            className='bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium'
+                            onClick={sendVideosToTimeline}
+                            disabled={addingTimeline}
+                            className='px-3 py-2 rounded-md font-medium flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50'
                           >
-                            Generate Images
-                          </button>
-                          <button
-                            onClick={triggerVideoGeneration}
-                            className={`px-4 py-2 rounded-md font-medium ${
-                              selectedResponse.segments.some((s) => s.imageUrl)
-                                ? "bg-green-600 hover:bg-green-500 text-white"
-                                : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                            }`}
-                            disabled={
-                              !selectedResponse.segments.some((s) => s.imageUrl)
-                            }
-                          >
-                            Generate Videos
-                          </button>
-                          {canSendTimeline && (
-                            <button
-                              onClick={sendVideosToTimeline}
-                              disabled={addingTimeline}
-                              className='px-3 py-2 rounded-md font-medium flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50'
-                            >
-                              {addingTimeline ? (
-                                <>
-                                  <div className='w-4 h-4'>
-                                    <LoadingSpinner />
-                                  </div>
-                                  <span>Adding…</span>
-                                </>
-                              ) : (
-                                "➕ Add Videos to Timeline"
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Progress Display */}
-                      {Object.keys(generationProgress).length > 0 && (
-                        <div className='p-4 border-b border-gray-800 bg-gray-900'>
-                          <h3 className='text-sm font-semibold text-gray-300 mb-3'>
-                            Generation Progress
-                          </h3>
-                          <div className='space-y-2'>
-                            {selectedResponse.segments.map((segment) => {
-                              const progress = generationProgress[segment.id];
-                              if (!progress) return null;
-
-                              return (
-                                <div
-                                  key={segment.id}
-                                  className='flex items-center justify-between text-sm'
-                                >
-                                  <div className='flex items-center gap-2'>
-                                    <span className='text-gray-400'>
-                                      Scene {segment.id}
-                                    </span>
-                                    <span className='text-xs text-gray-500'>
-                                      ({progress.index}/{progress.total})
-                                    </span>
-                                  </div>
-                                  <div className='flex items-center gap-2'>
-                                    {progress.status === "generating" && (
-                                      <>
-                                        <div className='w-4 h-4'>
-                                          <LoadingSpinner />
-                                        </div>
-                                        <span className='text-blue-400'>
-                                          Generating {progress.type}...
-                                        </span>
-                                      </>
-                                    )}
-                                    {progress.status === "completed" && (
-                                      <span className='text-green-400'>
-                                        ✓ {progress.type} completed
-                                      </span>
-                                    )}
-                                    {progress.status === "error" && (
-                                      <span className='text-red-400'>
-                                        ✗ {progress.type} failed
-                                      </span>
-                                    )}
-                                  </div>
+                            {addingTimeline ? (
+                              <>
+                                <div className='w-4 h-4'>
+                                  <LoadingSpinner />
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Segment Detail */}
-                      <div className='flex-1 overflow-hidden'>
-                        <SegmentDetail segment={selectedSegment} />
+                                <span>Adding…</span>
+                              </>
+                            ) : (
+                              "➕ Add Videos to Timeline"
+                            )}
+                          </button>
+                        )}
                       </div>
+                    )}
+
+                    {/* Progress Display */}
+                    {Object.keys(generationProgress).length > 0 && (
+                      <div className='p-4 border-b border-gray-800 bg-gray-900'>
+                        <h3 className='text-sm font-semibold text-gray-300 mb-3'>
+                          Generation Progress
+                        </h3>
+                        <div className='space-y-2'>
+                          {selectedResponse.segments.map((segment) => {
+                            const progress = generationProgress[segment.id];
+                            if (!progress) return null;
+
+                            return (
+                              <div
+                                key={segment.id}
+                                className='flex items-center justify-between text-sm'
+                              >
+                                <div className='flex items-center gap-2'>
+                                  <span className='text-gray-400'>
+                                    Scene {segment.id}
+                                  </span>
+                                  <span className='text-xs text-gray-500'>
+                                    ({progress.index}/{progress.total})
+                                  </span>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                  {progress.status === "generating" && (
+                                    <>
+                                      <div className='w-4 h-4'>
+                                        <LoadingSpinner />
+                                      </div>
+                                      <span className='text-blue-400'>
+                                        Generating {progress.type}...
+                                      </span>
+                                    </>
+                                  )}
+                                  {progress.status === "completed" && (
+                                    <span className='text-green-400'>
+                                      ✓ {progress.type} completed
+                                    </span>
+                                  )}
+                                  {progress.status === "error" && (
+                                    <span className='text-red-400'>
+                                      ✗ {progress.type} failed
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Segment Detail */}
+                    <div className='flex-1 overflow-hidden'>
+                      <SegmentDetail segment={selectedSegment} />
                     </div>
-                  ) : chatMessages.length > 0 ? (
-                    <div className='p-4 space-y-4'>
-                      {chatMessages.map((message, index) => (
+                  </div>
+                ) : chatMessages.length > 0 ? (
+                  <div className='p-4 space-y-4'>
+                    {chatMessages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${
+                          message.type === "user"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
                         <div
-                          key={index}
-                          className={`flex ${
+                          className={`max-w-[80%] rounded-lg p-3 ${
                             message.type === "user"
-                              ? "justify-end"
-                              : "justify-start"
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-700 text-gray-200"
                           }`}
                         >
-                          <div
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              message.type === "user"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-200"
-                            }`}
-                          >
-                            <div>{message.content}</div>
+                          <div>{message.content}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : !isAuthenticated ? (
+                  <div className='p-4 space-y-4'>
+                    <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
+                      <div className='mb-4'>
+                        <h3 className='text-lg font-semibold text-white mb-2'>
+                          Welcome to Usuals.ai
+                        </h3>
+                        <p className='text-gray-400 text-sm'>
+                          Sign in to access AI-powered video creation features
+                        </p>
+                      </div>
+                      <ChatLoginButton />
+                    </div>
+                  </div>
+                ) : concepts ? (
+                  <div className='p-4'>
+                    <h3 className='text-lg font-semibold mb-4 text-white'>
+                      Choose a Concept
+                    </h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      {concepts.map((concept, index) => (
+                        <div
+                          key={index}
+                          onClick={() => handleConceptSelect(concept)}
+                          className='bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-700 hover:border-gray-600 transition-colors'
+                        >
+                          <h4 className='text-white font-medium text-lg mb-2'>
+                            {concept.title}
+                          </h4>
+                          <p className='text-gray-300 text-sm mb-3'>
+                            {concept.concept}
+                          </p>
+                          <div className='flex flex-wrap gap-2'>
+                            <span className='px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded'>
+                              Tone: {concept.tone}
+                            </span>
+                            <span className='px-2 py-1 bg-green-600 text-green-100 text-xs rounded'>
+                              Goal: {concept.goal}
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
-                  ) : !isAuthenticated ? (
-                    <div className='p-4 space-y-4'>
-                      <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
-                        <div className='mb-4'>
-                          <h3 className='text-lg font-semibold text-white mb-2'>
-                            Welcome to Usuals.ai
-                          </h3>
-                          <p className='text-gray-400 text-sm'>
-                            Sign in to access AI-powered video creation features
-                          </p>
-                        </div>
-                        <ChatLoginButton />
-                      </div>
-                    </div>
-                  ) : concepts ? (
-                    <div className='p-4'>
-                      <h3 className='text-lg font-semibold mb-4 text-white'>
-                        Choose a Concept
-                      </h3>
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                        {concepts.map((concept, index) => (
-                          <div
-                            key={index}
-                            onClick={() => handleConceptSelect(concept)}
-                            className='bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-700 hover:border-gray-600 transition-colors'
-                          >
-                            <h4 className='text-white font-medium text-lg mb-2'>
-                              {concept.title}
-                            </h4>
-                            <p className='text-gray-300 text-sm mb-3'>
-                              {concept.concept}
-                            </p>
-                            <div className='flex flex-wrap gap-2'>
-                              <span className='px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded'>
-                                Tone: {concept.tone}
-                              </span>
-                              <span className='px-2 py-1 bg-green-600 text-green-100 text-xs rounded'>
-                                Goal: {concept.goal}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : responses ? (
-                    <ComparisonView
-                      response1={responses.response1}
-                      response2={responses.response2}
-                      onPreferResponse={handlePreferResponse}
-                    />
-                  ) : (
-                    <div className='p-4 space-y-4'>
-                      <p className='text-gray-400 text-center'>
-                        Enter a prompt to start creating your video content
-                      </p>
-                    </div>
-                  ))}
-              </div>
-
-              {/* Input area */}
-              {isAuthenticated ? (
-                <form
-                  className='p-4 border-t border-gray-800 bg-gray-900 flex gap-2'
-                  onSubmit={handleSubmit}
-                >
-                  <input
-                    type='text'
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={(e) => {
-                      e.stopPropagation();
-                      if (
-                        e.nativeEvent &&
-                        typeof e.nativeEvent.stopImmediatePropagation ===
-                          "function"
-                      ) {
-                        e.nativeEvent.stopImmediatePropagation();
-                      }
-                    }}
-                    placeholder='Describe your video idea...'
-                    className='flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500'
-                    disabled={loading}
+                  </div>
+                ) : responses ? (
+                  <ComparisonView
+                    response1={responses.response1}
+                    response2={responses.response2}
+                    onPreferResponse={handlePreferResponse}
                   />
-                  <button
-                    type='submit'
-                    className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {loading ? "Processing..." : "Create Video"}
-                  </button>
-                </form>
-              ) : (
-                <div className='p-4 border-t border-gray-800 bg-gray-900'>
-                  <p className='text-gray-400 text-sm text-center'>
-                    Sign in to use chat features
-                  </p>
-                </div>
-              )}
+                ) : (
+                  <div className='p-4 space-y-4'>
+                    <p className='text-gray-400 text-center'>
+                      Enter a prompt to start creating your video content
+                    </p>
+                  </div>
+                ))}
             </div>
+
+            {/* Input area */}
+            {isAuthenticated ? (
+              <form
+                className='p-4 border-t border-gray-800 bg-gray-900 flex gap-2'
+                onSubmit={handleSubmit}
+              >
+                <input
+                  type='text'
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (
+                      e.nativeEvent &&
+                      typeof e.nativeEvent.stopImmediatePropagation ===
+                        "function"
+                    ) {
+                      e.nativeEvent.stopImmediatePropagation();
+                    }
+                  }}
+                  placeholder='Describe your video idea...'
+                  className='flex-1 rounded-md bg-gray-800 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500'
+                  disabled={loading}
+                />
+                <button
+                  type='submit'
+                  className={`rounded-md bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 font-medium ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {loading ? "Processing..." : "Create Video"}
+                </button>
+              </form>
+            ) : (
+              <div className='p-4 border-t border-gray-800 bg-gray-900'>
+                <p className='text-gray-400 text-sm text-center'>
+                  Sign in to use chat features
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Character Generator Modal */}
+      <CharacterGenerator
+        isOpen={showCharacterGenerator}
+        onClose={() => setShowCharacterGenerator(false)}
+      />
+    </div>
   );
 }
 

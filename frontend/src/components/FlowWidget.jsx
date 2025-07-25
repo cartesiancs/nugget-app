@@ -38,6 +38,8 @@ function FlowWidget() {
     refreshSelectedProjectData,
   } = useProjectStore();
 
+  console.log("🔄 FlowWidget selectedProject:", selectedProject);
+
   const flowData = useMemo(() => {
     console.log("🔄 flowData useMemo called, store data:", { segmentations, images, videos });
     

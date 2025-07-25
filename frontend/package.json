@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:widget": "vite build --config vite.widget.config.ts",
     "build:flow-widget": "vite build --config vite.flow-widget.config.ts",
+    "build:both-widgets": "vite build --config vite.widget.config.ts --config vite.flow-widget.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

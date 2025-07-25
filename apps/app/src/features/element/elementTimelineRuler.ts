@@ -65,7 +65,7 @@ export class ElementTimelineRuler extends LitElement {
 
   render() {
     this.classList.add("ps-0", "overflow-hidden", "position-absolute");
-    this.style.top = "40px";
+    this.style.top = "69px";
     this.style.left = `${this.resize.timelineVertical.leftOption}px`;
 
     this.style.position = "absolute";
@@ -210,14 +210,15 @@ export class ElementTimelineRuler extends LitElement {
       let point = term * count + startPoint;
 
       let startX = point;
-      let startY = 15;
+      let startY = 10;
       let endX = point;
-      let endY = 20;
+      let endY = 15;
 
       ctx.beginPath();
 
       if (count % (10 * range) == 0) {
-        startY = 10;
+        startY = 5;
+        endY = 20;
         ctx.strokeStyle = "#e3e3e3";
         ctx.font = "300 12px serif";
         ctx.font;
@@ -225,18 +226,18 @@ export class ElementTimelineRuler extends LitElement {
           const text = this.formatSecondsToTime(
             (Number(count / 10) + startNumber * range) / unitSplit,
           );
-          ctx.strokeText(`${text}`, startX - term / 2, 10);
+          ctx.strokeText(`${text}`, startX - 15, 28);
         } else if (unit == "m") {
           const text = this.formatMinutesToHourMinute(
             (Number(count / 10) + startNumber * range) / unitSplit,
           );
 
-          ctx.strokeText(`${text}`, startX - term / 2, 10);
+          ctx.strokeText(`${text}`, startX - 15, 28);
         } else {
           const text = `${
             (Number(count / 10) + startNumber * range) / unitSplit
           }${unit}`;
-          ctx.strokeText(`${text}`, startX - term / 2, 10);
+          ctx.strokeText(`${text}`, startX - 15, 28);
         }
       } else {
         ctx.strokeStyle = "#e3e3e3";

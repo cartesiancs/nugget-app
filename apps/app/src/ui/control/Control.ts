@@ -50,6 +50,9 @@ export class Control extends LitElement {
   @property()
   nowActivePanel = this.controlPanel.nowActive;
 
+  @property()
+  isPanelCollapsed: boolean = true;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
@@ -74,7 +77,7 @@ export class Control extends LitElement {
     const elementControlComponent = document.querySelector("element-control");
 
     if (this.isAbleResize) {
-      const windowWidth = window.innerWidth - this.resize.chatSidebar;
+      const windowWidth = window.innerWidth;
       const nowX = e.clientX;
       const resizeX = (nowX / windowWidth) * 100;
 
@@ -119,20 +122,33 @@ export class Control extends LitElement {
     this.timelineState.setCursorType(type);
   }
 
+  _togglePanelDrawer() {
+    this.isPanelCollapsed = !this.isPanelCollapsed;
+  }
+
   render() {
     return html`
       <div
         id="split_col_1"
-        class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
-        style="width: ${this.resize.horizontal.panel}%;"
+        class="h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
+        style="width: 26%; /* ${this.resize.horizontal.panel}% */"
       >
         <div
-          class="split-col-bar"
+          class="split-col-bar d-flex align-items-center justify-content-center ${this.isPanelCollapsed ? 'collapsed' : ''}"
           @mousedown=${this._handleClickResizePanel}
-        ></div>
+        >
+          <span
+            class="material-symbols-outlined drawer-toggle"
+            style="cursor: pointer; user-select: none;"
+            @click=${this._togglePanelDrawer}
+          >
+            ${this.isPanelCollapsed ? "chevron_right" : "chevron_left"}
+          </span>
+        </div>
 
         <div
-          class=" h-100 w-100 overflow-y-hidden overflow-x-hidden position-absolute "
+          class="h-100 w-100 overflow-y-hidden overflow-x-hidden position-absolute"
+          style="transform: translateX(${this.isPanelCollapsed ? "-100%" : "0"}); transition: transform 0.3s ease;"
         >
           <div class="d-flex align-items-start h-100">
             <div
@@ -263,7 +279,7 @@ export class Control extends LitElement {
       <div
         id="split_col_2"
         class="h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
-        style="width: ${this.resize.horizontal.preview}%;"
+        style="width: 48%; /* ${this.resize.horizontal.preview}% */"
       >
         <div
           class="split-col-bar"
@@ -274,18 +290,16 @@ export class Control extends LitElement {
 
         <div
           style="height: calc(100% - 2rem);"
-          class="position-relative d-flex align-items-center justify-content-center ${this
+          class="position-relative d-flex align-items-center justify-content-center w-200 ${this
             .nowActivePanel == ""
             ? ""
             : "d-none"}"
         >
-          <div id="videobox">
-            <div class="d-flex justify-content-center">
-              <div id="video" class="video">
-                <preview-canvas></preview-canvas>
-                <element-control></element-control>
-                <drag-alignment-guide></drag-alignment-guide>
-              </div>
+          <div id="videobox" class="d-flex justify-content-center align-items-center w-100" style="margin-top: 2rem;">
+            <div id="video" class="video" style="background-color: #000000; border-radius: 20px; border: none;">
+              <preview-canvas></preview-canvas>
+              <element-control></element-control>
+              <drag-alignment-guide></drag-alignment-guide>
             </div>
           </div>
         </div>
@@ -339,8 +353,8 @@ export class Control extends LitElement {
       <!-- OPTION-->
       <div
         id="split_col_3"
-        class="bg-darker h-100 overflow-y-scroll overflow-x-hidden position-relative option-window p-2"
-        style="width: ${this.resize.horizontal.option}%;"
+        class="h-100 overflow-y-scroll overflow-x-hidden position-relative option-window p-2 w-100"
+        style="width: 26%; /* ${this.resize.horizontal.option}% */ background: linear-gradient(180deg, rgba(17, 18, 21, 0) 0%, rgba(50, 53, 62, 0.2) 100%); border: none;"
       >
         <input
           type="hidden"

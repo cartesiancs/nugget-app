@@ -176,6 +176,53 @@ export class Timeline extends LitElement {
     }
   }
 
+  // Smaller variant for compact control groups
+  togglePlayButtonSmall() {
+    if (this.isPlay) {
+      return html`<button
+        id="playToggleSmall"
+        class="btn btn-xs2 btn-transparent"
+        @click=${this._handleClickStop}
+      >
+        <span class="material-symbols-outlined icon-white icon-m">
+          stop_circle
+        </span>
+      </button>`;
+    } else {
+      return html`<button
+        id="playToggleSmall"
+        class="btn btn-xs2 btn-transparent"
+        @click=${this._handleClickPlay}
+      >
+        <span class="material-symbols-outlined icon-white icon-m">
+          play_circle
+        </span>
+      </button>`;
+    }
+  }
+
+  // Move the timeline cursor 10 seconds back
+  _handleClickBackward10() {
+    if (this.control.cursorType != "pointer") return;
+
+    const newCursor = Math.max(0, this.timelineCursor - 10000); // 10 000 ms
+    this.timelineState.setCursor(newCursor);
+  }
+
+  // Move the timeline cursor 10 seconds forward
+  _handleClickForward10() {
+    if (this.control.cursorType != "pointer") return;
+
+    // Avoid negative ranges – the upper bound will naturally be limited by range logic elsewhere
+    const newCursor = this.timelineCursor + 10000;
+    this.timelineState.setCursor(newCursor);
+  }
+
+  // Change cursor tool type (pointer/text/lock etc.)
+  _handleClickCursor(type: "pointer" | "text" | "shape" | "lockKeyboard") {
+    this.timelineState.setCursorType(type);
+  }
+
   keyframeOption() {
     if (this.target.isShow) {
       return html`
@@ -202,37 +249,82 @@ export class Timeline extends LitElement {
         @mousedown=${this._handleClickResizeBar}
       ></div>
 
-      <div class="row mb-2">
-        <div class="col-4">
-          <div class="d-flex justify-content-start">
-            ${this.togglePlayButton()}
-            <button
-              class="btn btn-xs2 btn-transparent ms-2"
-              @click=${this._handleClickReset}
-            >
-              <span class="material-symbols-outlined icon-white icon-md">
-                replay_circle_filled
-              </span>
-            </button>
-            <b class="text-light ms-2"
-              >${new Date(this.timelineCursor).toISOString().slice(11, 22)}</b
-            >
-          </div>
-        </div>
-        <div class="d-flex col col-5 gap-2">
-          <ai-input class="w-100"></ai-input>
-          <div
-            class="d-flex justify-content-end"
-            id="keyframeEditorButtonGroup"
-          >
-            ${this.keyframeOption()}
-          </div>
-        </div>
+      <!-- Top controls section -->
+      <div style="height: 60px; margin-bottom: 0; padding: 0.5rem 1rem; display: flex; align-items: center;">
+        <div class="row w-100">
+          <div class="col-4">
+            <div class="d-flex justify-content-start align-items-center gap-2">
+              <button
+                class="btn btn-xs2 btn-transparent ms-3 d-flex align-items-center"
+                @click=${this._handleClickReset}
+              >
+                <span class="material-symbols-outlined icon-white icon-md">
+                  replay_circle_filled
+                </span>
+              </button>
+              <b class="text-light"
+                >${new Date(this.timelineCursor).toISOString().slice(11, 22)}</b
+              >
 
-        <div class="col-3 row d-flex align-items-center m-0 p-0">
-          <element-timeline-range></element-timeline-range>
+              <!-- Cursor tool capsule (pointer / text / lock) -->
+              <div
+                class="d-flex justify-content-center align-items-center gap-2 mt-1"
+                style="background: rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 0.25rem 0.8rem;"
+              >
+                <button
+                  class="btn btn-xs2 btn-transparent d-flex align-items-center"
+                  @click=${() => this._handleClickCursor("pointer")}
+                >
+                  <span class="material-symbols-outlined icon-white icon-sm ${this.control.cursorType == "pointer" ? "text-primary" : ""}">near_me</span>
+                </button>
+
+                <button
+                  class="btn btn-xs2 btn-transparent d-flex align-items-center"
+                  @click=${() => this._handleClickCursor("text")}
+                >
+                  <span class="material-symbols-outlined icon-white icon-sm ${this.control.cursorType == "text" ? "text-primary" : ""}">text_fields</span>
+                </button>
+
+                <button
+                  class="btn btn-xs2 btn-transparent d-flex align-items-center"
+                  @click=${() => this._handleClickCursor("lockKeyboard")}
+                >
+                  <span class="material-symbols-outlined icon-white icon-sm ${this.control.cursorType == "lockKeyboard" ? "text-primary" : ""}">lock</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex col col-5 justify-content-center">
+            <div
+              class="d-flex justify-content-center align-items-center gap-3"
+              style="margin-bottom: 0.3rem; background: rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 0.30rem 1rem; align-self: center;"
+            >
+              <button
+                class="btn btn-xs2 btn-transparent d-flex align-items-center"
+                @click=${this._handleClickBackward10}
+              >
+                <span class="material-symbols-outlined icon-white icon-m">replay_10</span>
+              </button>
+
+              ${this.togglePlayButtonSmall()}
+
+              <button
+                class="btn btn-xs2 btn-transparent d-flex align-items-center"
+                @click=${this._handleClickForward10}
+              >
+                <span class="material-symbols-outlined icon-white icon-m">forward_10</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="col-3 d-flex justify-content-end align-items-center">
+            <element-timeline-range></element-timeline-range>
+          </div>
         </div>
       </div>
+
+      <!-- Separator line -->
+      <div style="height: 1px; background-color: rgba(255, 255, 255, 0.2); margin: 0;"></div>
 
       <element-timeline-ruler></element-timeline-ruler>
       <element-timeline id="split_inner_bottom"></element-timeline>

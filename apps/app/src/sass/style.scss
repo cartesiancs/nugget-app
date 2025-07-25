@@ -336,9 +336,24 @@ element-timeline-scroll {
   transform: translateY(-50%);
   width: 0.5rem;
   height: 80%;
-  background-color: #868f9900;
+  background-color: #1bbd8f00;
   cursor: col-resize;
   z-index: 8000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .drawer-toggle {
+    font-size: 2rem;
+    color: #bbb;
+    pointer-events: all;
+  }
+}
+
+.split-col-bar.collapsed {
+  left: 0;
+  right: auto;
+  cursor: pointer;
 }
 
 .split-bottom-bar {
@@ -381,8 +396,9 @@ element-timeline-scroll {
 }
 
 .preview {
-  background-color: #000000;
+  background-color: #000000 !important;
   display: block;
+  margin-right: 30px;
 }
 
 .control {
@@ -487,6 +503,11 @@ element-timeline-scroll {
 }
 
 .icon-white {
+  color: #ffffff;
+}
+
+.icon-m {
+  font-size: 1.8rem;
   color: #ffffff;
 }
 

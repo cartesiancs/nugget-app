@@ -1294,14 +1294,13 @@ export class PreviewCanvas extends LitElement {
   }
 
   protected render() {
-    this.style.margin = "10px";
+    this.style.margin = "0";
     return html` <canvas
       id="elementPreviewCanvasRef"
       class="preview"
-      style="width: 100%; max-height: calc(${this
-        .canvasMaxHeight}px - 40px); cursor: ${this.cursorType};"
-      width="1920"
-      height="1080"
+      style="width: 100%; max-height: ${this.canvasMaxHeight}px; cursor: ${this.cursorType};"
+      width="2200"
+      height="1300"
       onclick="${this.handleClickCanvas()}"
       @mousedown=${this._handleMouseDown}
       @mousemove=${this._handleMouseMove}

@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { IUIStore, uiStore } from "./states/uiStore";
 import "./features/demo/warningDemoEnv";
-import "./features/gpt/chatSidebar";
+
 
 @customElement("app-root")
 export class App extends LitElement {
@@ -49,13 +49,12 @@ export class App extends LitElement {
 
         <div class="d-flex col justify-content-start">
           <div
-            style="height: 97vh;padding-left: var(--bs-gutter-x,.75rem);width: calc(100% - ${this
-              .resize.chatSidebar}px);"
+            style="height: 97vh;padding-left: var(--bs-gutter-x,.75rem);width: 100%;"
           >
             <control-ui
               id="split_top"
               class="row align-items-start"
-              style="height: ${this.resize.vertical.top}%;"
+              style="height: ${this.resize.vertical.top}%; background: linear-gradient(180deg, rgba(17, 18, 21, 0) 0%, rgba(50, 53, 62, 0.2) 100%);"
             ></control-ui>
             <timeline-ui
               id="split_bottom"
@@ -63,8 +62,6 @@ export class App extends LitElement {
               style="height: ${this.resize.vertical.bottom}%;"
             ></timeline-ui>
           </div>
-
-          <chat-sidebar width="${this.resize.chatSidebar}px"></chat-sidebar>
         </div>
 
         <offcanvas-list-ui></offcanvas-list-ui>

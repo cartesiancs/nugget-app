@@ -874,7 +874,7 @@ function FlowWidget() {
 
       {/* Sliding sidebar */}
       <div
-        className={`fixed top-0 right-0 h-screen w-[80vw] max-w-[1200px] bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-screen w-screen bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         } z-[1000] flex flex-col shadow-xl`}
       >

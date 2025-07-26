@@ -12,6 +12,7 @@ import { imageApi } from "../services/image";
 import { s3Api } from "../services/s3";
 import { videoApi } from "../services/video-gen";
 import { projectApi } from "../services/project";
+import AddTestVideosButton from "./AddTestVideosButton";
 
 function ChatWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -890,6 +891,7 @@ function ChatWidget() {
         {/* Header */}
         <div className='flex justify-between items-center p-4 border-b border-gray-800 sticky top-0 relative'>
           <div className='flex items-center gap-3 relative'>
+            <AddTestVideosButton/>
             {isAuthenticated && (
               <>
                 {showProjectHistory && (

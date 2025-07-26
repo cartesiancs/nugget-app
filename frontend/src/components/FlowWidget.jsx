@@ -552,7 +552,12 @@ function FlowWidget() {
     const newNodes = [];
     const newEdges = [];
     
-    // NodeTypes are defined later with hooks; local reference not necessary here
+    // Create custom node types with regeneration callback
+    const nodeTypes = {
+      segmentNode: SegmentNode,
+      imageNode: (props) => <ImageNode {...props} onRegenerateImage={handleRegenerateImage} regeneratingImages={regeneratingImages} />,
+      videoNode: VideoNode,
+    };
 
     if (flowData.segments && flowData.segments.length > 0) {
       console.log("📊 Creating nodes for", flowData.segments.length, "segments");
@@ -855,12 +860,23 @@ function FlowWidget() {
 
   return (
     <div className="z-10">
-      {/* Full-screen overlay; hidden when not open */}
+      {/* Floating button */}
+      {!open && (
+        <button
+          className="fixed bottom-10 right-24 w-16 h-16 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]"
+          aria-label="Open flow widget"
+          onClick={() => setOpen(true)}
+          style={{ boxShadow: "0 4px 12px rgba(147, 51, 234, 0.3)" }}
+        >
+          REACT FLOW
+        </button>
+      )}
+
+      {/* Sliding sidebar */}
       <div
-        className={`fixed inset-0 h-screen w-screen bg-[#0d0d0d] text-white ${
-          open ? "flex" : "hidden"
-        } z-[9999] flex-col shadow-xl transition-opacity duration-300`}
-        style={{ opacity: open ? 1 : 0, visibility: open ? 'visible' : 'hidden' }}
+        className={`fixed top-0 right-0 h-screen w-[80vw] max-w-[1200px] bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
+          open ? "translate-x-0" : "translate-x-full"
+        } z-[1000] flex flex-col shadow-xl`}
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Video Creation Flow</h2>

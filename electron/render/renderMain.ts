@@ -311,7 +311,7 @@ export const renderFilter = {
             }`,
           )
           .inputOptions(`-itsoffset ${options.startTime}`)
-          .inputOptions(`-t ${(object.element.trim.endTime - object.element.trim.startTime) / 1000}`);
+          .inputOptions(`-t ${object.element.trim.endTime / 1000}`);
 
         if (object.element.codec.video != "default") {
           object.command.inputOptions(`-vcodec ${object.element.codec.video}`);

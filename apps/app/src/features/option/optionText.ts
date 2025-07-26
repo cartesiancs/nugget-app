@@ -292,15 +292,11 @@ export class OptionText extends LitElement {
   hide() {
     this.classList.add("d-none");
     this.isShow = false;
-    this.requestUpdate();
-    console.log("[OptionText] hide");
   }
 
   show() {
     this.classList.remove("d-none");
     this.isShow = true;
-    this.requestUpdate();
-    console.log("[OptionText] show");
   }
 
   setElementId({ elementId }) {
@@ -361,28 +357,18 @@ export class OptionText extends LitElement {
   }
 
   resetValue() {
-    const timeline = (document.querySelector("element-timeline") as any)?.timeline;
-    if (!timeline) return;
-
-    // Inputs may not be in the DOM yet if resetValue() is invoked before the
-    // first render.  If so, defer execution until after the next update cycle.
-    const fontColor: HTMLInputElement | null = this.querySelector("input[aria-event='font-color'");
-    const fontSize: HTMLInputElement | null = this.querySelector("input[aria-event='font-size'");
-    const textInput: HTMLInputElement | null = this.querySelector("input[aria-event='text'");
-    const letterSpacing: HTMLInputElement | null = this.querySelector("input[aria-event='letter-spacing'");
-
-    if (!fontColor || !fontSize || !textInput || !letterSpacing) {
-      // Wait until the template is rendered, then try again once.
-      this.updateComplete.then(() => {
-        this.resetValue();
-      });
-      return;
-    }
+    const timeline = document.querySelector("element-timeline").timeline;
+    const fontColor: any = this.querySelector("input[aria-event='font-color'");
+    const fontSize: any = this.querySelector("input[aria-event='font-size'");
+    const text: any = this.querySelector("input[aria-event='text'");
+    const letterSpacing: any = this.querySelector(
+      "input[aria-event='letter-spacing'",
+    );
 
     fontColor.value = timeline[this.elementId[0]].textcolor;
-    fontSize.value = timeline[this.elementId[0]].fontsize.toString();
-    textInput.value = timeline[this.elementId[0]].text;
-    letterSpacing.value = timeline[this.elementId[0]].letterSpacing.toString();
+    fontSize.value = timeline[this.elementId[0]].fontsize;
+    text.value = timeline[this.elementId[0]].text;
+    letterSpacing.value = timeline[this.elementId[0]].letterSpacing;
     this.backgroundEnable = timeline[this.elementId[0]].background.enable;
     this.outlineEnable = timeline[this.elementId[0]].options.outline.enable;
     this.align = timeline[this.elementId[0]].options.align;

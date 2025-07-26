@@ -435,8 +435,7 @@ function FlowWidget() {
       <div
         className={`fixed inset-0 h-screen w-screen bg-[#0d0d0d] text-white ${
           open ? "flex" : "hidden"
-        } z-[9999] flex-col shadow-xl transition-opacity duration-300`}
-        style={{ opacity: open ? 1 : 0, visibility: open ? 'visible' : 'hidden' }}
+        } z-[9999] flex-col shadow-xl`}
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Video Creation Flow</h2>

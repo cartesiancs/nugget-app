@@ -53,49 +53,6 @@ export class Control extends LitElement {
   @property()
   isPanelCollapsed: boolean = true;
 
-  // Track preview fullscreen state so we can toggle the icon
-  @property()
-  isPreviewFullScreen: boolean = false;
-
-  constructor() {
-    super();
-
-    // Listen to browser fullscreen changes to keep icon in sync
-    window.addEventListener("fullscreenchange", () => {
-      this.isPreviewFullScreen = document.fullscreenElement != null;
-      this.requestUpdate();
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // Preview fullscreen helpers
-  // ---------------------------------------------------------------------------
-
-  _togglePreviewFullScreen() {
-    const videoBox = document.getElementById("videobox");
-    if (!videoBox) return;
-
-    if (!document.fullscreenElement) {
-      // Enter fullscreen on the preview container
-      (videoBox as HTMLElement).requestFullscreen?.().catch(() => {});
-    } else {
-      document.exitFullscreen?.().catch(() => {});
-    }
-  }
-
-  _renderPreviewFullScreenButton() {
-    return html`<button
-      class="btn btn-xs2 btn-transparent position-absolute"
-      style="bottom: 0.5rem; right: 0.5rem; z-index: 50;"
-      @click=${this._togglePreviewFullScreen}
-      title="Toggle full-screen"
-    >
-      <span class="material-symbols-outlined icon-white icon-md">
-        ${this.isPreviewFullScreen ? "fullscreen_exit" : "fullscreen"}
-      </span>
-    </button>`;
-  }
-
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
@@ -325,13 +282,12 @@ export class Control extends LitElement {
             ? ""
             : "d-none"}"
         >
-          <div id="videobox" class="position-relative d-flex justify-content-center align-items-center w-100" style="margin-top: 2rem;">
+          <div id="videobox" class="d-flex justify-content-center align-items-center w-100" style="margin-top: 2rem;">
             <div id="video" class="video" style="background-color: #000000; border-radius: 20px; border: none;">
               <preview-canvas></preview-canvas>
               <element-control></element-control>
               <drag-alignment-guide></drag-alignment-guide>
             </div>
-            ${this._renderPreviewFullScreenButton()}
           </div>
         </div>
 

@@ -681,13 +681,8 @@ export class ElementControl extends LitElement {
     this.timelineState.patchTimeline(this.timeline);
     this.timelineState.checkPointTimeline();
 
-    // Show the text element as a draggable control
-    // Temporarily disabled to prevent editor from getting stuck
     // this.showText(elementId);
-
-    // Allow callers (e.g., timeline top-bar) to know which element was just
-    // created so they can immediately select it or open related option panels.
-    return elementId;
+    // this.elementTimeline.addElementBar(elementId);
   }
 
   // NOTE: 삭제 필요
@@ -762,9 +757,8 @@ export class ElementControl extends LitElement {
     this.timelineState.patchTimeline(this.timeline);
     this.timelineState.checkPointTimeline();
 
-    // Show the text element as a draggable control
-    // Temporarily disabled to prevent editor from getting stuck
     // this.showText(elementId);
+    // this.elementTimeline.addElementBar(elementId);
   }
 
   addAudio(blob, path) {
@@ -999,14 +993,21 @@ export class ElementControl extends LitElement {
     }
   }
 
-  showText(elementId) {
-    if (document.getElementById(`element-${elementId}`) == null) {
-      this.insertAdjacentHTML(
-        "beforeend",
-        `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`,
-      );
-    }
-  }
+  // showText(elementId) {
+  //   if (document.getElementById(`element-${elementId}`) == null) {
+  //     this.insertAdjacentHTML(
+  //       "beforeend",
+  //       `<element-control-asset element-id="${elementId}" element-filetype="text"></element-control-asset>`,
+  //     );
+  //   }
+  //   if (
+  //     this.timeline[elementId].animation["position"].isActivate == true &&
+  //     this.timeline[elementId].animation["position"].allpoints.length >
+  //       document.querySelector("element-control").progress
+  //   ) {
+  //     this.showAnimation(elementId, "position");
+  //   }
+  // }
 
   changeText(elementId) {
     //this.timeline[elementId].text = inputValue;

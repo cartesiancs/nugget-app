@@ -111,31 +111,18 @@ export class Timeline extends LitElement {
   }
 
   _handleMouseMove(e) {
-    const elementControlComponent = document.querySelector("element-control");
-
-    if (this.isAbleResize) {
-      const topBarHeight = 60;
-
-      const windowHeight = window.innerHeight + topBarHeight;
-      const nowY = e.clientY;
-      const resizeY = 100 - (nowY / windowHeight) * 103; // 103인 이유는 Vertical 전체가 windowHeight의 97%이기 떄문.
-      if (resizeY <= 20) {
-        this.uiState.updateVertical(20);
-        elementControlComponent.resizeEvent();
-        return false;
-      }
-
-      this.uiState.updateVertical(resizeY);
-      elementControlComponent.resizeEvent();
-    }
+    // Vertical resizing disabled – no operation
+    return;
   }
 
   _handleMouseUp() {
-    this.isAbleResize = false;
+    // Vertical resizing disabled – no operation
+    return;
   }
 
   _handleClickResizeBar() {
-    this.isAbleResize = true;
+    // Vertical resizing disabled – no operation
+    return;
   }
 
   _handleClickPlay() {
@@ -274,8 +261,7 @@ export class Timeline extends LitElement {
   render() {
     return html`
       <div
-        class="split-bottom-bar cursor-row-resize "
-        @mousedown=${this._handleClickResizeBar}
+        class="split-bottom-bar"
       ></div>
 
       <!-- Top controls section -->

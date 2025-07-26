@@ -55,7 +55,7 @@ function FlowWidget() {
   // Remove zustand loadingData logic, use a simple loading check for essentials
   const isLoadingEssentials = false; // All data is loaded from localStorage
 
-  // The rest of the logic remains the same, but use local state for all project data
+
   const flowData = useMemo(() => {
     if (!segmentations || !images || !videos) {
       return { segments: [], images: {}, videos: {}, imageDetails: {}, videoDetails: {} };

@@ -117,36 +117,23 @@ export class Control extends LitElement {
   }
 
   _handleMouseMove(e) {
-    const elementControlComponent = document.querySelector("element-control");
-
-    if (this.isAbleResize) {
-      const windowWidth = window.innerWidth;
-      const nowX = e.clientX;
-      const resizeX = (nowX / windowWidth) * 100;
-
-      if (this.targetResize == "panel" && resizeX <= 20) {
-        this.uiState.updateHorizontal(20, this.targetResize);
-        elementControlComponent.resizeEvent();
-        return false;
-      }
-
-      this.uiState.updateHorizontal(resizeX, this.targetResize);
-      elementControlComponent.resizeEvent();
-    }
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleMouseUp() {
-    this.isAbleResize = false;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleClickResizePanel() {
-    this.targetResize = "panel";
-    this.isAbleResize = true;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleClickResizePreview() {
-    this.targetResize = "preview";
-    this.isAbleResize = true;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleComplateAutoCaption(e) {
@@ -166,7 +153,10 @@ export class Control extends LitElement {
   }
 
   _togglePanelDrawer() {
+    console.log('Drawer toggle clicked. Current state:', this.isPanelCollapsed);
     this.isPanelCollapsed = !this.isPanelCollapsed;
+    console.log('Drawer new state:', this.isPanelCollapsed);
+    this.requestUpdate(); // Force re-render to ensure UI updates
   }
 
   render() {
@@ -178,12 +168,12 @@ export class Control extends LitElement {
       >
         <div
           class="split-col-bar d-flex align-items-center justify-content-center ${this.isPanelCollapsed ? 'collapsed' : ''}"
-          @mousedown=${this._handleClickResizePanel}
         >
           <span
             class="material-symbols-outlined drawer-toggle"
-            style="cursor: pointer; user-select: none;"
+            style="cursor: pointer; user-select: none; font-size: 32px; padding: 12px; background: ${this.isPanelCollapsed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}; border-radius: 8px; margin-left: 20px; border: ${this.isPanelCollapsed ? 'none' : '2px solid rgba(255,255,255,0.3)'};"
             @click=${this._togglePanelDrawer}
+            title="${this.isPanelCollapsed ? 'Open drawer' : 'Close drawer'}"
           >
             ${this.isPanelCollapsed ? "chevron_right" : "chevron_left"}
           </span>
@@ -324,10 +314,7 @@ export class Control extends LitElement {
         class="h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
         style="width: 48%; /* ${this.resize.horizontal.preview}% */"
       >
-        <div
-          class="split-col-bar"
-          @mousedown=${this._handleClickResizePreview}
-        ></div>
+        <div class="split-col-bar"></div>
 
         <preview-top-bar></preview-top-bar>
 

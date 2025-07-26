@@ -129,6 +129,7 @@ function ChatWidget() {
     }
   }, [selectedProject]);
 
+
   // Update step status based on current data
   useEffect(() => {
     if (!selectedProject) return;

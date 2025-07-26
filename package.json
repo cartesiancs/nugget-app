@@ -1,5 +1,5 @@
 {
-  "name": "nugget-app",
+  "name": "usuals-ai",
   "version": "0.4.3",
   "description": "Video Editor",
   "main": "main/main.js",
@@ -20,11 +20,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cartesiancs/nugget-app"
+    "url": "https://github.com/cartesiancs/usuals-ai"
   },
   "build": {
-    "productName": "Nugget",
-    "appId": "com.cartesiancs.nugget",
+    "productName": "Usuals.ai",
+    "appId": "ai.usuals.app",
     "asar": true,
     "extraResources": [
       {
@@ -43,9 +43,9 @@
       }
     ],
     "protocols": {
-      "name": "nuggetapp",
+      "name": "usualsapp",
       "schemes": [
-        "nuggetapp"
+        "usualsapp"
       ]
     },
     "mac": {

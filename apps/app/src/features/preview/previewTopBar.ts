@@ -5,6 +5,7 @@ import {
   IControlPanelStore,
   controlPanelStore,
 } from "../../states/controlPanelStore";
+import { IUIStore, uiStore } from "../../states/uiStore";
 import { v4 as uuidv4 } from "uuid";
 
 @customElement("preview-top-bar")
@@ -28,6 +29,14 @@ export class PreviewTopBar extends LitElement {
   @property()
   nowActivePanel = this.controlPanel.nowActive;
 
+  // UI Store for showing/hiding timeline
+  @property()
+  uiState: IUIStore = uiStore.getInitialState();
+
+  // Keep track of active view; stays on "timeline" visually
+  @property()
+  viewMode: "timeline" | "sandbox" = "timeline";
+
   @property()
   timeline: any = this.timelineState.timeline;
 
@@ -42,7 +51,16 @@ export class PreviewTopBar extends LitElement {
       this.nowActivePanel = state.nowActive;
     });
 
+    uiStore.subscribe((state) => {
+      this.uiState = state;
+    });
+
     return this;
+  }
+
+  /** Ensure component sets initial state */
+  connectedCallback() {
+    super.connectedCallback();
   }
 
   createShape(shape) {
@@ -147,53 +165,32 @@ export class PreviewTopBar extends LitElement {
     this.timelineState.setCursorType(type);
   }
 
-  _handleClickPanelButton(panel) {
-    this.controlPanel.setActivePanel(panel);
-    console.log("A", panel);
-  }
+  /**
+   * Toggle view between sandbox and timeline
+   */
+  _handleClickViewMode(mode: "timeline" | "sandbox") {
+    if (mode === "sandbox") {
+      console.log("PreviewTopBar: open FlowWidget overlay");
+      window.dispatchEvent(new CustomEvent("flowWidget:open"));
+      // Remain in timeline view; do not change layout
+      return;
+    }
 
-  _handleClickRemovePanelButton(panel) {
-    const filter = this.activePanel.filter((item) => {
-      return item != panel;
-    }) as any;
-    this.controlPanel.updatePanel(filter);
-    this.controlPanel.setActivePanel("");
-
-    console.log("A", panel);
+    // Close overlay explicitly when timeline clicked
+    this.viewMode = "timeline";
+    window.dispatchEvent(new CustomEvent("flowWidget:close"));
   }
 
   render() {
-    const activePanelMap = this.activePanel.map((item) => {
-      return html` <button
-        @click=${() => this._handleClickPanelButton(item)}
-        class="btn btn-xxs ${this.nowActivePanel == item
-          ? "btn-active"
-          : "btn-default"} text-light preview-top-button m-0"
-      >
-        ${item}
-        <span
-          class="material-symbols-outlined icon-xs"
-          @click=${() => this._handleClickRemovePanelButton(item)}
-        >
-          close
-        </span>
-      </button>`;
-    });
-
     return html`
       <style>
-        .timeline-cursor-buttons {
+        .top-toggle-bar {
           display: flex;
           flex-direction: row;
           gap: 0.5rem;
           height: 2rem;
-          border-bottom: 0.05rem #3a3f44 solid;
           align-items: center;
-          justify-content: space-between;
-        }
-
-        .timeline-cursor-button {
-          border: none;
+          justify-content: center;
         }
 
         .preview-top-button {
@@ -203,100 +200,28 @@ export class PreviewTopBar extends LitElement {
           align-items: center;
           gap: 0.25rem;
         }
+
+        /* Active button color */
+        .btn-active {
+          background-color: #B761FF !important;
+          color: #fff !important;
+        }
       </style>
 
-      <div class="timeline-cursor-buttons bg-darker">
-        <div class="d-flex col gap-2 justify-content-start p-1">
-          <button
-            @click=${() => this._handleClickPanelButton("")}
-            class="btn btn-xxs ${this.nowActivePanel == ""
-              ? "btn-active"
-              : "btn-default"} text-light preview-top-button m-0"
-          >
-            preview
-          </button>
+      <div class="top-toggle-bar" style="padding-top:2.5rem;">
+        <button
+          @click=${() => this._handleClickViewMode("sandbox")}
+          class="btn btn-xxs btn-default text-light preview-top-button m-0"
+        >
+          Sandbox
+        </button>
 
-          ${activePanelMap}
-        </div>
-        <div class="d-flex col gap-2 justify-content-end p-1">
-          <button
-            @click=${() => this._handleClickButton("pointer")}
-            class="btn btn-xxs ${this.control.cursorType == "pointer"
-              ? "btn-primary"
-              : "btn-default"} text-light m-0"
-          >
-            <span class="material-symbols-outlined icon-xs"> near_me </span>
-          </button>
-          <button
-            @click=${() => this._handleClickButton("text")}
-            class="btn btn-xxs ${this.control.cursorType == "text"
-              ? "btn-primary"
-              : "btn-default"} text-light m-0"
-          >
-            <span class="material-symbols-outlined icon-xs"> text_fields </span>
-          </button>
-
-          <div class="btn-group">
-            <button
-              class="btn btn-xxs btn-default dropdown-toggle text-light m-0"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <span class="material-symbols-outlined icon-xs"> add </span>
-            </button>
-
-            <ul class="dropdown-menu">
-              <li>
-                <a
-                  class="dropdown-item dropdown-item-sm"
-                  @click=${this.createSquare}
-                >
-                  <span class="material-symbols-outlined icon-xs">
-                    square
-                  </span>
-                  Square</a
-                >
-                <a
-                  class="dropdown-item dropdown-item-sm"
-                  @click=${this.createTriangle}
-                >
-                  <span class="material-symbols-outlined icon-xs">
-                    change_history
-                  </span>
-                  Triangle</a
-                >
-                <a
-                  class="dropdown-item dropdown-item-sm"
-                  @click=${this.createCircle}
-                >
-                  <span class="material-symbols-outlined icon-xs">
-                    circle
-                  </span>
-                  Circle</a
-                >
-                <a
-                  class="dropdown-item dropdown-item-sm ${this.control
-                    .cursorType == "shape"
-                    ? "bg-primary"
-                    : ""}"
-                  @click=${() => this._handleClickButton("shape")}
-                >
-                  <span class="material-symbols-outlined icon-xs"> edit </span>
-                  Pen Tool</a
-                >
-              </li>
-            </ul>
-          </div>
-
-          <button
-            @click=${() => this._handleClickButton("lockKeyboard")}
-            class="btn btn-xxs ${this.control.cursorType == "lockKeyboard"
-              ? "btn-primary"
-              : "btn-default"} text-light m-0"
-          >
-            <span class="material-symbols-outlined icon-xs"> lock </span>
-          </button>
-        </div>
+        <button
+          @click=${() => this._handleClickViewMode("timeline")}
+          class="btn btn-xxs ${this.viewMode == "timeline" ? "btn-active" : "btn-default"} text-light preview-top-button m-0"
+        >
+          Timeline
+        </button>
       </div>
     `;
   }

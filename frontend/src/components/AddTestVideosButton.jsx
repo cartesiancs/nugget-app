@@ -1,5 +1,3 @@
-import React from "react";
-
 // Hard-coded sample clips for quick testing
 const HARDCODED_VIDEOS = [
   { id: 1, url: "https://www.sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4" },

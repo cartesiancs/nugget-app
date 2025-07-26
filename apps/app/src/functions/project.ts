@@ -146,7 +146,7 @@ const project = {
 
   changeProjectFileValue: function ({ projectDestination }) {
     document.querySelector("#projectFile").value = projectDestination;
-    uiState.setTopBarTitle(`Nugget - ${projectDestination}`);
+    uiState.setTopBarTitle(`Usuals.ai - ${projectDestination}`);
   },
 };
 

@@ -179,12 +179,12 @@ ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient("nuggetapp", process.execPath, [
+    app.setAsDefaultProtocolClient("usualsapp", process.execPath, [
       path.resolve(process.argv[1]),
     ]);
   }
 } else {
-  app.setAsDefaultProtocolClient("nuggetapp");
+      app.setAsDefaultProtocolClient("usualsapp");
 }
 
 const gotTheLock = app.requestSingleInstanceLock();

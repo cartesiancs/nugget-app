@@ -32,8 +32,11 @@ export class InputText extends LitElement {
 
   constructor() {
     super();
-
     this.value = this.initValue;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
     this.parentInputBox = document.querySelector(
       `element-control-asset[element-id="${this.elementId}"]`,
     );
@@ -87,6 +90,7 @@ export class InputText extends LitElement {
     }
     console.log(element, this.timeline, this.elementId);
     element.text = value;
+    this.timelineState.patchTimeline(this.timeline);
   }
 
   _handleInput(event) {

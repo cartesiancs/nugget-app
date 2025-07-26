@@ -238,7 +238,7 @@ export class WarningDemo extends LitElement {
         <div class="modal-content modal-dark modal-darker">
           <div class="modal-body modal-body-dark">
             <h6 class="modal-title text-light font-weight-lg mb-2">
-              Nugget Demo Version
+              Usuals.ai Demo Version
             </h6>
 
             <span class="text-light"

@@ -32,45 +32,27 @@ function FlowWidget() {
   const [regeneratingImages, setRegeneratingImages] = useState(new Set());
   const [regeneratingVideos, setRegeneratingVideos] = useState(new Set());
 
-  /* ----------------------------------------------------
-   * Global open / close handlers so external scripts
-   * (e.g. the Lit previewTopBar sandbox toggle) can
-   * show or hide the FlowWidget without reaching into
-   * React internals. We listen for custom events and
-   * also emit them whenever the sidebar is opened or
-   * closed from inside this component.
-   * --------------------------------------------------*/
+  // Toggle attribute on the custom element so we can style it via CSS
   useEffect(() => {
-    const handleOpen = () => {
-      console.log("🎯 FlowWidget: Received flowWidget:open event");
-      setOpen(true);
-    };
-    const handleClose = () => {
-      console.log("🎯 FlowWidget: Received flowWidget:close event");
-      setOpen(false);
-    };
-
-    console.log("🎯 FlowWidget: Setting up event listeners");
-    window.addEventListener("flowWidget:open", handleOpen);
-    window.addEventListener("flowWidget:close", handleClose);
-
-    return () => {
-      console.log("🎯 FlowWidget: Cleaning up event listeners");
-      window.removeEventListener("flowWidget:open", handleOpen);
-      window.removeEventListener("flowWidget:close", handleClose);
-    };
-  }, []);
-
-  // Notify outer world when widget visibility changes
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent(open ? "flowWidget:opened" : "flowWidget:closed"));
-
-    // Toggle attribute on the custom element so we can style it via CSS
     const hostEl = document.querySelector("react-flow-widget");
     if (hostEl) {
       hostEl.setAttribute("data-open", open ? "true" : "false");
     }
   }, [open]);
+
+  // Re-add global open / close custom event listeners for external control
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    window.addEventListener("flowWidget:open", handleOpen);
+    window.addEventListener("flowWidget:close", handleClose);
+
+    return () => {
+      window.removeEventListener("flowWidget:open", handleOpen);
+      window.removeEventListener("flowWidget:close", handleClose);
+    };
+  }, []);
 
   // Load data from API (no localStorage fallback)
   const flowData = useMemo(() => {

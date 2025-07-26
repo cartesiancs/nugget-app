@@ -44,6 +44,7 @@ export class App extends LitElement {
           cursor: pointer;
           z-index: 10000;
           font-family: inherit;
+          transition: opacity 0.3s ease;
         `;
         publishButton.onclick = () => {
           console.log('Publish button clicked! Starting video export...');
@@ -77,6 +78,38 @@ export class App extends LitElement {
           }
         };
         document.body.appendChild(publishButton);
+
+        // Function to check if widgets are open and hide/show publish button
+        const updatePublishButtonVisibility = () => {
+          const chatWidget = document.querySelector('react-chat-widget[data-open="true"]');
+          const flowWidget = document.querySelector('react-flow-widget[data-open="true"]');
+
+          if (chatWidget || flowWidget) {
+            publishButton.style.opacity = '0';
+            publishButton.style.pointerEvents = 'none';
+          } else {
+            publishButton.style.opacity = '1';
+            publishButton.style.pointerEvents = 'auto';
+          }
+        };
+
+        // Listen for widget state changes
+        const observer = new MutationObserver(updatePublishButtonVisibility);
+
+        // Observe chat widget
+        const chatWidget = document.querySelector('react-chat-widget');
+        if (chatWidget) {
+          observer.observe(chatWidget, { attributes: true, attributeFilter: ['data-open'] });
+        }
+
+        // Observe flow widget
+        const flowWidget = document.querySelector('react-flow-widget');
+        if (flowWidget) {
+          observer.observe(flowWidget, { attributes: true, attributeFilter: ['data-open'] });
+        }
+
+        // Initial check
+        updatePublishButtonVisibility();
       }
     }, 1000);
 

@@ -14,6 +14,7 @@ import SegmentDetail from "./SegmentDetail";
 import LoadingSpinner from "./LoadingSpinner";
 import { useAuth } from "../hooks/useAuth";
 import ChatLoginButton from "./ChatLoginButton";
+import AddTestVideosButton from "./AddTestVideosButton";
 
 function ChatWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -571,6 +572,7 @@ function ChatWidget() {
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Segmentation Assistant</h2>
+          <AddTestVideosButton/>
           <div className="flex items-center gap-3">
             {isAuthenticated && user && (
               <div className="flex items-center gap-2">

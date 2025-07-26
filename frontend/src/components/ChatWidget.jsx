@@ -64,6 +64,14 @@ function ChatWidget() {
     }
   }, []);
 
+  // Toggle attribute on the custom element so we can style it via CSS
+  useEffect(() => {
+    const hostEl = document.querySelector("react-chat-widget");
+    if (hostEl) {
+      hostEl.setAttribute("data-open", open ? "true" : "false");
+    }
+  }, [open]);
+
   // -- Removed legacy “previous flow” block --
 
   const handleSubmit = async (e) => {

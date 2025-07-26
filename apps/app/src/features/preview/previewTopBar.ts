@@ -33,11 +33,7 @@ export class PreviewTopBar extends LitElement {
   @property()
   uiState: IUIStore = uiStore.getInitialState();
 
-  // Keep default timeline height to restore when switching back from sandbox
-  @property()
-  defaultTimelineHeight: number = this.uiState.resize.vertical.bottom;
-
-  // Current view mode – "timeline" (default) or "sandbox"
+  // Keep track of active view; stays on "timeline" visually
   @property()
   viewMode: "timeline" | "sandbox" = "timeline";
 
@@ -65,16 +61,6 @@ export class PreviewTopBar extends LitElement {
   /** Ensure component sets initial state */
   connectedCallback() {
     super.connectedCallback();
-
-    // Listen for FlowWidget close events so Timeline view is restored automatically
-    window.addEventListener("flowWidget:closed", () => {
-      this._handleClickViewMode("timeline");
-    });
-
-    // Listen for FlowWidget open events (e.g., from its own floating button)
-    window.addEventListener("flowWidget:opened", () => {
-      this._handleClickViewMode("sandbox");
-    });
   }
 
   createShape(shape) {
@@ -183,25 +169,16 @@ export class PreviewTopBar extends LitElement {
    * Toggle view between sandbox and timeline
    */
   _handleClickViewMode(mode: "timeline" | "sandbox") {
-    this.viewMode = mode;
-
-    console.log("PreviewTopBar: switching to", mode);
     if (mode === "sandbox") {
-      // Hide timeline area
-      uiStore.getState().updateVertical(0);
-
-      // Ask FlowWidget to open inside the same window
-      console.log("Dispatching flowWidget:open");
+      console.log("PreviewTopBar: open FlowWidget overlay");
       window.dispatchEvent(new CustomEvent("flowWidget:open"));
-    } else {
-      // Restore timeline area height
-      const height = this.defaultTimelineHeight > 0 ? this.defaultTimelineHeight : 40;
-      uiStore.getState().updateVertical(height);
-
-      // Ask FlowWidget to close
-      console.log("Dispatching flowWidget:close");
-      window.dispatchEvent(new CustomEvent("flowWidget:close"));
+      // Remain in timeline view; do not change layout
+      return;
     }
+
+    // Close overlay explicitly when timeline clicked
+    this.viewMode = "timeline";
+    window.dispatchEvent(new CustomEvent("flowWidget:close"));
   }
 
   render() {
@@ -231,10 +208,10 @@ export class PreviewTopBar extends LitElement {
         }
       </style>
 
-      <div class="top-toggle-bar">
+      <div class="top-toggle-bar" style="padding-top:2.5rem;">
         <button
           @click=${() => this._handleClickViewMode("sandbox")}
-          class="btn btn-xxs ${this.viewMode == "sandbox" ? "btn-active" : "btn-default"} text-light preview-top-button m-0"
+          class="btn btn-xxs btn-default text-light preview-top-button m-0"
         >
           Sandbox
         </button>

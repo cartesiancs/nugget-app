@@ -32,14 +32,15 @@ function FlowWidget() {
   const [regeneratingImages, setRegeneratingImages] = useState(new Set());
   const [regeneratingVideos, setRegeneratingVideos] = useState(new Set());
 
-  /* ----------------------------------------------------
-   * Global open / close handlers so external scripts
-   * (e.g. the Lit previewTopBar sandbox toggle) can
-   * show or hide the FlowWidget without reaching into
-   * React internals. We listen for custom events and
-   * also emit them whenever the sidebar is opened or
-   * closed from inside this component.
-   * --------------------------------------------------*/
+  // Toggle attribute on the custom element so we can style it via CSS
+  useEffect(() => {
+    const hostEl = document.querySelector("react-flow-widget");
+    if (hostEl) {
+      hostEl.setAttribute("data-open", open ? "true" : "false");
+    }
+  }, [open]);
+
+  // Re-add global open / close custom event listeners for external control
   useEffect(() => {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -52,17 +53,6 @@ function FlowWidget() {
       window.removeEventListener("flowWidget:close", handleClose);
     };
   }, []);
-
-  // Notify outer world when widget visibility changes
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent(open ? "flowWidget:opened" : "flowWidget:closed"));
-
-    // Toggle attribute on the custom element so we can style it via CSS
-    const hostEl = document.querySelector("react-flow-widget");
-    if (hostEl) {
-      hostEl.setAttribute("data-open", open ? "true" : "false");
-    }
-  }, [open]);
 
   // Load data from API (no localStorage fallback)
   const flowData = useMemo(() => {
@@ -428,7 +418,8 @@ function FlowWidget() {
       <div
         className={`fixed inset-0 h-screen w-screen bg-[#0d0d0d] text-white ${
           open ? "flex" : "hidden"
-        } z-[9999] flex-col shadow-xl`}
+        } z-[9999] flex-col shadow-xl transition-opacity duration-300`}
+        style={{ opacity: open ? 1 : 0, visibility: open ? 'visible' : 'hidden' }}
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
           <h2 className="text-lg font-semibold">Video Creation Flow</h2>

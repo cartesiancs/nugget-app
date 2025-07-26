@@ -111,31 +111,18 @@ export class Timeline extends LitElement {
   }
 
   _handleMouseMove(e) {
-    const elementControlComponent = document.querySelector("element-control");
-
-    if (this.isAbleResize) {
-      const topBarHeight = 60;
-
-      const windowHeight = window.innerHeight + topBarHeight;
-      const nowY = e.clientY;
-      const resizeY = 100 - (nowY / windowHeight) * 103; // 103인 이유는 Vertical 전체가 windowHeight의 97%이기 떄문.
-      if (resizeY <= 20) {
-        this.uiState.updateVertical(20);
-        elementControlComponent.resizeEvent();
-        return false;
-      }
-
-      this.uiState.updateVertical(resizeY);
-      elementControlComponent.resizeEvent();
-    }
+    // Vertical resizing disabled – no operation
+    return;
   }
 
   _handleMouseUp() {
-    this.isAbleResize = false;
+    // Vertical resizing disabled – no operation
+    return;
   }
 
   _handleClickResizeBar() {
-    this.isAbleResize = true;
+    // Vertical resizing disabled – no operation
+    return;
   }
 
   _handleClickPlay() {
@@ -220,6 +207,35 @@ export class Timeline extends LitElement {
 
   // Change cursor tool type (pointer/text/lock etc.)
   _handleClickCursor(type: "pointer" | "text" | "shape" | "lockKeyboard") {
+    // When the user selects the "text" tool from the top-bar we want to instantly
+    // create a new text element – mirroring the behaviour of the left-hand
+    // Control panel’s "Add Text" button. This prevents the UX issue where
+    // clicking the icon appeared to do nothing.
+
+    if (type === "text") {
+      const elementControlComponent: any = document.querySelector("element-control");
+
+      // Safeguard in case the component can’t be found or the method signature
+      // changes in the future.
+      if (elementControlComponent && typeof elementControlComponent.addText === "function") {
+        // Use default parameters – identical to <control-ui-text> behaviour.
+        const elementId = elementControlComponent.addText({});
+
+        try {
+          // Make the newly created element active & outlined so users know it’s ready to edit.
+          elementControlComponent.deactivateAllOutline?.();
+          elementControlComponent.activeElementId = elementId;
+          elementControlComponent.existActiveElement = true;
+
+          // Display the Option->Text panel pre-filled for this element.
+          const optionGroup: any = document.querySelector("option-group");
+          optionGroup?.showOption({ filetype: "text", elementId });
+        } catch (_) {
+          /* non-critical – fail silently */
+        }
+      }
+    }
+
     this.timelineState.setCursorType(type);
   }
 
@@ -245,8 +261,7 @@ export class Timeline extends LitElement {
   render() {
     return html`
       <div
-        class="split-bottom-bar cursor-row-resize "
-        @mousedown=${this._handleClickResizeBar}
+        class="split-bottom-bar"
       ></div>
 
       <!-- Top controls section -->

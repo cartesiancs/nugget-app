@@ -53,6 +53,49 @@ export class Control extends LitElement {
   @property()
   isPanelCollapsed: boolean = true;
 
+  // Track preview fullscreen state so we can toggle the icon
+  @property()
+  isPreviewFullScreen: boolean = false;
+
+  constructor() {
+    super();
+
+    // Listen to browser fullscreen changes to keep icon in sync
+    window.addEventListener("fullscreenchange", () => {
+      this.isPreviewFullScreen = document.fullscreenElement != null;
+      this.requestUpdate();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Preview fullscreen helpers
+  // ---------------------------------------------------------------------------
+
+  _togglePreviewFullScreen() {
+    const videoBox = document.getElementById("videobox");
+    if (!videoBox) return;
+
+    if (!document.fullscreenElement) {
+      // Enter fullscreen on the preview container
+      (videoBox as HTMLElement).requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }
+
+  _renderPreviewFullScreenButton() {
+    return html`<button
+      class="btn btn-xs2 btn-transparent position-absolute"
+      style="bottom: 0.5rem; right: 0.5rem; z-index: 50;"
+      @click=${this._togglePreviewFullScreen}
+      title="Toggle full-screen"
+    >
+      <span class="material-symbols-outlined icon-white icon-md">
+        ${this.isPreviewFullScreen ? "fullscreen_exit" : "fullscreen"}
+      </span>
+    </button>`;
+  }
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
@@ -74,36 +117,23 @@ export class Control extends LitElement {
   }
 
   _handleMouseMove(e) {
-    const elementControlComponent = document.querySelector("element-control");
-
-    if (this.isAbleResize) {
-      const windowWidth = window.innerWidth;
-      const nowX = e.clientX;
-      const resizeX = (nowX / windowWidth) * 100;
-
-      if (this.targetResize == "panel" && resizeX <= 20) {
-        this.uiState.updateHorizontal(20, this.targetResize);
-        elementControlComponent.resizeEvent();
-        return false;
-      }
-
-      this.uiState.updateHorizontal(resizeX, this.targetResize);
-      elementControlComponent.resizeEvent();
-    }
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleMouseUp() {
-    this.isAbleResize = false;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleClickResizePanel() {
-    this.targetResize = "panel";
-    this.isAbleResize = true;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleClickResizePreview() {
-    this.targetResize = "preview";
-    this.isAbleResize = true;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleComplateAutoCaption(e) {
@@ -123,7 +153,10 @@ export class Control extends LitElement {
   }
 
   _togglePanelDrawer() {
+    console.log('Drawer toggle clicked. Current state:', this.isPanelCollapsed);
     this.isPanelCollapsed = !this.isPanelCollapsed;
+    console.log('Drawer new state:', this.isPanelCollapsed);
+    this.requestUpdate(); // Force re-render to ensure UI updates
   }
 
   render() {
@@ -135,12 +168,12 @@ export class Control extends LitElement {
       >
         <div
           class="split-col-bar d-flex align-items-center justify-content-center ${this.isPanelCollapsed ? 'collapsed' : ''}"
-          @mousedown=${this._handleClickResizePanel}
         >
           <span
             class="material-symbols-outlined drawer-toggle"
-            style="cursor: pointer; user-select: none;"
+            style="cursor: pointer; user-select: none; font-size: 32px; padding: 12px; background: ${this.isPanelCollapsed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}; border-radius: 8px; margin-left: 20px; border: ${this.isPanelCollapsed ? 'none' : '2px solid rgba(255,255,255,0.3)'};"
             @click=${this._togglePanelDrawer}
+            title="${this.isPanelCollapsed ? 'Open drawer' : 'Close drawer'}"
           >
             ${this.isPanelCollapsed ? "chevron_right" : "chevron_left"}
           </span>
@@ -281,10 +314,7 @@ export class Control extends LitElement {
         class="h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
         style="width: 48%; /* ${this.resize.horizontal.preview}% */"
       >
-        <div
-          class="split-col-bar"
-          @mousedown=${this._handleClickResizePreview}
-        ></div>
+        <div class="split-col-bar"></div>
 
         <preview-top-bar></preview-top-bar>
 
@@ -295,12 +325,13 @@ export class Control extends LitElement {
             ? ""
             : "d-none"}"
         >
-          <div id="videobox" class="d-flex justify-content-center align-items-center w-100" style="margin-top: 2rem;">
+          <div id="videobox" class="position-relative d-flex justify-content-center align-items-center w-100" style="margin-top: 2rem;">
             <div id="video" class="video" style="background-color: #000000; border-radius: 20px; border: none;">
               <preview-canvas></preview-canvas>
               <element-control></element-control>
               <drag-alignment-guide></drag-alignment-guide>
             </div>
+            ${this._renderPreviewFullScreenButton()}
           </div>
         </div>
 

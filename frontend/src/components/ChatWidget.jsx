@@ -12,7 +12,8 @@ import { imageApi } from "../services/image";
 import { s3Api } from "../services/s3";
 import { videoApi } from "../services/video-gen";
 import { projectApi } from "../services/project";
-import AddTestVideosButton from "./AddTestVideosButton";
+import "../styles/chatwidget.css";
+import React from "react";
 
 function ChatWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -33,7 +34,7 @@ function ChatWidget() {
     try {
       const stored = localStorage.getItem('project-store-selectedProject');
       if (stored) {
-        const project = JSON.parse(stored);
+        const _project = JSON.parse(stored);
         return JSON.parse(localStorage.getItem(`project-store-videos`) || "{}");
       }
       return JSON.parse(localStorage.getItem("segmentVideos") || "{}");
@@ -43,7 +44,7 @@ function ChatWidget() {
     }
   });
 
-  const [timelineProgress, setTimelineProgress] = useState({
+  const [, setTimelineProgress] = useState({
     expected: 0,
     added: 0,
   });
@@ -56,6 +57,9 @@ function ChatWidget() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+  const [collapseSteps, setCollapseSteps] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const nameInputRef = useRef(null);
 
   // New 6-step flow states
@@ -76,6 +80,12 @@ function ChatWidget() {
   const [generatedImages, setGeneratedImages] = useState({});
   const [generatedVideos, setGeneratedVideos] = useState({});
   const [generationProgress, setGenerationProgress] = useState({});
+  // modal for viewing generated images
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState(null);
+  // video preview modal
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [modalVideoUrl, setModalVideoUrl] = useState(null);
 
   const steps = [
     { id: 0, name: 'Concept Writer', description: 'Generate video concepts' },
@@ -613,26 +623,28 @@ function ChatWidget() {
 
     let payload = [];
     if (selectedScript) {
+      // Prefer the unified map so we cover both freshly generated and previously stored videos
       payload = selectedScript.segments
-        .filter((s) => generatedVideos[s.id])
+        .filter((s) => combinedVideosMap[s.id])
         .sort((a, b) => a.id - b.id)
-        .map((s) => ({ id: s.id, url: generatedVideos[s.id] }));
+        .map((s) => ({ id: s.id, url: combinedVideosMap[s.id] }));
     }
 
+    // Fallback – use every video we currently know about
     if (payload.length === 0) {
-      let localVideos = {};
-      if (selectedProject) {
-        localVideos = JSON.parse(
-          localStorage.getItem(`project-store-videos-${selectedProject.id}`) || "{}",
-        );
-      } else {
-        localVideos = JSON.parse(
-          localStorage.getItem("segmentVideos") || "{}",
-        );
+      payload = Object.entries(combinedVideosMap).map(([id, url]) => {
+        const numId = Number(id);
+        return {
+          id: isNaN(numId) ? id : numId,
+          url,
+        };
+      });
+
+      // If all IDs are numeric, sort them; otherwise keep original order
+      const allNumeric = payload.every((p) => typeof p.id === 'number');
+      if (allNumeric) {
+        payload.sort((a, b) => a.id - b.id);
       }
-      payload = Object.entries(localVideos)
-        .map(([id, url]) => ({ id: Number(id), url }))
-        .sort((a, b) => a.id - b.id);
     }
 
     if (payload.length === 0) {
@@ -672,6 +684,52 @@ function ChatWidget() {
       setTimelineProgress({ expected: payload.length, added: 0 });
     } else {
       setError("Failed to add videos to timeline.");
+    }
+    setAddingTimeline(false);
+  };
+
+  // add only one video (by segmentId) to timeline
+  const addSingleVideoToTimeline = async (segmentId) => {
+    if (addingTimeline) return;
+    const videoUrl = combinedVideosMap[segmentId] || combinedVideosMap[String(segmentId)];
+    if (!videoUrl) {
+      setError('Video not found.');
+      return;
+    }
+
+    const payload = [{ id: Number(segmentId), url: videoUrl }];
+    setAddingTimeline(true);
+    let success = false;
+    try {
+      const addByUrlWithDir = window?.api?.ext?.timeline?.addByUrlWithDir;
+      const addByUrlFn = window?.api?.ext?.timeline?.addByUrl;
+      if (addByUrlFn) {
+        if (addByUrlWithDir) {
+          await addByUrlWithDir(payload);
+        } else {
+          await addByUrlFn(payload);
+        }
+        success = true;
+      } else if (window?.electronAPI?.req?.timeline?.addByUrl) {
+        if (window.electronAPI.req.timeline.addByUrlWithDir) {
+          await window.electronAPI.req.timeline.addByUrlWithDir(payload);
+        } else {
+          await window.electronAPI.req.timeline.addByUrl(payload);
+        }
+        success = true;
+      } else if (window.require) {
+        const { ipcRenderer } = window.require('electron');
+        await ipcRenderer.invoke('extension:timeline:addByUrlWithDir', payload);
+        success = true;
+      }
+    } catch (err) {
+      console.error('timeline add failed', err);
+    }
+
+    if (success) {
+      setTimelineProgress({ expected: 1, added: 0 });
+    } else {
+      setError('Failed to add video to timeline.');
     }
     setAddingTimeline(false);
   };
@@ -759,20 +817,22 @@ function ChatWidget() {
       }
 
       // Set images if available - map to segments properly
-      if (projectImages && projectImages.success && projectImages.data && projectImages.data.length > 0) {
+      if (projectImages && projectImages.success && Array.isArray(projectImages.data) && projectImages.data.length > 0) {
         const imagesMap = {};
         projectImages.data.forEach(img => {
-          // Try to find the matching segment by various ID fields
           const segmentId = img.uuid || img.segment_id || img.segmentId || img.id;
-          if (segmentId) {
-            // For images, we need to construct the URL from s3Key using CloudFront
-            const imageUrl = img.s3Key ? `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}` : img.url;
+          if (!segmentId) return;
+
+          // Support old s3Key as well as new imageS3Key / imageS3key
+          const key = img.s3Key || img.imageS3Key || img.imageS3key || img.image_s3_key;
+          const imageUrl = key ? `https://ds0fghatf06yb.cloudfront.net/${key}` : (img.url || img.imageUrl);
+          if (imageUrl) {
             imagesMap[segmentId] = imageUrl;
-            
-            // Also update the corresponding segment with the s3Key if not already set
+
+            // update segment data so we can reuse for video generation
             const segment = segments.find(seg => seg.id == segmentId);
             if (segment && !segment.s3Key) {
-              segment.s3Key = img.s3Key;
+              segment.s3Key = key;
             }
           }
         });
@@ -782,18 +842,23 @@ function ChatWidget() {
         console.log('No images found in API response');
         setGeneratedImages({});
       }
-      
-      // Set videos if available - map to segments properly
-      if (projectVideos && projectVideos.success && projectVideos.data && projectVideos.data.length > 0) {
+ 
+      // Set videos if available - map to segments properly (supports new videoFiles array)
+      if (projectVideos && projectVideos.success && Array.isArray(projectVideos.data) && projectVideos.data.length > 0) {
         const videosMap = {};
         projectVideos.data.forEach(video => {
-          // Try to find the matching segment by various ID fields
           const segmentId = video.uuid || video.segment_id || video.segmentId || video.id;
-          if (segmentId) {
-            // For videos, we need to construct the URL from s3Keys using CloudFront
-            const videoUrl = video.s3Keys && video.s3Keys.length > 0 
-              ? `https://ds0fghatf06yb.cloudfront.net/${video.s3Keys[0]}` 
-              : video.url;
+          if (!segmentId) return;
+
+          let videoKey = null;
+          if (Array.isArray(video.s3Keys) && video.s3Keys.length > 0) {
+            videoKey = video.s3Keys[0];
+          } else if (Array.isArray(video.videoFiles) && video.videoFiles.length > 0) {
+            videoKey = video.videoFiles[0].s3Key;
+          }
+
+          const videoUrl = videoKey ? `https://ds0fghatf06yb.cloudfront.net/${videoKey}` : (video.url || null);
+          if (videoUrl) {
             videosMap[segmentId] = videoUrl;
           }
         });
@@ -865,105 +930,146 @@ function ChatWidget() {
     );
   };
 
+  // helper maps combining stored data so UI shows even after reload
+  const combinedVideosMap = React.useMemo(() => ({ ...generatedVideos, ...storedVideosMap }), [generatedVideos, storedVideosMap]);
+
   return (
-    <div className='z-10'>
+    <div className='z-10' onClick={() => {
+        setShowMenu(false);
+        setShowUserMenu(false);
+      }}>
       {/* Floating chat button */}
       {!open && (
         <button
-          className='fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gray-900 hover:bg-gray-700 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]'
+          className='btn-floating fixed top-2/4 right-8 transform translate-y-12 px-4 py-2 rounded-lg text-white text-sm flex items-center gap-2 shadow-2xl z-[10001] backdrop-blur-lg border border-white/20 dark:border-gray-600/40 bg-gradient-to-tr from-gray-700/90 to-gray-800/90 dark:from-gray-700/90 dark:to-gray-800/90 transition-all duration-200 ease-in-out'
           aria-label='Open chat'
           onClick={() => setOpen(true)}
         >
-          💬
+          <span className="text-gray-300">✨</span>
+          <span className="text-gray-300 font-medium">Chat</span>
         </button>
       )}
 
       {/* Sliding sidebar */}
       <div
-        className={`z-10 fixed rounded-xl mb-4 mr-4 bottom-0 right-0 h-[87vh] w-[25vw] max-w-[600px] text-white transform transition-transform duration-300 ${
+        className={`glass-container fixed rounded-2xl mb-4 mr-4 bottom-0 right-0 h-[90vh] sm:h-[87vh] w-[90vw] sm:w-[360px] md:w-[25vw] max-w-[600px] text-white transform transition-transform duration-500 ${
           open ? "translate-x-0" : "translate-x-full"
-        } z-[1000] flex flex-col shadow-xl`}
-        style={{
-          background: 'linear-gradient(180.02deg, rgba(233, 232, 235, 0.14) 0.02%, rgba(86, 86, 88, 0.17) 67.61%, rgba(17, 18, 21, 0.2) 135.2%)',
-          backdropFilter: 'blur(80px)'
-        }}
+        } z-[10000] flex flex-col shadow-2xl`}
       >
         {/* Header */}
-        <div className='flex justify-between items-center p-4 border-b border-gray-800 sticky top-0 relative'>
-          <div className='flex items-center gap-3 relative'>
-            <AddTestVideosButton/>
+        <div className='flex justify-between items-center p-3 border-b border-gray-800 sticky top-0 relative'>
+          <div className='flex items-center gap-2 relative'>
+            {/* Hamburger */}
+            <button
+              className='text-white text-xl focus:outline-none hover:text-gray-300'
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu((v) => !v);
+              }}
+              title='Menu'
+            >
+              ☰
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div
+                className='absolute left-0 mt-2 w-48 bg-black/90 backdrop-blur-md border border-white/20 p-2 rounded-lg flex flex-col gap-2 z-[10002] text-sm'
+                onClick={(e) => e.stopPropagation()}
+              >
+                {isAuthenticated && (
+                  <>
+                    <button
+                      className='w-full flex items-center gap-2 px-3 py-1 hover:bg-gray-700 rounded'
+                      onClick={() => setShowProjectHistory((v) => !v)}
+                    >
+                      🕒 <span>Project History</span>
+                    </button>
+                    <button
+                      onClick={() => setShowCharacterGenerator(true)}
+                      className='w-full flex items-center gap-2 px-3 py-1 hover:bg-gray-700 rounded'
+                    >
+                      👤 <span>Generate Character</span>
+                    </button>
+                    <button
+                      onClick={openCreateModal}
+                      className='w-full flex items-center gap-2 px-3 py-1 hover:bg-gray-700 rounded'
+                    >
+                      ➕ <span>Create Project</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
             {isAuthenticated && (
               <>
                 {showProjectHistory && (
-                  <div className='absolute right-12 top-10 z-[1100]'>
+                  <div className='absolute left-48 top-10 z-[10002]'>
                     <ProjectHistoryDropdown
                       onSelect={() => setShowProjectHistory(false)}
                     />
                   </div>
                 )}
-                <button
-                  className='text-white text-xl focus:outline-none mr-2 bg-transparent shadow-none border-none p-0 m-0 hover:bg-transparent'
-                  title='Project History'
-                  onClick={() => setShowProjectHistory((v) => !v)}
-                >
-                  <span role='img' aria-label='history'>🕒</span>
-                </button>
-                <button
-                  onClick={() => setShowCharacterGenerator(true)}
-                  className='px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors flex items-center gap-1'
-                  title='Generate Character'
-                >
-                  <span>👤</span>
-                  <span className='hidden sm:inline'>Character</span>
-                </button>
-                {isAuthenticated && (
-                  <button
-                    onClick={openCreateModal}
-                    className={`ml-2 px-3 py-1 rounded bg-green-600 hover:bg-green-500 text-white font-medium ${creatingProject ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={creatingProject}
-                  >
-                    {creatingProject ? 'Creating...' : 'Create Project'}
-                  </button>
-                )}
               </>
             )}
             {isAuthenticated && user && (
-              <div className='flex items-center gap-2'>
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt='Profile'
-                    className='w-6 h-6 rounded-full border border-gray-600'
-                  />
-                ) : (
-                  <div className='w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center'>
-                    <span className='text-white text-xs font-medium'>
-                      {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                    </span>
+              <div className='relative ml-2'>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowUserMenu((v) => !v);
+                    setShowMenu(false);
+                  }}
+                  className='flex items-center gap-1 focus:outline-none'
+                >
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt='Profile'
+                      className='w-7 h-7 rounded-full border border-gray-600'
+                    />
+                  ) : (
+                    <div className='w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center'>
+                      <span className='text-white text-xs font-medium'>
+                        {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                  )}
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='w-3 h-3 text-gray-300'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                  </svg>
+                </button>
+
+                {showUserMenu && (
+                  <div
+                    className='absolute right-0 mt-2 w-44 bg-black/90 backdrop-blur-md border border-white/20 text-white rounded-md shadow-lg p-2 z-[10002] text-sm'
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className='px-2 py-1 border-b border-gray-700 mb-1'>{user.name || user.email}</div>
+                    <button
+                      onClick={logout}
+                      className='w-full text-left px-2 py-1 hover:bg-gray-800 rounded'
+                    >
+                      Sign Out
+                    </button>
                   </div>
                 )}
-                <span className='text-gray-300 text-sm hidden sm:block'>
-                  {user.name || user.email}
-                </span>
               </div>
             )}
-            {isAuthenticated && (
-              <button
-                onClick={logout}
-                className='px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors'
-                title='Sign Out'
-              >
-                Sign Out
-              </button>
-            )}
-            <button
-              className='text-white text-xl focus:outline-none'
-              aria-label='Close chat'
-              onClick={() => setOpen(false)}
-            >
-              ✕
-            </button>
           </div>
+          <button
+            className='text-white text-xl focus:outline-none hover:text-gray-300'
+            aria-label='Close chat'
+            onClick={() => setOpen(false)}
+          >
+            ✕
+          </button>
         </div>
         
         {/* Project banner */}
@@ -971,56 +1077,65 @@ function ChatWidget() {
 
         <div className='flex-1 overflow-hidden flex flex-col'>
           {/* 6 Steps */}
-          <div className='p-4 border-b border-gray-800'>
-            <h3 className='text-sm font-semibold text-gray-300 mb-3'>Video Creation Steps</h3>
-            <div className='space-y-2'>
-              {steps.map((step) => {
-                const icon = getStepIcon(step.id);
-                const isDisabled = isStepDisabled(step.id) || loading;
-                const isCurrent = currentStep === step.id;
-                
-                return (
-                  <div
-                    key={step.id}
-                    className={`w-full flex items-center gap-3 p-2 rounded text-left transition-colors ${
-                      isDisabled
-                        ? 'text-gray-500 cursor-not-allowed'
-                        : 'text-white hover:bg-gray-800'
-                    } ${isCurrent ? 'bg-gray-800' : ''}`}
-                  >
-                    <span className='text-lg'>{icon}</span>
-                    <div className='flex-1'>
-                      <div className='text-sm font-medium'>{step.name}</div>
-                      <div className='text-xs text-gray-400'>{step.description}</div>
-                    </div>
-                    {stepStatus[step.id] === 'done' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRedoStep(step.id);
-                        }}
-                        className='px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors'
-                        title='Redo this step'
-                      >
-                        Redo
-                      </button>
-                    )}
-                    {stepStatus[step.id] !== 'done' && !isDisabled && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStepClick(step.id);
-                        }}
-                        className='px-2 py-1 text-xs bg-green-600 hover:bg-green-500 text-white rounded transition-colors'
-                        title='Run this step'
-                      >
-                        Run
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+          <div className='p-3 border-b border-gray-800'>
+            <div className='flex items-center justify-between mb-1'>
+              <h3 className='text-xs font-semibold text-gray-300 uppercase tracking-wide'>Video Steps</h3>
+              <button
+                className='text-gray-400 hover:text-gray-200 text-sm focus:outline-none'
+                onClick={() => setCollapseSteps((v) => !v)}
+              >
+                {collapseSteps ? '▼' : '▲'}
+              </button>
             </div>
+            {!collapseSteps && (
+              <div className='space-y-1'>
+                {steps.map((step) => {
+                  const icon = getStepIcon(step.id);
+                  const isDisabled = isStepDisabled(step.id) || loading;
+                  const isCurrent = currentStep === step.id;
+                  return (
+                    <div
+                      key={step.id}
+                      className={`w-full flex items-center gap-2 p-1 rounded text-left transition-colors text-xs ${
+                        isDisabled ? 'text-gray-500 cursor-not-allowed' : 'text-white hover:bg-gray-800'
+                      } ${isCurrent ? 'bg-gray-800' : ''}`}
+                      onClick={() => {
+                        if (!loading && !isDisabled && stepStatus[step.id] === 'done') {
+                          setCurrentStep(step.id);
+                        }
+                      }}
+                    >
+                      <span className='text-sm'>{icon}</span>
+                      <div className='flex-1'>
+                        <div className='font-medium'>{step.name}</div>
+                      </div>
+                      {stepStatus[step.id] === 'done' && !collapseSteps && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRedoStep(step.id);
+                          }}
+                          className='px-2 py-0.5 text-[10px] bg-blue-600 hover:bg-blue-500 rounded'
+                        >
+                          Redo
+                        </button>
+                      )}
+                      {stepStatus[step.id] !== 'done' && !isDisabled && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStepClick(step.id);
+                          }}
+                          className='px-2 py-0.5 text-[10px] bg-green-600 hover:bg-green-500 rounded'
+                        >
+                          Run
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Content Area */}
@@ -1045,7 +1160,7 @@ function ChatWidget() {
             )}
 
             {/* Concepts Selection */}
-            {concepts && currentStep === 1 && stepStatus[1] === 'pending' && (
+            {concepts && currentStep === 1 && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Choose a Concept:</h4>
                 <div className='space-y-2'>
@@ -1068,7 +1183,7 @@ function ChatWidget() {
             )}
 
             {/* Scripts Selection */}
-            {scripts && currentStep === 3 && stepStatus[3] === 'pending' && (
+            {scripts && (currentStep === 2 || currentStep === 3) && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Choose a Script:</h4>
                 <div className='space-y-2'>
@@ -1154,8 +1269,8 @@ function ChatWidget() {
               </div>
             )}
 
-            {/* Generated Images - show when step 4 is clicked */}
-            {Object.keys(generatedImages).length > 0 && currentStep === 4 && (
+            {/* Generated Images - show when step 4 or 5 is active */}
+            {Object.keys(generatedImages).length > 0 && (currentStep === 4 || currentStep === 5) && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Generated Images:</h4>
                 <div className='grid grid-cols-2 gap-2'>
@@ -1164,7 +1279,11 @@ function ChatWidget() {
                       <img
                         src={imageUrl}
                         alt={`Generated image for segment ${segmentId}`}
-                        className='w-full h-20 object-cover rounded border border-gray-700'
+                        className='w-full h-20 object-cover rounded border border-gray-700 cursor-pointer'
+                        onClick={() => {
+                          setModalImageUrl(imageUrl);
+                          setShowImageModal(true);
+                        }}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -1178,18 +1297,22 @@ function ChatWidget() {
               </div>
             )}
 
-            {/* Generated Videos - show when step 5 is clicked */}
-            {Object.keys(generatedVideos).length > 0 && currentStep === 5 && (
+            {/* Generated Videos - show when step 5 is active */}
+            {Object.keys(combinedVideosMap).length > 0 && currentStep === 5 && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Generated Videos:</h4>
                 <div className='grid grid-cols-2 gap-2'>
-                  {Object.entries(generatedVideos).map(([segmentId, videoUrl]) => (
+                  {Object.entries(combinedVideosMap).map(([segmentId, videoUrl]) => (
                     <div key={segmentId} className='relative group'>
                       <video
                         src={videoUrl}
-                        className='w-full h-20 object-cover rounded border border-gray-700'
+                        className='w-full h-20 object-cover rounded border border-gray-700 cursor-pointer'
                         muted
                         loop
+                        onClick={() => {
+                          setModalVideoUrl(videoUrl);
+                          setShowVideoModal(true);
+                        }}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -1197,8 +1320,12 @@ function ChatWidget() {
                       <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center'>
                         <span className='text-white text-xs opacity-0 group-hover:opacity-100'>Segment {segmentId}</span>
                       </div>
-                      <div className='absolute top-1 right-1 bg-black bg-opacity-70 rounded px-1'>
-                        <span className='text-white text-xs'>▶</span>
+                      <div
+                        className='absolute top-1 right-1 bg-black bg-opacity-70 rounded px-1 cursor-pointer'
+                        title='Add to Timeline'
+                        onClick={() => addSingleVideoToTimeline(segmentId)}
+                      >
+                        <span className='text-white text-xs'>➕</span>
                       </div>
                     </div>
                   ))}
@@ -1280,8 +1407,8 @@ function ChatWidget() {
 
           {/* Input area */}
           {isAuthenticated && selectedProject ? (
-            <div className='p-4 border-t border-gray-800'>
-              <div className='relative flex flex-col items-center'>
+            <div className='p-4 border-t border-white/10 dark:border-gray-700/60'>
+              <div className='relative'>
                 <input
                   type='text'
                   value={prompt}
@@ -1291,29 +1418,32 @@ function ChatWidget() {
                     if (e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === "function") {
                       e.nativeEvent.stopImmediatePropagation();
                     }
-                  }}
-                  placeholder='Start Creating...'
-                  className='w-full flex-1 rounded-md bg-gray-800 text-white px-3 py-2 pr-20 focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-gray-500'
-                  disabled={loading}
-                />
-                <div className='self-end flex items-center gap-2'>
-                  <button
-                    type='button'
-                    className={`text-gray-400 hover:text-gray-300 p-1 ${
-                      loading || !prompt.trim() ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={loading || !prompt.trim()}
-                    onClick={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && prompt.trim() && !loading) {
                       e.preventDefault();
                       if (currentStep === 0) handleStepClick(0);
-                    }}
-                    title='Send'
-                  >
-                    <svg className='w-4 h-4' fill='currentColor' viewBox='0 0 20 20'>
-                      <path d='M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z' />
-                    </svg>
-                  </button>
-                </div>
+                    }
+                  }}
+                  placeholder='Start Creating...'
+                  className='w-full glass-input text-sm text-white pl-4 pr-12 py-3 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500'
+                  disabled={loading}
+                />
+
+                <button
+                  type='button'
+                  className={`absolute top-1/2 right-3 -translate-y-1/2 send-btn flex items-center justify-center rounded-full h-9 w-9 transition-opacity duration-150 ${
+                    loading || !prompt.trim() ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
+                  }`}
+                  disabled={loading || !prompt.trim()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentStep === 0) handleStepClick(0);
+                  }}
+                  title='Send'
+                >
+                  <svg className='w-4 h-4 text-white' fill='currentColor' viewBox='0 0 20 20'>
+                    <path d='M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z' />
+                  </svg>
+                </button>
               </div>
             </div>
           ) : (
@@ -1334,7 +1464,7 @@ function ChatWidget() {
 
       {/* Create Project Modal */}
       {createModalOpen && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10003]">
           <form onSubmit={handleCreateProjectModal} className="bg-gray-800 p-4 rounded-lg shadow-lg w-96 flex flex-col gap-3 relative">
             <h3 className="text-lg font-semibold text-white mb-2">Create New Project</h3>
             <label className="text-xs text-gray-300 mb-1">Project Name</label>
@@ -1371,6 +1501,65 @@ function ChatWidget() {
               >{creatingProject ? "Creating..." : "Create"}</button>
             </div>
           </form>
+        </div>,
+        document.body
+      )}
+
+      {/* Image preview modal */}
+      {showImageModal && modalImageUrl && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10003]"
+          onClick={() => {
+            setShowImageModal(false);
+            setModalImageUrl(null);
+          }}
+        >
+          <img
+            src={modalImageUrl}
+            alt="Preview"
+            className="max-w-full max-h-full rounded shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="absolute top-4 right-4 text-white text-2xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowImageModal(false);
+              setModalImageUrl(null);
+            }}
+          >
+            ✕
+          </button>
+        </div>,
+        document.body
+      )}
+
+      {/* Video preview modal */}
+      {showVideoModal && modalVideoUrl && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10003]"
+          onClick={() => {
+            setShowVideoModal(false);
+            setModalVideoUrl(null);
+          }}
+        >
+          <video
+            src={modalVideoUrl}
+            controls
+            autoPlay
+            className="max-w-full max-h-full rounded shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="absolute top-4 right-4 text-white text-2xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowVideoModal(false);
+              setModalVideoUrl(null);
+            }}
+          >
+            ✕
+          </button>
         </div>,
         document.body
       )}

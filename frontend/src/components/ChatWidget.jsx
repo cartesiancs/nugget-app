@@ -163,22 +163,26 @@ function ChatWidget() {
       newStepStatus[3] = 'pending';
     }
     
-    // Step 4: Image Generation - check if images exist
-    if (Object.keys(generatedImages).length > 0) {
+    // Step 4: Image Generation - check if images exist (from API or generation)
+    const hasImages = Object.keys(generatedImages).length > 0 || 
+                     (selectedScript?.segments?.some(seg => seg.s3Key || seg.image_s3_key || seg.imageS3Key));
+    if (hasImages) {
       newStepStatus[4] = 'done';
     } else {
       newStepStatus[4] = 'pending';
     }
     
-    // Step 5: Video Generation - check if videos exist
-    if (Object.keys(generatedVideos).length > 0) {
+    // Step 5: Video Generation - check if videos exist (from API or generation)
+    const hasVideos = Object.keys(generatedVideos).length > 0 || 
+                     (selectedScript?.segments?.some(seg => seg.videoUrl || seg.video_url));
+    if (hasVideos) {
       newStepStatus[5] = 'done';
     } else {
       newStepStatus[5] = 'pending';
     }
     
     // Debug logging for step status updates
-    if (Object.keys(generatedImages).length > 0 || Object.keys(generatedVideos).length > 0) {
+    if (hasImages || hasVideos) {
       console.log('Step status update:', {
         concepts: concepts?.length || 0,
         selectedConcept: !!selectedConcept,
@@ -186,6 +190,8 @@ function ChatWidget() {
         selectedScriptSegments: selectedScript?.segments?.length || 0,
         images: Object.keys(generatedImages).length,
         videos: Object.keys(generatedVideos).length,
+        hasImages,
+        hasVideos,
         newStepStatus
       });
     }
@@ -250,12 +256,29 @@ function ChatWidget() {
   const handleStepClick = async (stepId) => {
     if (isStepDisabled(stepId) || loading) return;
     
-    // If step is already done, ask for confirmation
-    if (stepStatus[stepId] === 'done') {
-      const stepName = steps[stepId].name;
-      const confirmed = window.confirm(`Step "${stepName}" is already completed. Do you want to run it again?`);
-      if (!confirmed) return;
+    setCurrentStep(stepId);
+    
+    // Only run the step if it's not already done
+    if (stepStatus[stepId] !== 'done') {
+      switch (stepId) {
+        case 0:
+          await runConceptWriter();
+          break;
+        case 2:
+          await runScriptGeneration();
+          break;
+        case 4:
+          await runImageGeneration();
+          break;
+        case 5:
+          await runVideoGeneration();
+          break;
+      }
     }
+  };
+
+  const handleRedoStep = async (stepId) => {
+    if (loading) return;
     
     setCurrentStep(stepId);
     
@@ -446,6 +469,7 @@ function ChatWidget() {
   };
 
   const runVideoGeneration = async () => {
+    // Check if we have any images available from the API response
     if (Object.keys(generatedImages).length === 0) {
       setError("Please generate images first");
       return;
@@ -464,9 +488,18 @@ function ChatWidget() {
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
 
-        // Check if this segment has a generated image
-        if (!generatedImages[segment.id]) {
-          console.log(`Skipping segment ${segment.id} - no image available`);
+        // Check if this segment has an image in the generatedImages map
+        // Try different segment ID formats to match with generatedImages
+        const segmentIdVariants = [
+          segment.id,
+          `seg-${segment.id}`,
+          segment.segmentId,
+          segment.uuid
+        ];
+        
+        const matchingImageKey = segmentIdVariants.find(id => generatedImages[id]);
+        if (!matchingImageKey) {
+          console.log(`Skipping segment ${segment.id} - no image available. Tried IDs:`, segmentIdVariants);
           continue;
         }
 
@@ -485,11 +518,23 @@ function ChatWidget() {
         }
 
         try {
-          console.log(`Generating video for segment ${segment.id} with imageS3Key: ${segment.s3Key}`);
+          // Extract s3Key from the image URL in generatedImages
+          const imageUrl = generatedImages[matchingImageKey];
+          let imageS3Key = null;
+          
+          if (imageUrl && imageUrl.includes('cloudfront.net/')) {
+            // Extract s3Key from CloudFront URL
+            const urlParts = imageUrl.split('cloudfront.net/');
+            if (urlParts.length > 1) {
+              imageS3Key = urlParts[1];
+            }
+          }
+          
+          console.log(`Generating video for segment ${segment.id} with imageS3Key: ${imageS3Key}`);
           const result = await videoApi.generateVideo({
             animation_prompt: segment.animation || segment.visual,
             art_style: artStyle,
-            imageS3Key: segment.s3Key,
+            imageS3Key: imageS3Key,
             uuid: segment.id,
             project_id: selectedProject?.id,
           });
@@ -680,52 +725,13 @@ function ChatWidget() {
         setConcepts(null);
       }
       
-      // Set images if available
-      if (projectImages && projectImages.success && projectImages.data && projectImages.data.length > 0) {
-        const imagesMap = {};
-        projectImages.data.forEach(img => {
-          const segmentId = img.uuid || img.segment_id || img.segmentId || img.id;
-          if (segmentId) {
-            // For images, we need to construct the URL from s3Key using CloudFront
-            const imageUrl = img.s3Key ? `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}` : img.url;
-            imagesMap[segmentId] = imageUrl;
-          }
-        });
-        console.log('Setting generated images:', imagesMap);
-        setGeneratedImages(imagesMap);
-      } else {
-        console.log('No images found in API response');
-        setGeneratedImages({});
-      }
-      
-      // Set videos if available
-      if (projectVideos && projectVideos.success && projectVideos.data && projectVideos.data.length > 0) {
-        const videosMap = {};
-        projectVideos.data.forEach(video => {
-          const segmentId = video.uuid || video.segment_id || video.segmentId || video.id;
-          if (segmentId) {
-            // For videos, we need to construct the URL from s3Keys using CloudFront
-            const videoUrl = video.s3Keys && video.s3Keys.length > 0 
-              ? `https://ds0fghatf06yb.cloudfront.net/${video.s3Keys[0]}` 
-              : video.url;
-            videosMap[segmentId] = videoUrl;
-          }
-        });
-        console.log('Setting generated videos:', videosMap);
-        setGeneratedVideos(videosMap);
-        setStoredVideosMap(videosMap);
-      } else {
-        console.log('No videos found in API response');
-        setGeneratedVideos({});
-        setStoredVideosMap({});
-      }
-      
-      // Set segments/scripts if available
+      // Set segments/scripts if available first (we need this to map images/videos correctly)
+      let segments = [];
       if (projectSegmentations && projectSegmentations.success && projectSegmentations.data && projectSegmentations.data.length > 0) {
         // Take the first segmentation (script) and extract its segments
         const firstSegmentation = projectSegmentations.data[0];
         if (firstSegmentation.segments && firstSegmentation.segments.length > 0) {
-          const segments = firstSegmentation.segments.map(seg => ({
+          segments = firstSegmentation.segments.map(seg => ({
             id: seg.segmentId || seg.id,
             visual: seg.visual,
             animation: seg.animation,
@@ -748,6 +754,54 @@ function ChatWidget() {
       } else {
         console.log('No segmentations found in API response');
         setSelectedScript(null);
+      }
+
+      // Set images if available - map to segments properly
+      if (projectImages && projectImages.success && projectImages.data && projectImages.data.length > 0) {
+        const imagesMap = {};
+        projectImages.data.forEach(img => {
+          // Try to find the matching segment by various ID fields
+          const segmentId = img.uuid || img.segment_id || img.segmentId || img.id;
+          if (segmentId) {
+            // For images, we need to construct the URL from s3Key using CloudFront
+            const imageUrl = img.s3Key ? `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}` : img.url;
+            imagesMap[segmentId] = imageUrl;
+            
+            // Also update the corresponding segment with the s3Key if not already set
+            const segment = segments.find(seg => seg.id == segmentId);
+            if (segment && !segment.s3Key) {
+              segment.s3Key = img.s3Key;
+            }
+          }
+        });
+        console.log('Setting generated images:', imagesMap);
+        setGeneratedImages(imagesMap);
+      } else {
+        console.log('No images found in API response');
+        setGeneratedImages({});
+      }
+      
+      // Set videos if available - map to segments properly
+      if (projectVideos && projectVideos.success && projectVideos.data && projectVideos.data.length > 0) {
+        const videosMap = {};
+        projectVideos.data.forEach(video => {
+          // Try to find the matching segment by various ID fields
+          const segmentId = video.uuid || video.segment_id || video.segmentId || video.id;
+          if (segmentId) {
+            // For videos, we need to construct the URL from s3Keys using CloudFront
+            const videoUrl = video.s3Keys && video.s3Keys.length > 0 
+              ? `https://ds0fghatf06yb.cloudfront.net/${video.s3Keys[0]}` 
+              : video.url;
+            videosMap[segmentId] = videoUrl;
+          }
+        });
+        console.log('Setting generated videos:', videosMap);
+        setGeneratedVideos(videosMap);
+        setStoredVideosMap(videosMap);
+      } else {
+        console.log('No videos found in API response');
+        setGeneratedVideos({});
+        setStoredVideosMap({});
       }
       
       // Reset other states
@@ -923,10 +977,8 @@ function ChatWidget() {
                 const isCurrent = currentStep === step.id;
                 
                 return (
-                  <button
+                  <div
                     key={step.id}
-                    onClick={() => handleStepClick(step.id)}
-                    disabled={isDisabled}
                     className={`w-full flex items-center gap-3 p-2 rounded text-left transition-colors ${
                       isDisabled
                         ? 'text-gray-500 cursor-not-allowed'
@@ -938,7 +990,31 @@ function ChatWidget() {
                       <div className='text-sm font-medium'>{step.name}</div>
                       <div className='text-xs text-gray-400'>{step.description}</div>
                     </div>
-                  </button>
+                    {stepStatus[step.id] === 'done' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRedoStep(step.id);
+                        }}
+                        className='px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors'
+                        title='Redo this step'
+                      >
+                        Redo
+                      </button>
+                    )}
+                    {stepStatus[step.id] !== 'done' && !isDisabled && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStepClick(step.id);
+                        }}
+                        className='px-2 py-1 text-xs bg-green-600 hover:bg-green-500 text-white rounded transition-colors'
+                        title='Run this step'
+                      >
+                        Run
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -966,7 +1042,7 @@ function ChatWidget() {
             )}
 
             {/* Concepts Selection */}
-            {concepts && stepStatus[1] === 'pending' && (
+            {concepts && currentStep === 1 && stepStatus[1] === 'pending' && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Choose a Concept:</h4>
                 <div className='space-y-2'>
@@ -989,7 +1065,7 @@ function ChatWidget() {
             )}
 
             {/* Scripts Selection */}
-            {scripts && stepStatus[3] === 'pending' && (
+            {scripts && currentStep === 3 && stepStatus[3] === 'pending' && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Choose a Script:</h4>
                 <div className='space-y-2'>
@@ -1011,26 +1087,62 @@ function ChatWidget() {
               </div>
             )}
 
-            {/* Generation Progress */}
-            {Object.keys(generationProgress).length > 0 && (
+            {/* Show selected concept when step 1 is clicked */}
+            {selectedConcept && currentStep === 1 && (
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-white mb-2'>Selected Concept:</h4>
+                <div className='p-3 bg-gray-800 border border-gray-700 rounded'>
+                  <div className='text-white font-medium text-sm mb-1'>{selectedConcept.title}</div>
+                  <div className='text-gray-300 text-xs mb-2'>{selectedConcept.concept}</div>
+                  <div className='flex flex-wrap gap-1'>
+                    <span className='px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded'>Tone: {selectedConcept.tone}</span>
+                    <span className='px-2 py-1 bg-green-600 text-green-100 text-xs rounded'>Goal: {selectedConcept.goal}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show selected script when step 3 is clicked */}
+            {selectedScript && currentStep === 3 && (
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-white mb-2'>Selected Script:</h4>
+                <div className='p-3 bg-gray-800 border border-gray-700 rounded'>
+                  <div className='text-white font-medium text-sm mb-1'>Script with {selectedScript.segments.length} segments</div>
+                  <div className='text-gray-300 text-xs mb-2'>Art Style: {selectedScript.artStyle || 'Default'}</div>
+                  <div className='space-y-1'>
+                    {selectedScript.segments.slice(0, 3).map((segment, index) => (
+                      <div key={index} className='text-gray-400 text-xs'>
+                        Segment {segment.id}: {segment.visual.substring(0, 50)}...
+                      </div>
+                    ))}
+                    {selectedScript.segments.length > 3 && (
+                      <div className='text-gray-500 text-xs'>... and {selectedScript.segments.length - 3} more segments</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Generation Progress - show when any generation step is active */}
+            {Object.keys(generationProgress).length > 0 && (currentStep === 4 || currentStep === 5) && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Generation Progress:</h4>
-                <div className='space-y-1'>
+                <div className='space-y-2'>
                   {Object.entries(generationProgress).map(([segmentId, progress]) => (
-                    <div key={segmentId} className='flex items-center justify-between text-xs'>
-                      <span className='text-gray-400'>Segment {segmentId}</span>
+                    <div key={segmentId} className='flex items-center justify-between p-2 bg-gray-800 rounded'>
+                      <span className='text-gray-300 text-xs'>Segment {segmentId}</span>
                       <div className='flex items-center gap-2'>
                         {progress.status === "generating" && (
                           <>
-                            <div className='w-3 h-3'><LoadingSpinner /></div>
-                            <span className='text-blue-400'>Generating {progress.type}...</span>
+                            <div className='w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin'></div>
+                            <span className='text-blue-400 text-xs'>Generating {progress.type}...</span>
                           </>
                         )}
                         {progress.status === "completed" && (
-                          <span className='text-green-400'>✓ {progress.type} completed</span>
+                          <span className='text-green-400 text-xs'>✓ {progress.type} completed</span>
                         )}
                         {progress.status === "error" && (
-                          <span className='text-red-400'>✗ {progress.type} failed</span>
+                          <span className='text-red-400 text-xs'>✗ {progress.type} failed</span>
                         )}
                       </div>
                     </div>
@@ -1039,8 +1151,60 @@ function ChatWidget() {
               </div>
             )}
 
-            {/* Generated Content Summary */}
-            {selectedScript && (
+            {/* Generated Images - show when step 4 is clicked */}
+            {Object.keys(generatedImages).length > 0 && currentStep === 4 && (
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-white mb-2'>Generated Images:</h4>
+                <div className='grid grid-cols-2 gap-2'>
+                  {Object.entries(generatedImages).map(([segmentId, imageUrl]) => (
+                    <div key={segmentId} className='relative group'>
+                      <img
+                        src={imageUrl}
+                        alt={`Generated image for segment ${segmentId}`}
+                        className='w-full h-20 object-cover rounded border border-gray-700'
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center'>
+                        <span className='text-white text-xs opacity-0 group-hover:opacity-100'>Segment {segmentId}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Generated Videos - show when step 5 is clicked */}
+            {Object.keys(generatedVideos).length > 0 && currentStep === 5 && (
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-white mb-2'>Generated Videos:</h4>
+                <div className='grid grid-cols-2 gap-2'>
+                  {Object.entries(generatedVideos).map(([segmentId, videoUrl]) => (
+                    <div key={segmentId} className='relative group'>
+                      <video
+                        src={videoUrl}
+                        className='w-full h-20 object-cover rounded border border-gray-700'
+                        muted
+                        loop
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center'>
+                        <span className='text-white text-xs opacity-0 group-hover:opacity-100'>Segment {segmentId}</span>
+                      </div>
+                      <div className='absolute top-1 right-1 bg-black bg-opacity-70 rounded px-1'>
+                        <span className='text-white text-xs'>▶</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Generated Content Summary - show when step 4 or 5 is clicked */}
+            {selectedScript && (currentStep === 4 || currentStep === 5) && (
               <div className='mb-4'>
                 <h4 className='text-sm font-semibold text-white mb-2'>Generated Content:</h4>
                 <div className='space-y-2'>

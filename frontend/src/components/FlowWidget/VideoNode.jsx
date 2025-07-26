@@ -5,6 +5,7 @@ import { videoApi } from "../../services/video-gen";
 
 const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit }) => {
   const isRegenerating = data.videoId && regeneratingVideos && regeneratingVideos.has(data.videoId);
+  const isTemporary = !data.videoId; // Temporary videos don't have videoId since they're not saved to DB
   const [editOpen, setEditOpen] = useState(false);
   const [editPrompt, setEditPrompt] = useState(data.segmentData?.animation || "");
   const [editLoading, setEditLoading] = useState(false);
@@ -31,12 +32,24 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
     setEditError("");
     setEditSuccess("");
     try {
+      // Get project ID from localStorage
+      let projectId;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          projectId = project.id;
+        }
+      } catch (error) {
+        console.error("Error parsing project from localStorage:", error);
+      }
       // 1. Generate new video with the new animation prompt
       const videoGenResponse = await videoApi.generateVideo({
         animation_prompt: editPrompt,
         art_style: data.segmentData.artStyle,
         imageS3Key: data.segmentData.imageS3Key,
         uuid: `seg-${data.segmentId}`,
+        project_id: projectId,
       });
       // 2. Regenerate video with new animation prompt and new video s3_keys
       if (videoGenResponse && videoGenResponse.s3Keys && videoGenResponse.s3Keys.length > 0) {
@@ -46,6 +59,7 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
           art_style: data.segmentData.artStyle,
           image_s3_key: data.segmentData.imageS3Key,
           video_s3_keys: [...videoGenResponse.s3Keys],
+          project_id: projectId,
         });
       }
       setEditSuccess("Video updated and regenerated!");
@@ -142,16 +156,23 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
             onMouseEnter={e => e.target.play()}
             onMouseLeave={e => e.target.pause()}
           />
+          {/* Temporary video indicator */}
+          {isTemporary && (
+            <div className="absolute top-1 right-1 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-semibold">
+              PREVIEW
+            </div>
+          )}
         </div>
         <div className="text-xs text-gray-400 text-center">
           Scene {data.segmentId} Video
+          {isTemporary && <span className="text-yellow-400 block">(Temporary)</span>}
         </div>
         {/* Regenerate button always visible in bottom right of the node */}
         <button
           onClick={handleRegenerate}
-          disabled={isRegenerating || !data.videoId || !data.segmentData}
+          disabled={isRegenerating || !data.videoId || !data.segmentData || isTemporary}
           className="absolute bottom-2 right-2 bg-purple-600 hover:bg-purple-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
-          title="Regenerate this video"
+          title={isTemporary ? "Cannot regenerate temporary videos" : "Regenerate this video"}
           style={{ width: 32, height: 32 }}
         >
           {isRegenerating ? (
@@ -163,9 +184,9 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
         {/* Edit button next to regenerate */}
         <button
           onClick={handleEdit}
-          disabled={isRegenerating || !data.videoId || !data.segmentData}
+          disabled={isRegenerating || !data.videoId || !data.segmentData || isTemporary}
           className="absolute bottom-2 right-12 bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
-          title="Edit animation prompt"
+          title={isTemporary ? "Cannot edit temporary videos" : "Edit animation prompt"}
           style={{ width: 32, height: 32 }}
         >
           <span role="img" aria-label="Edit">✏️</span>

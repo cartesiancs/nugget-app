@@ -8,9 +8,11 @@ import { imageApi } from "../../services/image";
  * - data
  * - onRegenerateImage
  * - regeneratingImages
+ * - onMakePrimary (optional): callback to make this image primary
+ * - isPrimary (optional): whether this image is the primary one
  * - onAfterEdit (optional): called after successful edit/regeneration to refresh parent data
  */
-const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onAfterEdit }) => {
+const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary, isPrimary, onAfterEdit }) => {
   const isRegenerating = data.imageId && regeneratingImages.has(data.imageId);
   const [editOpen, setEditOpen] = useState(false);
   const [editPrompt, setEditPrompt] = useState(data.segmentData?.visual || "");
@@ -22,6 +24,11 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onAfterEdit })
   const handleRegenerate = () => {
     if (!data.imageId || !data.segmentData || isRegenerating) return;
     onRegenerateImage(data.imageId, data.segmentData);
+  };
+
+  const handleMakePrimary = () => {
+    if (!data.imageId || !data.segmentId || isPrimary) return;
+    onMakePrimary?.(data.imageId, data.segmentId, data.allImages);
   };
 
   const handleEdit = () => {
@@ -38,11 +45,23 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onAfterEdit })
     setEditError("");
     setEditSuccess("");
     try {
+      // Get project ID from localStorage
+      let projectId;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          projectId = project.id;
+        }
+      } catch (error) {
+        console.error("Error parsing project from localStorage:", error);
+      }
       // 1. POST to generate new image with new visual_prompt
       const genResponse = await imageApi.generateImage({
         visual_prompt: editPrompt,
         art_style: data.segmentData.artStyle,
         uuid: `seg-${data.segmentId}`,
+        project_id: projectId,
       });
       // 2. PATCH with new visual_prompt and new s3_key
       if (genResponse && genResponse.s3_key) {
@@ -142,7 +161,14 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onAfterEdit })
         </div>,
         document.body
       )}
-      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative ${isRegenerating ? 'opacity-50 pointer-events-none' : ''}`}> 
+      <div className={`bg-gray-700 border ${isPrimary ? 'border-yellow-400 border-2' : 'border-gray-600'} rounded-lg p-4 min-w-[150px] max-w-[200px] relative ${isRegenerating ? 'opacity-50 pointer-events-none' : ''}`}> 
+        {/* Primary indicator */}
+        {isPrimary && (
+          <div className="absolute -top-2 -left-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold z-30">
+            ⭐ Primary
+          </div>
+        )}
+        
         {/* Loader overlay when regenerating (covers whole node) */}
         {isRegenerating && (
           <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
@@ -160,30 +186,53 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onAfterEdit })
         <div className="text-xs text-gray-400 text-center">
           Scene {data.segmentId} Image
         </div>
-        {/* Regenerate button always visible in bottom right of the node */}
-        <button
-          onClick={handleRegenerate}
-          disabled={isRegenerating || !data.imageId || !data.segmentData}
-          className="absolute bottom-2 right-2 bg-purple-600 hover:bg-purple-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
-          title="Regenerate this image"
-          style={{ width: 32, height: 32 }}
-        >
-          {isRegenerating ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <span role="img" aria-label="Regenerate">🔄</span>
+        
+        {/* Button container */}
+        <div className="absolute bottom-2 right-2 flex gap-1">
+          {/* Regenerate button */}
+          <button
+            onClick={handleRegenerate}
+            disabled={isRegenerating || !data.imageId || !data.segmentData}
+            className="bg-purple-600 hover:bg-purple-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            title="Regenerate this image"
+            style={{ width: 32, height: 32 }}
+          >
+            {isRegenerating ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <span role="img" aria-label="Regenerate">🔄</span>
+            )}
+          </button>
+          
+          {/* Edit button */}
+          <button
+            onClick={handleEdit}
+            disabled={isRegenerating || !data.imageId || !data.segmentData}
+            className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            title="Edit visual prompt"
+            style={{ width: 32, height: 32 }}
+          >
+            <span role="img" aria-label="Edit">✏️</span>
+          </button>
+          
+          {/* Star indicator for all images */}
+          {onMakePrimary && (
+            <button
+              onClick={isPrimary ? undefined : handleMakePrimary}
+              disabled={isRegenerating || !data.imageId || !data.segmentId || isPrimary}
+              className={`rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 ${
+                isPrimary 
+                  ? 'bg-yellow-400 text-black cursor-default' 
+                  : 'bg-gray-600 hover:bg-gray-500 text-white cursor-pointer'
+              }`}
+              title={isPrimary ? "This is the primary image" : "Make this image primary"}
+              style={{ width: 32, height: 32 }}
+            >
+              <span role="img" aria-label={isPrimary ? "Primary" : "Make Primary"}>⭐</span>
+            </button>
           )}
-        </button>
-        {/* Edit button next to regenerate */}
-        <button
-          onClick={handleEdit}
-          disabled={isRegenerating || !data.imageId || !data.segmentData}
-          className="absolute bottom-2 right-12 bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
-          title="Edit visual prompt"
-          style={{ width: 32, height: 32 }}
-        >
-          <span role="img" aria-label="Edit">✏️</span>
-        </button>
+        </div>
+        
         {/* Input handle */}
         <Handle
           type="target"

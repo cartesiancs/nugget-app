@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { videoApi, s3Api } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
+import { videoApi } from '../services/video-gen';
+import { s3Api } from '../services/s3';
 
 function VideoPanel({ segment, onClose }) {
   const [loading, setLoading] = useState(false);

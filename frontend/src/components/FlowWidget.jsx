@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import ChatLoginButton from "./ChatLoginButton";
 import LoadingSpinner from "./LoadingSpinner";
-import { projectApi, imageApi, videoApi } from "../services/api";
 import {
   ReactFlow,
   Background,
@@ -11,85 +10,77 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  Handle,
-  Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import SegmentNode from "./FlowWidget/SegmentNode";
 import ImageNode from "./FlowWidget/ImageNode";
 import VideoNode from "./FlowWidget/VideoNode";
+import { imageApi } from "../services/image";
+import { videoApi } from "../services/video-gen";
+import { projectApi } from "../services/project";
 
 function FlowWidget() {
   const { isAuthenticated, logout, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // We only track messages via setter; value itself not needed for UI rendering
-  const [, setFlowMessages] = useState([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [projectData, setProjectData] = useState(null);
   const [regeneratingImages, setRegeneratingImages] = useState(new Set());
   const [regeneratingVideos, setRegeneratingVideos] = useState(new Set());
 
-  // Toggle attribute on the custom element so we can style it via CSS
+  // Local state for project data
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [segmentations, setSegmentations] = useState([]);
+  const [images, setImages] = useState([]);
+  const [videos, setVideos] = useState([]);
+
+  // Sync from localStorage on mount and on storage event
   useEffect(() => {
-    const hostEl = document.querySelector("react-flow-widget");
-    if (hostEl) {
-      hostEl.setAttribute("data-open", open ? "true" : "false");
+    function syncFromStorage() {
+      const storedSelected = localStorage.getItem('project-store-selectedProject');
+      const storedSegmentations = localStorage.getItem('project-store-segmentations');
+      const storedImages = localStorage.getItem('project-store-images');
+      const storedVideos = localStorage.getItem('project-store-videos');
+      setSelectedProject(storedSelected ? JSON.parse(storedSelected) : null);
+      setSegmentations(storedSegmentations ? JSON.parse(storedSegmentations) : []);
+      setImages(storedImages ? JSON.parse(storedImages) : []);
+      setVideos(storedVideos ? JSON.parse(storedVideos) : []);
     }
-  }, [open]);
-
-  // Re-add global open / close custom event listeners for external control
-  useEffect(() => {
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-
-    window.addEventListener("flowWidget:open", handleOpen);
-    window.addEventListener("flowWidget:close", handleClose);
-
-    return () => {
-      window.removeEventListener("flowWidget:open", handleOpen);
-      window.removeEventListener("flowWidget:close", handleClose);
-    };
+    syncFromStorage();
+    window.addEventListener('storage', syncFromStorage);
+    return () => window.removeEventListener('storage', syncFromStorage);
   }, []);
 
-  // Load data from API (no localStorage fallback)
+  // Remove zustand loadingData logic, use a simple loading check for essentials
+  const isLoadingEssentials = false; // All data is loaded from localStorage
+
+
   const flowData = useMemo(() => {
-    console.log("🔄 flowData useMemo called, projectData:", projectData);
-    if (!projectData || !projectData.success || !projectData.project) {
+    if (!segmentations || !images || !videos) {
       return { segments: [], images: {}, videos: {}, imageDetails: {}, videoDetails: {} };
     }
-    const project = projectData.project;
-
-    // 1. Pick the segmentation to use (prefer selectedSegmentations, else first videoSegmentation)
     let segments = [];
     let segmentationSource = null;
-    if (Array.isArray(project.selectedSegmentations) && project.selectedSegmentations.length > 0) {
-      segmentationSource = project.selectedSegmentations[0];
-    } else if (Array.isArray(project.videoSegmentations) && project.videoSegmentations.length > 0) {
-      segmentationSource = project.videoSegmentations[0];
+    if (Array.isArray(segmentations) && segmentations.length > 0) {
+      segmentationSource = segmentations.find(seg => seg.isSelected) || segmentations[0];
     }
     if (segmentationSource && Array.isArray(segmentationSource.segments)) {
       segments = segmentationSource.segments.map(seg => ({
         ...seg,
-        id: seg.segmentId || seg.id, // Use segmentId for mapping
+        id: seg.segmentId || seg.id,
         visual: seg.visual || '',
         narration: seg.narration || '',
         animation: seg.animation || ''
       }));
     }
-    console.log("📋 Processed segments:", segments);
-
-    // 2. Build images/videos lookup by segmentId and store image details
-    const images = {};
+    const imagesMap = {};
     const imageDetails = {};
-    if (Array.isArray(project.generatedImages)) {
-      project.generatedImages.forEach(img => {
+    if (Array.isArray(images)) {
+      images.forEach(img => {
         if (img && img.success && img.s3Key && img.uuid) {
-          // uuid is like 'seg-2', so extract the segmentId
           const segmentId = img.uuid.replace(/^seg-/, '');
-          images[segmentId] = `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`;
+          imagesMap[segmentId] = `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`;
           imageDetails[segmentId] = {
             id: img.id,
             visualPrompt: img.visualPrompt,
@@ -99,16 +90,16 @@ function FlowWidget() {
         }
       });
     }
-    const videos = {};
+    const videosMap = {};
     const videoDetails = {};
-    if (Array.isArray(project.generatedVideos)) {
-      project.generatedVideos.forEach(video => {
+    if (Array.isArray(videos)) {
+      videos.forEach(video => {
         if (
           video && video.success && video.uuid &&
           Array.isArray(video.videoFiles) && video.videoFiles.length > 0 && video.videoFiles[0].s3Key
         ) {
           const segmentId = video.uuid.replace(/^seg-/, '');
-          videos[segmentId] = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
+          videosMap[segmentId] = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
           videoDetails[segmentId] = {
             id: video.id,
             artStyle: video.artStyle,
@@ -117,27 +108,25 @@ function FlowWidget() {
         }
       });
     }
-    console.log("🖼️ Images map:", images);
-    console.log("📝 Image details:", imageDetails);
-    console.log("🎬 Videos map:", videos);
-    return { segments, images, videos, imageDetails, videoDetails };
-  }, [projectData]);
+    return {
+      segments,
+      images: imagesMap,
+      videos: videosMap,
+      imageDetails,
+      videoDetails
+    };
+  }, [segmentations, images, videos]);
 
-  // Handle image regeneration
   const handleRegenerateImage = useCallback(async (imageId, segmentData) => {
     if (!isAuthenticated || regeneratingImages.has(imageId)) return;
-
-    console.log("🔄 Regenerating image (overwrite via generateImage + PATCH):", imageId, segmentData);
     setRegeneratingImages(prev => new Set(prev).add(imageId));
     try {
-      // 1. Overwrite the image in S3
       const genResponse = await imageApi.generateImage({
         visual_prompt: segmentData.visual,
         art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
         uuid: `seg-${segmentData.id}`,
+        project_id: selectedProject.id
       });
-      console.log("✅ Image generation (overwrite) successful:", genResponse);
-      // 2. PATCH to update metadata with s3_key
       if (genResponse && genResponse.s3_key) {
         const patchResponse = await imageApi.regenerateImage({
           id: imageId,
@@ -145,18 +134,19 @@ function FlowWidget() {
           art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
           s3_key: genResponse.s3_key,
         });
-        console.log("✅ Image PATCH (metadata update) successful:", patchResponse);
+        // Fetch the updated images for the project using projectApi
+        if (selectedProject?.id) {
+          try {
+            const imagesRes = await projectApi.getProjectImages(selectedProject.id, { page: 1, limit: 100 });
+            const imagesArr = imagesRes?.data || [];
+            localStorage.setItem('project-store-images', JSON.stringify(imagesArr));
+            setImages(imagesArr);
+          } catch (err) {
+            console.error('Failed to fetch updated images after regeneration', err);
+          }
+        }
       }
-      // 3. Refresh project data to get the updated image
-      const updatedProjectData = await projectApi.getProjectById();
-      setProjectData(updatedProjectData);
-      setFlowMessages(prev => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Image for scene ${segmentData.id} regenerated, overwritten, and metadata updated successfully!`,
-        },
-      ]);
+      setError(null);
     } catch (error) {
       console.error("❌ Image regeneration (overwrite+patch) failed:", error);
       setError(`Failed to regenerate image: ${error.message}`);
@@ -167,24 +157,21 @@ function FlowWidget() {
         return newSet;
       });
     }
-  }, [isAuthenticated, regeneratingImages]);
+  }, [isAuthenticated, regeneratingImages, selectedProject]);
 
-  // Handle video regeneration
   const handleRegenerateVideo = useCallback(async (videoId, segmentData) => {
     if (!isAuthenticated || regeneratingVideos.has(videoId)) return;
     setRegeneratingVideos(prev => new Set(prev).add(videoId));
     try {
-      // Always use the s3_key of the connected image for imageS3Key
       const imageS3Key = flowData.imageDetails?.[segmentData.id]?.s3Key || segmentData.imageS3Key;
-      
       const genResponse = await videoApi.generateVideo({
         animation_prompt: segmentData.animation,
         art_style: segmentData.artStyle,
         imageS3Key,
         uuid: `seg-${segmentData.id}`,
+        project_id: selectedProject.id,
       });
       if (genResponse && genResponse.s3Keys && genResponse.s3Keys.length > 0) {
-        console.log("🔄 Video re-generation response:", genResponse.s3Keys);
         await videoApi.regenerateVideo({
           id: videoId,
           animation_prompt: segmentData.animation,
@@ -192,17 +179,19 @@ function FlowWidget() {
           image_s3_key: imageS3Key,
           video_s3_keys: [...genResponse.s3Keys],
         });
+        // Fetch the updated videos for the project using projectApi
+        if (selectedProject?.id) {
+          try {
+            const videosRes = await projectApi.getProjectVideos(selectedProject.id, { page: 1, limit: 100 });
+            const videosArr = videosRes?.data || [];
+            localStorage.setItem('project-store-videos', JSON.stringify(videosArr));
+            setVideos(videosArr);
+          } catch (err) {
+            console.error('Failed to fetch updated videos after regeneration', err);
+          }
+        }
       }
-      // 3. Refresh project data to get the updated video
-      const updatedProjectData = await projectApi.getProjectById();
-      setProjectData(updatedProjectData);
-      setFlowMessages(prev => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Video for scene ${segmentData.id} regenerated, overwritten, and metadata updated successfully!`,
-        },
-      ]);
+      setError(null);
     } catch (error) {
       setError(`Failed to regenerate video: ${error.message}`);
     } finally {
@@ -212,15 +201,17 @@ function FlowWidget() {
         return newSet;
       });
     }
-  }, [isAuthenticated, regeneratingVideos, flowData.imageDetails]);
+  }, [isAuthenticated, regeneratingVideos, flowData.imageDetails, selectedProject]);
 
-  // Create nodes and edges from flow data
   const createFlowElements = useCallback(() => {
-    console.log("🎯 createFlowElements called with flowData:", flowData);
+    console.log("🎯 createFlowElements called with flowData:", {
+      segments: flowData.segments.length,
+      images: Object.keys(flowData.images).length,
+      videos: Object.keys(flowData.videos).length
+    });
+    
     const newNodes = [];
     const newEdges = [];
-    
-    // NodeTypes are defined later with hooks; local reference not necessary here
 
     if (flowData.segments && flowData.segments.length > 0) {
       console.log("📊 Creating nodes for", flowData.segments.length, "segments");
@@ -230,7 +221,7 @@ function FlowWidget() {
       const startY = 50;
       
       flowData.segments.forEach((segment, index) => {
-        console.log(`🎬 Processing segment ${index}:`, segment);
+        console.log(`🎬 Processing segment ${index}:`, segment.id);
         const x = startX;
         const y = startY + index * rowSpacing;
         // Use segment.id (which is segmentId) for lookup
@@ -310,19 +301,22 @@ function FlowWidget() {
           });
         }
       });
+    } else {
+      console.log("❌ No segments found for flow creation");
     }
     
+    console.log("🎯 Setting nodes:", newNodes.length, "edges:", newEdges.length);
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [flowData, setNodes, setEdges, handleRegenerateImage, regeneratingImages]);
+  }, [flowData, setNodes, setEdges]);
 
   // Add a stable callback to refresh project data after edit
   const handleAfterImageEdit = useCallback(async () => {
-    const updatedProjectData = await projectApi.getProjectById();
-    setProjectData(updatedProjectData);
+    console.log("🔄 handleAfterImageEdit called");
+    // No refreshSelectedProjectData needed here, as it's handled by storage event
   }, []);
 
-  // Update nodeTypes to pass onAfterEdit to ImageNode and VideoNode
+  // Update nodeTypes to pass callbacks to ImageNode and VideoNode
   const nodeTypes = useMemo(() => ({
     segmentNode: SegmentNode,
     imageNode: (props) => <ImageNode {...props} onRegenerateImage={handleRegenerateImage} regeneratingImages={regeneratingImages} onAfterEdit={handleAfterImageEdit} />,
@@ -331,8 +325,21 @@ function FlowWidget() {
 
   // Initialize flow when data changes
   useEffect(() => {
+    console.log("🎯 Effect triggered - creating flow elements");
     createFlowElements();
-  }, [createFlowElements, projectData]);
+  }, [createFlowElements]);
+
+  // Add effect to refresh data when selectedProject changes
+  useEffect(() => {
+    if (selectedProject?.id) {
+      console.log("🔄 Selected project changed, refreshing data for:", selectedProject.id);
+      // Small delay to ensure store has updated
+      const timer = setTimeout(() => {
+        // No refreshSelectedProjectData needed here, as it's handled by storage event
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedProject?.id]);
 
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
@@ -348,14 +355,7 @@ function FlowWidget() {
     try {
       // Simulate flow processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      setFlowMessages((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Flow action "${action}" completed successfully!`,
-        },
-      ]);
+      setError(null);
     } catch (error) {
       setError(error.message || "Flow action failed");
     } finally {
@@ -378,40 +378,6 @@ function FlowWidget() {
 
   const stats = getWorkflowStats();
 
-  useEffect(() => {
-    console.log("HERE...")
-    const fetchProjectData = async () => {
-      if (!isAuthenticated) {
-        console.log("User not authenticated, skipping API call");
-        return;
-      }
-      
-      console.log("Fetching project data from API...");
-      try {
-        setLoading(true);
-        const data = await projectApi.getProjectById();
-        console.log("Project data fetched:", data);
-        
-        if (data.success && data.project) {
-          console.log("Project details:", data.project);
-          console.log("Conversations:", data.project.conversations);
-          console.log("Video segmentations:", data.project.videoSegmentations);
-          console.log("Generated images:", data.project.generatedImages);
-          console.log("Generated videos:", data.project.generatedVideos);
-          
-          setProjectData(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch project data:", error);
-        setError("Failed to fetch project data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchProjectData();
-  }, [isAuthenticated]);
-
   return (
     <div className="z-10">
       {/* Full-screen overlay; hidden when not open */}
@@ -422,7 +388,16 @@ function FlowWidget() {
         style={{ opacity: open ? 1 : 0, visibility: open ? 'visible' : 'hidden' }}
       >
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
-          <h2 className="text-lg font-semibold">Video Creation Flow</h2>
+          <div>
+            <h2 className="text-lg font-semibold">Video Creation Flow</h2>
+            {/* Debug info */}
+            <div className="text-xs text-gray-400 mt-1">
+              Project: {selectedProject?.name || 'None'} | 
+              Segments: {flowData.segments.length} | 
+              Images: {Object.keys(flowData.images).length} | 
+              Videos: {Object.keys(flowData.videos).length}
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             {isAuthenticated && user && (
               <div className="flex items-center gap-2">
@@ -496,7 +471,7 @@ function FlowWidget() {
             )}
 
             <div className="flex-1 overflow-hidden">
-              {loading ? (
+              {loading || isLoadingEssentials ? (
                 <div className="flex items-center justify-center h-full">
                   <LoadingSpinner />
                 </div>
@@ -526,6 +501,17 @@ function FlowWidget() {
                     <ChatLoginButton />
                   </div>
                 </div>
+              ) : !selectedProject ? (
+                <div className="p-4 space-y-4">
+                  <div className="text-center p-6 bg-gray-800 border border-gray-700 rounded-lg">
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      No Project Selected
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-4">
+                      Select a project from the project history dropdown to view its workflow.
+                    </p>
+                  </div>
+                </div>
               ) : flowData.segments.length === 0 ? (
                 <div className="p-4 space-y-4">
                   <div className="text-center p-6 bg-gray-800 border border-gray-700 rounded-lg">
@@ -533,7 +519,7 @@ function FlowWidget() {
                       No Workflow Data
                     </h3>
                     <p className="text-gray-400 text-sm mb-4">
-                      Start creating a video in the chat widget to see the workflow flow here.
+                      Project "{selectedProject.name}" doesn't have any video segments yet. Start creating a video in the chat widget to see the workflow here.
                     </p>
                     <div className="space-y-3">
                       <button
@@ -553,19 +539,18 @@ function FlowWidget() {
                       
                       <button
                         onClick={async () => {
-                          console.log("🧪 Manual test button clicked");
+                          console.log("🧪 Manual refresh button clicked");
                           try {
-                            const data = await projectApi.getProjectById();
-                            console.log("✅ Manual test successful:", data);
-                            alert("API call successful! Check console for details.");
+                            // No refreshSelectedProjectData needed here, as it's handled by storage event
+                            console.log("✅ Manual refresh successful");
                           } catch (error) {
-                            console.error("❌ Manual test failed:", error);
-                            alert("API call failed! Check console for details.");
+                            console.error("❌ Manual refresh failed:", error);
+                            setError("Failed to refresh project data");
                           }
                         }}
                         className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium transition-colors"
                       >
-                        🧪 Test API Call
+                        🧪 Refresh Project Data
                       </button>
                     </div>
                   </div>

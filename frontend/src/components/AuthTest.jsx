@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { testApi } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { testApi } from '../services/api';
 
 const AuthTest = () => {
   const { isAuthenticated, user } = useAuth();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { webInfoApi } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
+import { webInfoApi } from '../services/web-info';
 
 function WebInfoPrompt({ onWebInfoResponse, onError }) {
   const [prompt, setPrompt] = useState('');

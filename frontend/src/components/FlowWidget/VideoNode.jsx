@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
-import { videoApi } from "../../services/api";
+import { videoApi } from "../../services/video-gen";
 
 const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit }) => {
   const isRegenerating = data.videoId && regeneratingVideos && regeneratingVideos.has(data.videoId);

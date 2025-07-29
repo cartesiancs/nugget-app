@@ -21,8 +21,8 @@ function CreditWidget() {
       await addCredits({
         userId: user.id,
         amount,
-        type: "MANUAL_ADD",
-        description: "Manual credit addition"
+        type: "PURCHASE",
+        description: "Manual credit purchase"
       });
       setCreditAmount("");
       setShowAddCredit(false);

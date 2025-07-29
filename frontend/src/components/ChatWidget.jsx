@@ -13,9 +13,10 @@ import { s3Api } from "../services/s3";
 import { projectApi } from "../services/project";
 import ModelSelector from "./ModelSelector";
 import CreditWidget from "./CreditWidget";
+import { useProjectStore } from "../store/useProjectStore";
+import { getTextCreditCost, getImageCreditCost, getVideoCreditCost, formatCreditDeduction } from "../lib/pricing";
 import "../styles/chatwidget.css";
 import React from "react";
-import { useProjectStore } from "../store/useProjectStore";
 
 function ChatWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -96,6 +97,11 @@ function ChatWidget() {
   const [redoStepId, setRedoStepId] = useState(null);
   const [redoImageModel, setRedoImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
   const [redoVideoModel, setRedoVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
+
+  // Credit deduction notification state
+  const [creditDeductionMessage, setCreditDeductionMessage] = useState(null);
+
+  const { fetchBalance } = useProjectStore();
 
   const steps = [
     { id: 0, name: 'Concept Writer', description: 'Generate video concepts' },
@@ -251,6 +257,55 @@ function ChatWidget() {
     setSelectedVideoModel(chatApi.getDefaultModel('VIDEO'));
   };
 
+  // Helper function to show credit deduction and refresh balance
+  const showCreditDeduction = (serviceName, model = null, count = 1) => {
+    let credits = 0;
+    let message = '';
+
+    switch (serviceName) {
+      case 'Web Info Processing':
+        credits = getTextCreditCost('web-info');
+        message = formatCreditDeduction('Web Info Processing', credits);
+        break;
+      case 'Concept Generation':
+        credits = getTextCreditCost('concept generator');
+        message = formatCreditDeduction('Concept Generation', credits);
+        break;
+      case 'Script Generation':
+        credits = getTextCreditCost('script & segmentation') * count;
+        message = formatCreditDeduction('Script Generation', credits);
+        break;
+      case 'Image Generation':
+        if (model) {
+          credits = getImageCreditCost(model) * count;
+          message = formatCreditDeduction(`Image Generation (${model})`, credits);
+        } else {
+          credits = getImageCreditCost('imagen') * count; // default to imagen
+          message = formatCreditDeduction('Image Generation', credits);
+        }
+        break;
+      case 'Video Generation':
+        if (model) {
+          credits = getVideoCreditCost(model, 8) * count; // 8 seconds default
+          message = formatCreditDeduction(`Video Generation (${model})`, credits);
+        } else {
+          credits = getVideoCreditCost('veo2', 8) * count; // default to veo2
+          message = formatCreditDeduction('Video Generation', credits);
+        }
+        break;
+      default:
+        message = `Credit deducted for ${serviceName}`;
+    }
+
+    setCreditDeductionMessage(message);
+    setTimeout(() => setCreditDeductionMessage(null), 3000); // Clear after 3 seconds
+    
+    // Refresh balance if user is authenticated
+    if (user?.id) {
+      fetchBalance(user.id);
+    }
+  };
+
   const updateStepStatus = (stepId, status) => {
     setStepStatus(prev => ({
       ...prev,
@@ -374,6 +429,7 @@ function ChatWidget() {
       console.log("Starting pipeline with web-info...");
       const webInfoResult = await webInfoApi.processWebInfo(prompt, selectedProject?.id);
       console.log("Web-info response:", webInfoResult);
+      showCreditDeduction("Web Info Processing");
 
       console.log("Calling concept-writer...");
       const webInfoContent = webInfoResult.choices[0].message.content;
@@ -385,6 +441,7 @@ function ChatWidget() {
 
       console.log("Concept-writer response:", conceptsResult);
       setConcepts(conceptsResult.concepts);
+      showCreditDeduction("Concept Generation");
       updateStepStatus(0, 'done');
       setCurrentStep(1);
     } catch (error) {
@@ -423,6 +480,8 @@ function ChatWidget() {
       ]);
       
       setScripts({ response1: res1, response2: res2 });
+      // Show credit deduction for both segmentation calls
+      showCreditDeduction("Script Generation", null, 2);
       updateStepStatus(2, 'done');
       setCurrentStep(3);
     } catch (error) {
@@ -480,6 +539,7 @@ function ChatWidget() {
             const imageUrl = await s3Api.downloadImage(result.s3_key);
             imagesMap[segment.id] = imageUrl;
             segment.s3Key = result.s3_key;
+            showCreditDeduction("Image Generation", selectedImageModel, 1);
 
             setGenerationProgress((prev) => ({
               ...prev,
@@ -608,6 +668,7 @@ function ChatWidget() {
           if (result.s3_key) {
             const videoUrl = await s3Api.downloadVideo(result.s3_key);
             videosMap[segment.id] = videoUrl;
+            showCreditDeduction("Video Generation", selectedVideoModel, 1);
 
             setGenerationProgress((prev) => ({
               ...prev,
@@ -1116,9 +1177,6 @@ function ChatWidget() {
             )}
           </div>
 
-          {/* Credit Widget */}
-          {/* {isAuthenticated && <CreditWidget />} */}
-
           <button
             className='text-white text-xl focus:outline-none hover:text-gray-300'
             aria-label='Close chat'
@@ -1127,6 +1185,23 @@ function ChatWidget() {
             ✕
           </button>
         </div>
+        
+        {/* Credit Widget Section */}
+        {isAuthenticated && (
+          <div className='px-3 py-2 bg-gray-900/50 border-b border-gray-800'>
+            <CreditWidget />
+          </div>
+        )}
+        
+        {/* Credit Deduction Notification */}
+        {creditDeductionMessage && (
+          <div className='px-3 py-2 bg-green-900/50 border-b border-green-800'>
+            <div className='flex items-center gap-2 text-green-200'>
+              <span>💰</span>
+              <span className='text-xs'>{creditDeductionMessage}</span>
+            </div>
+          </div>
+        )}
         
         {/* Project banner */}
         {isAuthenticated && <SelectedProjectBanner />}

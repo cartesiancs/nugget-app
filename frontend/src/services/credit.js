@@ -1,6 +1,15 @@
 import { axiosInstance } from "../lib/axiosInstance";
 import { getAuthHeaders } from "./api";
 
+/**
+ * Credit API service
+ *
+ * Backend CreditTransactionType enum values:
+ * - DEDUCTION: For deducting credits from operations
+ * - REFUND: For refunding credits
+ * - PURCHASE: For purchasing/adding credits
+ */
+
 export const creditApi = {
   // Get user's current credit balance
   getBalance: async (userId) => {

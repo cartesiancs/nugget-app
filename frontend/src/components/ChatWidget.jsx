@@ -306,6 +306,18 @@ function ChatWidget() {
     }
   };
 
+  // Helper function to show refund message
+  const showRefundMessage = (serviceName = null) => {
+    const message = serviceName ? `Credits refunded for ${serviceName}` : "Credits refunded due to error";
+    setCreditDeductionMessage(message);
+    setTimeout(() => setCreditDeductionMessage(null), 3000);
+    
+    // Refresh balance if user is authenticated
+    if (user?.id) {
+      fetchBalance(user.id);
+    }
+  };
+
   const updateStepStatus = (stepId, status) => {
     setStepStatus(prev => ({
       ...prev,
@@ -427,11 +439,12 @@ function ChatWidget() {
 
     try {
       console.log("Starting pipeline with web-info...");
+      showCreditDeduction("Web Info Processing");
       const webInfoResult = await webInfoApi.processWebInfo(prompt, selectedProject?.id);
       console.log("Web-info response:", webInfoResult);
-      showCreditDeduction("Web Info Processing");
 
       console.log("Calling concept-writer...");
+      showCreditDeduction("Concept Generation");
       const webInfoContent = webInfoResult.choices[0].message.content;
       const conceptsResult = await conceptWriterApi.generateConcepts(
         prompt,
@@ -441,11 +454,11 @@ function ChatWidget() {
 
       console.log("Concept-writer response:", conceptsResult);
       setConcepts(conceptsResult.concepts);
-      showCreditDeduction("Concept Generation");
       updateStepStatus(0, 'done');
       setCurrentStep(1);
     } catch (error) {
       console.error("Error in concept writer:", error);
+      showRefundMessage();
       setError(error.message || "Failed to generate concepts. Please try again.");
       updateStepStatus(0, 'pending');
     } finally {
@@ -464,6 +477,8 @@ function ChatWidget() {
     updateStepStatus(2, 'loading');
 
     try {
+      // Show credit deduction for both segmentation calls immediately
+      showCreditDeduction("Script Generation", null, 2);
       const [res1, res2] = await Promise.all([
         segmentationApi.getSegmentation({
           prompt,
@@ -480,12 +495,11 @@ function ChatWidget() {
       ]);
       
       setScripts({ response1: res1, response2: res2 });
-      // Show credit deduction for both segmentation calls
-      showCreditDeduction("Script Generation", null, 2);
       updateStepStatus(2, 'done');
       setCurrentStep(3);
     } catch (error) {
       console.error("Error in script generation:", error);
+      showRefundMessage("Script Generation");
       setError(error.message || "Failed to generate scripts. Please try again.");
       updateStepStatus(2, 'pending');
     } finally {
@@ -508,6 +522,10 @@ function ChatWidget() {
       const segments = selectedScript.segments;
       const artStyle = selectedScript.artStyle || "";
       const imagesMap = {};
+      
+      // Show total credit deduction upfront for all segments
+      const totalSegments = segments.length;
+      showCreditDeduction("Image Generation", selectedImageModel, totalSegments);
 
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
@@ -539,7 +557,6 @@ function ChatWidget() {
             const imageUrl = await s3Api.downloadImage(result.s3_key);
             imagesMap[segment.id] = imageUrl;
             segment.s3Key = result.s3_key;
-            showCreditDeduction("Image Generation", selectedImageModel, 1);
 
             setGenerationProgress((prev) => ({
               ...prev,
@@ -553,6 +570,8 @@ function ChatWidget() {
           }
         } catch (err) {
           console.error(`Error generating image for segment ${segment.id}:`, err);
+          // Show refund message for failed segment
+          showRefundMessage("Image Generation");
           setGenerationProgress((prev) => ({
             ...prev,
             [segment.id]: {
@@ -584,6 +603,7 @@ function ChatWidget() {
       setCurrentStep(5);
     } catch (error) {
       console.error("Error in image generation:", error);
+      showRefundMessage("Image Generation");
       setError(error.message || "Failed to generate images. Please try again.");
       updateStepStatus(4, 'pending');
     } finally {
@@ -607,6 +627,16 @@ function ChatWidget() {
       const segments = selectedScript.segments;
       const artStyle = selectedScript.artStyle || "";
       const videosMap = {};
+      
+      // Count valid segments (those with images) and show total credit deduction upfront
+      const validSegments = segments.filter(segment => {
+        const segmentIdVariants = [segment.id, `seg-${segment.id}`, segment.segmentId, segment.uuid];
+        return segmentIdVariants.some(id => generatedImages[id]);
+      });
+      const totalValidSegments = validSegments.length;
+      if (totalValidSegments > 0) {
+        showCreditDeduction("Video Generation", selectedVideoModel, totalValidSegments);
+      }
 
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
@@ -668,7 +698,6 @@ function ChatWidget() {
           if (result.s3_key) {
             const videoUrl = await s3Api.downloadVideo(result.s3_key);
             videosMap[segment.id] = videoUrl;
-            showCreditDeduction("Video Generation", selectedVideoModel, 1);
 
             setGenerationProgress((prev) => ({
               ...prev,
@@ -681,6 +710,8 @@ function ChatWidget() {
             }));
           } else {
             console.warn(`No s3_key returned for segment ${segment.id}`);
+            // Show refund message for failed segment
+            showRefundMessage("Video Generation");
             setGenerationProgress((prev) => ({
               ...prev,
               [segment.id]: {
@@ -694,6 +725,8 @@ function ChatWidget() {
           }
         } catch (err) {
           console.error(`Error generating video for segment ${segment.id}:`, err);
+          // Show refund message for failed segment
+          showRefundMessage("Video Generation");
           setGenerationProgress((prev) => ({
             ...prev,
             [segment.id]: {
@@ -712,6 +745,7 @@ function ChatWidget() {
       updateStepStatus(5, 'done');
     } catch (error) {
       console.error("Error in video generation:", error);
+      showRefundMessage("Video Generation");
       setError(error.message || "Failed to generate videos. Please try again.");
       updateStepStatus(5, 'pending');
     } finally {

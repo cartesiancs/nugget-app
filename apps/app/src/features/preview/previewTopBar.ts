@@ -61,17 +61,6 @@ export class PreviewTopBar extends LitElement {
   /** Handle external close events from overlay to switch back to timeline */
   connectedCallback() {
     super.connectedCallback();
-<<<<<<< HEAD
-=======
-
-    try {
-      (window as any).electronAPI?.res?.overlayRecord?.stop?.(() => {
-        this._handleClickViewMode("timeline");
-      });
-    } catch (e) {
-      /* ignore if bridge missing */
-    }
->>>>>>> parent of ffa6c0f (Implement FlowWidget open/close event handling and enhance PreviewTopBar state management. The FlowWidget now listens for custom events to toggle visibility, while the PreviewTopBar automatically switches views based on FlowWidget events. Console logs added for better debugging.)
   }
 
   createShape(shape) {
@@ -180,31 +169,11 @@ export class PreviewTopBar extends LitElement {
    * Toggle view between sandbox and timeline
    */
   _handleClickViewMode(mode: "timeline" | "sandbox") {
-<<<<<<< HEAD
     if (mode === "sandbox") {
       console.log("PreviewTopBar: open FlowWidget overlay");
       window.dispatchEvent(new CustomEvent("flowWidget:open"));
       // Remain in timeline view; do not change layout
       return;
-=======
-    this.viewMode = mode;
-
-    if (mode === "sandbox") {
-      // Hide timeline area
-      uiStore.getState().updateVertical(0);
-
-      // Attempt to show the flow editor overlay via Electron.
-      try {
-        (window as any).electronAPI?.req?.overlayRecord?.show?.();
-      } catch (e) {
-        // Silently ignore if API is unavailable (e.g., in browser preview)
-        console.warn("Electron overlay call failed", e);
-      }
-    } else {
-      // Restore timeline area height
-      const height = this.defaultTimelineHeight > 0 ? this.defaultTimelineHeight : 40;
-      uiStore.getState().updateVertical(height);
->>>>>>> parent of ffa6c0f (Implement FlowWidget open/close event handling and enhance PreviewTopBar state management. The FlowWidget now listens for custom events to toggle visibility, while the PreviewTopBar automatically switches views based on FlowWidget events. Console logs added for better debugging.)
     }
 
     // Close overlay explicitly when timeline clicked

@@ -12,8 +12,10 @@ import { chatApi } from "../services/chat";
 import { s3Api } from "../services/s3";
 import { projectApi } from "../services/project";
 import ModelSelector from "./ModelSelector";
+import CreditWidget from "./CreditWidget";
 import "../styles/chatwidget.css";
 import React from "react";
+import { useProjectStore } from "../store/useProjectStore";
 
 function ChatWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -138,6 +140,14 @@ function ChatWidget() {
       });
     }
   }, []);
+
+  // Load credit balance when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      const { fetchBalance } = useProjectStore.getState();
+      fetchBalance(user.id);
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Load project data when selectedProject changes
   useEffect(() => {
@@ -1105,6 +1115,10 @@ function ChatWidget() {
               </div>
             )}
           </div>
+
+          {/* Credit Widget */}
+          {/* {isAuthenticated && <CreditWidget />} */}
+
           <button
             className='text-white text-xl focus:outline-none hover:text-gray-300'
             aria-label='Close chat'

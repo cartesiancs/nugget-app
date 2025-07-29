@@ -1,8 +1,3 @@
-/**
- * Credit pricing utility based on backend pricing
- * Source: prices.md
- */
-
 export const CREDIT_PRICES = {
   // Image Generation
   IMAGE: {
@@ -12,7 +7,7 @@ export const CREDIT_PRICES = {
       unit: "per image",
       cost: 0.04,
     },
-    recraft: {
+    "recraft-v3": {
       credits: 1,
       editCredits: 2,
       unit: "per image",
@@ -87,13 +82,6 @@ export const CREDIT_PRICES = {
   },
 };
 
-/**
- * Get credit cost for a specific model and operation type
- * @param {string} category - 'IMAGE', 'VIDEO', 'AUDIO', 'TEXT'
- * @param {string} model - Model name (e.g., 'imagen', 'veo2', 'perplexity')
- * @param {boolean} isEdit - Whether this is an edit operation
- * @returns {number} Credit cost
- */
 export const getCreditCost = (category, model, isEdit = false) => {
   const categoryPrices = CREDIT_PRICES[category.toUpperCase()];
   if (!categoryPrices) {
@@ -110,56 +98,24 @@ export const getCreditCost = (category, model, isEdit = false) => {
   return isEdit ? modelPrices.editCredits : modelPrices.credits;
 };
 
-/**
- * Get credit cost for text operations by service name
- * @param {string} serviceName - Service name ('web-info', 'concept generator', 'script & segmentation', 'perplexity')
- * @param {boolean} isEdit - Whether this is an edit operation
- * @returns {number} Credit cost
- */
 export const getTextCreditCost = (serviceName, isEdit = false) => {
   return getCreditCost("TEXT", serviceName, isEdit);
 };
 
-/**
- * Get credit cost for image generation
- * @param {string} model - Image model name
- * @param {boolean} isEdit - Whether this is an edit operation
- * @returns {number} Credit cost
- */
 export const getImageCreditCost = (model, isEdit = false) => {
   return getCreditCost("IMAGE", model, isEdit);
 };
 
-/**
- * Get credit cost for video generation
- * @param {string} model - Video model name
- * @param {number} duration - Duration in seconds (default: 8)
- * @param {boolean} isEdit - Whether this is an edit operation
- * @returns {number} Credit cost
- */
 export const getVideoCreditCost = (model, duration = 8, isEdit = false) => {
   const baseCost = getCreditCost("VIDEO", model, isEdit);
   return baseCost * duration;
 };
 
-/**
- * Get credit cost for audio generation
- * @param {string} model - Audio model name
- * @param {number} duration - Duration in minutes (default: 1)
- * @param {boolean} isEdit - Whether this is an edit operation
- * @returns {number} Credit cost
- */
 export const getAudioCreditCost = (model, duration = 1, isEdit = false) => {
   const baseCost = getCreditCost("AUDIO", model, isEdit);
   return baseCost * duration;
 };
 
-/**
- * Format credit deduction message
- * @param {string} serviceName - Name of the service
- * @param {number} credits - Number of credits deducted
- * @returns {string} Formatted message
- */
 export const formatCreditDeduction = (serviceName, credits) => {
   return `${credits} credit${
     credits !== 1 ? "s" : ""

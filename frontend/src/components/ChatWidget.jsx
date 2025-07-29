@@ -8,10 +8,10 @@ import { ProjectHistoryDropdown } from "./ProjectHistoryDropdown";
 import { webInfoApi } from "../services/web-info";
 import { conceptWriterApi } from "../services/concept-writer";
 import { segmentationApi } from "../services/segmentationapi";
-import { imageApi } from "../services/image";
+import { chatApi } from "../services/chat";
 import { s3Api } from "../services/s3";
-import { videoApi } from "../services/video-gen";
 import { projectApi } from "../services/project";
+import ModelSelector from "./ModelSelector";
 import "../styles/chatwidget.css";
 import React from "react";
 
@@ -86,6 +86,14 @@ function ChatWidget() {
   // video preview modal
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [modalVideoUrl, setModalVideoUrl] = useState(null);
+  // model selection states
+  const [selectedImageModel, setSelectedImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
+  const [selectedVideoModel, setSelectedVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
+  // redo modal states
+  const [showRedoModal, setShowRedoModal] = useState(false);
+  const [redoStepId, setRedoStepId] = useState(null);
+  const [redoImageModel, setRedoImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
+  const [redoVideoModel, setRedoVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
 
   const steps = [
     { id: 0, name: 'Concept Writer', description: 'Generate video concepts' },
@@ -228,6 +236,9 @@ function ChatWidget() {
     setGeneratedImages({});
     setGeneratedVideos({});
     setGenerationProgress({});
+    // Reset model selections to defaults
+    setSelectedImageModel(chatApi.getDefaultModel('IMAGE'));
+    setSelectedVideoModel(chatApi.getDefaultModel('VIDEO'));
   };
 
   const updateStepStatus = (stepId, status) => {
@@ -292,6 +303,16 @@ function ChatWidget() {
   const handleRedoStep = async (stepId) => {
     if (loading) return;
     
+    // For steps that need model selection, show modal
+    if (stepId === 4 || stepId === 5) {
+      setRedoStepId(stepId);
+      setRedoImageModel(selectedImageModel);
+      setRedoVideoModel(selectedVideoModel);
+      setShowRedoModal(true);
+      return;
+    }
+    
+    // For other steps, run immediately
     setCurrentStep(stepId);
     
     switch (stepId) {
@@ -301,6 +322,23 @@ function ChatWidget() {
       case 2:
         await runScriptGeneration();
         break;
+    }
+  };
+
+  const handleRedoWithModel = async () => {
+    if (loading || !redoStepId) return;
+    
+    setShowRedoModal(false);
+    setCurrentStep(redoStepId);
+    
+    // Update the main model selections with the redo selections
+    if (redoStepId === 4) {
+      setSelectedImageModel(redoImageModel);
+    } else if (redoStepId === 5) {
+      setSelectedVideoModel(redoVideoModel);
+    }
+    
+    switch (redoStepId) {
       case 4:
         await runImageGeneration();
         break;
@@ -308,6 +346,8 @@ function ChatWidget() {
         await runVideoGeneration();
         break;
     }
+    
+    setRedoStepId(null);
   };
 
   const runConceptWriter = async () => {
@@ -418,11 +458,12 @@ function ChatWidget() {
         }
 
         try {
-          const result = await imageApi.generateImage({
+          const result = await chatApi.generateImage({
             visual_prompt: segment.visual,
             art_style: artStyle,
             uuid: segment.id,
             project_id: selectedProject?.id,
+            model: selectedImageModel,
           });
 
           if (result.s3_key) {
@@ -543,18 +584,19 @@ function ChatWidget() {
           }
           
           console.log(`Generating video for segment ${segment.id} with imageS3Key: ${imageS3Key}`);
-          const result = await videoApi.generateVideo({
+          const result = await chatApi.generateVideo({
             animation_prompt: segment.animation || segment.visual,
             art_style: artStyle,
-            imageS3Key: imageS3Key,
+            image_s3_key: imageS3Key,
             uuid: segment.id,
             project_id: selectedProject?.id,
+            model: selectedVideoModel,
           });
 
           console.log(`Video generation result for segment ${segment.id}:`, result);
 
-          if (result.s3Keys && result.s3Keys.length > 0) {
-            const videoUrl = await s3Api.downloadVideo(result.s3Keys[0]);
+          if (result.s3_key) {
+            const videoUrl = await s3Api.downloadVideo(result.s3_key);
             videosMap[segment.id] = videoUrl;
 
             setGenerationProgress((prev) => ({
@@ -567,7 +609,7 @@ function ChatWidget() {
               },
             }));
           } else {
-            console.warn(`No s3Keys returned for segment ${segment.id}`);
+            console.warn(`No s3_key returned for segment ${segment.id}`);
             setGenerationProgress((prev) => ({
               ...prev,
               [segment.id]: {
@@ -575,7 +617,7 @@ function ChatWidget() {
                 status: "error",
                 index: i + 1,
                 total: segments.length,
-                error: "No video keys returned from API",
+                error: "No video key returned from API",
               },
             }));
           }
@@ -1241,6 +1283,39 @@ function ChatWidget() {
               </div>
             )}
 
+            {/* Model Selection - show when step 4 or 5 is active */}
+            {(currentStep === 4 || currentStep === 5) && (
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-white mb-2'>AI Model Selection:</h4>
+                <div className='space-y-3'>
+                  {currentStep === 4 && (
+                    <div>
+                      <label className='block text-xs text-gray-400 mb-1'>Image Generation Model:</label>
+                      <ModelSelector
+                        genType="IMAGE"
+                        selectedModel={selectedImageModel}
+                        onModelChange={setSelectedImageModel}
+                        disabled={loading}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                  {currentStep === 5 && (
+                    <div>
+                      <label className='block text-xs text-gray-400 mb-1'>Video Generation Model:</label>
+                      <ModelSelector
+                        genType="VIDEO"
+                        selectedModel={selectedVideoModel}
+                        onModelChange={setSelectedVideoModel}
+                        disabled={loading}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Generation Progress - show when any generation step is active */}
             {Object.keys(generationProgress).length > 0 && (currentStep === 4 || currentStep === 5) && (
               <div className='mb-4'>
@@ -1560,6 +1635,72 @@ function ChatWidget() {
           >
             ✕
           </button>
+        </div>,
+        document.body
+      )}
+
+      {/* Redo modal with model selection */}
+      {showRedoModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10003]"
+          onClick={() => setShowRedoModal(false)}
+        >
+          <div
+            className="bg-gray-800 p-6 rounded-lg shadow-lg w-96 flex flex-col gap-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Redo {redoStepId === 4 ? 'Image' : 'Video'} Generation
+            </h3>
+            <p className="text-gray-300 text-sm">
+              Choose a different AI model for regeneration:
+            </p>
+            
+            {redoStepId === 4 && (
+              <div>
+                <label className="block text-xs text-gray-300 mb-1">Image Generation Model</label>
+                <ModelSelector
+                  genType="IMAGE"
+                  selectedModel={redoImageModel}
+                  onModelChange={setRedoImageModel}
+                  disabled={loading}
+                  className="w-full"
+                />
+              </div>
+            )}
+            
+            {redoStepId === 5 && (
+              <div>
+                <label className="block text-xs text-gray-300 mb-1">Video Generation Model</label>
+                <ModelSelector
+                  genType="VIDEO"
+                  selectedModel={redoVideoModel}
+                  onModelChange={setRedoVideoModel}
+                  disabled={loading}
+                  className="w-full"
+                />
+              </div>
+            )}
+            
+            <div className="flex gap-3 mt-4">
+              <button
+                type="button"
+                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white rounded px-4 py-2"
+                onClick={() => setShowRedoModal(false)}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2"
+                onClick={handleRedoWithModel}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Redo Generation"}
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}

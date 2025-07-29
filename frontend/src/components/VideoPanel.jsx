@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
-import { videoApi } from '../services/video-gen';
+import { chatApi } from '../services/chat';
 import { s3Api } from '../services/s3';
+import ModelSelector from './ModelSelector';
 
 function VideoPanel({ segment, onClose }) {
   const [loading, setLoading] = useState(false);
   const [videos, setVideos] = useState({});
   const [error, setError] = useState(null);
+  const [selectedVideoModel, setSelectedVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
 
   useEffect(() => {
     if (segment?.imageUrl && segment?.id && !videos[segment.id]) {
@@ -24,16 +26,17 @@ function VideoPanel({ segment, onClose }) {
     setError(null);
 
     try {
-      const result = await videoApi.generateVideo({
+      const result = await chatApi.generateVideo({
         animation_prompt: currentSegment.animation || currentSegment.visual,
         art_style: currentSegment.artStyle || '',
-        imageS3Key: currentSegment.imageUrl,
-        uuid: currentSegment.id
+        image_s3_key: currentSegment.imageUrl,
+        uuid: currentSegment.id,
+        model: selectedVideoModel,
       });
       
-      if (result.s3Keys && result.s3Keys.length > 0) {
+      if (result.s3_key) {
         // Download video from S3 and create blob URL
-        const videoUrl = await s3Api.downloadVideo(result.s3Keys[0]);
+        const videoUrl = await s3Api.downloadVideo(result.s3_key);
         setVideos(prev => ({
           ...prev,
           [currentSegment.id]: videoUrl
@@ -65,6 +68,18 @@ function VideoPanel({ segment, onClose }) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Model Selection */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Video Generation Model</label>
+          <ModelSelector
+            genType="VIDEO"
+            selectedModel={selectedVideoModel}
+            onModelChange={setSelectedVideoModel}
+            disabled={loading}
+            className="w-full"
+          />
+        </div>
+
         {/* Video Preview */}
         {currentVideo && !loading && (
           <div className="space-y-2">

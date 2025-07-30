@@ -868,17 +868,6 @@ function FlowWidget() {
   return (
     <div className="z-10">
       {/* Floating button */}
-      {!open && (
-        <button
-          className="fixed bottom-10 right-24 w-16 h-16 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]"
-          aria-label="Open flow widget"
-          onClick={() => setOpen(true)}
-          style={{ boxShadow: "0 4px 12px rgba(147, 51, 234, 0.3)" }}
-        >
-          REACT FLOW
-        </button>
-      )}
-
       {/* Sliding sidebar */}
       <div
         className={`fixed top-0 right-0 h-screen w-screen bg-[#0d0d0d] text-white transform transition-transform duration-300 ${

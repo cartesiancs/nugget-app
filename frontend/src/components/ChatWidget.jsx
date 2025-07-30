@@ -15,12 +15,19 @@ import ModelSelector from "./ModelSelector";
 import CreditWidget from "./CreditWidget";
 import { useProjectStore } from "../store/useProjectStore";
 import { getTextCreditCost, getImageCreditCost, getVideoCreditCost, formatCreditDeduction } from "../lib/pricing";
-import "../styles/chatwidget.css";
+
 import React from "react";
 
 function ChatWidget() {
   const { isAuthenticated, logout, user } = useAuth();
   const [open, setOpen] = useState(false);
+  // Hide publish button when chat open
+  useEffect(() => {
+    const btn = document.getElementById('publish-button');
+    if (btn) {
+      btn.style.display = open ? 'none' : '';
+    }
+  }, [open]);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1092,7 +1099,7 @@ function ChatWidget() {
       {/* Floating chat button */}
       {!open && (
         <button
-          className='btn-floating fixed top-2/4 right-8 transform translate-y-12 px-4 py-2 rounded-lg text-white text-sm flex items-center gap-2 shadow-2xl z-[10001] backdrop-blur-lg border border-white/20 dark:border-gray-600/40 bg-gradient-to-tr from-gray-700/90 to-gray-800/90 dark:from-gray-700/90 dark:to-gray-800/90 transition-all duration-200 ease-in-out'
+          className='shadow-lg fixed top-2/4 right-8 transform translate-y-12 px-4 py-2 rounded-lg text-white text-sm flex items-center gap-2 shadow-2xl z-[10001] backdrop-blur-lg border border-white/20 dark:border-gray-600/40 bg-gradient-to-tr from-gray-700/90 to-gray-800/90 dark:from-gray-700/90 dark:to-gray-800/90 transition-all duration-200 ease-in-out'
           aria-label='Open chat'
           onClick={() => setOpen(true)}
         >
@@ -1103,7 +1110,7 @@ function ChatWidget() {
 
       {/* Sliding sidebar */}
       <div
-        className={`glass-container fixed rounded-2xl mb-4 mr-4 bottom-0 right-0 h-[90vh] sm:h-[87vh] w-[90vw] sm:w-[360px] md:w-[25vw] max-w-[600px] text-white transform transition-transform duration-500 ${
+        className={`backdrop-blur-xl bg-white/20 dark:bg-gray-800/30 border border-white/30 dark:border-gray-700/40 shadow-lg rounded-2xl transition-all duration-300 ease-out fixed rounded-2xl mb-4 mr-4 bottom-0 right-0 h-[90vh] sm:h-[87vh] w-[90vw] sm:w-[360px] md:w-[25vw] max-w-[600px] text-white transform transition-transform duration-500 ${
           open ? "translate-x-0" : "translate-x-full"
         } z-[10000] flex flex-col shadow-2xl`}
       >
@@ -1626,13 +1633,13 @@ function ChatWidget() {
                     }
                   }}
                   placeholder='Start Creating...'
-                  className='w-full glass-input text-sm text-white pl-4 pr-12 py-3 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500'
+                  className='w-full bg-white/15 dark:bg-gray-700/40 backdrop-blur-sm border border-white/25 dark:border-gray-600/40 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 placeholder-gray-500 dark:placeholder-gray-400 text-sm text-white pl-4 pr-12 py-3 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500'
                   disabled={loading}
                 />
 
                 <button
                   type='button'
-                  className={`absolute top-1/2 right-3 -translate-y-1/2 send-btn flex items-center justify-center rounded-full h-9 w-9 transition-opacity duration-150 ${
+                  className={`absolute top-1/2 right-3 -translate-y-1/2 bg-gradient-to-br from-indigo-500/80 via-purple-500/80 to-pink-500/80 backdrop-blur-sm border border-white/30 dark:border-gray-600/40 shadow-md flex items-center justify-center rounded-full h-9 w-9 transition-opacity duration-150 ${
                     loading || !prompt.trim() ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
                   }`}
                   disabled={loading || !prompt.trim()}

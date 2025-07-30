@@ -538,22 +538,17 @@ function ChatWidget() {
       const artStyle = selectedScript.artStyle || "";
       const imagesMap = {};
       
-      for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i];
-
+      // Create parallel promises for all segments
+      const imagePromises = segments.map(async (segment, index) => {
         setGenerationProgress((prev) => ({
           ...prev,
           [segment.id]: {
             type: "image",
             status: "generating",
-            index: i + 1,
+            index: index + 1,
             total: segments.length,
           },
         }));
-
-        if (i > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
 
         try {
           const result = await chatApi.generateImage({
@@ -574,10 +569,24 @@ function ChatWidget() {
               [segment.id]: {
                 type: "image",
                 status: "completed",
-                index: i + 1,
+                index: index + 1,
                 total: segments.length,
               },
             }));
+
+            return { segmentId: segment.id, imageUrl, s3Key: result.s3_key };
+          } else {
+            setGenerationProgress((prev) => ({
+              ...prev,
+              [segment.id]: {
+                type: "image",
+                status: "error",
+                index: index + 1,
+                total: segments.length,
+                error: "No image key returned from API",
+              },
+            }));
+            return null;
           }
         } catch (err) {
           console.error(`Error generating image for segment ${segment.id}:`, err);
@@ -586,13 +595,17 @@ function ChatWidget() {
             [segment.id]: {
               type: "image",
               status: "error",
-              index: i + 1,
+              index: index + 1,
               total: segments.length,
               error: err.message,
             },
           }));
+          return null;
         }
-      }
+      });
+
+      // Wait for all image generation requests to complete
+      await Promise.allSettled(imagePromises);
 
       // Show credit deduction after successful generation for all segments
       const totalSegments = segments.length;
@@ -647,9 +660,8 @@ function ChatWidget() {
         return segmentIdVariants.some(id => generatedImages[id]);
       });
 
-      for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i];
-
+      // Create parallel promises for all valid segments
+      const videoPromises = validSegments.map(async (segment, index) => {
         // Check if this segment has an image in the generatedImages map
         // Try different segment ID formats to match with generatedImages
         const segmentIdVariants = [
@@ -662,7 +674,7 @@ function ChatWidget() {
         const matchingImageKey = segmentIdVariants.find(id => generatedImages[id]);
         if (!matchingImageKey) {
           console.log(`Skipping segment ${segment.id} - no image available. Tried IDs:`, segmentIdVariants);
-          continue;
+          return null;
         }
 
         setGenerationProgress((prev) => ({
@@ -670,14 +682,10 @@ function ChatWidget() {
           [segment.id]: {
             type: "video",
             status: "generating",
-            index: i + 1,
-            total: segments.length,
+            index: index + 1,
+            total: validSegments.length,
           },
         }));
-
-        if (i > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-        }
 
         try {
           // Extract s3Key from the image URL in generatedImages
@@ -713,10 +721,12 @@ function ChatWidget() {
               [segment.id]: {
                 type: "video",
                 status: "completed",
-                index: i + 1,
-                total: segments.length,
+                index: index + 1,
+                total: validSegments.length,
               },
             }));
+
+            return { segmentId: segment.id, videoUrl };
           } else {
             console.warn(`No s3_key returned for segment ${segment.id}`);
             setGenerationProgress((prev) => ({
@@ -724,11 +734,12 @@ function ChatWidget() {
               [segment.id]: {
                 type: "video",
                 status: "error",
-                index: i + 1,
-                total: segments.length,
+                index: index + 1,
+                total: validSegments.length,
                 error: "No video key returned from API",
               },
             }));
+            return null;
           }
         } catch (err) {
           console.error(`Error generating video for segment ${segment.id}:`, err);
@@ -737,13 +748,17 @@ function ChatWidget() {
             [segment.id]: {
               type: "video",
               status: "error",
-              index: i + 1,
-              total: segments.length,
+              index: index + 1,
+              total: validSegments.length,
               error: err.message,
             },
           }));
+          return null;
         }
-      }
+      });
+
+      // Wait for all video generation requests to complete
+      await Promise.allSettled(videoPromises);
 
       // Show credit deduction after successful generation for valid segments
       const totalValidSegments = validSegments.length;

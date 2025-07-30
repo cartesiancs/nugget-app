@@ -107,7 +107,7 @@ export const getImageCreditCost = (model, isEdit = false) => {
   return getCreditCost("IMAGE", model, isEdit);
 };
 
-export const getVideoCreditCost = (model, duration = 8, isEdit = false) => {
+export const getVideoCreditCost = (model, duration = 5, isEdit = false) => {
   const baseCost = getCreditCost("VIDEO", model, isEdit);
   return baseCost * duration;
 };

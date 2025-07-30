@@ -23,13 +23,14 @@ export const CREDIT_PRICES = {
       unit: "per second",
       cost: 0.5,
     },
-    "runway ml": {
+    // runway ml
+    gen4_turbo: {
       credits: 2.5,
       editCredits: 3.75,
       unit: "per second",
       cost: 0.05,
     },
-    "kling v2.1 master (fal ai)": {
+    "kling v2.1-master": {
       credits: 20,
       editCredits: 30,
       unit: "per second",

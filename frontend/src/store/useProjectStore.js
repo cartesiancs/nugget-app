@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { projectApi } from "../services/project";
+import { creditApi } from "../services/credit";
 
 const storeImpl = (set, get) => ({
   projects: [],
@@ -22,8 +23,11 @@ const storeImpl = (set, get) => ({
     segmentations: false,
     summaries: false,
     research: false,
+    balance: false,
   },
   error: null,
+  creditBalance: 0,
+
   setProjects: (projects) => set({ projects }),
   setSelectedProject: (project) => {
     set({ selectedProject: project });
@@ -41,6 +45,8 @@ const storeImpl = (set, get) => ({
   setSegmentations: (segmentations) => set({ segmentations }),
   setSummaries: (summaries) => set({ summaries }),
   setResearch: (research) => set({ research }),
+  setCreditBalance: (balance) => set({ creditBalance: balance }),
+
   fetchProjects: async (page = 1, limit = 10) => {
     set({ loading: true, error: null });
     try {
@@ -250,6 +256,52 @@ const storeImpl = (set, get) => ({
       throw e;
     }
   },
+
+  // Credit related functions
+  fetchBalance: async (userId) => {
+    set((state) => ({
+      loadingData: { ...state.loadingData, balance: true },
+      error: null,
+    }));
+    try {
+      const data = await creditApi.getBalance(userId);
+      set((state) => ({
+        creditBalance: data.credits || 0,
+        loadingData: { ...state.loadingData, balance: false },
+      }));
+      return data;
+    } catch (error) {
+      set((state) => ({
+        error: error.message || "Failed to fetch credit balance",
+        loadingData: { ...state.loadingData, balance: false },
+      }));
+      throw error;
+    }
+  },
+
+  addCredits: async ({ userId, amount, type, description }) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await creditApi.addCredits({
+        userId,
+        amount,
+        type,
+        description,
+      });
+      set((state) => ({
+        creditBalance: state.creditBalance + amount,
+        loading: false,
+      }));
+      return data;
+    } catch (error) {
+      set({
+        error: error.message || "Failed to add credits",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
   refreshSelectedProjectData: async () => {
     const { selectedProject } = get();
     if (selectedProject?.id) {

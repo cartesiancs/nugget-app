@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
-import { imageApi } from "../../services/image";
+import { chatApi } from "../../services/chat";
+import ModelSelector from "../ModelSelector";
 
 /**
  * ImageNode props:
@@ -19,6 +20,7 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
+  const [selectedImageModel, setSelectedImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
   const inputRef = useRef(null);
 
   const handleRegenerate = () => {
@@ -33,6 +35,7 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
 
   const handleEdit = () => {
     setEditPrompt(data.segmentData?.visual || "");
+    setSelectedImageModel(chatApi.getDefaultModel('IMAGE'));
     setEditOpen(true);
     setEditError("");
     setEditSuccess("");
@@ -57,20 +60,22 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
         console.error("Error parsing project from localStorage:", error);
       }
       // 1. POST to generate new image with new visual_prompt
-      const genResponse = await imageApi.generateImage({
+      const genResponse = await chatApi.generateImage({
         visual_prompt: editPrompt,
         art_style: data.segmentData.artStyle,
         uuid: `seg-${data.segmentId}`,
         project_id: projectId,
+        model: selectedImageModel,
       });
-      // 2. PATCH with new visual_prompt and new s3_key
+      
+      // 2. Call the regenerate function to update the image in the flow
       if (genResponse && genResponse.s3_key) {
-        await imageApi.regenerateImage({
-          id: data.imageId,
-          visual_prompt: editPrompt,
-          art_style: data.segmentData.artStyle,
-          s3_key: genResponse.s3_key,
-        });
+        // Update the segment data with the new s3_key for regeneration
+        const updatedSegmentData = {
+          ...data.segmentData,
+          s3Key: genResponse.s3_key
+        };
+        onRegenerateImage(data.imageId, updatedSegmentData);
       }
       setEditSuccess("Image updated and regenerated!");
       setTimeout(() => {
@@ -141,6 +146,14 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
               autoFocus
               rows={4}
               style={{ minHeight: 60 }}
+            />
+            <label className="text-xs text-gray-300 mb-1">Image Generation Model</label>
+            <ModelSelector
+              genType="IMAGE"
+              selectedModel={selectedImageModel}
+              onModelChange={setSelectedImageModel}
+              disabled={editLoading}
+              className="w-full"
             />
             {editError && <div className="text-xs text-red-400">{editError}</div>}
             {editSuccess && <div className="text-xs text-green-400">{editSuccess}</div>}

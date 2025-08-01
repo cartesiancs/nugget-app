@@ -8,16 +8,22 @@ import { ProjectHistoryDropdown } from "./ProjectHistoryDropdown";
 import { webInfoApi } from "../services/web-info";
 import { conceptWriterApi } from "../services/concept-writer";
 import { segmentationApi } from "../services/segmentationapi";
-import { imageApi } from "../services/image";
+import { chatApi } from "../services/chat";
 import { s3Api } from "../services/s3";
-import { videoApi } from "../services/video-gen";
 import { projectApi } from "../services/project";
-import "../styles/chatwidget.css";
+import ModelSelector from "./ModelSelector";
+import CreditWidget from "./CreditWidget";
+import FloatingChatButton from "./chat-widget/FloatingChatButton";
+import StepList from "./chat-widget/StepList";
+import InputArea from "./chat-widget/InputArea";
+import { useProjectStore } from "../store/useProjectStore";
+import { getTextCreditCost, getImageCreditCost, getVideoCreditCost, formatCreditDeduction } from "../lib/pricing";
+
 import React from "react";
 
-function ChatWidget() {
+function ChatWidgetSidebar({ open, setOpen }) {
   const { isAuthenticated, logout, user } = useAuth();
-  const [open, setOpen] = useState(false);
+
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -86,6 +92,19 @@ function ChatWidget() {
   // video preview modal
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [modalVideoUrl, setModalVideoUrl] = useState(null);
+  // model selection states
+  const [selectedImageModel, setSelectedImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
+  const [selectedVideoModel, setSelectedVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
+  // redo modal states
+  const [showRedoModal, setShowRedoModal] = useState(false);
+  const [redoStepId, setRedoStepId] = useState(null);
+  const [redoImageModel, setRedoImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
+  const [redoVideoModel, setRedoVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
+
+  // Credit deduction notification state
+  const [creditDeductionMessage, setCreditDeductionMessage] = useState(null);
+
+  const { fetchBalance } = useProjectStore();
 
   const steps = [
     { id: 0, name: 'Concept Writer', description: 'Generate video concepts' },
@@ -130,6 +149,14 @@ function ChatWidget() {
       });
     }
   }, []);
+
+  // Load credit balance when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      const { fetchBalance } = useProjectStore.getState();
+      fetchBalance(user.id);
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Load project data when selectedProject changes
   useEffect(() => {
@@ -228,6 +255,65 @@ function ChatWidget() {
     setGeneratedImages({});
     setGeneratedVideos({});
     setGenerationProgress({});
+    // Reset model selections to defaults
+    setSelectedImageModel(chatApi.getDefaultModel('IMAGE'));
+    setSelectedVideoModel(chatApi.getDefaultModel('VIDEO'));
+  };
+
+  // Helper function to show credit deduction after successful API response
+  const showCreditDeduction = (serviceName, model = null, count = 1) => {
+    let credits = 0;
+    let message = '';
+
+    switch (serviceName) {
+      case 'Web Info Processing':
+        credits = getTextCreditCost('web-info');
+        message = formatCreditDeduction('Web Info Processing', credits);
+        break;
+      case 'Concept Generation':
+        credits = getTextCreditCost('concept generator');
+        message = formatCreditDeduction('Concept Generation', credits);
+        break;
+      case 'Script Generation':
+        credits = getTextCreditCost('script & segmentation') * count;
+        message = formatCreditDeduction('Script Generation', credits);
+        break;
+      case 'Image Generation':
+        if (model) {
+          credits = getImageCreditCost(model) * count;
+          message = formatCreditDeduction(`Image Generation (${model})`, credits);
+        } else {
+          credits = getImageCreditCost('imagen') * count; // default to imagen
+          message = formatCreditDeduction('Image Generation', credits);
+        }
+        break;
+      case 'Video Generation':
+        if (model) {
+          credits = getVideoCreditCost(model, 5) * count; // 8 seconds default
+          message = formatCreditDeduction(`Video Generation (${model})`, credits);
+        } else {
+          credits = getVideoCreditCost('veo2', 5) * count; // default to veo2
+          message = formatCreditDeduction('Video Generation', credits);
+        }
+        break;
+      default:
+        message = `Credit deducted for ${serviceName}`;
+    }
+
+    setCreditDeductionMessage(message);
+    setTimeout(() => setCreditDeductionMessage(null), 3000); // Clear after 3 seconds
+    
+    // Refresh balance if user is authenticated
+    if (user?.id) {
+      fetchBalance(user.id);
+    }
+  };
+
+  // Helper function to show request failure message
+  const showRequestFailed = (serviceName = null) => {
+    const message = serviceName ? `${serviceName} request failed` : "Request failed";
+    setCreditDeductionMessage(message);
+    setTimeout(() => setCreditDeductionMessage(null), 3000);
   };
 
   const updateStepStatus = (stepId, status) => {
@@ -292,6 +378,16 @@ function ChatWidget() {
   const handleRedoStep = async (stepId) => {
     if (loading) return;
     
+    // For steps that need model selection, show modal
+    if (stepId === 4 || stepId === 5) {
+      setRedoStepId(stepId);
+      setRedoImageModel(selectedImageModel);
+      setRedoVideoModel(selectedVideoModel);
+      setShowRedoModal(true);
+      return;
+    }
+    
+    // For other steps, run immediately
     setCurrentStep(stepId);
     
     switch (stepId) {
@@ -301,6 +397,23 @@ function ChatWidget() {
       case 2:
         await runScriptGeneration();
         break;
+    }
+  };
+
+  const handleRedoWithModel = async () => {
+    if (loading || !redoStepId) return;
+    
+    setShowRedoModal(false);
+    setCurrentStep(redoStepId);
+    
+    // Update the main model selections with the redo selections
+    if (redoStepId === 4) {
+      setSelectedImageModel(redoImageModel);
+    } else if (redoStepId === 5) {
+      setSelectedVideoModel(redoVideoModel);
+    }
+    
+    switch (redoStepId) {
       case 4:
         await runImageGeneration();
         break;
@@ -308,6 +421,8 @@ function ChatWidget() {
         await runVideoGeneration();
         break;
     }
+    
+    setRedoStepId(null);
   };
 
   const runConceptWriter = async () => {
@@ -334,11 +449,27 @@ function ChatWidget() {
       );
 
       console.log("Concept-writer response:", conceptsResult);
+      
+      // Show combined credit deduction for both API calls (web-info + concept generation)
+      const webInfoCredits = getTextCreditCost('web-info');
+      const conceptCredits = getTextCreditCost('concept generator');
+      const totalCredits = webInfoCredits + conceptCredits;
+      const message = formatCreditDeduction('Concept Writer Process', totalCredits);
+      
+      setCreditDeductionMessage(message);
+      setTimeout(() => setCreditDeductionMessage(null), 3000);
+      
+      // Refresh balance if user is authenticated
+      if (user?.id) {
+        fetchBalance(user.id);
+      }
+      
       setConcepts(conceptsResult.concepts);
       updateStepStatus(0, 'done');
       setCurrentStep(1);
     } catch (error) {
       console.error("Error in concept writer:", error);
+      showRequestFailed("Concept Generation");
       setError(error.message || "Failed to generate concepts. Please try again.");
       updateStepStatus(0, 'pending');
     } finally {
@@ -372,11 +503,14 @@ function ChatWidget() {
         }),
       ]);
       
+      // Show credit deduction after successful API responses
+      showCreditDeduction("Script Generation", null, 2);
       setScripts({ response1: res1, response2: res2 });
       updateStepStatus(2, 'done');
       setCurrentStep(3);
     } catch (error) {
       console.error("Error in script generation:", error);
+      showRequestFailed("Script Generation");
       setError(error.message || "Failed to generate scripts. Please try again.");
       updateStepStatus(2, 'pending');
     } finally {
@@ -399,30 +533,26 @@ function ChatWidget() {
       const segments = selectedScript.segments;
       const artStyle = selectedScript.artStyle || "";
       const imagesMap = {};
-
-      for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i];
-
+      
+      // Create parallel promises for all segments
+      const imagePromises = segments.map(async (segment, index) => {
         setGenerationProgress((prev) => ({
           ...prev,
           [segment.id]: {
             type: "image",
             status: "generating",
-            index: i + 1,
+            index: index + 1,
             total: segments.length,
           },
         }));
 
-        if (i > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
-
         try {
-          const result = await imageApi.generateImage({
+          const result = await chatApi.generateImage({
             visual_prompt: segment.visual,
             art_style: artStyle,
             uuid: segment.id,
             project_id: selectedProject?.id,
+            model: selectedImageModel,
           });
 
           if (result.s3_key) {
@@ -435,10 +565,24 @@ function ChatWidget() {
               [segment.id]: {
                 type: "image",
                 status: "completed",
-                index: i + 1,
+                index: index + 1,
                 total: segments.length,
               },
             }));
+
+            return { segmentId: segment.id, imageUrl, s3Key: result.s3_key };
+          } else {
+            setGenerationProgress((prev) => ({
+              ...prev,
+              [segment.id]: {
+                type: "image",
+                status: "error",
+                index: index + 1,
+                total: segments.length,
+                error: "No image key returned from API",
+              },
+            }));
+            return null;
           }
         } catch (err) {
           console.error(`Error generating image for segment ${segment.id}:`, err);
@@ -447,13 +591,21 @@ function ChatWidget() {
             [segment.id]: {
               type: "image",
               status: "error",
-              index: i + 1,
+              index: index + 1,
               total: segments.length,
               error: err.message,
             },
           }));
+          return null;
         }
-      }
+      });
+
+      // Wait for all image generation requests to complete
+      await Promise.allSettled(imagePromises);
+
+      // Show credit deduction after successful generation for all segments
+      const totalSegments = segments.length;
+      showCreditDeduction("Image Generation", selectedImageModel, totalSegments);
 
       // Update segments with s3Key for video generation
       const segmentsWithS3Key = segments.map(segment => ({
@@ -473,6 +625,7 @@ function ChatWidget() {
       setCurrentStep(5);
     } catch (error) {
       console.error("Error in image generation:", error);
+      showRequestFailed("Image Generation");
       setError(error.message || "Failed to generate images. Please try again.");
       updateStepStatus(4, 'pending');
     } finally {
@@ -496,10 +649,15 @@ function ChatWidget() {
       const segments = selectedScript.segments;
       const artStyle = selectedScript.artStyle || "";
       const videosMap = {};
+      
+      // Count valid segments (those with images)
+      const validSegments = segments.filter(segment => {
+        const segmentIdVariants = [segment.id, `seg-${segment.id}`, segment.segmentId, segment.uuid];
+        return segmentIdVariants.some(id => generatedImages[id]);
+      });
 
-      for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i];
-
+      // Create parallel promises for all valid segments
+      const videoPromises = validSegments.map(async (segment, index) => {
         // Check if this segment has an image in the generatedImages map
         // Try different segment ID formats to match with generatedImages
         const segmentIdVariants = [
@@ -512,7 +670,7 @@ function ChatWidget() {
         const matchingImageKey = segmentIdVariants.find(id => generatedImages[id]);
         if (!matchingImageKey) {
           console.log(`Skipping segment ${segment.id} - no image available. Tried IDs:`, segmentIdVariants);
-          continue;
+          return null;
         }
 
         setGenerationProgress((prev) => ({
@@ -520,14 +678,10 @@ function ChatWidget() {
           [segment.id]: {
             type: "video",
             status: "generating",
-            index: i + 1,
-            total: segments.length,
+            index: index + 1,
+            total: validSegments.length,
           },
         }));
-
-        if (i > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-        }
 
         try {
           // Extract s3Key from the image URL in generatedImages
@@ -543,18 +697,19 @@ function ChatWidget() {
           }
           
           console.log(`Generating video for segment ${segment.id} with imageS3Key: ${imageS3Key}`);
-          const result = await videoApi.generateVideo({
+          const result = await chatApi.generateVideo({
             animation_prompt: segment.animation || segment.visual,
             art_style: artStyle,
-            imageS3Key: imageS3Key,
+            image_s3_key: imageS3Key,
             uuid: segment.id,
             project_id: selectedProject?.id,
+            model: selectedVideoModel,
           });
 
           console.log(`Video generation result for segment ${segment.id}:`, result);
 
-          if (result.s3Keys && result.s3Keys.length > 0) {
-            const videoUrl = await s3Api.downloadVideo(result.s3Keys[0]);
+          if (result.s3_key) {
+            const videoUrl = await s3Api.downloadVideo(result.s3_key);
             videosMap[segment.id] = videoUrl;
 
             setGenerationProgress((prev) => ({
@@ -562,22 +717,25 @@ function ChatWidget() {
               [segment.id]: {
                 type: "video",
                 status: "completed",
-                index: i + 1,
-                total: segments.length,
+                index: index + 1,
+                total: validSegments.length,
               },
             }));
+
+            return { segmentId: segment.id, videoUrl };
           } else {
-            console.warn(`No s3Keys returned for segment ${segment.id}`);
+            console.warn(`No s3_key returned for segment ${segment.id}`);
             setGenerationProgress((prev) => ({
               ...prev,
               [segment.id]: {
                 type: "video",
                 status: "error",
-                index: i + 1,
-                total: segments.length,
-                error: "No video keys returned from API",
+                index: index + 1,
+                total: validSegments.length,
+                error: "No video key returned from API",
               },
             }));
+            return null;
           }
         } catch (err) {
           console.error(`Error generating video for segment ${segment.id}:`, err);
@@ -586,12 +744,22 @@ function ChatWidget() {
             [segment.id]: {
               type: "video",
               status: "error",
-              index: i + 1,
-              total: segments.length,
+              index: index + 1,
+              total: validSegments.length,
               error: err.message,
             },
           }));
+          return null;
         }
+      });
+
+      // Wait for all video generation requests to complete
+      await Promise.allSettled(videoPromises);
+
+      // Show credit deduction after successful generation for valid segments
+      const totalValidSegments = validSegments.length;
+      if (totalValidSegments > 0) {
+        showCreditDeduction("Video Generation", selectedVideoModel, totalValidSegments);
       }
 
       setGeneratedVideos(videosMap);
@@ -599,6 +767,7 @@ function ChatWidget() {
       updateStepStatus(5, 'done');
     } catch (error) {
       console.error("Error in video generation:", error);
+      showRequestFailed("Video Generation");
       setError(error.message || "Failed to generate videos. Please try again.");
       updateStepStatus(5, 'pending');
     } finally {
@@ -938,21 +1107,11 @@ function ChatWidget() {
         setShowMenu(false);
         setShowUserMenu(false);
       }}>
-      {/* Floating chat button */}
-      {!open && (
-        <button
-          className='btn-floating fixed top-2/4 right-8 transform translate-y-12 px-4 py-2 rounded-lg text-white text-sm flex items-center gap-2 shadow-2xl z-[10001] backdrop-blur-lg border border-white/20 dark:border-gray-600/40 bg-gradient-to-tr from-gray-700/90 to-gray-800/90 dark:from-gray-700/90 dark:to-gray-800/90 transition-all duration-200 ease-in-out'
-          aria-label='Open chat'
-          onClick={() => setOpen(true)}
-        >
-          <span className="text-gray-300">✨</span>
-          <span className="text-gray-300 font-medium">Chat</span>
-        </button>
-      )}
+
 
       {/* Sliding sidebar */}
       <div
-        className={`glass-container fixed rounded-2xl mb-4 mr-4 bottom-0 right-0 h-[90vh] sm:h-[87vh] w-[90vw] sm:w-[360px] md:w-[25vw] max-w-[600px] text-white transform transition-transform duration-500 ${
+        className={`backdrop-blur-xl bg-white/20 dark:bg-gray-800/30 border border-white/30 dark:border-gray-700/40 shadow-lg rounded-2xl transition-all duration-300 ease-out fixed rounded-2xl mb-4 mr-4 bottom-0 right-0 h-[90vh] sm:h-[87vh] w-[90vw] sm:w-[360px] md:w-[25vw] max-w-[600px] text-white transform transition-transform duration-500 ${
           open ? "translate-x-0" : "translate-x-full"
         } z-[10000] flex flex-col shadow-2xl`}
       >
@@ -1063,6 +1222,7 @@ function ChatWidget() {
               </div>
             )}
           </div>
+
           <button
             className='text-white text-xl focus:outline-none hover:text-gray-300'
             aria-label='Close chat'
@@ -1072,71 +1232,42 @@ function ChatWidget() {
           </button>
         </div>
         
+        {/* Credit Widget Section */}
+        {isAuthenticated && (
+          <div className='px-3 py-2 bg-gray-900/50 border-b border-gray-800'>
+            <CreditWidget />
+          </div>
+        )}
+        
+        {/* Credit Deduction Notification */}
+        {creditDeductionMessage && (
+          <div className='px-3 py-2 bg-green-900/50 border-b border-green-800'>
+            <div className='flex items-center gap-2 text-green-200'>
+              <span>💰</span>
+              <span className='text-xs'>{creditDeductionMessage}</span>
+            </div>
+          </div>
+        )}
+        
         {/* Project banner */}
         {isAuthenticated && <SelectedProjectBanner />}
 
         <div className='flex-1 overflow-hidden flex flex-col'>
           {/* 6 Steps */}
-          <div className='p-3 border-b border-gray-800'>
-            <div className='flex items-center justify-between mb-1'>
-              <h3 className='text-xs font-semibold text-gray-300 uppercase tracking-wide'>Video Steps</h3>
-              <button
-                className='text-gray-400 hover:text-gray-200 text-sm focus:outline-none'
-                onClick={() => setCollapseSteps((v) => !v)}
-              >
-                {collapseSteps ? '▼' : '▲'}
-              </button>
-            </div>
-            {!collapseSteps && (
-              <div className='space-y-1'>
-                {steps.map((step) => {
-                  const icon = getStepIcon(step.id);
-                  const isDisabled = isStepDisabled(step.id) || loading;
-                  const isCurrent = currentStep === step.id;
-                  return (
-                    <div
-                      key={step.id}
-                      className={`w-full flex items-center gap-2 p-1 rounded text-left transition-colors text-xs ${
-                        isDisabled ? 'text-gray-500 cursor-not-allowed' : 'text-white hover:bg-gray-800'
-                      } ${isCurrent ? 'bg-gray-800' : ''}`}
-                      onClick={() => {
-                        if (!loading && !isDisabled && stepStatus[step.id] === 'done') {
-                          setCurrentStep(step.id);
-                        }
-                      }}
-                    >
-                      <span className='text-sm'>{icon}</span>
-                      <div className='flex-1'>
-                        <div className='font-medium'>{step.name}</div>
-                      </div>
-                      {stepStatus[step.id] === 'done' && !collapseSteps && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRedoStep(step.id);
-                          }}
-                          className='px-2 py-0.5 text-[10px] bg-blue-600 hover:bg-blue-500 rounded'
-                        >
-                          Redo
-                        </button>
-                      )}
-                      {stepStatus[step.id] !== 'done' && !isDisabled && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStepClick(step.id);
-                          }}
-                          className='px-2 py-0.5 text-[10px] bg-green-600 hover:bg-green-500 rounded'
-                        >
-                          Run
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <StepList
+            steps={steps}
+            stepStatus={stepStatus}
+            currentStep={currentStep}
+            loading={loading}
+            collapseSteps={collapseSteps}
+            setCollapseSteps={setCollapseSteps}
+            isStepDisabled={isStepDisabled}
+            getStepIcon={getStepIcon}
+            handleStepClick={handleStepClick}
+            handleRedoStep={handleRedoStep}
+            setCurrentStep={setCurrentStep}
+          />
+
 
           {/* Content Area */}
           <div className='flex-1 overflow-y-auto p-4'>
@@ -1237,6 +1368,39 @@ function ChatWidget() {
                       <div className='text-gray-500 text-xs'>... and {selectedScript.segments.length - 3} more segments</div>
                     )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Model Selection - show when step 4 or 5 is active */}
+            {(currentStep === 4 || currentStep === 5) && (
+              <div className='mb-4'>
+                <h4 className='text-sm font-semibold text-white mb-2'>AI Model Selection:</h4>
+                <div className='space-y-3'>
+                  {currentStep === 4 && (
+                    <div>
+                      <label className='block text-xs text-gray-400 mb-1'>Image Generation Model:</label>
+                      <ModelSelector
+                        genType="IMAGE"
+                        selectedModel={selectedImageModel}
+                        onModelChange={setSelectedImageModel}
+                        disabled={loading}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+                  {currentStep === 5 && (
+                    <div>
+                      <label className='block text-xs text-gray-400 mb-1'>Video Generation Model:</label>
+                      <ModelSelector
+                        genType="VIDEO"
+                        selectedModel={selectedVideoModel}
+                        onModelChange={setSelectedVideoModel}
+                        disabled={loading}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1406,53 +1570,15 @@ function ChatWidget() {
           </div>
 
           {/* Input area */}
-          {isAuthenticated && selectedProject ? (
-            <div className='p-4 border-t border-white/10 dark:border-gray-700/60'>
-              <div className='relative'>
-                <input
-                  type='text'
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    e.stopPropagation();
-                    if (e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === "function") {
-                      e.nativeEvent.stopImmediatePropagation();
-                    }
-                    if (e.key === "Enter" && !e.shiftKey && prompt.trim() && !loading) {
-                      e.preventDefault();
-                      if (currentStep === 0) handleStepClick(0);
-                    }
-                  }}
-                  placeholder='Start Creating...'
-                  className='w-full glass-input text-sm text-white pl-4 pr-12 py-3 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500'
-                  disabled={loading}
-                />
-
-                <button
-                  type='button'
-                  className={`absolute top-1/2 right-3 -translate-y-1/2 send-btn flex items-center justify-center rounded-full h-9 w-9 transition-opacity duration-150 ${
-                    loading || !prompt.trim() ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
-                  }`}
-                  disabled={loading || !prompt.trim()}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentStep === 0) handleStepClick(0);
-                  }}
-                  title='Send'
-                >
-                  <svg className='w-4 h-4 text-white' fill='currentColor' viewBox='0 0 20 20'>
-                    <path d='M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z' />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className='p-4 border-t border-gray-800'>
-              <p className='text-gray-400 text-sm text-center'>
-                {!isAuthenticated ? 'Sign in to use chat features' : 'Select a project to start creating content'}
-              </p>
-            </div>
-          )}
+          <InputArea
+            isAuthenticated={isAuthenticated}
+            selectedProject={selectedProject}
+            prompt={prompt}
+            setPrompt={setPrompt}
+            loading={loading}
+            currentStep={currentStep}
+            handleStepClick={handleStepClick}
+          />
         </div>
       </div>
 
@@ -1563,7 +1689,95 @@ function ChatWidget() {
         </div>,
         document.body
       )}
+
+      {/* Redo modal with model selection */}
+      {showRedoModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10003]"
+          onClick={() => setShowRedoModal(false)}
+        >
+          <div
+            className="bg-gray-800 p-6 rounded-lg shadow-lg w-96 flex flex-col gap-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Redo {redoStepId === 4 ? 'Image' : 'Video'} Generation
+            </h3>
+            <p className="text-gray-300 text-sm">
+              Choose a different AI model for regeneration:
+            </p>
+            
+            {redoStepId === 4 && (
+              <div>
+                <label className="block text-xs text-gray-300 mb-1">Image Generation Model</label>
+                <ModelSelector
+                  genType="IMAGE"
+                  selectedModel={redoImageModel}
+                  onModelChange={setRedoImageModel}
+                  disabled={loading}
+                  className="w-full"
+                />
+              </div>
+            )}
+            
+            {redoStepId === 5 && (
+              <div>
+                <label className="block text-xs text-gray-300 mb-1">Video Generation Model</label>
+                <ModelSelector
+                  genType="VIDEO"
+                  selectedModel={redoVideoModel}
+                  onModelChange={setRedoVideoModel}
+                  disabled={loading}
+                  className="w-full"
+                />
+              </div>
+            )}
+            
+            <div className="flex gap-3 mt-4">
+              <button
+                type="button"
+                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white rounded px-4 py-2"
+                onClick={() => setShowRedoModal(false)}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2"
+                onClick={handleRedoWithModel}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Redo Generation"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
+  );
+}
+
+// Wrapper component to keep the public <ChatWidget /> API small.
+// Manages only the "open" state & publish-button visibility then delegates
+// all heavy UI / logic to <ChatWidgetSidebar />.
+function ChatWidget() {
+  const [open, setOpen] = React.useState(false);
+
+  // Hide Electron publish button when the chat is open
+  React.useEffect(() => {
+    const btn = document.getElementById("publish-button");
+    if (btn) {
+      btn.style.display = open ? "none" : "";
+    }
+  }, [open]);
+
+  return (
+    <>
+      <FloatingChatButton open={open} setOpen={setOpen} />
+      <ChatWidgetSidebar open={open} setOpen={setOpen} />
+    </>
   );
 }
 

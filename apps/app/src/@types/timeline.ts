@@ -32,6 +32,7 @@ type TimelinePlaced = {
   timelineOptions: {
     color: string;
   };
+  track: number;
 };
 
 type Visual = {

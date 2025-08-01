@@ -22,6 +22,8 @@ import { isVisualTimelineElement } from "../../@types/timeline";
 
 @customElement("preview-canvas")
 export class PreviewCanvas extends LitElement {
+  isFullscreen = false;
+
   previewRatio: number;
   isMove: boolean;
   activeElementId: string;
@@ -62,6 +64,9 @@ export class PreviewCanvas extends LitElement {
 
   constructor() {
     super();
+    document.addEventListener("fullscreenchange", () => {
+      this.isFullscreen = !!document.fullscreenElement;
+    });
 
     this.previewRatio = 1920 / 1920;
     this.isMove = false;
@@ -160,6 +165,14 @@ export class PreviewCanvas extends LitElement {
 
     const controlDom = document.querySelector("element-control");
     controlDom.previewRatio = this.previewRatio;
+  }
+
+  toggleFullscreen() {
+    if (!this.isFullscreen) {
+      this.canvas.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
   }
 
   updateCursor() {
@@ -554,6 +567,7 @@ export class PreviewCanvas extends LitElement {
       key: elementId,
       priority: 1,
       blob: "",
+      track: 0,
       startTime: 0,
       duration: 1000,
       opacity: 100,
@@ -1295,16 +1309,17 @@ export class PreviewCanvas extends LitElement {
 
   protected render() {
     this.style.margin = "0";
-    return html` <canvas
+    return html` <div style="position:relative; width:100%; max-height:${this.canvasMaxHeight}px;">
+        <button @click=${this.toggleFullscreen} style="position:absolute; top:8px; right:8px; z-index:5; background:rgba(0,0,0,0.5); border:none; color:white; padding:4px 6px; border-radius:4px; cursor:pointer;">⛶</button>
+        <canvas
       id="elementPreviewCanvasRef"
       class="preview"
       style="width: 100%; max-height: ${this.canvasMaxHeight}px; cursor: ${this.cursorType};"
       width="2200"
       height="1300"
-      onclick="${this.handleClickCanvas()}"
       @mousedown=${this._handleMouseDown}
       @mousemove=${this._handleMouseMove}
       @mouseup=${this._handleMouseUp}
-    ></canvas>`;
+    ></canvas></div>`;
   }
 }

@@ -3,8 +3,8 @@ import { useAuth } from "../hooks/useAuth";
 import ChatLoginButton from "./ChatLoginButton";
 import LoadingSpinner from "./LoadingSpinner";
 import { projectApi } from "../services/project";
-import { imageApi } from "../services/image";
-import { videoApi } from "../services/video-gen";
+import { chatApi } from "../services/chat";
+import ModelSelector from "./ModelSelector";
 import {
   ReactFlow,
   Background,
@@ -38,6 +38,9 @@ function FlowWidget() {
   const [creatingImages, setCreatingImages] = useState(new Set());
   const [creatingVideos, setCreatingVideos] = useState(new Set());
   const [temporaryVideos, setTemporaryVideos] = useState(new Map()); // Store temporary videos: key = `${segmentId}-${imageId}`, value = videoUrl
+  // Model selection states
+  const [selectedImageModel, setSelectedImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
+  const [selectedVideoModel, setSelectedVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
 
   // New state for all fetched data
   const [allProjectData, setAllProjectData] = useState({
@@ -257,34 +260,41 @@ function FlowWidget() {
       return;
     }
 
-    console.log("🔄 Regenerating image (overwrite via generateImage + PATCH):", imageId, segmentData);
+    console.log("🔄 Regenerating image:", imageId, segmentData);
     setRegeneratingImages(prev => new Set(prev).add(imageId));
     try {
-      // 1. Overwrite the image in S3
-      const genResponse = await imageApi.generateImage({
-        visual_prompt: segmentData.visual,
-        art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
-        uuid: `seg-${segmentData.id}`,
-        project_id: projectId,
-      });
-      console.log("✅ Image generation (overwrite) successful:", genResponse);
-      // 2. PATCH to update metadata with s3_key
-      if (genResponse && genResponse.s3_key) {
-        await imageApi.regenerateImage({
-          id: imageId,
+      let genResponse;
+      
+      // Check if we already have a new s3_key from the ImageNode edit
+      if (segmentData.s3Key) {
+        console.log("✅ Using existing s3_key from ImageNode edit:", segmentData.s3Key);
+        genResponse = { s3_key: segmentData.s3Key };
+      } else {
+        // Generate new image
+        genResponse = await chatApi.generateImage({
           visual_prompt: segmentData.visual,
           art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
-          s3_key: genResponse.s3_key,
+          uuid: `seg-${segmentData.id}`,
           project_id: projectId,
+          model: selectedImageModel,
         });
+        console.log("✅ Image generation successful:", genResponse);
       }
-      // 3. Refresh project data to get the updated image
+      
+      // Update the image metadata if we have a new s3_key
+      if (genResponse && genResponse.s3_key) {
+        // Note: The new unified API doesn't have a separate regenerateImage endpoint
+        // The image is regenerated directly through the generateImage call
+        console.log("✅ Image regeneration completed with s3_key:", genResponse.s3_key);
+      }
+      
+      // Refresh project data to get the updated image
       await refreshProjectData();
       setFlowMessages(prev => [
         ...prev,
         {
           type: "assistant",
-          content: `Image for scene ${segmentData.id} regenerated, overwritten, and metadata updated successfully!`,
+          content: `Image for scene ${segmentData.id} regenerated successfully!`,
         },
       ]);
     } catch (error) {
@@ -325,23 +335,18 @@ function FlowWidget() {
       // Always use the s3_key of the connected image for imageS3Key
       const imageS3Key = flowData.imageDetails?.[segmentData.id]?.s3Key || segmentData.imageS3Key;
       
-      const genResponse = await videoApi.generateVideo({
+      const genResponse = await chatApi.generateVideo({
         animation_prompt: segmentData.animation,
         art_style: segmentData.artStyle,
-        imageS3Key,
+        image_s3_key: imageS3Key,
         uuid: `seg-${segmentData.id}`,
         project_id: projectId,
+        model: selectedVideoModel,
       });
-      if (genResponse && genResponse.s3Keys && genResponse.s3Keys.length > 0) {
-        console.log("🔄 Video re-generation response:", genResponse.s3Keys);
-        await videoApi.regenerateVideo({
-          id: videoId,
-          animation_prompt: segmentData.animation,
-          art_style: segmentData.artStyle,
-          image_s3_key: imageS3Key,
-          video_s3_keys: [...genResponse.s3Keys],
-          project_id: projectId,
-        });
+      if (genResponse && genResponse.s3_key) {
+        console.log("🔄 Video re-generation response:", genResponse.s3_key);
+        // Note: The new unified API doesn't have a separate regenerateVideo endpoint
+        // The video is regenerated directly through the generateVideo call
       }
       // 3. Refresh project data to get the updated video
       await refreshProjectData();
@@ -391,11 +396,12 @@ function FlowWidget() {
       const timestamp = Date.now();
       const uniqueUuid = `seg-${segmentId}-${timestamp}`;
       
-      const genResponse = await imageApi.generateImage({
+      const genResponse = await chatApi.generateImage({
         visual_prompt: segmentData.visual,
         art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
         uuid: uniqueUuid,
         project_id: projectId,
+        model: selectedImageModel,
       });
       console.log("✅ New image generation successful:", genResponse);
       
@@ -510,19 +516,20 @@ function FlowWidget() {
       const timestamp = Date.now();
       const uniqueUuid = `seg-${segmentId}-${timestamp}`;
       
-      const genResponse = await videoApi.generateVideo({
+      const genResponse = await chatApi.generateVideo({
         animation_prompt: segmentData.animation,
         art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
-        imageS3Key: targetImage.s3Key,
+        image_s3_key: targetImage.s3Key,
         uuid: uniqueUuid,
         project_id: projectId,
+        model: selectedVideoModel,
       });
       
       console.log("✅ New video generation successful:", genResponse);
       
       // Store the generated video URL in temporary videos state
-      if (genResponse && genResponse.s3Keys && genResponse.s3Keys.length > 0) {
-        const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${genResponse.s3Keys[0]}`;
+      if (genResponse && genResponse.s3_key) {
+        const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${genResponse.s3_key}`;
         const videoKey = `${segmentId}-${imageId}`;
         setTemporaryVideos(prev => new Map(prev).set(videoKey, videoUrl));
         
@@ -861,17 +868,6 @@ function FlowWidget() {
   return (
     <div className="z-10">
       {/* Floating button */}
-      {!open && (
-        <button
-          className="fixed bottom-10 right-24 w-16 h-16 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-2xl flex items-center justify-center shadow-2xl z-[1001]"
-          aria-label="Open flow widget"
-          onClick={() => setOpen(true)}
-          style={{ boxShadow: "0 4px 12px rgba(147, 51, 234, 0.3)" }}
-        >
-          REACT FLOW
-        </button>
-      )}
-
       {/* Sliding sidebar */}
       <div
         className={`fixed top-0 right-0 h-screen w-screen bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
@@ -957,6 +953,35 @@ function FlowWidget() {
                     className="bg-purple-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${stats.completionRate}%` }}
                   ></div>
+                </div>
+              </div>
+            )}
+
+            {/* Model Selection */}
+            {isAuthenticated && stats.totalSegments > 0 && (
+              <div className="p-4 border-b border-gray-800 bg-gray-800">
+                <h3 className="text-sm font-semibold text-gray-300 mb-3">AI Model Selection</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Image Generation Model</label>
+                    <ModelSelector
+                      genType="IMAGE"
+                      selectedModel={selectedImageModel}
+                      onModelChange={setSelectedImageModel}
+                      disabled={loading}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Video Generation Model</label>
+                    <ModelSelector
+                      genType="VIDEO"
+                      selectedModel={selectedVideoModel}
+                      onModelChange={setSelectedVideoModel}
+                      disabled={loading}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
             )}

@@ -5,13 +5,36 @@ const AuthContext = createContext();
 export { AuthContext };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // Persisted user information (if any) is loaded from localStorage first so that
+  // we can immediately render the authenticated state. We will still validate the
+  // token with the backend in the background.
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('authUser');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState(localStorage.getItem('authToken'));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Check if we're running in Electron
   const isElectron = window.electronAPI && window.electronAPI.req;
+
+  // Keep the user object persisted so it survives full application restarts
+  useEffect(() => {
+    if (user) {
+      try {
+        localStorage.setItem('authUser', JSON.stringify(user));
+      } catch (e) {
+        console.error('Failed to persist authUser', e);
+      }
+    } else {
+      localStorage.removeItem('authUser');
+    }
+  }, [user]);
 
   // Initialize authentication on mount
   useEffect(() => {
@@ -67,6 +90,7 @@ export const AuthProvider = ({ children }) => {
       setToken(authData.access_token);
       setUser(authData.user);
       localStorage.setItem('authToken', authData.access_token);
+      localStorage.setItem('authUser', JSON.stringify(authData.user));
       setError(null);
     }
   };
@@ -109,6 +133,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setToken(null);
       localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
       setError(null);
     }
   };

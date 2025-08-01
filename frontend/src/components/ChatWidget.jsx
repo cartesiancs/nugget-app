@@ -13,21 +13,17 @@ import { s3Api } from "../services/s3";
 import { projectApi } from "../services/project";
 import ModelSelector from "./ModelSelector";
 import CreditWidget from "./CreditWidget";
+import FloatingChatButton from "./chat-widget/FloatingChatButton";
+import StepList from "./chat-widget/StepList";
+import InputArea from "./chat-widget/InputArea";
 import { useProjectStore } from "../store/useProjectStore";
 import { getTextCreditCost, getImageCreditCost, getVideoCreditCost, formatCreditDeduction } from "../lib/pricing";
 
 import React from "react";
 
-function ChatWidget() {
+function ChatWidgetSidebar({ open, setOpen }) {
   const { isAuthenticated, logout, user } = useAuth();
-  const [open, setOpen] = useState(false);
-  // Hide publish button when chat open
-  useEffect(() => {
-    const btn = document.getElementById('publish-button');
-    if (btn) {
-      btn.style.display = open ? 'none' : '';
-    }
-  }, [open]);
+
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1111,17 +1107,7 @@ function ChatWidget() {
         setShowMenu(false);
         setShowUserMenu(false);
       }}>
-      {/* Floating chat button */}
-      {!open && (
-        <button
-          className='shadow-lg fixed top-2/4 right-8 transform translate-y-12 px-4 py-2 rounded-lg text-white text-sm flex items-center gap-2 shadow-2xl z-[10001] backdrop-blur-lg border border-white/20 dark:border-gray-600/40 bg-gradient-to-tr from-gray-700/90 to-gray-800/90 dark:from-gray-700/90 dark:to-gray-800/90 transition-all duration-200 ease-in-out'
-          aria-label='Open chat'
-          onClick={() => setOpen(true)}
-        >
-          <span className="text-gray-300">✨</span>
-          <span className="text-gray-300 font-medium">Chat</span>
-        </button>
-      )}
+
 
       {/* Sliding sidebar */}
       <div
@@ -1268,66 +1254,20 @@ function ChatWidget() {
 
         <div className='flex-1 overflow-hidden flex flex-col'>
           {/* 6 Steps */}
-          <div className='p-3 border-b border-gray-800'>
-            <div className='flex items-center justify-between mb-1'>
-              <h3 className='text-xs font-semibold text-gray-300 uppercase tracking-wide'>Video Steps</h3>
-              <button
-                className='text-gray-400 hover:text-gray-200 text-sm focus:outline-none'
-                onClick={() => setCollapseSteps((v) => !v)}
-              >
-                {collapseSteps ? '▼' : '▲'}
-              </button>
-            </div>
-            {!collapseSteps && (
-              <div className='space-y-1'>
-                {steps.map((step) => {
-                  const icon = getStepIcon(step.id);
-                  const isDisabled = isStepDisabled(step.id) || loading;
-                  const isCurrent = currentStep === step.id;
-                  return (
-                    <div
-                      key={step.id}
-                      className={`w-full flex items-center gap-2 p-1 rounded text-left transition-colors text-xs ${
-                        isDisabled ? 'text-gray-500 cursor-not-allowed' : 'text-white hover:bg-gray-800'
-                      } ${isCurrent ? 'bg-gray-800' : ''}`}
-                      onClick={() => {
-                        if (!loading && !isDisabled && stepStatus[step.id] === 'done') {
-                          setCurrentStep(step.id);
-                        }
-                      }}
-                    >
-                      <span className='text-sm'>{icon}</span>
-                      <div className='flex-1'>
-                        <div className='font-medium'>{step.name}</div>
-                      </div>
-                      {stepStatus[step.id] === 'done' && !collapseSteps && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRedoStep(step.id);
-                          }}
-                          className='px-2 py-0.5 text-[10px] bg-blue-600 hover:bg-blue-500 rounded'
-                        >
-                          Redo
-                        </button>
-                      )}
-                      {stepStatus[step.id] !== 'done' && !isDisabled && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStepClick(step.id);
-                          }}
-                          className='px-2 py-0.5 text-[10px] bg-green-600 hover:bg-green-500 rounded'
-                        >
-                          Run
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <StepList
+            steps={steps}
+            stepStatus={stepStatus}
+            currentStep={currentStep}
+            loading={loading}
+            collapseSteps={collapseSteps}
+            setCollapseSteps={setCollapseSteps}
+            isStepDisabled={isStepDisabled}
+            getStepIcon={getStepIcon}
+            handleStepClick={handleStepClick}
+            handleRedoStep={handleRedoStep}
+            setCurrentStep={setCurrentStep}
+          />
+
 
           {/* Content Area */}
           <div className='flex-1 overflow-y-auto p-4'>
@@ -1630,53 +1570,15 @@ function ChatWidget() {
           </div>
 
           {/* Input area */}
-          {isAuthenticated && selectedProject ? (
-            <div className='p-4 border-t border-white/10 dark:border-gray-700/60'>
-              <div className='relative'>
-                <input
-                  type='text'
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    e.stopPropagation();
-                    if (e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === "function") {
-                      e.nativeEvent.stopImmediatePropagation();
-                    }
-                    if (e.key === "Enter" && !e.shiftKey && prompt.trim() && !loading) {
-                      e.preventDefault();
-                      if (currentStep === 0) handleStepClick(0);
-                    }
-                  }}
-                  placeholder='Start Creating...'
-                  className='w-full bg-white/15 dark:bg-gray-700/40 backdrop-blur-sm border border-white/25 dark:border-gray-600/40 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 placeholder-gray-500 dark:placeholder-gray-400 text-sm text-white pl-4 pr-12 py-3 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500'
-                  disabled={loading}
-                />
-
-                <button
-                  type='button'
-                  className={`absolute top-1/2 right-3 -translate-y-1/2 bg-gradient-to-br from-indigo-500/80 via-purple-500/80 to-pink-500/80 backdrop-blur-sm border border-white/30 dark:border-gray-600/40 shadow-md flex items-center justify-center rounded-full h-9 w-9 transition-opacity duration-150 ${
-                    loading || !prompt.trim() ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
-                  }`}
-                  disabled={loading || !prompt.trim()}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentStep === 0) handleStepClick(0);
-                  }}
-                  title='Send'
-                >
-                  <svg className='w-4 h-4 text-white' fill='currentColor' viewBox='0 0 20 20'>
-                    <path d='M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z' />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className='p-4 border-t border-gray-800'>
-              <p className='text-gray-400 text-sm text-center'>
-                {!isAuthenticated ? 'Sign in to use chat features' : 'Select a project to start creating content'}
-              </p>
-            </div>
-          )}
+          <InputArea
+            isAuthenticated={isAuthenticated}
+            selectedProject={selectedProject}
+            prompt={prompt}
+            setPrompt={setPrompt}
+            loading={loading}
+            currentStep={currentStep}
+            handleStepClick={handleStepClick}
+          />
         </div>
       </div>
 
@@ -1854,6 +1756,28 @@ function ChatWidget() {
         document.body
       )}
     </div>
+  );
+}
+
+// Wrapper component to keep the public <ChatWidget /> API small.
+// Manages only the "open" state & publish-button visibility then delegates
+// all heavy UI / logic to <ChatWidgetSidebar />.
+function ChatWidget() {
+  const [open, setOpen] = React.useState(false);
+
+  // Hide Electron publish button when the chat is open
+  React.useEffect(() => {
+    const btn = document.getElementById("publish-button");
+    if (btn) {
+      btn.style.display = open ? "none" : "";
+    }
+  }, [open]);
+
+  return (
+    <>
+      <FloatingChatButton open={open} setOpen={setOpen} />
+      <ChatWidgetSidebar open={open} setOpen={setOpen} />
+    </>
   );
 }
 

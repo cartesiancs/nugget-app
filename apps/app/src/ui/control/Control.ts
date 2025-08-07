@@ -126,14 +126,7 @@ export class Control extends LitElement {
         <div
           class="split-col-bar d-flex align-items-center justify-content-center ${this.isPanelCollapsed ? 'collapsed' : ''}"
         >
-          <span
-            class="material-symbols-outlined drawer-toggle"
-            style="cursor: pointer; user-select: none; font-size: 32px; padding: 12px; background: ${this.isPanelCollapsed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}; border-radius: 8px; margin-left: 20px; border: ${this.isPanelCollapsed ? 'none' : '2px solid rgba(255,255,255,0.3)'};"
-            @click=${this._togglePanelDrawer}
-            title="${this.isPanelCollapsed ? 'Open drawer' : 'Close drawer'}"
-          >
-            ${this.isPanelCollapsed ? "chevron_right" : "chevron_left"}
-          </span>
+
         </div>
 
         <div

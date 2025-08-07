@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../lib/axiosInstance';
 
 const AuthContext = createContext();
 
@@ -22,6 +23,42 @@ export const AuthProvider = ({ children }) => {
 
   // Check if we're running in Electron
   const isElectron = window.electronAPI && window.electronAPI.req;
+
+  // Handle OAuth callback in browser mode
+  useEffect(() => {
+    if (isElectron) return; // skip if running inside Electron
+    if (window.location.pathname === '/auth/google-redirect') {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const accessToken = params.get('access_token') || params.get('token');
+
+      const finalizeWebLogin = async () => {
+        try {
+          let tokenData = null;
+          if (code && !accessToken) {
+            // Exchange the code for JWT token via backend endpoint
+            const res = await fetch(`${API_BASE_URL}/auth/google-redirect?code=${encodeURIComponent(code)}`);
+            if (!res.ok) throw new Error('Token exchange failed');
+            tokenData = await res.json();
+          } else {
+            tokenData = { success: true, access_token: accessToken, user: null };
+          }
+
+          if (tokenData && tokenData.success && tokenData.access_token) {
+            handleAuthSuccess({ access_token: tokenData.access_token, user: tokenData.user });
+          }
+        } catch (err) {
+          console.error('OAuth callback handling failed', err);
+        } finally {
+          // Clean up URL regardless of outcome
+          window.history.replaceState({}, document.title, '/');
+        }
+      };
+
+      finalizeWebLogin();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep the user object persisted so it survives full application restarts
   useEffect(() => {
@@ -112,7 +149,8 @@ export const AuthProvider = ({ children }) => {
         }
       } else {
         // In web browser, redirect to Google OAuth
-        window.location.href = 'https://backend.usuals.ai/auth/google';
+        const redirectUri = `${window.location.origin}/auth/google-redirect`;
+        window.location.href = `${API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
       }
     } catch (error) {
       console.error('Login failed:', error);

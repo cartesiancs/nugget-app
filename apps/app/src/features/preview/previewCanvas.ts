@@ -1314,9 +1314,9 @@ export class PreviewCanvas extends LitElement {
         <canvas
       id="elementPreviewCanvasRef"
       class="preview"
-      style="width: 100%; max-height: ${this.canvasMaxHeight}px; cursor: ${this.cursorType};"
-      width="2200"
-      height="1300"
+      style="width: 100%; aspect-ratio: 16 / 9; max-width: 100%; height: auto; cursor: ${this.cursorType};"
+      width="1600"
+      height="900"
       @mousedown=${this._handleMouseDown}
       @mousemove=${this._handleMouseMove}
       @mouseup=${this._handleMouseUp}

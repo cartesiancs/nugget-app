@@ -1773,6 +1773,15 @@ function ChatWidget() {
     }
   }, [open]);
 
+  // Handle right panel layout when chat opens/closes
+  React.useEffect(() => {
+    if (typeof window.toggleRightPanel === 'function') {
+      window.toggleRightPanel(open);
+    } else {
+      console.warn('toggleRightPanel function not available on window');
+    }
+  }, [open]);
+
   return (
     <>
       <FloatingChatButton open={open} setOpen={setOpen} />

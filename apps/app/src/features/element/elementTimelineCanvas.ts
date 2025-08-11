@@ -454,7 +454,8 @@ export class elementTimelineCanvas extends LitElement {
           const height = ROW_H;
           // Calculate row position so clip is vertically centered within row
           const track = (this.timeline[elementId].track ?? 0);
-          const top = track * ROW_SPACING + verticalMargin - this.canvasVerticalScroll;
+          const topOffset = 2; // Minimal offset - first row should be very close to ruler
+          const top = track * ROW_SPACING + verticalMargin - this.canvasVerticalScroll + topOffset;
           const left =
             this.millisecondsToPx(this.timeline[elementId].startTime) -
             this.timelineScroll;
@@ -1522,11 +1523,12 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   renderCanvas() {
+    const canvasWidth = window.innerWidth - this.resize.timelineVertical.leftOption;
     return html`
       <canvas
         id="elementTimelineCanvasRef"
-        style="width: 1122px;left: ${this.resize.timelineVertical
-          .leftOption}px;position: absolute;top: 30px;"
+        style="width: ${canvasWidth}px;left: ${this.resize.timelineVertical
+          .leftOption}px;position: absolute;top: 60px;"
         @mousewheel=${this._handleMouseWheel}
         @mousemove=${this._handleMouseMove}
         @mousedown=${this._handleMouseDown}

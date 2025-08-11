@@ -206,7 +206,7 @@ export class ElementTimeline extends LitElement {
       "h-100",
       "line",
       "bg-darker",
-      "overflow-hidden",
+      "overflow-y-auto",
     );
 
     return html`

@@ -65,18 +65,20 @@ export class ElementTimelineRuler extends LitElement {
 
   render() {
     this.classList.add("ps-0", "overflow-hidden", "position-absolute");
-    this.style.top = "69px";
+    this.style.top = "10px";
     this.style.left = `${this.resize.timelineVertical.leftOption}px`;
-
+    this.style.zIndex = "400";
     this.style.position = "absolute";
-    this.width = document.querySelector("element-timeline").clientWidth;
-    this.height = 30;
+    
+    // Match the timeline canvas width calculation
+    this.width = window.innerWidth - this.resize.timelineVertical.leftOption;
+    this.height = 35;
 
     return html`<canvas
       id="elementTimelineRulerCanvasRef"
       width="${this.width}"
       height="${this.height}"
-      style="width: ${this.width}px; height: ${this.height}px;"
+      style="width: ${this.width}px; height: ${this.height}px; background-color: #16181b;"
     ></canvas>`;
   }
 
@@ -137,26 +139,40 @@ export class ElementTimelineRuler extends LitElement {
     const now =
       this.millisecondsToPx(this.timelineCursor) - this.timelineScroll + 1;
 
-    const size = 6;
-    const top = 16;
+    const size = 8; // Increased from 6 to 8
+    const top = 10;
 
-    ctx.fillStyle = "#dbdaf0";
+    ctx.fillStyle = "#ffffff"; // Changed to white for better visibility
+    ctx.strokeStyle = "#ffffff";
 
+    // Draw vertical line first (bigger)
+    ctx.beginPath();
+    ctx.moveTo(now, top);
+    ctx.lineTo(now, this.canvas.height);
+    ctx.lineWidth = 3; // Increased line width
+    ctx.stroke();
+
+    // Draw triangle head
     ctx.beginPath();
     ctx.moveTo(now - size, top);
     ctx.lineTo(now, this.canvas.height);
     ctx.lineTo(now + size, top);
-    ctx.lineWidth = 2;
+    ctx.closePath();
     ctx.fill();
   }
 
   drawRuler() {
-    this.width = document.querySelector("element-timeline").clientWidth;
+    if (!this.canvas) return;
+    
+    // Match the timeline canvas width calculation
+    this.width = window.innerWidth - this.resize.timelineVertical.leftOption;
 
     const ctx: any = this.canvas.getContext("2d");
+    if (!ctx) return;
 
     const dpr = window.devicePixelRatio;
     this.canvas.style.width = `${this.width}px`;
+    this.canvas.style.height = `${this.height}px`;
 
     this.canvas.width = this.width * dpr;
     this.canvas.height = (this.height as number) * dpr;
@@ -219,32 +235,33 @@ export class ElementTimelineRuler extends LitElement {
       if (count % (10 * range) == 0) {
         startY = 5;
         endY = 20;
-        ctx.strokeStyle = "#e3e3e3";
-        ctx.font = "300 12px serif";
-        ctx.font;
+        ctx.strokeStyle = "#ffffff";
+        ctx.fillStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.font = "400 11px -apple-system, BlinkMacSystemFont, sans-serif";
         if (unit == "s") {
           const text = this.formatSecondsToTime(
             (Number(count / 10) + startNumber * range) / unitSplit,
           );
-          ctx.strokeText(`${text}`, startX - 15, 28);
+          ctx.fillText(`${text}`, startX - 15, 30);
         } else if (unit == "m") {
           const text = this.formatMinutesToHourMinute(
             (Number(count / 10) + startNumber * range) / unitSplit,
           );
 
-          ctx.strokeText(`${text}`, startX - 15, 28);
+          ctx.fillText(`${text}`, startX - 15, 30);
         } else {
           const text = `${
             (Number(count / 10) + startNumber * range) / unitSplit
           }${unit}`;
-          ctx.strokeText(`${text}`, startX - 15, 28);
+          ctx.fillText(`${text}`, startX - 15, 30);
         }
       } else {
-        ctx.strokeStyle = "#e3e3e3";
+        ctx.strokeStyle = "#cccccc";
+        ctx.lineWidth = 1;
       }
       ctx.moveTo(startX, startY);
       ctx.lineTo(endX, endY);
-      ctx.lineWidth = 1;
       ctx.stroke();
     }
 

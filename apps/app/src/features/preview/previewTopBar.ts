@@ -187,11 +187,12 @@ export class PreviewTopBar extends LitElement {
         .top-toggle-bar {
           display: flex;
           flex-direction: row;
-          margin-top: 1rem;
+          margin-top: 0;
           gap: 0.5rem;
           height: 2rem;
           align-items: center;
           justify-content: center;
+          flex-wrap: wrap;
         }
 
         .preview-top-button {

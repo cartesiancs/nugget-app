@@ -1308,13 +1308,17 @@ export class PreviewCanvas extends LitElement {
   }
 
   protected render() {
-    this.style.margin = "0";
-    return html` <div style="position:relative; width:100%; max-height:${this.canvasMaxHeight}px;">
+    this.style.margin = "0 auto";
+    this.style.width = "70%";
+    this.style.height = "100%";
+    this.style.display = "block";
+    this.style.aspectRatio = "16/9";
+    return html` <div style="position:relative; width:100%; height:100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
         <button @click=${this.toggleFullscreen} style="position:absolute; top:8px; right:8px; z-index:5; background:rgba(0,0,0,0.5); border:none; color:white; padding:4px 6px; border-radius:4px; cursor:pointer;">⛶</button>
         <canvas
       id="elementPreviewCanvasRef"
       class="preview"
-      style="width: 100%; aspect-ratio: 16 / 9; max-width: 100%; height: auto; cursor: ${this.cursorType};"
+      style="width: 70%; height: 100%; aspect-ratio: 16/9 !important; cursor: ${this.cursorType}; border-radius: 20px; display: block; margin: 0 auto;"
       width="1600"
       height="900"
       @mousedown=${this._handleMouseDown}

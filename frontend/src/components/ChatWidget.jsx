@@ -1111,9 +1111,15 @@ function ChatWidgetSidebar({ open, setOpen }) {
 
       {/* Sliding sidebar */}
       <div
-        className={`backdrop-blur-xl bg-white/20 dark:bg-gray-800/30 border border-white/30 dark:border-gray-700/40 shadow-lg rounded-2xl transition-all duration-300 ease-out fixed rounded-2xl mb-4 mr-4 bottom-0 right-0 h-[90vh] sm:h-[87vh] w-[90vw] sm:w-[360px] md:w-[25vw] max-w-[600px] text-white transform transition-transform duration-500 ${
+        className={`bg-gray-800/95 backdrop-blur-sm border border-gray-600/40 shadow-lg rounded-lg transition-all duration-300 ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
           open ? "translate-x-0" : "translate-x-full"
         } z-[10000] flex flex-col shadow-2xl`}
+        style={{
+          width: 'calc(30% - 20px)',
+          height: 'calc(100vh - 200px)',
+          right: open ? '10px' : '-100%',
+          top: '110px'
+        }}
       >
         {/* Header */}
         <div className='flex justify-between items-center p-3 border-b border-gray-800 sticky top-0 relative'>
@@ -1765,12 +1771,9 @@ function ChatWidgetSidebar({ open, setOpen }) {
 function ChatWidget() {
   const [open, setOpen] = React.useState(false);
 
-  // Hide Electron publish button when the chat is open
+  // Keep publish button visible when chat is open (removed hiding logic)
   React.useEffect(() => {
-    const btn = document.getElementById("publish-button");
-    if (btn) {
-      btn.style.display = open ? "none" : "";
-    }
+    // Publish button remains visible
   }, [open]);
 
   // Handle right panel layout when chat opens/closes
@@ -1780,6 +1783,8 @@ function ChatWidget() {
     } else {
       console.warn('toggleRightPanel function not available on window');
     }
+
+    // Keep layout buttons visible (removed hiding logic)
   }, [open]);
 
   return (

@@ -241,8 +241,8 @@ export class App extends LitElement {
               /* Right panel layout styles */
               body.right-panel-open #split_top,
               body.right-panel-open #split_bottom {
-                margin-right: calc(30% + 20px) !important;
-                width: calc(70% - 20px) !important;
+                margin-right: 30% !important;
+                width: 70% !important;
                 transition: margin-right 0.3s ease, width 0.3s ease !important;
               }
 
@@ -251,6 +251,36 @@ export class App extends LitElement {
                 margin-right: 0 !important;
                 width: 100% !important;
                 transition: margin-right 0.3s ease, width 0.3s ease !important;
+              }
+
+              /* Preview section responsive to right panel */
+              body.right-panel-open #split_col_2 {
+                width: 100% !important;
+              }
+
+              body.right-panel-open .video-container {
+                transform: translateX(-50%) !important;
+                max-width: 100% !important;
+                width: 100% !important;
+              }
+
+              body.right-panel-open #videobox {
+                width: 100% !important;
+                max-width: 100% !important;
+              }
+
+              body.right-panel-open #video {
+                max-width: 80% !important;
+              }
+
+              /* Timeline elements responsive to right panel */
+              body.right-panel-open timeline-ui,
+              body.right-panel-open element-timeline,
+              body.right-panel-open element-timeline-canvas,
+              body.right-panel-open element-timeline-ruler,
+              body.right-panel-open element-timeline-bottom {
+                width: 100% !important;
+                max-width: 100% !important;
               }
 
               #video {
@@ -456,16 +486,13 @@ export class App extends LitElement {
             rightPanelElement.isRightPanelCollapsed = false;
             rightPanelElement.style.cssText = `
               position: fixed;
-              top: 10px;
-              right: 10px;
-              height: calc(100vh - 20px);
-              width: calc(30% - 20px);
+              top: 100px;
+              right: 0;
+              height: calc(100vh - 100px);
+              width: 30%;
               z-index: 9999;
               pointer-events: auto;
-              background: #000000;
-              border: 1px solid rgba(255,255,255,0.2);
-              border-radius: 12px;
-              box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+              background: #181a1c;
               overflow: hidden;
             `;
             document.body.appendChild(rightPanelElement);
@@ -526,16 +553,16 @@ export class App extends LitElement {
           const splitBottom = document.getElementById('split_bottom') as HTMLElement;
 
           if (rightPanelVisible) {
-            // Adjust main content to make room for the right panel with proper gap
+            // Adjust main content to make room for the right panel
             if (splitTop) {
-              splitTop.style.marginRight = 'calc(30% + 20px)';
-              splitTop.style.width = 'calc(70% - 20px)';
+              splitTop.style.marginRight = '30%';
+              splitTop.style.width = '70%';
               splitTop.style.transition = 'margin-right 0.3s ease, width 0.3s ease';
             }
 
             if (splitBottom) {
-              splitBottom.style.marginRight = 'calc(30% + 20px)';
-              splitBottom.style.width = 'calc(70% - 20px)';
+              splitBottom.style.marginRight = '30%';
+              splitBottom.style.width = '70%';
               splitBottom.style.transition = 'margin-right 0.3s ease, width 0.3s ease';
             }
           } else {

@@ -885,6 +885,15 @@ export class elementTimelineCanvas extends LitElement {
     }
 
     if (elementType == "dynamic") {
+      // Safety check: ensure targetTrim is properly initialized
+      if (!this.targetTrim[targetId] || this.targetTrim[targetId].startTime === undefined) {
+        console.warn('targetTrim not properly initialized for', targetId, 'reinitializing...');
+        this.targetTrim[targetId] = {
+          startTime: this.timeline[targetId].trim.startTime,
+          endTime: this.timeline[targetId].trim.endTime,
+        };
+      }
+
       if (this.targetTrim[targetId].startTime + this.pxToMilliseconds(dx) > 0) {
         this.timeline[targetId].startTime = this.targetStartTime[targetId];
         this.timeline[targetId].trim.startTime =
@@ -914,6 +923,15 @@ export class elementTimelineCanvas extends LitElement {
     }
 
     if (elementType == "dynamic") {
+      // Safety check: ensure targetTrim is properly initialized
+      if (!this.targetTrim[targetId] || this.targetTrim[targetId].endTime === undefined) {
+        console.warn('targetTrim not properly initialized for', targetId, 'reinitializing...');
+        this.targetTrim[targetId] = {
+          startTime: this.timeline[targetId].trim.startTime,
+          endTime: this.timeline[targetId].trim.endTime,
+        };
+      }
+
       if (
         this.targetTrim[targetId].endTime + this.pxToMilliseconds(dx) <
         this.targetDuration[targetId] / this.timeline[targetId].speed

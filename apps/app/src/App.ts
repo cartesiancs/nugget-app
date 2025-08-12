@@ -241,7 +241,7 @@ export class App extends LitElement {
               /* Right panel layout styles */
               body.right-panel-open #split_top,
               body.right-panel-open #split_bottom {
-                margin-right: 30% !important;
+                margin-right: 10% ;
                 width: 70% !important;
                 transition: margin-right 0.3s ease, width 0.3s ease !important;
               }
@@ -281,7 +281,29 @@ export class App extends LitElement {
               body.right-panel-open element-timeline-bottom {
                 width: 100% !important;
                 max-width: 100% !important;
+                pointer-events: auto !important;
+                z-index: auto !important;
               }
+
+              /* BOTH PANELS OPEN - compress timeline and center preview */
+              body.panel-open.right-panel-open #split_top,
+              body.panel-open.right-panel-open #split_bottom {
+                margin-left: calc(26% - 10px) !important;
+                margin-right: 30% !important;
+                width: calc(54% + 10px) !important;
+                transition: margin-left 0.3s ease, margin-right 0.3s ease, width 0.3s ease !important;
+              }
+
+              body.panel-open.right-panel-open .video-container {
+                transform: translateX(-59%) !important;
+                transition: transform 0.3s ease !important;
+              }
+
+              body.panel-open.right-panel-open #video {
+                max-width: 85% !important;
+              }
+
+
 
               #video {
                 aspect-ratio: 16/9 !important;
@@ -490,7 +512,7 @@ export class App extends LitElement {
               right: 0;
               height: calc(100vh - 100px);
               width: 30%;
-              z-index: 9999;
+              z-index: 10;
               pointer-events: auto;
               background: #181a1c;
               overflow: hidden;
@@ -579,6 +601,157 @@ export class App extends LitElement {
               splitBottom.style.transition = 'margin-right 0.3s ease, width 0.3s ease';
             }
           }
+
+          // Force timeline canvas to properly recalculate and redraw after layout change
+          setTimeout(() => {
+            console.log('Forcing timeline canvas recalculation and redraw after right panel layout change...');
+            
+            // Find the timeline canvas element
+            const timelineCanvas = document.querySelector('element-timeline-canvas') as any;
+            if (timelineCanvas) {
+              // Force canvas to recalculate its dimensions
+              if (timelineCanvas.canvas) {
+                const canvas = timelineCanvas.canvas;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * window.devicePixelRatio;
+                canvas.height = rect.height * window.devicePixelRatio;
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
+                
+                console.log('Canvas dimensions recalculated:', rect.width, 'x', rect.height);
+              }
+
+              // Force timeline scroll state to refresh - this is crucial for coordinate calculations
+              if (timelineCanvas.timelineState && timelineCanvas.timelineState.scroll !== undefined) {
+                const currentScroll = timelineCanvas.timelineScroll || 0;
+                console.log('Current timeline scroll:', currentScroll);
+                
+                // Force the timeline scroll property to update
+                timelineCanvas.timelineScroll = currentScroll;
+                
+                // Update the scroll in the store to trigger all subscriptions
+                if (timelineCanvas.timelineState.setScroll) {
+                  timelineCanvas.timelineState.setScroll(currentScroll);
+                }
+              }
+              
+              // Force redraw
+              if (timelineCanvas.drawCanvas) {
+                timelineCanvas.drawCanvas();
+              }
+              
+              // Trigger requestUpdate to force LitElement to re-render
+              if (timelineCanvas.requestUpdate) {
+                timelineCanvas.requestUpdate();
+              }
+            }
+
+            // Force window resize event to trigger other elements
+            window.dispatchEvent(new Event('resize'));
+            
+            // Double redraw with requestAnimationFrame to ensure it's processed
+            requestAnimationFrame(() => {
+              if (timelineCanvas && timelineCanvas.drawCanvas) {
+                console.log('Second canvas redraw via requestAnimationFrame');
+                timelineCanvas.drawCanvas();
+              }
+            });
+
+            // Enhanced debug and fix for timeline clicks
+            if (timelineCanvas && !timelineCanvas._debugClickAdded) {
+              timelineCanvas._debugClickAdded = true;
+              
+              // COMPLETELY OVERRIDE the _handleMouseDown to prevent issues
+              const originalHandleMouseDown = timelineCanvas._handleMouseDown?.bind(timelineCanvas);
+              
+              if (originalHandleMouseDown) {
+                timelineCanvas._handleMouseDown = function(e) {
+                  console.log('INTERCEPTED _handleMouseDown');
+                  
+                  // Prevent document click from interfering
+                  e.stopPropagation();
+                  
+                  const x = e.offsetX;
+                  const y = e.offsetY;
+                  const target = this.findTarget({ x: x, y: y });
+                  
+                  console.log('Intercepted findTarget result:', target);
+                  console.log('Timeline data available:', Object.keys(this.timeline || {}));
+                  
+                  // If we found a valid target, set it properly
+                  if (target.targetId && target.targetId !== "") {
+                    console.log('Setting targetId to:', target.targetId);
+                    this.targetId = [target.targetId];
+                    this.cursorType = target.cursorType;
+                    
+                    // Call the original method but skip the problematic clearing logic
+                    try {
+                      // Set up the necessary state for the original method
+                      this.timelineState.setCursorType("pointer");
+                      this.firstClickPosition.x = e.offsetX;
+                      this.firstClickPosition.y = e.offsetY;
+                      
+                      // Initialize target properties
+                      for (let index = 0; index < this.targetId.length; index++) {
+                        const elementId = this.targetId[index];
+                        this.targetStartTime[elementId] = this.timeline[elementId].startTime;
+                        this.targetDuration[elementId] = this.timeline[elementId].duration;
+                        this.targetTrack[elementId] = this.timeline[elementId].track ?? 0;
+                        
+                        // Get element type (hardcoded check to avoid import issues)
+                        let elementType = this.timeline[elementId].filetype === 'video' || this.timeline[elementId].filetype === 'audio' ? 'dynamic' : 'static';
+                        if (elementType == "dynamic") {
+                          this.targetTrim[elementId] = {
+                            startTime: this.timeline[elementId].trim.startTime,
+                            endTime: this.timeline[elementId].trim.endTime,
+                          };
+                        }
+                      }
+                      
+                      // Force redraw to show selection
+                      this.drawCanvas();
+                      console.log('Successfully handled timeline click for:', target.targetId);
+                      
+                    } catch (error) {
+                      console.error('Error in timeline click handler:', error);
+                    }
+                  } else {
+                    console.log('No valid target found, clearing selection');
+                    this.targetId = [];
+                    this.drawCanvas();
+                  }
+                }.bind(timelineCanvas);
+              }
+            }
+
+            // CRITICAL FIX: Temporarily patch the problematic _handleDocumentClick function
+            if (timelineCanvas && timelineCanvas._handleDocumentClick) {
+              const originalDocumentClick = timelineCanvas._handleDocumentClick;
+              
+              // Replace with a safer version that doesn't clear targetId on canvas clicks
+              timelineCanvas._handleDocumentClick = function(e) {
+                // Only clear targetId if clicking OUTSIDE the timeline canvas or if target is empty
+                if (e.target.id !== "elementTimelineCanvasRef" && 
+                    !e.target.closest('element-timeline-canvas') &&
+                    !e.target.closest('#elementTimelineCanvasRef')) {
+                  this.targetId = [];
+                  this.drawCanvas();
+                }
+              }.bind(timelineCanvas);
+            }
+
+            // Extreme fix: try to force a complete re-initialization of canvas event handling
+            setTimeout(() => {
+              if (timelineCanvas) {
+                console.log('Forcing complete timeline canvas refresh...');
+                
+                // Force one more redraw
+                if (timelineCanvas.drawCanvas) {
+                  timelineCanvas.drawCanvas();
+                }
+              }
+            }, 800);
+          }, 400);
         };
 
         const adjustOffsets = () => {

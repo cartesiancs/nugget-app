@@ -4,55 +4,56 @@ import { getAuthHeaders } from "./api";
 // Available models for generation
 export const AVAILABLE_MODELS = {
   IMAGE: {
-    'recraft-v3': {
-      name: 'Recraft AI v3',
-      description: 'Realistic photographic image generation',
-      provider: 'Recraft AI',
-      imageSize: '1024x1024'
+    "recraft-v3": {
+      name: "Recraft AI v3",
+      description: "Realistic photographic image generation",
+      provider: "Recraft AI",
+      imageSize: "1024x1024",
     },
-    'imagen': {
-      name: 'Google Imagen',
-      description: 'High-quality image generation',
-      provider: 'Google Gemini',
-      imageSize: 'Variable'
-    }
+    imagen: {
+      name: "Google Imagen",
+      description: "High-quality image generation",
+      provider: "Google Gemini",
+      imageSize: "Variable",
+    },
   },
   VIDEO: {
-    'kling-v2.1-master': {
-      name: 'Kling v2.1 Master',
-      description: 'Image-to-video generation',
-      provider: 'Fal.ai',
-      duration: '5 seconds',
-      resolution: 'Variable'
+    "kling-v2.1-master": {
+      name: "Kling v2.1 Master",
+      description: "Image-to-video generation",
+      provider: "Fal.ai",
+      duration: "5 seconds",
+      resolution: "Variable",
     },
-    'gen4_turbo': {
-      name: 'RunwayML Gen4 Turbo',
-      description: 'Advanced video generation',
-      provider: 'RunwayML',
-      duration: '5 seconds',
-      resolution: '1280:720'
-    }
-  }
+    gen4_turbo: {
+      name: "RunwayML Gen4 Turbo",
+      description: "Advanced video generation",
+      provider: "RunwayML",
+      duration: "5 seconds",
+      resolution: "1280:720",
+    },
+  },
 };
 
 // Unified chat API wrapper
 export const chatApi = {
   // Generate image using the new unified chat endpoint
-  generateImage: async ({ 
-    visual_prompt, 
-    art_style, 
-    uuid, 
-    project_id, 
-    model = 'recraft-v3' 
+  generateImage: async ({
+    visual_prompt,
+    art_style,
+    project_id,
+    segmentId,
+    model = "recraft-v3",
   }) => {
     try {
       const payload = {
         model,
-        gen_type: 'image',
-        uuid,
+        gen_type: "image",
         visual_prompt,
-        art_style: art_style && art_style.trim() ? art_style.trim() : "realistic",
-        projectId: project_id
+        art_style:
+          art_style && art_style.trim() ? art_style.trim() : "realistic",
+        projectId: project_id,
+        segmentId,
       };
 
       const headers = await getAuthHeaders();
@@ -68,23 +69,24 @@ export const chatApi = {
   },
 
   // Generate video using the new unified chat endpoint
-  generateVideo: async ({ 
-    animation_prompt, 
-    art_style, 
-    image_s3_key, 
-    uuid, 
-    project_id, 
-    model = 'kling-v2.1-master' 
+  generateVideo: async ({
+    animation_prompt,
+    art_style,
+    image_s3_key,
+    project_id,
+    segmentId,
+    model = "kling-v2.1-master",
   }) => {
     try {
       const payload = {
         model,
-        gen_type: 'video',
-        uuid,
+        gen_type: "video",
+        segmentId,
         animation_prompt,
         image_s3_key,
-        art_style: art_style && art_style.trim() ? art_style.trim() : "realistic",
-        projectId: project_id
+        art_style:
+          art_style && art_style.trim() ? art_style.trim() : "realistic",
+        projectId: project_id,
       };
 
       const headers = await getAuthHeaders();
@@ -108,8 +110,8 @@ export const chatApi = {
   getDefaultModel: (genType) => {
     const models = AVAILABLE_MODELS[genType.toUpperCase()];
     if (!models) return null;
-    
+
     // Return the first model as default
     return Object.keys(models)[0];
-  }
-}; 
+  },
+};

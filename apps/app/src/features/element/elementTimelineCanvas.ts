@@ -161,7 +161,23 @@ export class elementTimelineCanvas extends LitElement {
   }
 
   _handleDocumentClick(e) {
-    if (e.target.id != "elementTimelineCanvasRef") {
+    // Temporarily disabled to test if this is causing the issue
+    // TODO: Re-enable with proper logic later
+    return;
+    
+    // Only clear selection if clicking outside the timeline canvas area
+    const canvas = document.getElementById("elementTimelineCanvasRef");
+    if (!canvas) return;
+    
+    // Check if click is on the canvas itself
+    if (e.target === canvas) return;
+    
+    // Check if click is within timeline container
+    const timelineContainer = e.target.closest('element-timeline') || 
+                             e.target.closest('element-timeline-canvas');
+    
+    if (!timelineContainer) {
+      console.log('Clearing selection - clicked outside timeline');
       this.targetId = [];
       this.drawCanvas();
     }
@@ -959,9 +975,18 @@ export class elementTimelineCanvas extends LitElement {
 
     for (const elementId in sortedTimeline) {
       if (Object.prototype.hasOwnProperty.call(sortedTimeline, elementId)) {
-        const defaultWidth = this.millisecondsToPx(
-          this.timeline[elementId].duration,
-        );
+        // Calculate width based on element type
+        let defaultWidth;
+        const elementType = elementUtils.getElementType(this.timeline[elementId].filetype);
+        if (elementType === "dynamic") {
+          // For dynamic elements (videos), use trimmed duration
+          defaultWidth = this.millisecondsToPx(
+            this.timeline[elementId].trim.endTime - this.timeline[elementId].trim.startTime
+          );
+        } else {
+          // For static elements, use full duration
+          defaultWidth = this.millisecondsToPx(this.timeline[elementId].duration);
+        }
 
         let additionalLeft = 0;
 
@@ -977,10 +1002,19 @@ export class elementTimelineCanvas extends LitElement {
         // All clips share the same vertical track, so Y is constant.
         const track = (this.timeline[elementId].track ?? 0);
         const startY = track * defaultHeight * 1.2 - this.canvasVerticalScroll;
-        const startX =
-          this.millisecondsToPx(this.timeline[elementId].startTime) -
-          this.timelineScroll +
-          additionalLeft;
+        
+        // Calculate startX based on element type
+        let startX;
+        if (elementType === "dynamic") {
+          // For dynamic elements (videos), start position includes trim offset
+          startX = this.millisecondsToPx(
+            this.timeline[elementId].startTime + this.timeline[elementId].trim.startTime
+          ) - this.timelineScroll + additionalLeft;
+        } else {
+          // For static elements, use start time directly
+          startX = this.millisecondsToPx(this.timeline[elementId].startTime) -
+            this.timelineScroll + additionalLeft;
+        }
 
         const endX = startX + defaultWidth;
         const endY = startY + defaultHeight;
@@ -1006,20 +1040,23 @@ export class elementTimelineCanvas extends LitElement {
               return { targetId: targetId, cursorType: "move" };
             }
           } else if (elementType == "dynamic") {
-            const trimStartTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.startTime,
+            // For dynamic elements (videos), calculate positions exactly as they are rendered
+            const trimmedWidth = this.millisecondsToPx(
+              this.timeline[elementId].trim.endTime - this.timeline[elementId].trim.startTime
             );
-            const trimEndTime = this.millisecondsToPx(
-              this.timeline[elementId].trim.endTime,
-            );
+            const adjustedStartX = this.millisecondsToPx(
+              this.timeline[elementId].startTime + this.timeline[elementId].trim.startTime
+            ) - this.timelineScroll;
+            const adjustedEndX = adjustedStartX + trimmedWidth;
+            
             if (
-              x > startX + trimStartTime - stretchArea &&
-              x < startX + trimStartTime + stretchArea
+              x > adjustedStartX - stretchArea &&
+              x < adjustedStartX + stretchArea
             ) {
               return { targetId: targetId, cursorType: "stretchStart" };
             } else if (
-              x > trimEndTime + startX - stretchArea &&
-              x < trimEndTime + startX + stretchArea
+              x > adjustedEndX - stretchArea &&
+              x < adjustedEndX + stretchArea
             ) {
               return { targetId: targetId, cursorType: "stretchEnd" };
             } else {
@@ -1305,6 +1342,7 @@ export class elementTimelineCanvas extends LitElement {
       const y = e.offsetY;
 
       const target = this.findTarget({ x: x, y: y });
+      console.log('Mouse down - target found:', target);
 
       if (e.shiftKey && target.targetId != "") {
         this.targetId.push(target.targetId);

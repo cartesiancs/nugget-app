@@ -398,7 +398,11 @@ element-timeline-scroll {
 .preview {
   background-color: #000000 !important;
   display: block;
-  margin-right: 30px;
+  margin: 0 auto;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16/9 !important;
+  border-radius: 20px;
 }
 
 .control {
@@ -420,7 +424,16 @@ element-timeline-scroll {
 .video {
   position: relative;
   display: flex;
-  overflow: clip;
+  overflow: hidden;
+  aspect-ratio: 16/9 !important;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  /* Ensure perfect 16:9 aspect ratio */
+  container-type: inline-size;
+  /* Center content within video container */
+  justify-content: center;
+  align-items: center;
 }
 
 .line {

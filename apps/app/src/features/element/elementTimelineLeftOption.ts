@@ -80,18 +80,18 @@ export class ElementTimelineLeftOption extends LitElement {
     const width = this.resize.timelineVertical.leftOption;
     const height = rows * ROW_SPACING;
     this.canvas.style.width = `${width}px`;
-    this.canvas.style.height = `${height + 12}px`; // Increase height by 20px
-    this.canvas.style.marginTop = '20px'; // Increased top margin from 10px to 20px
+    this.canvas.style.height = `${height + 12}px`;
+    this.canvas.style.marginTop = '62px'; // Align with ruler position
     this.canvas.width = width * dpr;
-    this.canvas.height = (height + 20) * dpr; // Increase canvas height to match style
+    this.canvas.height = (height + 20) * dpr;
     ctx.scale(dpr, dpr);
 
     ctx.clearRect(0, 0, width, height);
 
     // Only draw icon once, aligned to first row.
     if (this.iconLoaded && this.iconImg) {
-      const ICON_SIZE = 50; // Increased from 40 to 50
-      const MARGIN_TOP = 15; // Increased top margin
+      const ICON_SIZE = 40;
+      const MARGIN_TOP = 2; // Minimal top margin to align with closer first timeline row
       const ix = (width - ICON_SIZE) / 2;
       const iy = MARGIN_TOP + (ROW_H - ICON_SIZE) / 2; // Center in first row with top margin
       ctx.drawImage(this.iconImg, ix, iy, ICON_SIZE, ICON_SIZE);

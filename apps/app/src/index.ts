@@ -49,6 +49,7 @@ import "./sass/style.scss";
 
 import "./ui/timeline/Timeline";
 import "./ui/control/Control";
+import "./ui/control/ControlPanel";
 import "./ui/modal/Modal";
 import "./ui/offcanvas/TimelineOptions";
 import "./ui/toast/Toast";

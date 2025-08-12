@@ -15,10 +15,16 @@ export interface IUIStore {
       leftOption: number;
     };
   };
+  rightPanel: {
+    isOpen: boolean;
+    width: number;
+  };
   topBarTitle: string;
   updateTimelineVertical: (px: number) => void;
   updateVertical: (criteria: number) => void;
   updateHorizontal: (criteria: number, panel: "panel" | "preview") => void;
+  setRightPanelOpen: (isOpen: boolean) => void;
+  setRightPanelWidth: (width: number) => void;
   setTopBarTitle: (topBarTitle: string) => void;
 }
 
@@ -37,11 +43,31 @@ export const uiStore = createStore<IUIStore>((set) => ({
       leftOption: 170,
     },
   },
-      topBarTitle: "Usuals.ai",
+  rightPanel: {
+    isOpen: false,
+    width: 26,
+  },
+  topBarTitle: "Usuals.ai",
 
   setTopBarTitle: (topBarTitle) =>
     set((state) => ({
       topBarTitle: topBarTitle,
+    })),
+
+  setRightPanelOpen: (isOpen) =>
+    set((state) => ({
+      rightPanel: {
+        ...state.rightPanel,
+        isOpen: isOpen,
+      },
+    })),
+
+  setRightPanelWidth: (width) =>
+    set((state) => ({
+      rightPanel: {
+        ...state.rightPanel,
+        width: width,
+      },
     })),
 
   updateTimelineVertical: (px) =>

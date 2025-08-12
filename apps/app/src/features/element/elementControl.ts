@@ -451,6 +451,7 @@ export class ElementControl extends LitElement {
           filetype: "video",
           codec: { video: "default", audio: "default" },
           speed: 1,
+          track: 0, // Initialize track property for row placement
           filter: {
             enable: false,
             list: [],
@@ -553,6 +554,7 @@ export class ElementControl extends LitElement {
           filetype: "video",
           codec: { video: "default", audio: "default" },
           speed: 1,
+          track: 0, // Initialize track property for row placement
           filter: {
             enable: false,
             list: [],
@@ -783,6 +785,7 @@ export class ElementControl extends LitElement {
         localpath: path,
         filetype: "audio",
         speed: 1,
+        track: 0, // Initialize track property for row placement
         timelineOptions: {
           color: "rgb(133, 179, 59)",
         },
@@ -810,6 +813,7 @@ export class ElementControl extends LitElement {
       localpath: path,
       filetype: "audio",
       speed: 1,
+      track: 0, // Initialize track property for row placement
       timelineOptions: {
         color: "rgb(133, 179, 59)",
       },

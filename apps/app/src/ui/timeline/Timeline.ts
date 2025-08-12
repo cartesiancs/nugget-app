@@ -280,10 +280,10 @@ export class Timeline extends LitElement {
               </div>
             </div>
           </div>
-          <div class="d-flex col col-5 justify-content-center">
+          <div class="d-flex col col-5 justify-content-center ">
             <div
               class="d-flex justify-content-center align-items-center gap-3"
-              style="margin-bottom: 0.3rem; background: rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 0.30rem 1rem; align-self: center;"
+              style="margin-bottom: 0.3rem; background: rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 0.30rem 1rem; align-self: center; "
             >
               <button
                 class="btn btn-xs2 btn-transparent d-flex align-items-center"

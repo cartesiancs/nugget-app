@@ -3,7 +3,7 @@ import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
 import { videoApi } from "../../services/video-gen";
 
-const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit }) => {
+const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, onChatClick, selected }) => {
   const isRegenerating = data.videoId && regeneratingVideos && regeneratingVideos.has(data.videoId);
   const isTemporary = !data.videoId; // Temporary videos don't have videoId since they're not saved to DB
   const [editOpen, setEditOpen] = useState(false);
@@ -76,7 +76,9 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
 
   if (!data.videoUrl) {
     return (
-      <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative">
+      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative transition-all duration-200 ${
+        selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
+      }`}>
         <div className="flex items-center justify-center h-20 bg-gray-800 rounded mb-2">
           <div className="text-center">
             <div className="text-2xl mb-1">🎬</div>
@@ -94,9 +96,10 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
           id="input"
           style={{
             background: '#10b981',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            width: 16,
+            height: 16,
+            border: '3px solid #fff',
+            left: -8
           }}
         />
       </div>
@@ -139,7 +142,9 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
         </div>,
         document.body
       )}
-      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative ${isRegenerating ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative transition-all duration-200 ${
+        selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
+      }`}>
         {/* Loader overlay when regenerating (covers whole node) */}
         {isRegenerating && (
           <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
@@ -191,6 +196,31 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
         >
           <span role="img" aria-label="Edit">✏️</span>
         </button>
+        
+        {/* Chat button */}
+        {onChatClick && (
+          <button
+            onClick={() => onChatClick(data.id || data.videoId, "video")}
+            disabled={isRegenerating}
+            className="absolute bottom-2 right-24 bg-green-600 hover:bg-green-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            title="Open chat for this video"
+            style={{ width: 32, height: 32 }}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </button>
+        )}
         {/* Input handle */}
         <Handle
           type="target"
@@ -198,9 +228,10 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
           id="input"
           style={{
             background: '#10b981',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            width: 16,
+            height: 16,
+            border: '3px solid #fff',
+            left: -8
           }}
         />
       </div>

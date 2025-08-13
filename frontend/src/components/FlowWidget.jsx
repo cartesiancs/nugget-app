@@ -22,6 +22,14 @@ import ImageNode from "./FlowWidget/ImageNode";
 import VideoNode from "./FlowWidget/VideoNode";
 import AddImageNode from "./FlowWidget/AddImageNode";
 import AddVideoNode from "./FlowWidget/AddVideoNode";
+import NewTextNode from "./FlowWidget/TextNode";
+import NewImageNode from "./FlowWidget/NewImageNode";
+import NewVideoNode from "./FlowWidget/NewVideoNode";
+import NodeChat from "./FlowWidget/NodeChat";
+import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
+import ChatNode from "./FlowWidget/ChatNode";
+import { assets } from "../assets/assets";
+import FlowWidgetBottomToolbar from "./FlowWidget/FlowWidgetBottomToolbar";
 
 function FlowWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -38,15 +46,30 @@ function FlowWidget() {
   const [creatingImages, setCreatingImages] = useState(new Set());
   const [creatingVideos, setCreatingVideos] = useState(new Set());
   const [temporaryVideos, setTemporaryVideos] = useState(new Map()); // Store temporary videos: key = `${segmentId}-${imageId}`, value = videoUrl
+  const [addModalOpen, setAddModalOpen] = useState(false);
   // Model selection states
-  const [selectedImageModel, setSelectedImageModel] = useState(chatApi.getDefaultModel('IMAGE'));
-  const [selectedVideoModel, setSelectedVideoModel] = useState(chatApi.getDefaultModel('VIDEO'));
+  const [selectedImageModel, setSelectedImageModel] = useState(
+    chatApi.getDefaultModel("IMAGE"),
+  );
+  const [selectedVideoModel, setSelectedVideoModel] = useState(
+    chatApi.getDefaultModel("VIDEO"),
+  );
+  
+  // Node chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatNodeId, setChatNodeId] = useState(null);
+  const [chatNodeType, setChatNodeType] = useState(null);
+
+  // Selected node state for sidebar
+  const [selectedNode, setSelectedNode] = useState(null);
+
+
 
   // New state for all fetched data
   const [allProjectData, setAllProjectData] = useState({
     segments: [],
     images: [],
-    videos: []
+    videos: [],
   });
 
   // Helper function to refresh project data
@@ -59,7 +82,9 @@ function FlowWidget() {
     // Get project ID from localStorage
     let projectId;
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const project = JSON.parse(storedProject);
         projectId = project.id;
@@ -74,19 +99,18 @@ function FlowWidget() {
       return;
     }
 
-    console.log("Fetching project segmentations and related images/videos for project ID:", projectId);
+    console.log(
+      "Fetching project segmentations and related images/videos for project ID:",
+      projectId,
+    );
     try {
       setLoading(true);
-      
+
       // Fetch project segmentations, images, and videos in parallel
-      const [
-        segmentationsData,
-        imagesData,
-        videosData
-      ] = await Promise.all([
+      const [segmentationsData, imagesData, videosData] = await Promise.all([
         projectApi.getProjectSegmentations(projectId),
         projectApi.getProjectImages(projectId),
-        projectApi.getProjectVideos(projectId)
+        projectApi.getProjectVideos(projectId),
       ]);
 
       console.log("Project data fetched successfully:");
@@ -96,9 +120,17 @@ function FlowWidget() {
 
       // Extract segments from the first segmentation
       let segments = [];
-      if (segmentationsData && segmentationsData.success && segmentationsData.data && segmentationsData.data.length > 0) {
+      if (
+        segmentationsData &&
+        segmentationsData.success &&
+        segmentationsData.data &&
+        segmentationsData.data.length > 0
+      ) {
         const firstSegmentation = segmentationsData.data[0];
-        if (firstSegmentation.segments && Array.isArray(firstSegmentation.segments)) {
+        if (
+          firstSegmentation.segments &&
+          Array.isArray(firstSegmentation.segments)
+        ) {
           segments = firstSegmentation.segments;
         }
       }
@@ -106,12 +138,11 @@ function FlowWidget() {
       setAllProjectData({
         segments: segments,
         images: imagesData?.data || [],
-        videos: videosData?.data || []
+        videos: videosData?.data || [],
       });
 
       // Keep the old projectData for backward compatibility
       setProjectData({ success: true, project: { segments: segments } });
-      
     } catch (error) {
       console.error("Failed to fetch project data:", error);
       setError("Failed to fetch project data");
@@ -145,14 +176,14 @@ function FlowWidget() {
   // Load data from API (no localStorage fallback)
   const flowData = useMemo(() => {
     console.log("🔄 flowData useMemo called, allProjectData:", allProjectData);
-    
+
     // 1. Get segments from segmentation API response
-    const segments = allProjectData.segments.map(seg => ({
+    const segments = allProjectData.segments.map((seg) => ({
       ...seg,
       id: seg.segmentId || seg.id, // Use segmentId for mapping
-      visual: seg.visual || '',
-      narration: seg.narration || '',
-      animation: seg.animation || ''
+      visual: seg.visual || "",
+      narration: seg.narration || "",
+      animation: seg.animation || "",
     }));
     console.log("📋 Processed segments:", segments);
 
@@ -160,18 +191,18 @@ function FlowWidget() {
     const images = {};
     const imageDetails = {};
     const allImagesBySegment = {};
-    
+
     if (Array.isArray(allProjectData.images)) {
-      allProjectData.images.forEach(img => {
+      allProjectData.images.forEach((img) => {
         if (img && img.success && img.s3Key && img.uuid) {
           // Extract segmentId from uuid (handles both 'seg-2' and 'seg-2-1234567890' formats)
-          const segmentId = img.uuid.replace(/^seg-(\d+)(?:-\d+)?$/, '$1');
-          
+          const segmentId = img.uuid.replace(/^seg-(\d+)(?:-\d+)?$/, "$1");
+
           // Initialize arrays if they don't exist
           if (!allImagesBySegment[segmentId]) {
             allImagesBySegment[segmentId] = [];
           }
-          
+
           // Add this image to the segment's image list
           allImagesBySegment[segmentId].push({
             id: img.id,
@@ -180,13 +211,13 @@ function FlowWidget() {
             artStyle: img.artStyle,
             s3Key: img.s3Key,
             uuid: img.uuid,
-            isPrimary: !img.uuid.includes('-') // Consider images without timestamp as primary
+            isPrimary: !img.uuid.includes("-"), // Consider images without timestamp as primary
           });
         }
       });
-      
+
       // For backward compatibility, keep the first image as the main one
-      Object.keys(allImagesBySegment).forEach(segmentId => {
+      Object.keys(allImagesBySegment).forEach((segmentId) => {
         const segmentImages = allImagesBySegment[segmentId];
         if (segmentImages.length > 0) {
           // Sort by primary first, then by creation time (uuid timestamp)
@@ -195,7 +226,7 @@ function FlowWidget() {
             if (!a.isPrimary && b.isPrimary) return 1;
             return 0;
           });
-          
+
           const primaryImage = segmentImages[0];
           images[segmentId] = primaryImage.url;
           imageDetails[segmentId] = {
@@ -203,7 +234,7 @@ function FlowWidget() {
             visualPrompt: primaryImage.visualPrompt,
             artStyle: primaryImage.artStyle,
             s3Key: primaryImage.s3Key,
-            allImages: segmentImages // Store all images for the segment
+            allImages: segmentImages, // Store all images for the segment
           };
         }
       });
@@ -211,13 +242,19 @@ function FlowWidget() {
     const videos = {};
     const videoDetails = {};
     if (Array.isArray(allProjectData.videos)) {
-      allProjectData.videos.forEach(video => {
+      allProjectData.videos.forEach((video) => {
         if (
-          video && video.success && video.uuid &&
-          Array.isArray(video.videoFiles) && video.videoFiles.length > 0 && video.videoFiles[0].s3Key
+          video &&
+          video.success &&
+          video.uuid &&
+          Array.isArray(video.videoFiles) &&
+          video.videoFiles.length > 0 &&
+          video.videoFiles[0].s3Key
         ) {
-          const segmentId = video.uuid.replace(/^seg-/, '');
-          videos[segmentId] = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
+          const segmentId = video.uuid.replace(/^seg-/, "");
+          videos[
+            segmentId
+          ] = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
           videoDetails[segmentId] = {
             id: video.id,
             artStyle: video.artStyle,
@@ -229,220 +266,27 @@ function FlowWidget() {
     console.log("🖼️ Images map:", images);
     console.log("📝 Image details:", imageDetails);
     console.log("🎬 Videos map:", videos);
-    
+
     // Add temporary videos to the videos map
     temporaryVideos.forEach((videoUrl, key) => {
       videos[key] = videoUrl;
     });
-    
+
     console.log("🎬 Videos map (including temporary):", videos);
     return { segments, images, videos, imageDetails, videoDetails };
   }, [allProjectData, temporaryVideos]);
 
   // Handle image regeneration
-  const handleRegenerateImage = useCallback(async (imageId, segmentData) => {
-    if (!isAuthenticated || regeneratingImages.has(imageId)) return;
-
-    // Get project ID from localStorage
-    let projectId;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
-        projectId = project.id;
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
-
-    if (!projectId) {
-      setError("No project selected. Please select a project first.");
-      return;
-    }
-
-    console.log("🔄 Regenerating image:", imageId, segmentData);
-    setRegeneratingImages(prev => new Set(prev).add(imageId));
-    try {
-      let genResponse;
-      
-      // Check if we already have a new s3_key from the ImageNode edit
-      if (segmentData.s3Key) {
-        console.log("✅ Using existing s3_key from ImageNode edit:", segmentData.s3Key);
-        genResponse = { s3_key: segmentData.s3Key };
-      } else {
-        // Generate new image
-        genResponse = await chatApi.generateImage({
-          visual_prompt: segmentData.visual,
-          art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
-          uuid: `seg-${segmentData.id}`,
-          project_id: projectId,
-          model: selectedImageModel,
-        });
-        console.log("✅ Image generation successful:", genResponse);
-      }
-      
-      // Update the image metadata if we have a new s3_key
-      if (genResponse && genResponse.s3_key) {
-        // Note: The new unified API doesn't have a separate regenerateImage endpoint
-        // The image is regenerated directly through the generateImage call
-        console.log("✅ Image regeneration completed with s3_key:", genResponse.s3_key);
-      }
-      
-      // Refresh project data to get the updated image
-      await refreshProjectData();
-      setFlowMessages(prev => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Image for scene ${segmentData.id} regenerated successfully!`,
-        },
-      ]);
-    } catch (error) {
-      console.error("❌ Image regeneration (overwrite+patch) failed:", error);
-      setError(`Failed to regenerate image: ${error.message}`);
-    } finally {
-      setRegeneratingImages(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(imageId);
-        return newSet;
-      });
-    }
-  }, [isAuthenticated, regeneratingImages, refreshProjectData]);
-
-  // Handle video regeneration
-  const handleRegenerateVideo = useCallback(async (videoId, segmentData) => {
-    if (!isAuthenticated || regeneratingVideos.has(videoId)) return;
-
-    // Get project ID from localStorage
-    let projectId;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
-        projectId = project.id;
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
-
-    if (!projectId) {
-      setError("No project selected. Please select a project first.");
-      return;
-    }
-
-    setRegeneratingVideos(prev => new Set(prev).add(videoId));
-    try {
-      // Always use the s3_key of the connected image for imageS3Key
-      const imageS3Key = flowData.imageDetails?.[segmentData.id]?.s3Key || segmentData.imageS3Key;
-      
-      const genResponse = await chatApi.generateVideo({
-        animation_prompt: segmentData.animation,
-        art_style: segmentData.artStyle,
-        image_s3_key: imageS3Key,
-        uuid: `seg-${segmentData.id}`,
-        project_id: projectId,
-        model: selectedVideoModel,
-      });
-      if (genResponse && genResponse.s3_key) {
-        console.log("🔄 Video re-generation response:", genResponse.s3_key);
-        // Note: The new unified API doesn't have a separate regenerateVideo endpoint
-        // The video is regenerated directly through the generateVideo call
-      }
-      // 3. Refresh project data to get the updated video
-      await refreshProjectData();
-      setFlowMessages(prev => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Video for scene ${segmentData.id} regenerated, overwritten, and metadata updated successfully!`,
-        },
-      ]);
-    } catch (error) {
-      setError(`Failed to regenerate video: ${error.message}`);
-    } finally {
-      setRegeneratingVideos(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(videoId);
-        return newSet;
-      });
-    }
-  }, [isAuthenticated, regeneratingVideos, flowData.imageDetails, refreshProjectData]);
-
-  // Handle creating new image for a segment
-  const handleCreateNewImage = useCallback(async (segmentId, segmentData) => {
-    if (!isAuthenticated) return;
-
-    // Get project ID from localStorage
-    let projectId;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
-        projectId = project.id;
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
-
-    if (!projectId) {
-      setError("No project selected. Please select a project first.");
-      return;
-    }
-
-    console.log("🆕 Creating new image for segment:", segmentId, segmentData);
-    setCreatingImages(prev => new Set(prev).add(segmentId));
-    try {
-      // Generate new image with unique timestamp to avoid overwriting
-      const timestamp = Date.now();
-      const uniqueUuid = `seg-${segmentId}-${timestamp}`;
-      
-      const genResponse = await chatApi.generateImage({
-        visual_prompt: segmentData.visual,
-        art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
-        uuid: uniqueUuid,
-        project_id: projectId,
-        model: selectedImageModel,
-      });
-      console.log("✅ New image generation successful:", genResponse);
-      
-      // Refresh project data to get the new image
-      await refreshProjectData();
-      setFlowMessages(prev => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `New image for scene ${segmentId} created successfully!`,
-        },
-      ]);
-    } catch (error) {
-      console.error("❌ New image creation failed:", error);
-      setError(`Failed to create new image: ${error.message}`);
-    } finally {
-      setCreatingImages(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(segmentId);
-        return newSet;
-      });
-    }
-  }, [isAuthenticated, refreshProjectData]);
-
-  // Handle making an image primary
-  const handleMakePrimary = useCallback(async (imageId, segmentId, allImages) => {
-    if (!isAuthenticated) return;
-
-    console.log("⭐ Making image primary:", imageId, "for segment:", segmentId);
-    try {
-      // Find the image to make primary
-      const targetImage = allImages.find(img => img.id === imageId);
-      if (!targetImage) {
-        console.error("Image not found:", imageId);
-        return;
-      }
+  const handleRegenerateImage = useCallback(
+    async (imageId, segmentData) => {
+      if (!isAuthenticated || regeneratingImages.has(imageId)) return;
 
       // Get project ID from localStorage
       let projectId;
       try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
+        const storedProject = localStorage.getItem(
+          "project-store-selectedProject",
+        );
         if (storedProject) {
           const project = JSON.parse(storedProject);
           projectId = project.id;
@@ -456,124 +300,387 @@ function FlowWidget() {
         return;
       }
 
-      // Update the image metadata to make it primary by changing the UUID to the original segment format
-      await imageApi.regenerateImage({
-        id: imageId,
-        visual_prompt: targetImage.visualPrompt,
-        art_style: targetImage.artStyle || 'cinematic photography with soft lighting',
-        s3_key: targetImage.s3Key, // Use the existing image's s3_key
-        uuid: `seg-${segmentId}`, // Change UUID to original format to make it primary
-      });
+      console.log("🔄 Regenerating image:", imageId, segmentData);
+      setRegeneratingImages((prev) => new Set(prev).add(imageId));
+      try {
+        let genResponse;
 
-      // Refresh project data to get the updated image
-      await refreshProjectData();
-      setFlowMessages(prev => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Image for scene ${segmentId} is now primary!`,
-        },
-      ]);
-    } catch (error) {
-      console.error("❌ Failed to make image primary:", error);
-      setError(`Failed to make image primary: ${error.message}`);
-    }
-  }, [isAuthenticated, refreshProjectData]);
+        // Check if we already have a new s3_key from the ImageNode edit
+        if (segmentData.s3Key) {
+          console.log(
+            "✅ Using existing s3_key from ImageNode edit:",
+            segmentData.s3Key,
+          );
+          genResponse = { s3_key: segmentData.s3Key };
+        } else {
+          // Generate new image
+          genResponse = await chatApi.generateImage({
+            visual_prompt: segmentData.visual,
+            art_style:
+              segmentData.artStyle ||
+              "cinematic photography with soft lighting",
+            uuid: `seg-${segmentData.id}`,
+            project_id: projectId,
+            model: selectedImageModel,
+          });
+          console.log("✅ Image generation successful:", genResponse);
+        }
 
-  // Handle creating new video for a specific image
-  const handleCreateNewVideo = useCallback(async (segmentId, imageId, segmentData) => {
-    if (!isAuthenticated || creatingVideos.has(imageId)) return;
+        // Update the image metadata if we have a new s3_key
+        if (genResponse && genResponse.s3_key) {
+          // Note: The new unified API doesn't have a separate regenerateImage endpoint
+          // The image is regenerated directly through the generateImage call
+          console.log(
+            "✅ Image regeneration completed with s3_key:",
+            genResponse.s3_key,
+          );
+        }
 
-    // Get project ID from localStorage
-    let projectId;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
-        projectId = project.id;
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
-
-    if (!projectId) {
-      setError("No project selected. Please select a project first.");
-      return;
-    }
-
-    console.log("🎬 Creating new video for image:", imageId, "segment:", segmentId);
-    setCreatingVideos(prev => new Set(prev).add(imageId));
-    try {
-      // Find the image details to get the s3_key
-      const imageDetail = flowData.imageDetails[segmentId];
-      const targetImage = imageDetail?.allImages?.find(img => img.id === imageId);
-      
-      if (!targetImage) {
-        throw new Error("Image not found");
-      }
-
-      // Generate new video with unique timestamp
-      const timestamp = Date.now();
-      const uniqueUuid = `seg-${segmentId}-${timestamp}`;
-      
-      const genResponse = await chatApi.generateVideo({
-        animation_prompt: segmentData.animation,
-        art_style: segmentData.artStyle || 'cinematic photography with soft lighting',
-        image_s3_key: targetImage.s3Key,
-        uuid: uniqueUuid,
-        project_id: projectId,
-        model: selectedVideoModel,
-      });
-      
-      console.log("✅ New video generation successful:", genResponse);
-      
-      // Store the generated video URL in temporary videos state
-      if (genResponse && genResponse.s3_key) {
-        const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${genResponse.s3_key}`;
-        const videoKey = `${segmentId}-${imageId}`;
-        setTemporaryVideos(prev => new Map(prev).set(videoKey, videoUrl));
-        
-        setFlowMessages(prev => [
+        // Refresh project data to get the updated image
+        await refreshProjectData();
+        setFlowMessages((prev) => [
           ...prev,
           {
             type: "assistant",
-            content: `New video for scene ${segmentId} generated successfully! (Preview mode - not saved to database)`,
+            content: `Image for scene ${segmentData.id} regenerated successfully!`,
           },
         ]);
+      } catch (error) {
+        console.error("❌ Image regeneration (overwrite+patch) failed:", error);
+        setError(`Failed to regenerate image: ${error.message}`);
+      } finally {
+        setRegeneratingImages((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(imageId);
+          return newSet;
+        });
       }
-    } catch (error) {
-      console.error("❌ New video creation failed:", error);
-      setError(`Failed to create new video: ${error.message}`);
-    } finally {
-      setCreatingVideos(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(imageId);
-        return newSet;
-      });
-    }
-  }, [isAuthenticated, refreshProjectData, flowData.imageDetails, creatingVideos]);
+    },
+    [isAuthenticated, regeneratingImages, refreshProjectData],
+  );
+
+  // Handle video regeneration
+  const handleRegenerateVideo = useCallback(
+    async (videoId, segmentData) => {
+      if (!isAuthenticated || regeneratingVideos.has(videoId)) return;
+
+      // Get project ID from localStorage
+      let projectId;
+      try {
+        const storedProject = localStorage.getItem(
+          "project-store-selectedProject",
+        );
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          projectId = project.id;
+        }
+      } catch (error) {
+        console.error("Error parsing project from localStorage:", error);
+      }
+
+      if (!projectId) {
+        setError("No project selected. Please select a project first.");
+        return;
+      }
+
+      setRegeneratingVideos((prev) => new Set(prev).add(videoId));
+      try {
+        // Always use the s3_key of the connected image for imageS3Key
+        const imageS3Key =
+          flowData.imageDetails?.[segmentData.id]?.s3Key ||
+          segmentData.imageS3Key;
+
+        const genResponse = await chatApi.generateVideo({
+          animation_prompt: segmentData.animation,
+          art_style: segmentData.artStyle,
+          image_s3_key: imageS3Key,
+          uuid: `seg-${segmentData.id}`,
+          project_id: projectId,
+          model: selectedVideoModel,
+        });
+        if (genResponse && genResponse.s3_key) {
+          console.log("🔄 Video re-generation response:", genResponse.s3_key);
+          // Note: The new unified API doesn't have a separate regenerateVideo endpoint
+          // The video is regenerated directly through the generateVideo call
+        }
+        // 3. Refresh project data to get the updated video
+        await refreshProjectData();
+        setFlowMessages((prev) => [
+          ...prev,
+          {
+            type: "assistant",
+            content: `Video for scene ${segmentData.id} regenerated, overwritten, and metadata updated successfully!`,
+          },
+        ]);
+      } catch (error) {
+        setError(`Failed to regenerate video: ${error.message}`);
+      } finally {
+        setRegeneratingVideos((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(videoId);
+          return newSet;
+        });
+      }
+    },
+    [
+      isAuthenticated,
+      regeneratingVideos,
+      flowData.imageDetails,
+      refreshProjectData,
+    ],
+  );
+
+  // Handle creating new image for a segment
+  const handleCreateNewImage = useCallback(
+    async (segmentId, segmentData) => {
+      if (!isAuthenticated) return;
+
+      // Get project ID from localStorage
+      let projectId;
+      try {
+        const storedProject = localStorage.getItem(
+          "project-store-selectedProject",
+        );
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          projectId = project.id;
+        }
+      } catch (error) {
+        console.error("Error parsing project from localStorage:", error);
+      }
+
+      if (!projectId) {
+        setError("No project selected. Please select a project first.");
+        return;
+      }
+
+      console.log("🆕 Creating new image for segment:", segmentId, segmentData);
+      setCreatingImages((prev) => new Set(prev).add(segmentId));
+      try {
+        // Generate new image with unique timestamp to avoid overwriting
+        const timestamp = Date.now();
+        const uniqueUuid = `seg-${segmentId}-${timestamp}`;
+
+        const genResponse = await chatApi.generateImage({
+          visual_prompt: segmentData.visual,
+          art_style:
+            segmentData.artStyle || "cinematic photography with soft lighting",
+          uuid: uniqueUuid,
+          project_id: projectId,
+          model: selectedImageModel,
+        });
+        console.log("✅ New image generation successful:", genResponse);
+
+        // Refresh project data to get the new image
+        await refreshProjectData();
+        setFlowMessages((prev) => [
+          ...prev,
+          {
+            type: "assistant",
+            content: `New image for scene ${segmentId} created successfully!`,
+          },
+        ]);
+      } catch (error) {
+        console.error("❌ New image creation failed:", error);
+        setError(`Failed to create new image: ${error.message}`);
+      } finally {
+        setCreatingImages((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(segmentId);
+          return newSet;
+        });
+      }
+    },
+    [isAuthenticated, refreshProjectData],
+  );
+
+  // Handle making an image primary
+  const handleMakePrimary = useCallback(
+    async (imageId, segmentId, allImages) => {
+      if (!isAuthenticated) return;
+
+      console.log(
+        "⭐ Making image primary:",
+        imageId,
+        "for segment:",
+        segmentId,
+      );
+      try {
+        // Find the image to make primary
+        const targetImage = allImages.find((img) => img.id === imageId);
+        if (!targetImage) {
+          console.error("Image not found:", imageId);
+          return;
+        }
+
+        // Get project ID from localStorage
+        let projectId;
+        try {
+          const storedProject = localStorage.getItem(
+            "project-store-selectedProject",
+          );
+          if (storedProject) {
+            const project = JSON.parse(storedProject);
+            projectId = project.id;
+          }
+        } catch (error) {
+          console.error("Error parsing project from localStorage:", error);
+        }
+
+        if (!projectId) {
+          setError("No project selected. Please select a project first.");
+          return;
+        }
+
+        // Update the image metadata to make it primary by changing the UUID to the original segment format
+        await imageApi.regenerateImage({
+          id: imageId,
+          visual_prompt: targetImage.visualPrompt,
+          art_style:
+            targetImage.artStyle || "cinematic photography with soft lighting",
+          s3_key: targetImage.s3Key, // Use the existing image's s3_key
+          uuid: `seg-${segmentId}`, // Change UUID to original format to make it primary
+        });
+
+        // Refresh project data to get the updated image
+        await refreshProjectData();
+        setFlowMessages((prev) => [
+          ...prev,
+          {
+            type: "assistant",
+            content: `Image for scene ${segmentId} is now primary!`,
+          },
+        ]);
+      } catch (error) {
+        console.error("❌ Failed to make image primary:", error);
+        setError(`Failed to make image primary: ${error.message}`);
+      }
+    },
+    [isAuthenticated, refreshProjectData],
+  );
+
+  // Handle creating new video for a specific image
+  const handleCreateNewVideo = useCallback(
+    async (segmentId, imageId, segmentData) => {
+      if (!isAuthenticated || creatingVideos.has(imageId)) return;
+
+      // Get project ID from localStorage
+      let projectId;
+      try {
+        const storedProject = localStorage.getItem(
+          "project-store-selectedProject",
+        );
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          projectId = project.id;
+        }
+      } catch (error) {
+        console.error("Error parsing project from localStorage:", error);
+      }
+
+      if (!projectId) {
+        setError("No project selected. Please select a project first.");
+        return;
+      }
+
+      console.log(
+        "🎬 Creating new video for image:",
+        imageId,
+        "segment:",
+        segmentId,
+      );
+      setCreatingVideos((prev) => new Set(prev).add(imageId));
+      try {
+        // Find the image details to get the s3_key
+        const imageDetail = flowData.imageDetails[segmentId];
+        const targetImage = imageDetail?.allImages?.find(
+          (img) => img.id === imageId,
+        );
+
+        if (!targetImage) {
+          throw new Error("Image not found");
+        }
+
+        // Generate new video with unique timestamp
+        const timestamp = Date.now();
+        const uniqueUuid = `seg-${segmentId}-${timestamp}`;
+
+        const genResponse = await chatApi.generateVideo({
+          animation_prompt: segmentData.animation,
+          art_style:
+            segmentData.artStyle || "cinematic photography with soft lighting",
+          image_s3_key: targetImage.s3Key,
+          uuid: uniqueUuid,
+          project_id: projectId,
+          model: selectedVideoModel,
+        });
+
+        console.log("✅ New video generation successful:", genResponse);
+
+        // Store the generated video URL in temporary videos state
+        if (genResponse && genResponse.s3_key) {
+          const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${genResponse.s3_key}`;
+          const videoKey = `${segmentId}-${imageId}`;
+          setTemporaryVideos((prev) => new Map(prev).set(videoKey, videoUrl));
+
+          setFlowMessages((prev) => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `New video for scene ${segmentId} generated successfully! (Preview mode - not saved to database)`,
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error("❌ New video creation failed:", error);
+        setError(`Failed to create new video: ${error.message}`);
+      } finally {
+        setCreatingVideos((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(imageId);
+          return newSet;
+        });
+      }
+    },
+    [
+      isAuthenticated,
+      refreshProjectData,
+      flowData.imageDetails,
+      creatingVideos,
+    ],
+  );
 
   // Create nodes and edges from flow data
   const createFlowElements = useCallback(() => {
     console.log("🎯 createFlowElements called with flowData:", flowData);
     const newNodes = [];
     const newEdges = [];
-    
+
     // Create custom node types with regeneration callback
     const nodeTypes = {
       segmentNode: SegmentNode,
-      imageNode: (props) => <ImageNode {...props} onRegenerateImage={handleRegenerateImage} regeneratingImages={regeneratingImages} />,
+      imageNode: (props) => (
+        <ImageNode
+          {...props}
+          onRegenerateImage={handleRegenerateImage}
+          regeneratingImages={regeneratingImages}
+        />
+      ),
       videoNode: VideoNode,
     };
 
     if (flowData.segments && flowData.segments.length > 0) {
-      console.log("📊 Creating nodes for", flowData.segments.length, "segments");
+      console.log(
+        "📊 Creating nodes for",
+        flowData.segments.length,
+        "segments",
+      );
       const nodeSpacing = 220; // horizontal space between columns
       const rowSpacing = 300; // vertical space between images
       const startX = 50;
       const startY = 50;
       const segmentSpacing = 600; // Space between segments
-      
+
       flowData.segments.forEach((segment, segIndex) => {
         const x = startX;
         const y = startY + segIndex * segmentSpacing; // segmentSpacing = enough vertical space for all images/videos
@@ -584,7 +691,11 @@ function FlowWidget() {
           position: { x, y },
           data: {
             ...segment,
-            status: (flowData.videos[segment.id] ? "completed" : flowData.images[segment.id] ? "generating" : "pending"),
+            status: flowData.videos[segment.id]
+              ? "completed"
+              : flowData.images[segment.id]
+              ? "generating"
+              : "pending",
           },
         });
         // Add Image node to the right of segment
@@ -598,18 +709,18 @@ function FlowWidget() {
             segmentData: {
               id: segment.id,
               visual: segment.visual,
-              artStyle: 'cinematic photography with soft lighting'
+              artStyle: "cinematic photography with soft lighting",
             },
-            hasExistingImages: !!flowData.images[segment.id]
+            hasExistingImages: !!flowData.images[segment.id],
           },
         });
         newEdges.push({
           id: `segment-${segment.id}-to-add-image-${segment.id}`,
           source: `segment-${segment.id}`,
           target: `add-image-${segment.id}`,
-          sourceHandle: 'output',
-          targetHandle: 'input',
-          style: { stroke: "#8b5cf6", strokeWidth: 3 }
+          sourceHandle: "output",
+          targetHandle: "input",
+          style: { stroke: "#8b5cf6", strokeWidth: 3 },
         });
         // If segment has images, stack them vertically to the right of add image node
         const imageDetail = flowData.imageDetails[segment.id];
@@ -631,21 +742,31 @@ function FlowWidget() {
                   id: segment.id,
                   visual: segment.visual,
                   animation: segment.animation,
-                  artStyle: image.artStyle || 'cinematic photography with soft lighting'
-                }
+                  artStyle:
+                    image.artStyle ||
+                    "cinematic photography with soft lighting",
+                },
               },
             });
             newEdges.push({
               id: `add-image-${segment.id}-to-image-${segment.id}-${image.id}`,
               source: `add-image-${segment.id}`,
               target: `image-${segment.id}-${image.id}`,
-              sourceHandle: 'output',
-              targetHandle: 'input',
-              style: { stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "5,5" }
+              sourceHandle: "output",
+              targetHandle: "input",
+              style: {
+                stroke: "#f59e0b",
+                strokeWidth: 2,
+                strokeDasharray: "5,5",
+              },
             });
             // Video/add-video node to the right of each image
-            const imageVideoUrl = flowData.videos[`${segment.id}-${image.id}`] || flowData.videos[segment.id];
-            const imageVideoId = flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id || flowData?.videoDetails?.[segment.id]?.id;
+            const imageVideoUrl =
+              flowData.videos[`${segment.id}-${image.id}`] ||
+              flowData.videos[segment.id];
+            const imageVideoId =
+              flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id ||
+              flowData?.videoDetails?.[segment.id]?.id;
             const videoX = imageX + nodeSpacing;
             if (imageVideoUrl) {
               newNodes.push({
@@ -660,7 +781,9 @@ function FlowWidget() {
                   segmentData: {
                     id: segment.id,
                     animation: segment.animation,
-                    artStyle: flowData?.videoDetails?.[segment.id]?.artStyle || 'cinematic photography with soft lighting',
+                    artStyle:
+                      flowData?.videoDetails?.[segment.id]?.artStyle ||
+                      "cinematic photography with soft lighting",
                     imageS3Key: image.s3Key,
                   },
                 },
@@ -669,8 +792,8 @@ function FlowWidget() {
                 id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
                 source: `image-${segment.id}-${image.id}`,
                 target: `video-${segment.id}-${image.id}`,
-                sourceHandle: 'output',
-                targetHandle: 'input',
+                sourceHandle: "output",
+                targetHandle: "input",
                 style: { stroke: "#10b981", strokeWidth: 3 },
               });
             } else {
@@ -684,24 +807,30 @@ function FlowWidget() {
                   segmentData: {
                     id: segment.id,
                     animation: segment.animation,
-                    artStyle: image.artStyle || 'cinematic photography with soft lighting'
-                  }
+                    artStyle:
+                      image.artStyle ||
+                      "cinematic photography with soft lighting",
+                  },
                 },
               });
               newEdges.push({
                 id: `image-${segment.id}-${image.id}-to-add-video-${segment.id}-${image.id}`,
                 source: `image-${segment.id}-${image.id}`,
                 target: `add-video-${segment.id}-${image.id}`,
-                sourceHandle: 'output',
-                targetHandle: 'input',
-                style: { stroke: "#10b981", strokeWidth: 2, strokeDasharray: "5,5" },
+                sourceHandle: "output",
+                targetHandle: "input",
+                style: {
+                  stroke: "#10b981",
+                  strokeWidth: 2,
+                  strokeDasharray: "5,5",
+                },
               });
             }
           });
         }
       });
     }
-    
+
     setNodes(newNodes);
     setEdges(newEdges);
   }, [flowData, setNodes, setEdges]);
@@ -721,7 +850,9 @@ function FlowWidget() {
     // Get project ID from localStorage
     let projectId;
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const project = JSON.parse(storedProject);
         projectId = project.id;
@@ -736,19 +867,18 @@ function FlowWidget() {
       return;
     }
 
-    console.log("Fetching project segmentations and related images/videos for project ID:", projectId);
+    console.log(
+      "Fetching project segmentations and related images/videos for project ID:",
+      projectId,
+    );
     try {
       setLoading(true);
-      
+
       // Fetch project segmentations, images, and videos in parallel
-      const [
-        segmentationsData,
-        imagesData,
-        videosData
-      ] = await Promise.all([
+      const [segmentationsData, imagesData, videosData] = await Promise.all([
         projectApi.getProjectSegmentations(projectId),
         projectApi.getProjectImages(projectId),
-        projectApi.getProjectVideos(projectId)
+        projectApi.getProjectVideos(projectId),
       ]);
 
       console.log("Project data fetched successfully:");
@@ -758,9 +888,17 @@ function FlowWidget() {
 
       // Extract segments from the first segmentation
       let segments = [];
-      if (segmentationsData && segmentationsData.success && segmentationsData.data && segmentationsData.data.length > 0) {
+      if (
+        segmentationsData &&
+        segmentationsData.success &&
+        segmentationsData.data &&
+        segmentationsData.data.length > 0
+      ) {
         const firstSegmentation = segmentationsData.data[0];
-        if (firstSegmentation.segments && Array.isArray(firstSegmentation.segments)) {
+        if (
+          firstSegmentation.segments &&
+          Array.isArray(firstSegmentation.segments)
+        ) {
           segments = firstSegmentation.segments;
         }
       }
@@ -768,12 +906,11 @@ function FlowWidget() {
       setAllProjectData({
         segments: segments,
         images: imagesData?.data || [],
-        videos: videosData?.data || []
+        videos: videosData?.data || [],
       });
 
       // Keep the old projectData for backward compatibility
       setProjectData({ success: true, project: { segments: segments } });
-      
     } catch (error) {
       console.error("Failed to fetch project data:", error);
       setError("Failed to fetch project data");
@@ -782,14 +919,171 @@ function FlowWidget() {
     }
   }, [isAuthenticated]);
 
+  // Handle chat click for nodes
+  const handleChatClick = useCallback((nodeId, nodeType) => {
+    setChatNodeId(nodeId);
+    setChatNodeType(nodeType);
+    setChatOpen(true);
+  }, []);
+
+  // Handle chat close
+  const handleChatClose = useCallback(() => {
+    setChatOpen(false);
+    setChatNodeId(null);
+    setChatNodeType(null);
+  }, []);
+
+  // Handle adding new nodes
+  const handleAddNode = useCallback((nodeType) => {
+    const newNodeId = `${nodeType}-${Date.now()}`;
+    
+    // Generate random position within the viewport
+    const randomX = Math.random() * 600 + 100;
+    const randomY = Math.random() * 400 + 100;
+    
+    let newNodeType;
+    let newNodeData = {
+      id: newNodeId,
+      nodeType: nodeType,
+      onChatClick: handleChatClick,
+    };
+
+    // Set specific data based on node type
+    switch (nodeType) {
+      case "text":
+        newNodeType = "textNode";
+        newNodeData.content = "New text content...";
+        break;
+      case "image":
+        newNodeType = "newImageNode";
+        break;
+      case "video":
+        newNodeType = "newVideoNode";
+        break;
+      case "segment":
+        newNodeType = "segmentNode";
+        newNodeData.visual = "New segment visual...";
+        newNodeData.narration = "New segment narration...";
+        newNodeData.animation = "New segment animation...";
+        break;
+      default:
+        newNodeType = "textNode";
+        newNodeData.content = "New node...";
+    }
+
+    const newNode = {
+      id: newNodeId,
+      type: newNodeType,
+      position: { x: randomX, y: randomY },
+      data: newNodeData,
+    };
+
+    setNodes((prevNodes) => [...prevNodes, newNode]);
+  }, [setNodes, handleChatClick]);
+
+  // Handle adding chat node when clicking on other nodes
+  const handleAddChatNode = useCallback((clickedNode) => {
+    // Remove any existing chat nodes first
+    setNodes((prevNodes) => prevNodes.filter(node => node.type !== 'chatNode'));
+    setEdges((prevEdges) => prevEdges.filter(edge => !edge.target.includes('chat-')));
+    
+    // Create new chat node
+    const chatNodeId = `chat-${clickedNode.id}-${Date.now()}`;
+    const chatNode = {
+      id: chatNodeId,
+      type: 'chatNode',
+      position: { 
+        x: clickedNode.position.x - 50, 
+        y: clickedNode.position.y + 125 + 120 
+      },
+      data: {
+        nodeType: clickedNode.type,
+        parentNodeId: clickedNode.id,
+        onSendMessage: (message, nodeType, model) => {
+          console.log("Message sent:", message, "Node type:", nodeType, "Model:", model);
+          // Handle message sending logic here
+        }
+      }
+    };
+
+    // Add chat node to the flow
+    setNodes((prevNodes) => [...prevNodes, chatNode]);
+
+    // Create edge connecting the clicked node to the chat node
+    const newEdge = {
+      id: `${clickedNode.id}-to-${chatNodeId}`,
+      source: clickedNode.id,
+      target: chatNodeId,
+      sourceHandle: 'output',
+      targetHandle: 'target',
+      style: { stroke: '#3B82F6', strokeWidth: 2, strokeDasharray: '5,5' },
+      type: 'smoothstep'
+    };
+
+    setEdges((prevEdges) => [...prevEdges, newEdge]);
+  }, [setNodes, setEdges]);
+
   // Update nodeTypes to pass onAfterEdit to ImageNode and VideoNode
-  const nodeTypes = useMemo(() => ({
-    segmentNode: SegmentNode,
-    imageNode: (props) => <ImageNode {...props} onRegenerateImage={handleRegenerateImage} regeneratingImages={regeneratingImages} onAfterEdit={handleAfterImageEdit} onMakePrimary={handleMakePrimary} isPrimary={props.data?.isPrimary} />,
-    videoNode: (props) => <VideoNode {...props} onRegenerateVideo={handleRegenerateVideo} regeneratingVideos={regeneratingVideos} onAfterEdit={handleAfterImageEdit} />,
-    addImageNode: (props) => <AddImageNode {...props} onCreateNewImage={handleCreateNewImage} creatingImages={creatingImages} hasExistingImages={props.data?.hasExistingImages} />,
-    addVideoNode: (props) => <AddVideoNode {...props} onCreateNewVideo={handleCreateNewVideo} creatingVideos={creatingVideos} />,
-  }), [handleRegenerateImage, regeneratingImages, handleAfterImageEdit, handleRegenerateVideo, regeneratingVideos, handleCreateNewImage, creatingImages, handleMakePrimary, handleCreateNewVideo, creatingVideos]);
+  const nodeTypes = useMemo(
+    () => ({
+      segmentNode: SegmentNode,
+      imageNode: (props) => (
+        <ImageNode
+          {...props}
+          onRegenerateImage={handleRegenerateImage}
+          regeneratingImages={regeneratingImages}
+          onAfterEdit={handleAfterImageEdit}
+          onMakePrimary={handleMakePrimary}
+          isPrimary={props.data?.isPrimary}
+          onChatClick={handleChatClick}
+        />
+      ),
+      videoNode: (props) => (
+        <VideoNode
+          {...props}
+          onRegenerateVideo={handleRegenerateVideo}
+          regeneratingVideos={regeneratingVideos}
+          onAfterEdit={handleAfterImageEdit}
+          onChatClick={handleChatClick}
+        />
+      ),
+      textNode: (props) => (
+        <NewTextNode
+          {...props}
+          onChatClick={handleChatClick}
+        />
+      ),
+      addImageNode: (props) => (
+        <AddImageNode
+          {...props}
+          onCreateNewImage={handleCreateNewImage}
+          creatingImages={creatingImages}
+          hasExistingImages={props.data?.hasExistingImages}
+        />
+      ),
+      addVideoNode: (props) => (
+        <AddVideoNode
+          {...props}
+          onCreateNewVideo={handleCreateNewVideo}
+          creatingVideos={creatingVideos}
+        />
+      ),
+      chatNode: ChatNode,
+    }),
+    [
+      handleRegenerateImage,
+      regeneratingImages,
+      handleAfterImageEdit,
+      handleRegenerateVideo,
+      regeneratingVideos,
+      handleCreateNewImage,
+      creatingImages,
+      handleMakePrimary,
+      handleCreateNewVideo,
+      creatingVideos,
+      handleChatClick,
+    ],
+  );
 
   // Initialize flow when data changes
   useEffect(() => {
@@ -798,7 +1092,7 @@ function FlowWidget() {
 
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    [setEdges],
   );
 
   const handleFlowAction = async (action) => {
@@ -828,12 +1122,15 @@ function FlowWidget() {
     const totalSegments = flowData.segments.length;
     const imagesGenerated = Object.keys(flowData.images).length;
     const videosGenerated = Object.keys(flowData.videos).length;
-    
+
     return {
       totalSegments,
       imagesGenerated,
       videosGenerated,
-      completionRate: totalSegments > 0 ? Math.round((videosGenerated / totalSegments) * 100) : 0,
+      completionRate:
+        totalSegments > 0
+          ? Math.round((videosGenerated / totalSegments) * 100)
+          : 0,
     };
   };
 
@@ -851,22 +1148,39 @@ function FlowWidget() {
       // Clear temporary videos when closing the widget
       setTemporaryVideos(new Map());
     };
-    window.addEventListener('flowWidget:open', openHandler);
-    window.addEventListener('flowWidget:close', closeHandler);
+    window.addEventListener("flowWidget:open", openHandler);
+    window.addEventListener("flowWidget:close", closeHandler);
     return () => {
-      window.removeEventListener('flowWidget:open', openHandler);
-      window.removeEventListener('flowWidget:close', closeHandler);
+      window.removeEventListener("flowWidget:open", openHandler);
+      window.removeEventListener("flowWidget:close", closeHandler);
     };
   }, []);
 
   // Reflect open state on host element attribute for CSS
   useEffect(() => {
-    const host = document.querySelector('react-flow-widget');
-    if (host) host.setAttribute('data-open', open ? 'true' : 'false');
+    const host = document.querySelector("react-flow-widget");
+    if (host) host.setAttribute("data-open", open ? "true" : "false");
   }, [open]);
 
+  // Handle click outside to close dropdowns
+  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".relative")) {
+        setLogoDropdownOpen(false);
+        setUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="z-10">
+    <div className='z-10'>
       {/* Floating button */}
       {/* Sliding sidebar */}
       <div
@@ -874,145 +1188,271 @@ function FlowWidget() {
           open ? "translate-x-0" : "translate-x-full"
         } z-[1000] flex flex-col shadow-xl`}
       >
-        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
-          <h2 className="text-lg font-semibold">Video Creation Flow</h2>
-          <div className="flex items-center gap-3">
-            {isAuthenticated && user && (
-              <div className="flex items-center gap-2">
-                {user.avatar ? (
+        <div className='flex flex-1 overflow-hidden'>
+          {/* Main content area */}
+          <div className='flex-1 flex flex-col'>
+            {/* Left Section: Logo + Title */}
+            <div className='fixed top-4 left-4 z-[1001] flex items-center gap-3'>
+              {/* Logo with Dropdown */}
+              <div className='relative'>
+                <button
+                  onClick={() => setLogoDropdownOpen(!logoDropdownOpen)}
+                  className='h-10 flex items-center gap-2 text-white hover:text-gray-300 transition-all duration-200 bg-black/50 px-3 py-2 rounded-lg backdrop-blur-sm'
+                >
                   <img
-                    src={user.avatar}
-                    alt="Profile"
-                    className="w-6 h-6 rounded-full border border-gray-600"
+                    src={assets.SandBoxLogo}
+                    alt='Logo'
+                    className='w-5 h-5'
                   />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">
-                      {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                    </span>
+                  <svg
+                    className={`w-3 h-3 transform transition-transform duration-200 ${
+                      logoDropdownOpen ? "rotate-180" : ""
+                    }`}
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M19 9l-7 7-7-7'
+                    />
+                  </svg>
+                </button>
+                {logoDropdownOpen && (
+                  <div className='absolute top-full left-0 mt-1 w-48 bg-gray-800/95 border border-gray-700 rounded-lg shadow-xl backdrop-blur-sm z-[1002]'>
+                    <div className='py-2'>
+                      <button
+                        onClick={() => setLogoDropdownOpen(false)}
+                        className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
+                      >
+                        Option 1
+                      </button>
+                      <button
+                        onClick={() => setLogoDropdownOpen(false)}
+                        className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
+                      >
+                        Option 2
+                      </button>
+                    </div>
                   </div>
                 )}
-                <span className="text-gray-300 text-sm hidden sm:block">
-                  {user.name || user.email}
-                </span>
               </div>
-            )}
-            {isAuthenticated && (
-              <button
-                onClick={logout}
-                className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
-                title="Sign Out"
-              >
-                Sign Out
-              </button>
-            )}
-            <button
-              className="text-white text-xl focus:outline-none"
-              aria-label="Close flow widget"
-              onClick={() => setOpen(false)}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main content area */}
-          <div className="flex-1 flex flex-col">
-            {/* Stats bar */}
-            {isAuthenticated && stats.totalSegments > 0 && (
-              <div className="p-4 border-b border-gray-800 bg-gray-900">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-300">Workflow Progress</h3>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-gray-400">
-                      Segments: <span className="text-white">{stats.totalSegments}</span>
-                    </span>
-                    <span className="text-gray-400">
-                      Images: <span className="text-yellow-400">{stats.imagesGenerated}</span>
-                    </span>
-                    <span className="text-gray-400">
-                      Videos: <span className="text-green-400">{stats.videosGenerated}</span>
-                    </span>
-                    <span className="text-gray-400">
-                      Completion: <span className="text-purple-400">{stats.completionRate}%</span>
-                    </span>
-                    {temporaryVideos.size > 0 && (
-                      <button
-                        onClick={() => setTemporaryVideos(new Map())}
-                        className="text-yellow-400 hover:text-yellow-300 text-xs underline"
-                        title="Clear temporary videos"
-                      >
-                        Clear Previews ({temporaryVideos.size})
-                      </button>
+              {/* Separator */}
+              <div className='h-6 w-px bg-gray-600'></div>
+
+              <h2 className='h-10 flex items-center text-lg font-semibold text-white drop-shadow-lg bg-black/50 px-3 py-2 rounded-lg backdrop-blur-sm'>
+                Untitled
+              </h2>
+            </div>
+
+            {/* Center Section: Tab Switching + Close Icon */}
+            <div className='fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001]'>
+              <div className='h-10 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg p-1'>
+                <button className='h-8 px-3 py-1 text-sm text-white bg-purple-600 rounded-md transition-colors flex items-center gap-2'>
+                  <img
+                    src={assets.SandBoxTabIcon}
+                    alt='Sandbox Icon'
+                    className='w-4 h-4'
+                  />
+                  Sandbox
+                </button>
+                <button
+                  className='h-8 px-3 py-1 text-gray-400 hover:text-white transition-colors flex items-center gap-2 rounded-md hover:bg-gray-700/50'
+                  aria-label='Timeline tab'
+                  onClick={() => setOpen(false)}
+                >
+                  <img
+                    src={assets.TimelineTabIcon}
+                    alt='Timeline Icon'
+                    className='w-4 h-4'
+                  />
+                  Timeline
+                </button>
+              </div>
+            </div>
+
+
+
+            {/* Right Section: User + Chat Bot + Blue Button */}
+            <div className='fixed top-4 right-4 z-[1001] flex items-center gap-3'>
+              {/* User Icon with Dropdown */}
+              {isAuthenticated && user ? (
+                <div className='relative'>
+                  <button
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className='h-10 flex items-center gap-2 hover:bg-gray-700/50 rounded-lg px-2 py-2 transition-all duration-200 bg-black/50 backdrop-blur-sm'
+                  >
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt='Profile'
+                        className='w-6 h-6 rounded-full border border-gray-600'
+                      />
+                    ) : (
+                      <div className='w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center'>
+                        <span className='text-white text-xs font-medium'>
+                          {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                        </span>
+                      </div>
                     )}
-                  </div>
-                </div>
-                <div className="mt-2 w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${stats.completionRate}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
+                    <svg
+                      className={`w-3 h-3 text-gray-400 transform transition-transform duration-200 ${
+                        userDropdownOpen ? "rotate-180" : ""
+                      }`}
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M19 9l-7 7-7-7'
+                      />
+                    </svg>
+                  </button>
 
+                  {userDropdownOpen && (
+                    <div className='absolute top-full right-0 mt-1 w-48 bg-gray-800/95 border border-gray-700 rounded-lg shadow-xl backdrop-blur-sm z-[1002]'>
+                      <div className='py-2'>
+                        <div className='px-4 py-2 border-b border-gray-700'>
+                          <p className='text-sm font-medium text-white'>
+                            {user.name || "User"}
+                          </p>
+                          <p className='text-xs text-gray-400'>{user.email}</p>
+                        </div>
+                        <button
+                          onClick={() => setUserDropdownOpen(false)}
+                          className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
+                        >
+                          Profile Settings
+                        </button>
+                        <button
+                          onClick={() => setUserDropdownOpen(false)}
+                          className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
+                        >
+                          Preferences
+                        </button>
+                        <div className='border-t border-gray-700 mt-1 pt-1'>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setUserDropdownOpen(false);
+                            }}
+                            className='w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700/70 transition-colors'
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className='h-10 flex items-center bg-black/50 backdrop-blur-sm rounded-lg px-2'>
+                  <ChatLoginButton />
+                </div>
+              )}
+
+              {/* Chat Bot Icon */}
+              <div className='rounded-lg transition-colors backdrop-blur-sm items-center '>
+                <img
+                  src={assets.ChatBotButton}
+                  alt='Chat Bot Icon'
+                  className='w-18 h-18'
+                />
+              </div>
+
+              {/* Blue Button */}
+              <button className='h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors backdrop-blur-sm flex items-center gap-2'>
+                <img
+                  src={assets.PublishIcon}
+                  alt='Publish Icon'
+                  className='w-4 h-4'
+                />
+                Publish
+              </button>
+
+              {/* Chat History */}
+              <button className='fixed top-20 right-4 z-[1001] w-12 h-12 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg transition-all duration-200 flex items-center justify-center border border-gray-600'>
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth={2}
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                  />
+                </svg>
+              </button>
+            </div>
             {/* Model Selection */}
-            {isAuthenticated && stats.totalSegments > 0 && (
-              <div className="p-4 border-b border-gray-800 bg-gray-800">
-                <h3 className="text-sm font-semibold text-gray-300 mb-3">AI Model Selection</h3>
-                <div className="grid grid-cols-2 gap-4">
+            {/* {isAuthenticated && stats.totalSegments > 0 && (
+              <div className='pt-2 pb-2 pl-4 pr-4 border-b border-gray-800 bg-gray-800'>
+                <h3 className='text-sm font-semibold text-gray-300 mb-3'>
+                  AI Model Selection
+                </h3>
+                <div className='grid grid-cols-2 gap-4'>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Image Generation Model</label>
+                    <label className='block text-xs text-gray-400 mb-1'>
+                      Image Generation Model
+                    </label>
                     <ModelSelector
-                      genType="IMAGE"
+                      genType='IMAGE'
                       selectedModel={selectedImageModel}
                       onModelChange={setSelectedImageModel}
                       disabled={loading}
-                      className="w-full"
+                      className='w-full'
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Video Generation Model</label>
+                    <label className='block text-xs text-gray-400 mb-1'>
+                      Video Generation Model
+                    </label>
                     <ModelSelector
-                      genType="VIDEO"
+                      genType='VIDEO'
                       selectedModel={selectedVideoModel}
                       onModelChange={setSelectedVideoModel}
                       disabled={loading}
-                      className="w-full"
+                      className='w-full'
                     />
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
-
-
-            <div className="flex-1 overflow-hidden">
+            <div className='flex-1 overflow-hidden'>
               {loading ? (
-                <div className="flex items-center justify-center h-full">
+                <div className='flex items-center justify-center h-full'>
                   <LoadingSpinner />
                 </div>
               ) : error ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-red-400 text-center p-4">
+                <div className='flex items-center justify-center h-full'>
+                  <div className='text-red-400 text-center p-4'>
                     <p>{error}</p>
                     <button
                       onClick={() => setError(null)}
-                      className="mt-2 text-sm text-purple-400 hover:text-purple-300"
+                      className='mt-2 text-sm text-purple-400 hover:text-purple-300'
                     >
                       Dismiss
                     </button>
                   </div>
                 </div>
               ) : !isAuthenticated ? (
-                <div className="p-4 space-y-4">
-                  <div className="text-center p-6 bg-gray-800 border border-gray-700 rounded-lg">
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-white mb-2">
+                <div className='p-4 space-y-4'>
+                  <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
+                    <div className='mb-4'>
+                      <h3 className='text-lg font-semibold text-white mb-2'>
                         Video Creation Flow
                       </h3>
-                      <p className="text-gray-400 text-sm">
+                      <p className='text-gray-400 text-sm'>
                         Sign in to visualize your video creation workflow
                       </p>
                     </div>
@@ -1020,21 +1460,22 @@ function FlowWidget() {
                   </div>
                 </div>
               ) : flowData.segments.length === 0 ? (
-                <div className="p-4 space-y-4">
-                  <div className="text-center p-6 bg-gray-800 border border-gray-700 rounded-lg">
-                    <h3 className="text-lg font-semibold text-white mb-4">
+                <div className='p-4 space-y-4'>
+                  <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
+                    <h3 className='text-lg font-semibold text-white mb-4'>
                       No Workflow Data
                     </h3>
-                    <p className="text-gray-400 text-sm mb-4">
-                      Start creating a video in the chat widget to see the workflow flow here.
+                    <p className='text-gray-400 text-sm mb-4'>
+                      Start creating a video in the chat widget to see the
+                      workflow flow here.
                     </p>
                     <button
                       onClick={() => handleFlowAction("Refresh Data")}
                       disabled={loading}
-                      className="w-full bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50"
+                      className='w-full bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50'
                     >
                       {loading ? (
-                        <div className="flex items-center justify-center gap-2">
+                        <div className='flex items-center justify-center gap-2'>
                           <LoadingSpinner />
                           <span>Processing...</span>
                         </div>
@@ -1045,38 +1486,83 @@ function FlowWidget() {
                   </div>
                 </div>
               ) : (
-                <div className="w-full h-full">
+                <div className='w-full h-full'>
                   <ReactFlow
                     nodes={nodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    onNodeClick={(event, node) => {
+                      setSelectedNode(node);
+                      // Add chat node when clicking on non-chat nodes
+                      if (node.type !== 'chatNode') {
+                        handleAddChatNode(node);
+                      }
+                    }}
+                    onPaneClick={() => {
+                      setSelectedNode(null);
+                      // Remove all chat nodes when deselecting
+                      setNodes((prevNodes) => prevNodes.filter(node => node.type !== 'chatNode'));
+                      setEdges((prevEdges) => prevEdges.filter(edge => !edge.target.includes('chat-')));
+                    }}
                     nodeTypes={nodeTypes}
                     fitView
-                    attributionPosition="bottom-left"
+                    attributionPosition='bottom-left'
                     edgesFocusable={true}
                     edgesUpdatable={true}
                     proOptions={{ hideAttribution: true }}
                   >
-                    <Background 
-                      color="#374151" 
-                      gap={20} 
-                      variant="dots"
+                    <Background color='#374151' gap={20} variant='dots' />
+                    <Controls
+                      position='bottom-right'
+                      className='
+                        !border-[#27272a] 
+                        !rounded-lg 
+                        [&>button]:!bg-[#23232b] 
+                        [&>button]:!text-white 
+                        [&>button]:!border-[#27272a] 
+                        [&>button]:!hover:bg-[#3f3f46] 
+                        [&>button]:!m-1
+                        [&>button]:!shadow-none
+                      '
                     />
-                    <Controls className="!bg-gray-800 !border-gray-700 !rounded-lg [&>button]:!bg-gray-700 [&>button]:!text-white [&>button]:!border-gray-600 [&>button:hover]:!bg-gray-600" />
-                    <MiniMap 
-                      className="bg-gray-800 border border-gray-700 rounded-lg"
-                      nodeColor="#8b5cf6"
-                      maskColor="rgba(0, 0, 0, 0.5)"
-                    />
+                    {/* <MiniMap
+                      className='bg-gray-800 border border-gray-700 rounded-lg'
+                      nodeColor='#8b5cf6'
+                      maskColor='rgba(0, 0, 0, 0.5)'
+                    /> */}
                   </ReactFlow>
+                  
+                  {/* Flow Widget Sidebar */}
+                  <FlowWidgetSidebar
+                    selectedNode={selectedNode}
+                    onClose={() => setSelectedNode(null)}
+                    onChatClick={handleChatClick}
+                  />
+
+
                 </div>
               )}
             </div>
           </div>
+          <FlowWidgetBottomToolbar onAddNode={handleAddNode} />
         </div>
       </div>
+
+      {/* Node Chat Modal */}
+      {chatOpen && (
+        <NodeChat
+          nodeId={chatNodeId}
+          nodeType={chatNodeType}
+          isOpen={chatOpen}
+          onClose={handleChatClose}
+          onSendMessage={(message, nodeType, model) => {
+            console.log("Message sent:", message, "Node type:", nodeType, "Model:", model);
+            // Handle message sending logic here
+          }}
+        />
+      )}
     </div>
   );
 }

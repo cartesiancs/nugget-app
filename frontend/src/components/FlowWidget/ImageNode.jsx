@@ -91,15 +91,21 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
 
   if (!data.imageUrl) {
     return (
-      <div
-        className={`bg-gray-800/90 rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
-          selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
-        }`}
-        style={{
-          border: '1px solid rgba(233, 232, 235, 0.2)',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-        }}
-      >
+      <div className="relative">
+        {/* Node Label */}
+        <div className="absolute -top-8 left-0 text-sm font-semibold text-yellow-400 bg-gray-900/90 px-2 py-1 rounded-md border border-yellow-400/30">
+          IMAGE
+        </div>
+        
+        <div
+          className={`bg-gray-800/90 rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+            selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
+          }`}
+          style={{
+            border: '1px solid rgba(233, 232, 235, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+          }}
+        >
         <div className="flex items-center justify-center w-[220px] h-[220px] bg-gray-900/80 rounded-lg mx-auto">
           <div className="text-center">
             <div className="text-2xl mb-1">🖼️</div>
@@ -140,6 +146,7 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
             right: -10
           }}
         />
+        </div>
       </div>
     );
   }
@@ -188,16 +195,22 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
         </div>,
         document.body
       )}
-      <div
-        className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible ${isRegenerating ? 'opacity-50 pointer-events-none' : ''} transition-all duration-200 ${
-          selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
-        }`}
-        style={{
-          background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
-          border: "1px solid rgba(233, 232, 235, 0.2)",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-        }}
-      >
+      <div className="relative">
+        {/* Node Label */}
+        <div className="absolute -top-8 left-0 text-sm font-semibold text-yellow-400 bg-gray-900/90 px-2 py-1 rounded-md border border-yellow-400/30">
+          IMAGE
+        </div>
+        
+        <div
+          className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible ${isRegenerating ? 'opacity-50 pointer-events-none' : ''} transition-all duration-200 ${
+            selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
+          }`}
+          style={{
+            background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
+            border: "1px solid rgba(233, 232, 235, 0.2)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
+          }}
+        >
         {/* Primary indicator */}
         {isPrimary && (
           <div className="absolute -top-2 -left-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold z-30">
@@ -229,20 +242,20 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           Scene {data.segmentId} Image
         </div>
         
-        {/* Button container */}
-        <div className="absolute bottom-2 right-2 flex gap-1">
+        {/* Action buttons aligned with text height */}
+        <div className="absolute bottom-1 right-2 flex items-center gap-1">
           {/* Regenerate button */}
           <button
             onClick={handleRegenerate}
             disabled={isRegenerating || !data.imageId || !data.segmentData}
-            className="bg-purple-600 hover:bg-purple-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            className="bg-purple-600 hover:bg-purple-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
             title="Regenerate this image"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 28, height: 28 }}
           >
             {isRegenerating ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              <span role="img" aria-label="Regenerate">🔄</span>
+              <span className="text-sm">🔄</span>
             )}
           </button>
           
@@ -250,11 +263,11 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           <button
             onClick={handleEdit}
             disabled={isRegenerating || !data.imageId || !data.segmentData}
-            className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
             title="Edit visual prompt"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 28, height: 28 }}
           >
-            <span role="img" aria-label="Edit">✏️</span>
+            <span className="text-sm">✏️</span>
           </button>
           
           {/* Star indicator for all images */}
@@ -262,15 +275,15 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
             <button
               onClick={isPrimary ? undefined : handleMakePrimary}
               disabled={isRegenerating || !data.imageId || !data.segmentId || isPrimary}
-              className={`rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 ${
+              className={`rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors ${
                 isPrimary 
                   ? 'bg-yellow-400 text-black cursor-default' 
                   : 'bg-gray-600 hover:bg-gray-500 text-white cursor-pointer'
               }`}
               title={isPrimary ? "This is the primary image" : "Make this image primary"}
-              style={{ width: 32, height: 32 }}
+              style={{ width: 28, height: 28 }}
             >
-              <span role="img" aria-label={isPrimary ? "Primary" : "Make Primary"}>⭐</span>
+              <span className="text-sm">⭐</span>
             </button>
           )}
           
@@ -279,12 +292,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
             <button
               onClick={() => onChatClick(data.id || data.imageId, "image")}
               disabled={isRegenerating}
-              className="bg-green-600 hover:bg-green-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+              className="bg-green-600 hover:bg-green-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
               title="Open chat for this image"
-              style={{ width: 32, height: 32 }}
+              style={{ width: 28, height: 28 }}
             >
               <svg
-                className="w-4 h-4"
+                className="w-3 h-3"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -330,6 +343,7 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
             right: -10
           }}
         />
+        </div>
       </div>
     </>
   );

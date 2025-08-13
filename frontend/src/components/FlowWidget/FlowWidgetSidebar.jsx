@@ -131,7 +131,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
       className='fixed left-4 top-20 bottom-4 rounded-xl shadow-2xl z-[1000] animate-in slide-in-from-left duration-300'
       style={{
         width: "320px",
-        maxHeight: "calc(100vh - 6rem)",
+        maxHeight: "calc(86vh - 6rem)",
         background:
           "linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
         border: "1px solid",
@@ -141,7 +141,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
       }}
     >
       {/* Header */}
-      <div className='flex items-center justify-between p-4'>
+      <div className='flex items-center justify-between p-3'>
         <h3 className='text-white font-medium text-xl'>Properties</h3>
       </div>
 
@@ -173,8 +173,8 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
               style={{
                 fontSize: "14px",
                 fontFamily: "Inter",
-                background: "rgba(17, 18, 21, 0.3)",
-                border: "1px solid rgba(233, 232, 235, 0.1)",
+                background:"linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
+                border: "none", 
                 backdropFilter: "blur(10px)",
               }}
               placeholder='Enter your prompt here...'
@@ -200,7 +200,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
               Node Type
             </label>
             <span
-              className='text-white font-medium'
+              className='text-white font-medium '
               style={{ fontSize: "14px", fontFamily: "Inter" }}
             >
               {nodeType}
@@ -226,7 +226,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
               <select
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className='text-white rounded-lg focus:outline-none appearance-none cursor-pointer pr-8'
+                className='text-white rounded-lg focus:outline-none appearance-none cursor-pointer'
                 style={{
                   width: "150px",
                   height: "32px",
@@ -234,14 +234,30 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
                   fontFamily: "Inter",
                   paddingLeft: "12px",
                   paddingRight: "32px",
-                  background: "rgba(17, 18, 21, 0.3)",
-                  border: "1px solid rgba(233, 232, 235, 0.1)",
+                  background: "rgba(17, 18, 21, 0.5)",
+                  border: "1px solid rgba(233, 232, 235, 0.2)",
                   backdropFilter: "blur(10px)",
+                  color: "white",
                 }}
               >
-                <option value='GPT-4o mini'>GPT-4o mini</option>
-                <option value='GPT image'>GPT image</option>
-                <option value='GPT video'>GPT video</option>
+                <option
+                  value='GPT-4o mini'
+                  style={{ background: "#1a1a1a", color: "white" }}
+                >
+                  GPT-4o mini
+                </option>
+                <option
+                  value='GPT image'
+                  style={{ background: "#1a1a1a", color: "white" }}
+                >
+                  GPT image
+                </option>
+                <option
+                  value='GPT video'
+                  style={{ background: "#1a1a1a", color: "white" }}
+                >
+                  GPT video
+                </option>
               </select>
               <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                 <svg

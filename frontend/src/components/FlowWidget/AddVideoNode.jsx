@@ -17,14 +17,20 @@ const AddVideoNode = ({ data, onCreateNewVideo, creatingVideos }) => {
   };
 
   return (
-    <div
-      className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible hover:border-green-400/60 transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
-      style={{
-        background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
-        border: "1px solid rgba(233, 232, 235, 0.2)",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
-      }}
-    >
+    <div className="relative">
+      {/* Node Label */}
+      <div className="absolute -top-8 left-0 text-sm font-semibold text-green-400 bg-gray-900/90 px-2 py-1 rounded-md border border-green-400/30">
+        ADD VIDEO
+      </div>
+      
+      <div
+        className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible hover:border-green-400/60 transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
+        style={{
+          background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
+          border: "1px solid rgba(233, 232, 235, 0.2)",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
+        }}
+      >
       {/* Loader overlay when creating */}
       {isCreating && (
         <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
@@ -50,14 +56,7 @@ const AddVideoNode = ({ data, onCreateNewVideo, creatingVideos }) => {
       <div className="absolute bottom-1 left-2 text-sm text-gray-400">
         {data?.segmentId ? `Scene ${data.segmentId}` : 'New Video'}
       </div>
-      <button
-        onClick={handleAddVideo}
-        disabled={isCreating}
-        className="w-full bg-green-600 hover:bg-green-500 text-white text-sm py-1 px-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        title="Add new video for this image"
-      >
-        {isCreating ? "Creating..." : "Add Video"}
-      </button>
+
       
       {/* Input handle */}
       <Handle
@@ -88,9 +87,10 @@ const AddVideoNode = ({ data, onCreateNewVideo, creatingVideos }) => {
           zIndex: 9999,
           right: -10
         }}
-      />
-    </div>
-  );
-};
+              />
+        </div>
+      </div>
+    );
+  };
 
 export default AddVideoNode; 

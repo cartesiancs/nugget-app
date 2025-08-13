@@ -71,6 +71,9 @@ function FlowWidget() {
     videos: [],
   });
 
+  // Project name state
+  const [projectName, setProjectName] = useState("Untitled");
+
   // Helper function to refresh project data
   const refreshProjectData = useCallback(async () => {
     if (!isAuthenticated) {
@@ -78,8 +81,9 @@ function FlowWidget() {
       return;
     }
 
-    // Get project ID from localStorage
+    // Get project ID and name from localStorage
     let projectId;
+    let projectName = "Untitled";
     try {
       const storedProject = localStorage.getItem(
         "project-store-selectedProject",
@@ -87,6 +91,8 @@ function FlowWidget() {
       if (storedProject) {
         const project = JSON.parse(storedProject);
         projectId = project.id;
+        projectName = project.name || project.title || "Untitled";
+        setProjectName(projectName);
       }
     } catch (error) {
       console.error("Error parsing project from localStorage:", error);
@@ -856,8 +862,9 @@ function FlowWidget() {
       return;
     }
 
-    // Get project ID from localStorage
+    // Get project ID and name from localStorage
     let projectId;
+    let projectName = "Untitled";
     try {
       const storedProject = localStorage.getItem(
         "project-store-selectedProject",
@@ -865,6 +872,8 @@ function FlowWidget() {
       if (storedProject) {
         const project = JSON.parse(storedProject);
         projectId = project.id;
+        projectName = project.name || project.title || "Untitled";
+        setProjectName(projectName);
       }
     } catch (error) {
       console.error("Error parsing project from localStorage:", error);
@@ -1191,6 +1200,20 @@ function FlowWidget() {
     fetchAllProjectData();
   }, [fetchAllProjectData]);
 
+  // Update project name when component mounts or project changes
+  useEffect(() => {
+    try {
+      const storedProject = localStorage.getItem("project-store-selectedProject");
+      if (storedProject) {
+        const project = JSON.parse(storedProject);
+        const projectName = project.name || project.title || "Untitled";
+        setProjectName(projectName);
+      }
+    } catch (error) {
+      console.error("Error parsing project from localStorage:", error);
+    }
+  }, []);
+
   // Listen for sandbox open/close events
   useEffect(() => {
     const openHandler = () => setOpen(true);
@@ -1292,8 +1315,8 @@ function FlowWidget() {
               {/* Separator */}
               <div className='h-6 w-px border-[#FFFFFF]/50 border-1 rounded-lg bg-[#FFFFFF]/50 -ml-4'></div>
 
-              <h2 className='h-10 flex items-center text-lg font-semibold text-white drop-shadow-lg bg-black/50 mr-5 py-2 rounded-lg backdrop-blur-sm'>
-                Untitled
+              <h2 className='h-10 flex items-center text-lg font-semibold text-white drop-shadow-lg bg-black/50 mr-5 py-2 rounded-lg backdrop-blur-sm px-3'>
+                {projectName}
               </h2>
             </div>
 

@@ -31,36 +31,35 @@ const SegmentNode = ({ data }) => {
     <div
       className="rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible"
       style={{
-        background: "linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
-        border: "1px solid",
-        borderImage: "linear-gradient(180deg, rgba(17, 18, 21, 0.1) 0%, rgba(233, 232, 235, 0.04) 100%) 1",
-        backdropFilter: "blur(20px)"
+        background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
+        border: "1px solid rgba(233, 232, 235, 0.2)",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
       }}
     >
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-xs font-bold text-blue-400">Scene {data.id}</h3>
-        <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(data.status)}`}></div>
+        <h3 className="text-sm font-bold text-blue-400">Scene {data.id}</h3>
+        <div className={`w-3 h-3 rounded-full ${getStatusColor(data.status)}`}></div>
       </div>
       {/* Reduce inner height to accommodate header and status within 240px node */}
       <div 
-        className="w-[220px] h-[200px] rounded-lg p-2 text-[11px] text-gray-300 overflow-hidden"
+        className="w-[220px] h-[200px] rounded-lg p-2 text-xs text-gray-300 overflow-hidden"
         style={{
-          background: "rgba(17, 18, 21, 0.3)",
-          border: "1px solid rgba(233, 232, 235, 0.1)",
-          backdropFilter: "blur(10px)"
+          background: "rgba(17, 18, 21, 0.8)",
+          border: "1px solid rgba(233, 232, 235, 0.15)",
+          boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)"
         }}
       >
         <div className="mb-1">
-          <h4 className="text-[10px] font-medium text-gray-300 mb-0.5">Visual</h4>
-          <p className="text-[10px] text-gray-400 line-clamp-4 leading-snug whitespace-pre-wrap break-words">{data.visual}</p>
+          <h4 className="text-xs font-medium text-gray-300 mb-1">Visual</h4>
+          <p className="text-xs text-gray-400 line-clamp-4 leading-relaxed whitespace-pre-wrap break-words">{data.visual}</p>
         </div>
         {data.narration && (
           <div>
-            <h4 className="text-[10px] font-medium text-gray-300 mb-0.5">Narration</h4>
-            <p className="text-[10px] text-gray-400 line-clamp-2 leading-snug whitespace-pre-wrap break-words">{data.narration}</p>
+            <h4 className="text-xs font-medium text-gray-300 mb-1">Narration</h4>
+            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed whitespace-pre-wrap break-words">{data.narration}</p>
           </div>
         )}
-        <div className="absolute bottom-1 left-2 text-[10px] text-gray-400">
+        <div className="absolute bottom-1 left-2 text-xs text-gray-400">
           {getStatusIcon(data.status)} {data.status}
         </div>
       </div>

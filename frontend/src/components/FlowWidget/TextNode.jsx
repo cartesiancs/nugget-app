@@ -27,39 +27,56 @@ function NewTextNode({ data, isConnectable, selected }) {
   };
 
   return (
-    <div className={`bg-blue-600 rounded-lg p-4 min-w-[120px] min-h-[80px] border-2 border-blue-700 shadow-lg relative transition-all duration-200 ${
-      selected ? 'ring-4 ring-blue-400 ring-opacity-50 shadow-blue-500/50' : ''
-    }`}>
+    <div
+      className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+        selected ? 'ring-4 ring-blue-400 ring-opacity-50 shadow-blue-500/50' : ''
+      }`}
+      style={{
+        background: "linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
+        border: "1px solid",
+        borderImage: "linear-gradient(180deg, rgba(17, 18, 21, 0.1) 0%, rgba(233, 232, 235, 0.04) 100%) 1",
+        backdropFilter: "blur(20px)"
+      }}
+    >
       {/* Input Handle - Left side */}
       <Handle
         type="target"
         position="left"
         style={{ 
           background: "#3b82f6",
-          width: 16,
-          height: 16,
-          border: '3px solid #fff',
-          left: -8
+          width: 20,
+          height: 20,
+          border: '4px solid #fff',
+          boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
+          zIndex: 9999,
+          left: -10
         }}
         isConnectable={isConnectable}
       />
 
       {/* Node Content */}
-      <div className="text-center">
-        <div className="text-xs text-blue-200 mb-2 font-medium">TEXT</div>
+      <div 
+        className="text-center w-[220px] h-[220px] rounded-lg mx-auto p-2"
+        style={{
+          background: "rgba(17, 18, 21, 0.3)",
+          border: "1px solid rgba(233, 232, 235, 0.1)",
+          backdropFilter: "blur(10px)"
+        }}
+      >
+        <div className="text-[10px] text-blue-200 mb-1 font-medium">TEXT</div>
         {isEditing ? (
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             onBlur={handleBlur}
             onKeyPress={handleKeyPress}
-            className="w-full bg-blue-700 text-white text-sm p-2 rounded border border-blue-500 focus:outline-none focus:border-blue-300 resize-none"
+            className="w-full h-[190px] bg-gray-800 text-white text-[12px] p-2 rounded border border-gray-700 focus:outline-none focus:border-gray-500 resize-none"
             autoFocus
-            rows={3}
+            rows={8}
           />
         ) : (
           <div
-            className="text-white text-sm cursor-pointer min-h-[60px] flex items-center justify-center"
+            className="text-white text-[12px] cursor-pointer h-[190px] flex items-center justify-center overflow-auto whitespace-pre-wrap break-words text-left w-full p-2"
             onDoubleClick={handleDoubleClick}
           >
             {text}
@@ -73,10 +90,12 @@ function NewTextNode({ data, isConnectable, selected }) {
         position="right"
         style={{ 
           background: "#3b82f6",
-          width: 16,
-          height: 16,
-          border: '3px solid #fff',
-          right: -8
+          width: 20,
+          height: 20,
+          border: '4px solid #fff',
+          boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
+          zIndex: 9999,
+          right: -10
         }}
         isConnectable={isConnectable}
       />

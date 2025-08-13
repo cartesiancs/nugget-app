@@ -91,17 +91,26 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
 
   if (!data.imageUrl) {
     return (
-      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative transition-all duration-200 ${
-        selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
-      }`}>
-        <div className="flex items-center justify-center h-20 bg-gray-800 rounded mb-2">
+      <div
+        className={`bg-gray-800/40 rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+          selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
+        }`}
+        style={{
+          border: '1.09px solid',
+          borderImageSlice: 1,
+          borderImageSource:
+            'linear-gradient(134.29deg, rgba(233, 232, 235, 0.04) -3.79%, rgba(233, 232, 235, 0.2) 52.39%, rgba(233, 232, 235, 0.04) 108.57%)',
+          backdropFilter: 'blur(10.86419677734375px)'
+        }}
+      >
+        <div className="flex items-center justify-center w-[220px] h-[220px] bg-gray-900/60 rounded-lg mx-auto">
           <div className="text-center">
             <div className="text-2xl mb-1">🖼️</div>
             <p className="text-xs text-gray-400">No image here</p>
             <p className="text-xs text-gray-500">Generate image</p>
           </div>
         </div>
-        <div className="text-xs text-gray-400 text-center">
+        <div className="absolute bottom-1 left-2 text-[10px] text-gray-400">
           Scene {data.segmentId}
         </div>
         {/* Input handle */}
@@ -111,10 +120,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="input"
           style={{
             background: '#8b5cf6',
-            width: 16,
-            height: 16,
-            border: '3px solid #fff',
-            left: -8
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(139, 92, 246, 0.8)',
+            zIndex: 9999,
+            left: -10
           }}
         />
         {/* Output handle */}
@@ -124,10 +135,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="output"
           style={{
             background: '#10b981',
-            width: 16,
-            height: 16,
-            border: '3px solid #fff',
-            right: -8
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+            zIndex: 9999,
+            right: -10
           }}
         />
       </div>
@@ -178,9 +191,17 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
         </div>,
         document.body
       )}
-      <div className={`bg-gray-700 border ${isPrimary ? 'border-yellow-400 border-2' : 'border-gray-600'} rounded-lg p-4 min-w-[150px] max-w-[200px] relative ${isRegenerating ? 'opacity-50 pointer-events-none' : ''} transition-all duration-200 ${
-        selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
-      }`}>
+      <div
+        className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible ${isRegenerating ? 'opacity-50 pointer-events-none' : ''} transition-all duration-200 ${
+          selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
+        }`}
+        style={{
+          background: "linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
+          border: "1px solid",
+          borderImage: "linear-gradient(180deg, rgba(17, 18, 21, 0.1) 0%, rgba(233, 232, 235, 0.04) 100%) 1",
+          backdropFilter: "blur(20px)"
+        }}
+      >
         {/* Primary indicator */}
         {isPrimary && (
           <div className="absolute -top-2 -left-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold z-30">
@@ -195,14 +216,20 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
             <span className="text-white text-xs font-semibold">Regenerating...</span>
           </div>
         )}
-        <div className="relative">
-          <img 
-            src={data.imageUrl} 
-            alt={`Scene ${data.segmentId}`} 
-            className="w-full h-20 object-cover rounded mb-2"
+        <div className="relative flex items-center justify-center w-[220px] h-[200px] rounded mx-auto"
+          style={{
+            background: "rgba(17, 18, 21, 0.3)",
+            border: "1px solid rgba(233, 232, 235, 0.1)",
+            backdropFilter: "blur(10px)"
+          }}
+        >
+          <img
+            src={data.imageUrl}
+            alt={`Scene ${data.segmentId}`}
+            className="w-full h-full object-contain rounded"
           />
         </div>
-        <div className="text-xs text-gray-400 text-center">
+        <div className="absolute bottom-1 left-2 text-[10px] text-gray-300">
           Scene {data.segmentId} Image
         </div>
         
@@ -284,10 +311,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="input"
           style={{
             background: '#8b5cf6',
-            width: 16,
-            height: 16,
-            border: '3px solid #fff',
-            left: -8
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(139, 92, 246, 0.8)',
+            zIndex: 9999,
+            left: -10
           }}
         />
         {/* Output handle */}
@@ -297,10 +326,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="output"
           style={{
             background: '#10b981',
-            width: 16,
-            height: 16,
-            border: '3px solid #fff',
-            right: -8
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+            zIndex: 9999,
+            right: -10
           }}
         />
       </div>

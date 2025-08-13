@@ -18,7 +18,15 @@ const AddImageNode = ({ data, onCreateNewImage, creatingImages, hasExistingImage
   };
 
   return (
-    <div className={`bg-gray-700 border-2 border-dashed border-gray-500 rounded-lg p-4 min-w-[150px] max-w-[200px] relative hover:border-purple-400 transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div
+      className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible hover:border-purple-400/60 transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
+      style={{
+        background: "linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
+        border: "1px solid",
+        borderImage: "linear-gradient(180deg, rgba(17, 18, 21, 0.1) 0%, rgba(233, 232, 235, 0.04) 100%) 1",
+        backdropFilter: "blur(20px)"
+      }}
+    >
       {/* Loader overlay when creating */}
       {isCreating && (
         <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
@@ -27,7 +35,14 @@ const AddImageNode = ({ data, onCreateNewImage, creatingImages, hasExistingImage
         </div>
       )}
       
-      <div className="flex items-center justify-center h-20 bg-gray-800 rounded mb-2">
+      <div 
+        className="flex items-center justify-center w-[220px] h-[200px] rounded-lg mx-auto"
+        style={{
+          background: "rgba(17, 18, 21, 0.3)",
+          border: "1px solid rgba(233, 232, 235, 0.1)",
+          backdropFilter: "blur(10px)"
+        }}
+      >
         <div className="text-center">
           <div className="text-2xl mb-1">➕</div>
           <p className="text-xs text-gray-400">
@@ -36,13 +51,8 @@ const AddImageNode = ({ data, onCreateNewImage, creatingImages, hasExistingImage
           <p className="text-xs text-gray-500">Generate new</p>
         </div>
       </div>
-      <div className="text-xs text-gray-400 text-center mb-2">
-        Scene {data.segmentId}
-        {hasExistingImages && (
-          <div className="text-xs text-yellow-400 mt-1">
-            Has existing images
-          </div>
-        )}
+      <div className="absolute bottom-1 left-2 text-[10px] text-gray-400">
+        {data?.segmentId ? `Scene ${data.segmentId}` : 'New Image'}
       </div>
       <button
         onClick={handleAddImage}
@@ -60,9 +70,12 @@ const AddImageNode = ({ data, onCreateNewImage, creatingImages, hasExistingImage
         id="input"
         style={{
           background: '#8b5cf6',
-          width: 12,
-          height: 12,
-          border: '2px solid #fff',
+          width: 20,
+          height: 20,
+          border: '4px solid #fff',
+          boxShadow: '0 0 15px rgba(139, 92, 246, 0.8)',
+          zIndex: 9999,
+          left: -10
         }}
       />
       {/* Output handle */}
@@ -71,10 +84,13 @@ const AddImageNode = ({ data, onCreateNewImage, creatingImages, hasExistingImage
         position={Position.Right}
         id="output"
         style={{
-          background: '#10b981',
-          width: 12,
-          height: 12,
-          border: '2px solid #fff',
+          background: '#f59e0b',
+          width: 20,
+          height: 20,
+          border: '4px solid #fff',
+          boxShadow: '0 0 15px rgba(245, 158, 11, 0.8)',
+          zIndex: 9999,
+          right: -10
         }}
       />
     </div>

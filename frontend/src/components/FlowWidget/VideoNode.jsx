@@ -76,17 +76,26 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
 
   if (!data.videoUrl) {
     return (
-      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative transition-all duration-200 ${
-        selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
-      }`}>
-        <div className="flex items-center justify-center h-20 bg-gray-800 rounded mb-2">
+      <div
+        className={`bg-gray-800/40 rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+          selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
+        }`}
+        style={{
+          border: '1.09px solid',
+          borderImageSlice: 1,
+          borderImageSource:
+            'linear-gradient(134.29deg, rgba(233, 232, 235, 0.04) -3.79%, rgba(233, 232, 235, 0.2) 52.39%, rgba(233, 232, 235, 0.04) 108.57%)',
+          backdropFilter: 'blur(10.86419677734375px)'
+        }}
+      >
+        <div className="flex items-center justify-center w-[220px] h-[220px] bg-gray-900/60 rounded-lg mx-auto">
           <div className="text-center">
             <div className="text-2xl mb-1">🎬</div>
             <p className="text-xs text-gray-400">No video</p>
             <p className="text-xs text-gray-500">Generate video</p>
           </div>
         </div>
-        <div className="text-xs text-gray-400 text-center">
+        <div className="absolute bottom-1 left-2 text-[10px] text-gray-400">
           Scene {data.segmentId}
         </div>
         {/* Input handle */}
@@ -96,10 +105,12 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
           id="input"
           style={{
             background: '#10b981',
-            width: 16,
-            height: 16,
-            border: '3px solid #fff',
-            left: -8
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+            zIndex: 9999,
+            left: -10
           }}
         />
       </div>
@@ -142,9 +153,17 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
         </div>,
         document.body
       )}
-      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative transition-all duration-200 ${
-        selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
-      }`}>
+      <div
+        className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+          selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
+        }`}
+        style={{
+          background: "linear-gradient(180.01deg, rgba(50, 53, 62, 0.17) 0.01%, rgba(17, 18, 21, 0.2) 109.75%)",
+          border: "1px solid",
+          borderImage: "linear-gradient(180deg, rgba(17, 18, 21, 0.1) 0%, rgba(233, 232, 235, 0.04) 100%) 1",
+          backdropFilter: "blur(20px)"
+        }}
+      >
         {/* Loader overlay when regenerating (covers whole node) */}
         {isRegenerating && (
           <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
@@ -152,10 +171,16 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
             <span className="text-white text-xs font-semibold">Regenerating...</span>
           </div>
         )}
-        <div className="relative">
+        <div className="relative flex items-center justify-center w-[220px] h-[200px] rounded mx-auto"
+          style={{
+            background: "rgba(17, 18, 21, 0.3)",
+            border: "1px solid rgba(233, 232, 235, 0.1)",
+            backdropFilter: "blur(10px)"
+          }}
+        >
           <video
             src={data.videoUrl}
-            className="w-full h-20 object-cover rounded mb-2"
+            className="w-full h-full object-contain rounded"
             muted
             loop
             onMouseEnter={e => e.target.play()}
@@ -168,9 +193,9 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
             </div>
           )}
         </div>
-        <div className="text-xs text-gray-400 text-center">
+        <div className="absolute bottom-1 left-2 text-[10px] text-gray-300">
           Scene {data.segmentId} Video
-          {isTemporary && <span className="text-yellow-400 block">(Temporary)</span>}
+          {isTemporary && <span className="text-yellow-400 ml-1">(Temporary)</span>}
         </div>
         {/* Regenerate button always visible in bottom right of the node */}
         <button
@@ -228,10 +253,12 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
           id="input"
           style={{
             background: '#10b981',
-            width: 16,
-            height: 16,
-            border: '3px solid #fff',
-            left: -8
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+            zIndex: 9999,
+            left: -10
           }}
         />
       </div>

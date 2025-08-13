@@ -100,7 +100,7 @@ const NodeChat = ({ nodeId, nodeType, isOpen, onClose, onSendMessage }) => {
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 rounded-lg shadow-lg w-96 h-[600px] flex flex-col"
+        className="bg-gray-900 rounded-xl shadow-2xl border border-gray-700 w-[800px] h-[600px] max-w-[90vw] max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

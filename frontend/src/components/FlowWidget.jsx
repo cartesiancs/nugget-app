@@ -23,8 +23,7 @@ import VideoNode from "./FlowWidget/VideoNode";
 import AddImageNode from "./FlowWidget/AddImageNode";
 import AddVideoNode from "./FlowWidget/AddVideoNode";
 import NewTextNode from "./FlowWidget/TextNode";
-import NewImageNode from "./FlowWidget/NewImageNode";
-import NewVideoNode from "./FlowWidget/NewVideoNode";
+// Removed NewImageNode/NewVideoNode; using AddImageNode/AddVideoNode
 import NodeChat from "./FlowWidget/NodeChat";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
@@ -54,7 +53,9 @@ function FlowWidget() {
   const [selectedVideoModel, setSelectedVideoModel] = useState(
     chatApi.getDefaultModel("VIDEO"),
   );
-  
+  // ReactFlow instance for dynamic fitView control
+  const [rfInstance, setRfInstance] = useState(null);
+
   // Node chat state
   const [chatOpen, setChatOpen] = useState(false);
   const [chatNodeId, setChatNodeId] = useState(null);
@@ -62,8 +63,6 @@ function FlowWidget() {
 
   // Selected node state for sidebar
   const [selectedNode, setSelectedNode] = useState(null);
-
-
 
   // New state for all fetched data
   const [allProjectData, setAllProjectData] = useState({
@@ -720,7 +719,11 @@ function FlowWidget() {
           target: `add-image-${segment.id}`,
           sourceHandle: "output",
           targetHandle: "input",
-          style: { stroke: "#8b5cf6", strokeWidth: 3 },
+          style: { 
+            stroke: "#8b5cf6", 
+            strokeWidth: 3,
+            filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))"
+          },
         });
         // If segment has images, stack them vertically to the right of add image node
         const imageDetail = flowData.imageDetails[segment.id];
@@ -758,6 +761,7 @@ function FlowWidget() {
                 stroke: "#f59e0b",
                 strokeWidth: 2,
                 strokeDasharray: "5,5",
+                filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))"
               },
             });
             // Video/add-video node to the right of each image
@@ -794,7 +798,11 @@ function FlowWidget() {
                 target: `video-${segment.id}-${image.id}`,
                 sourceHandle: "output",
                 targetHandle: "input",
-                style: { stroke: "#10b981", strokeWidth: 3 },
+                style: { 
+                  stroke: "#10b981", 
+                  strokeWidth: 3,
+                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))"
+                },
               });
             } else {
               newNodes.push({
@@ -823,6 +831,7 @@ function FlowWidget() {
                   stroke: "#10b981",
                   strokeWidth: 2,
                   strokeDasharray: "5,5",
+                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))"
                 },
               });
             }
@@ -934,94 +943,122 @@ function FlowWidget() {
   }, []);
 
   // Handle adding new nodes
-  const handleAddNode = useCallback((nodeType) => {
-    const newNodeId = `${nodeType}-${Date.now()}`;
-    
-    // Generate random position within the viewport
-    const randomX = Math.random() * 600 + 100;
-    const randomY = Math.random() * 400 + 100;
-    
-    let newNodeType;
-    let newNodeData = {
-      id: newNodeId,
-      nodeType: nodeType,
-      onChatClick: handleChatClick,
-    };
+  const handleAddNode = useCallback(
+    (nodeType) => {
+      const newNodeId = `${nodeType}-${Date.now()}`;
 
-    // Set specific data based on node type
-    switch (nodeType) {
-      case "text":
-        newNodeType = "textNode";
-        newNodeData.content = "New text content...";
-        break;
-      case "image":
-        newNodeType = "newImageNode";
-        break;
-      case "video":
-        newNodeType = "newVideoNode";
-        break;
-      case "segment":
-        newNodeType = "segmentNode";
-        newNodeData.visual = "New segment visual...";
-        newNodeData.narration = "New segment narration...";
-        newNodeData.animation = "New segment animation...";
-        break;
-      default:
-        newNodeType = "textNode";
-        newNodeData.content = "New node...";
-    }
+      // Generate random position within the viewport
+      const randomX = Math.random() * 600 + 100;
+      const randomY = Math.random() * 400 + 100;
 
-    const newNode = {
-      id: newNodeId,
-      type: newNodeType,
-      position: { x: randomX, y: randomY },
-      data: newNodeData,
-    };
+      let newNodeType;
+      let newNodeData = {
+        id: newNodeId,
+        nodeType: nodeType,
+        onChatClick: handleChatClick,
+      };
 
-    setNodes((prevNodes) => [...prevNodes, newNode]);
-  }, [setNodes, handleChatClick]);
+      // Set specific data based on node type
+      switch (nodeType) {
+        case "text":
+          newNodeType = "textNode";
+          newNodeData.content = "New text content...";
+          break;
+        case "image":
+          newNodeType = "addImageNode";
+          newNodeData.segmentId = null;
+          newNodeData.segmentData = null;
+          newNodeData.hasExistingImages = false;
+          break;
+        case "video":
+          newNodeType = "addVideoNode";
+          newNodeData.segmentId = null;
+          newNodeData.imageId = null;
+          newNodeData.segmentData = null;
+          break;
+        case "segment":
+          newNodeType = "segmentNode";
+          newNodeData.visual = "New segment visual...";
+          newNodeData.narration = "New segment narration...";
+          newNodeData.animation = "New segment animation...";
+          break;
+        default:
+          newNodeType = "textNode";
+          newNodeData.content = "New node...";
+      }
+
+      const newNode = {
+        id: newNodeId,
+        type: newNodeType,
+        position: { x: randomX, y: randomY },
+        data: newNodeData,
+      };
+
+      setNodes((prevNodes) => [...prevNodes, newNode]);
+    },
+    [setNodes, handleChatClick],
+  );
 
   // Handle adding chat node when clicking on other nodes
-  const handleAddChatNode = useCallback((clickedNode) => {
-    // Remove any existing chat nodes first
-    setNodes((prevNodes) => prevNodes.filter(node => node.type !== 'chatNode'));
-    setEdges((prevEdges) => prevEdges.filter(edge => !edge.target.includes('chat-')));
-    
-    // Create new chat node
-    const chatNodeId = `chat-${clickedNode.id}-${Date.now()}`;
-    const chatNode = {
-      id: chatNodeId,
-      type: 'chatNode',
-      position: { 
-        x: clickedNode.position.x - 50, 
-        y: clickedNode.position.y + 125 + 120 
-      },
-      data: {
-        nodeType: clickedNode.type,
-        parentNodeId: clickedNode.id,
-        onSendMessage: (message, nodeType, model) => {
-          console.log("Message sent:", message, "Node type:", nodeType, "Model:", model);
-          // Handle message sending logic here
-        }
-      }
-    };
+  const handleAddChatNode = useCallback(
+    (clickedNode) => {
+      // Remove any existing chat nodes first
+      setNodes((prevNodes) =>
+        prevNodes.filter((node) => node.type !== "chatNode"),
+      );
+      setEdges((prevEdges) =>
+        prevEdges.filter((edge) => !edge.target.includes("chat-")),
+      );
 
-    // Add chat node to the flow
-    setNodes((prevNodes) => [...prevNodes, chatNode]);
+      // Create new chat node
+      const chatNodeId = `chat-${clickedNode.id}-${Date.now()}`;
+      const chatNode = {
+        id: chatNodeId,
+        type: "chatNode",
+        position: {
+          x: clickedNode.position.x - 50,
+          y: clickedNode.position.y + 125 + 120,
+        },
+        data: {
+          nodeType: clickedNode.type,
+          parentNodeId: clickedNode.id,
+          onSendMessage: (message, nodeType, model) => {
+            console.log(
+              "Message sent:",
+              message,
+              "Node type:",
+              nodeType,
+              "Model:",
+              model,
+            );
+            // Handle message sending logic here
+          },
+        },
+      };
 
-    // Create edge connecting the clicked node to the chat node
-    const newEdge = {
-      id: `${clickedNode.id}-to-${chatNodeId}`,
-      source: clickedNode.id,
-      target: chatNodeId,
-      sourceHandle: 'output',
-      targetHandle: 'target',
-      style: { stroke: '#3B82F6', strokeWidth: 2, strokeDasharray: '5,5' },
-      type: 'smoothstep'
-    };
+      // Add chat node to the flow
+      setNodes((prevNodes) => [...prevNodes, chatNode]);
 
-    setEdges((prevEdges) => [...prevEdges, newEdge]);
-  }, [setNodes, setEdges]);
+      // Create edge connecting the clicked node to the chat node
+      const newEdge = {
+        id: `${clickedNode.id}-to-${chatNodeId}`,
+        source: clickedNode.id,
+        target: chatNodeId,
+        sourceHandle: "output",
+        targetHandle: "target",
+        style: { 
+          stroke: "#3B82F6", 
+          strokeWidth: 2, 
+          strokeDasharray: "5,5",
+          filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))"
+        },
+        type: "smoothstep",
+      };
+
+      setEdges((prevEdges) => [...prevEdges, newEdge]);
+    },
+    [setNodes, setEdges],
+  );
 
   // Update nodeTypes to pass onAfterEdit to ImageNode and VideoNode
   const nodeTypes = useMemo(
@@ -1048,10 +1085,7 @@ function FlowWidget() {
         />
       ),
       textNode: (props) => (
-        <NewTextNode
-          {...props}
-          onChatClick={handleChatClick}
-        />
+        <NewTextNode {...props} onChatClick={handleChatClick} />
       ),
       addImageNode: (props) => (
         <AddImageNode
@@ -1094,6 +1128,23 @@ function FlowWidget() {
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
   );
+
+  // Keep the graph within bounds when nodes/edges change
+  useEffect(() => {
+    if (rfInstance) {
+      requestAnimationFrame(() => {
+        try {
+          // Only fitView on initial load, not when nodes/edges change
+          // This prevents zoom reset when clicking elsewhere
+          if (nodes.length === 0 && edges.length === 0) {
+            rfInstance.fitView({ padding: 0.2, includeHiddenNodes: true });
+          }
+        } catch (e) {
+          // no-op
+        }
+      });
+    }
+  }, [rfInstance, nodes.length, edges.length]);
 
   const handleFlowAction = async (action) => {
     if (!isAuthenticated) return;
@@ -1181,8 +1232,6 @@ function FlowWidget() {
 
   return (
     <div className='z-10'>
-      {/* Floating button */}
-      {/* Sliding sidebar */}
       <div
         className={`fixed top-0 right-0 h-screen w-screen bg-[#0d0d0d] text-white transform transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
@@ -1190,14 +1239,14 @@ function FlowWidget() {
       >
         <div className='flex flex-1 overflow-hidden'>
           {/* Main content area */}
-          <div className='flex-1 flex flex-col'>
+          <div className='flex-1 flex flex-col min-w-[1200px] min-h-[800px]'>
             {/* Left Section: Logo + Title */}
-            <div className='fixed top-4 left-4 z-[1001] flex items-center gap-3'>
+            <div className='fixed top-4 left-4 z-[1001] bg-black/50 backdrop-blur-sm flex items-center gap-3'>
               {/* Logo with Dropdown */}
               <div className='relative'>
                 <button
                   onClick={() => setLogoDropdownOpen(!logoDropdownOpen)}
-                  className='h-10 flex items-center gap-2 text-white hover:text-gray-300 transition-all duration-200 bg-black/50 px-3 py-2 rounded-lg backdrop-blur-sm'
+                  className='h-10 flex items-center gap-2 text-white hover:text-gray-300 transition-all duration-200 bg-black/10 px-3 py-2 rounded-lg backdrop-blur-sm'
                 >
                   <img
                     src={assets.SandBoxLogo}
@@ -1241,9 +1290,9 @@ function FlowWidget() {
               </div>
 
               {/* Separator */}
-              <div className='h-6 w-px bg-gray-600'></div>
+              <div className='h-6 w-px border-[#FFFFFF]/50 border-1 rounded-lg bg-[#FFFFFF]/50 -ml-4'></div>
 
-              <h2 className='h-10 flex items-center text-lg font-semibold text-white drop-shadow-lg bg-black/50 px-3 py-2 rounded-lg backdrop-blur-sm'>
+              <h2 className='h-10 flex items-center text-lg font-semibold text-white drop-shadow-lg bg-black/50 mr-5 py-2 rounded-lg backdrop-blur-sm'>
                 Untitled
               </h2>
             </div>
@@ -1251,7 +1300,7 @@ function FlowWidget() {
             {/* Center Section: Tab Switching + Close Icon */}
             <div className='fixed top-4 left-1/2 transform -translate-x-1/2 z-[1001]'>
               <div className='h-10 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-lg p-1'>
-                <button className='h-8 px-3 py-1 text-sm text-white bg-purple-600 rounded-md transition-colors flex items-center gap-2'>
+                <button className='h-8 px-3 py-1 text-sm text-[#94E7ED] bg-[#94E7ED26] rounded-md transition-colors flex items-center gap-2'>
                   <img
                     src={assets.SandBoxTabIcon}
                     alt='Sandbox Icon'
@@ -1274,8 +1323,6 @@ function FlowWidget() {
               </div>
             </div>
 
-
-
             {/* Right Section: User + Chat Bot + Blue Button */}
             <div className='fixed top-4 right-4 z-[1001] flex items-center gap-3'>
               {/* User Icon with Dropdown */}
@@ -1283,7 +1330,7 @@ function FlowWidget() {
                 <div className='relative'>
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className='h-10 flex items-center gap-2 hover:bg-gray-700/50 rounded-lg px-2 py-2 transition-all duration-200 bg-black/50 backdrop-blur-sm'
+                    className='h-10 flex items-center gap-2  hover:border-0 border-0 rounded-lg px-2 py-2 transition-all duration-200 bg-black/50 backdrop-blur-sm'
                   >
                     {user.avatar ? (
                       <img
@@ -1292,7 +1339,7 @@ function FlowWidget() {
                         className='w-6 h-6 rounded-full border border-gray-600'
                       />
                     ) : (
-                      <div className='w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center'>
+                      <div className='w-6 h-6 rounded-full bg-cyan-600 flex items-center justify-center'>
                         <span className='text-white text-xs font-medium'>
                           {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                         </span>
@@ -1366,8 +1413,8 @@ function FlowWidget() {
                 />
               </div>
 
-              {/* Blue Button */}
-              <button className='h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors backdrop-blur-sm flex items-center gap-2'>
+              {/* Publish Button */}
+              <button className='h-10 px-4 py-2 bg-[#32353E66]/40 hover:bg-[#32353E66] border-0 text-white/50 text-sm font-medium rounded-lg transition-colors backdrop-blur-sm flex items-center gap-2'>
                 <img
                   src={assets.PublishIcon}
                   alt='Publish Icon'
@@ -1377,21 +1424,16 @@ function FlowWidget() {
               </button>
 
               {/* Chat History */}
-              <button className='fixed top-20 right-4 z-[1001] w-12 h-12 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg transition-all duration-200 flex items-center justify-center border border-gray-600'>
-                <svg
-                  className='w-5 h-5'
-                  fill='none'
-                  stroke='currentColor'
-                  strokeWidth={2}
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    d='M12 6v6m0 0v6m0-6h6m-6 0H6'
-                  />
-                </svg>
-              </button>
+              <div
+                className='fixed top-24  right-4 z-[1001] w-16 h-16 hover:bg-gray-600 border-0 text-white rounded-full shadow-lg transition-all duration-200 flex items-center justify-center  backdrop-blur-sm'
+                style={{ background: "#18191CCC" }}
+              >
+                <img
+                  src={assets.NewChatIcon}
+                  className='w-12 h-12'
+                  alt='New Chat'
+                />
+              </div>
             </div>
             {/* Model Selection */}
             {/* {isAuthenticated && stats.totalSegments > 0 && (
@@ -1428,7 +1470,7 @@ function FlowWidget() {
               </div>
             )} */}
 
-            <div className='flex-1 overflow-hidden'>
+            <div className='flex-1 overflow-auto'>
               {loading ? (
                 <div className='flex items-center justify-center h-full'>
                   <LoadingSpinner />
@@ -1486,25 +1528,35 @@ function FlowWidget() {
                   </div>
                 </div>
               ) : (
-                <div className='w-full h-full'>
+                <div className='w-full h-full min-w-[1000px] min-h-[700px]'>
                   <ReactFlow
+                    onInit={setRfInstance}
                     nodes={nodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    fitViewOptions={{ padding: 0.2, includeHiddenNodes: true }}
+                    minZoom={0.1}
+                    maxZoom={1.5}
                     onNodeClick={(event, node) => {
                       setSelectedNode(node);
                       // Add chat node when clicking on non-chat nodes
-                      if (node.type !== 'chatNode') {
+                      if (node.type !== "chatNode") {
                         handleAddChatNode(node);
                       }
                     }}
                     onPaneClick={() => {
                       setSelectedNode(null);
                       // Remove all chat nodes when deselecting
-                      setNodes((prevNodes) => prevNodes.filter(node => node.type !== 'chatNode'));
-                      setEdges((prevEdges) => prevEdges.filter(edge => !edge.target.includes('chat-')));
+                      setNodes((prevNodes) =>
+                        prevNodes.filter((node) => node.type !== "chatNode"),
+                      );
+                      setEdges((prevEdges) =>
+                        prevEdges.filter(
+                          (edge) => !edge.target.includes("chat-"),
+                        ),
+                      );
                     }}
                     nodeTypes={nodeTypes}
                     fitView
@@ -1533,15 +1585,13 @@ function FlowWidget() {
                       maskColor='rgba(0, 0, 0, 0.5)'
                     /> */}
                   </ReactFlow>
-                  
+
                   {/* Flow Widget Sidebar */}
                   <FlowWidgetSidebar
                     selectedNode={selectedNode}
                     onClose={() => setSelectedNode(null)}
                     onChatClick={handleChatClick}
                   />
-
-
                 </div>
               )}
             </div>
@@ -1558,7 +1608,14 @@ function FlowWidget() {
           isOpen={chatOpen}
           onClose={handleChatClose}
           onSendMessage={(message, nodeType, model) => {
-            console.log("Message sent:", message, "Node type:", nodeType, "Model:", model);
+            console.log(
+              "Message sent:",
+              message,
+              "Node type:",
+              nodeType,
+              "Model:",
+              model,
+            );
             // Handle message sending logic here
           }}
         />

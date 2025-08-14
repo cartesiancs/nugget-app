@@ -31,18 +31,25 @@ const ScriptSelection = ({
     return (
       <div className="mt-3 w-full space-y-3">
         {/* Script 1 */}
-        <div className="w-full bg-gray-800 border border-gray-600 rounded-lg overflow-hidden hover:border-gray-500 transition-all duration-300 cursor-pointer">
+        <div 
+          className="w-full border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer"
+          style={{
+            background: '#18191C80',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+          }}
+        >
           <div 
-            className="p-4 flex flex-col relative"
+            className="p-3 flex flex-col relative"
             onClick={() => handleScriptClick(scripts.response1, 1)}
           >
             {/* Dropdown arrow in top right */}
             <button
               onClick={(e) => handleExpandClick(e, 1)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors p-1"
+              className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
             >
               <svg 
-                className={`w-4 h-4 transition-transform duration-200 ${expandedScript === 1 ? 'rotate-180' : ''}`} 
+                className={`w-3 h-3 transition-transform duration-200 ${expandedScript === 1 ? 'rotate-180' : ''}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -52,32 +59,32 @@ const ScriptSelection = ({
             </button>
 
             {/* Title */}
-            <div className="text-white font-bold text-base mb-3 pr-8">
+            <div className="text-white font-bold text-sm mb-2 pr-6">
               Script 1
             </div>
 
             {/* Segments and Art Style */}
-            <div className="space-y-2 mb-3">
-              <div className="text-gray-300 text-sm">
-                <span className="text-gray-400">Segments:</span> {scripts.response1.segments?.length || 0}
+            <div className="space-y-1 mb-2">
+              <div className="text-gray-300 text-xs">
+                <span className="text-cyan-300">Segments:</span> {scripts.response1.segments?.length || 0}
               </div>
-              <div className="text-gray-300 text-sm">
-                <span className="text-gray-400">Art Style:</span> {scripts.response1.artStyle || "Default"}
+              <div className="text-gray-300 text-xs">
+                <span className="text-cyan-300">Art Style:</span> {scripts.response1.artStyle || "Default"}
               </div>
             </div>
 
             {/* Narration content */}
             <div className="flex-1">
               {expandedScript === 1 ? (
-                <div className="text-gray-300 text-sm leading-relaxed">
-                  <span className="text-gray-400">Narration:</span>
-                  <div className="mt-2 space-y-3 max-h-60 overflow-y-auto">
+                <div className="text-gray-300 text-xs leading-relaxed">
+                  <span className="text-cyan-300">Narration:</span>
+                  <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
                     {scripts.response1.segments?.map((segment, index) => (
-                      <div key={index} className="border-l-2 border-gray-600 pl-3">
-                        <div className="text-gray-500 text-xs mb-1">
+                      <div key={index} className="border-l-2 border-cyan-400/30 pl-2">
+                        <div className="text-gray-400 text-xs mb-1">
                           Narration {index + 1}:
                         </div>
-                        <div className="text-gray-300 text-sm">
+                        <div className="text-gray-300 text-xs">
                           {segment.narration || segment.visual}
                         </div>
                       </div>
@@ -86,11 +93,16 @@ const ScriptSelection = ({
                 </div>
               ) : (
                 <div className="relative">
-                  <div className="text-gray-300 text-sm leading-relaxed">
-                    <span className="text-gray-400">Narration:</span> {scripts.response1.segments?.[0]?.narration?.substring(0, 100) || scripts.response1.segments?.[0]?.visual?.substring(0, 100) || "No content"}...
+                  <div className="text-gray-300 text-xs leading-relaxed">
+                    <span className="text-cyan-300">Narration:</span> {scripts.response1.segments?.[0]?.narration?.substring(0, 80) || scripts.response1.segments?.[0]?.visual?.substring(0, 80) || "No content"}...
                   </div>
                   {/* Blur effect at bottom when collapsed */}
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-800 to-transparent pointer-events-none"></div>
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(24, 25, 28, 0.8), transparent)'
+                    }}
+                  ></div>
                 </div>
               )}
             </div>
@@ -98,18 +110,25 @@ const ScriptSelection = ({
         </div>
 
         {/* Script 2 */}
-        <div className="w-full bg-gray-800 border border-gray-600 rounded-lg overflow-hidden hover:border-gray-500 transition-all duration-300 cursor-pointer">
+        <div 
+          className="w-full border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer"
+          style={{
+            background: '#18191C80',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+          }}
+        >
           <div 
-            className="p-4 flex flex-col relative"
+            className="p-3 flex flex-col relative"
             onClick={() => handleScriptClick(scripts.response2, 2)}
           >
             {/* Dropdown arrow in top right */}
             <button
               onClick={(e) => handleExpandClick(e, 2)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors p-1"
+              className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
             >
               <svg 
-                className={`w-4 h-4 transition-transform duration-200 ${expandedScript === 2 ? 'rotate-180' : ''}`} 
+                className={`w-3 h-3 transition-transform duration-200 ${expandedScript === 2 ? 'rotate-180' : ''}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -119,32 +138,32 @@ const ScriptSelection = ({
             </button>
 
             {/* Title */}
-            <div className="text-white font-bold text-base mb-3 pr-8">
+            <div className="text-white font-bold text-sm mb-2 pr-6">
               Script 2
             </div>
 
             {/* Segments and Art Style */}
-            <div className="space-y-2 mb-3">
-              <div className="text-gray-300 text-sm">
-                <span className="text-gray-400">Segments:</span> {scripts.response2.segments?.length || 0}
+            <div className="space-y-1 mb-2">
+              <div className="text-gray-300 text-xs">
+                <span className="text-cyan-300">Segments:</span> {scripts.response2.segments?.length || 0}
               </div>
-              <div className="text-gray-300 text-sm">
-                <span className="text-gray-400">Art Style:</span> {scripts.response2.artStyle || "Default"}
+              <div className="text-gray-300 text-xs">
+                <span className="text-cyan-300">Art Style:</span> {scripts.response2.artStyle || "Default"}
               </div>
             </div>
 
             {/* Narration content */}
             <div className="flex-1">
               {expandedScript === 2 ? (
-                <div className="text-gray-300 text-sm leading-relaxed">
-                  <span className="text-gray-400">Narration:</span>
-                  <div className="mt-2 space-y-3 max-h-60 overflow-y-auto">
+                <div className="text-gray-300 text-xs leading-relaxed">
+                  <span className="text-cyan-300">Narration:</span>
+                  <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
                     {scripts.response2.segments?.map((segment, index) => (
-                      <div key={index} className="border-l-2 border-gray-600 pl-3">
-                        <div className="text-gray-500 text-xs mb-1">
+                      <div key={index} className="border-l-2 border-cyan-400/30 pl-2">
+                        <div className="text-gray-400 text-xs mb-1">
                           Narration {index + 1}:
                         </div>
-                        <div className="text-gray-300 text-sm">
+                        <div className="text-gray-300 text-xs">
                           {segment.narration || segment.visual}
                         </div>
                       </div>
@@ -153,11 +172,16 @@ const ScriptSelection = ({
                 </div>
               ) : (
                 <div className="relative">
-                  <div className="text-gray-300 text-sm leading-relaxed">
-                    <span className="text-gray-400">Narration:</span> {scripts.response2.segments?.[0]?.narration?.substring(0, 100) || scripts.response2.segments?.[0]?.visual?.substring(0, 100) || "No content"}...
+                  <div className="text-gray-300 text-xs leading-relaxed">
+                    <span className="text-cyan-300">Narration:</span> {scripts.response2.segments?.[0]?.narration?.substring(0, 80) || scripts.response2.segments?.[0]?.visual?.substring(0, 80) || "No content"}...
                   </div>
                   {/* Blur effect at bottom when collapsed */}
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-800 to-transparent pointer-events-none"></div>
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(24, 25, 28, 0.8), transparent)'
+                    }}
+                  ></div>
                 </div>
               )}
             </div>

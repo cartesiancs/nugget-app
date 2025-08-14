@@ -230,7 +230,7 @@ const ChatMessages = ({
   ]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-3 space-y-3">
       {messages.map((message) => (
         <div
           key={message.id}
@@ -240,12 +240,23 @@ const ChatMessages = ({
             className={`${
               message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready"
                 ? "w-full p-0" // Full width and no padding/background for media messages
-                : `max-w-[80%] p-3 ${
+                : `max-w-[80%] p-2.5 ${
                     message.type === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 text-gray-100"
+                      ? "text-white rounded-lg"
+                      : "text-gray-100 rounded-lg"
                   }`
-            } rounded-lg`}
+            }`}
+            style={
+              message.id !== "concept-request" && message.id !== "script-request" && message.id !== "image-generation" && message.id !== "video-generation" && message.id !== "timeline-ready"
+                ? {
+                    background: message.type === "user" 
+                      ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%)'
+                      : '#18191C80',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                  }
+                : {}
+            }
           >
             {message.content && <div className="text-sm">{message.content}</div>}
             {message.component && (
@@ -260,10 +271,17 @@ const ChatMessages = ({
       {/* Loading indicator */}
       {chatFlow.loading && (
         <div className="flex justify-start">
-          <div className="bg-gray-700 text-gray-100 rounded-lg p-3">
+          <div 
+            className="text-gray-100 rounded-lg p-2.5"
+            style={{
+              background: '#18191C80',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              <span className="text-sm">Processing...</span>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-cyan-400"></div>
+              <span className="text-xs">Processing...</span>
             </div>
           </div>
         </div>
@@ -272,11 +290,18 @@ const ChatMessages = ({
       {/* Error message */}
       {chatFlow.error && (
         <div className="flex justify-start">
-          <div className="bg-red-600 text-white rounded-lg p-3 max-w-[80%]">
-            <div className="text-sm">{chatFlow.error}</div>
+          <div 
+            className="text-white rounded-lg p-2.5 max-w-[80%]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.8) 0%, rgba(220, 38, 38, 0.9) 100%)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <div className="text-xs">{chatFlow.error}</div>
             <button
               onClick={() => chatFlow.setError(null)}
-              className="mt-2 text-xs text-red-200 hover:text-white underline"
+              className="mt-1 text-xs text-red-200 hover:text-white underline"
             >
               Dismiss
             </button>

@@ -337,15 +337,18 @@ function ChatWidgetSidebar({ open, setOpen }) {
       {/* Sliding sidebar */}
       <div
 
-        className={`bg-gray-800/95 backdrop-blur-sm border-0 border-gray-600/40 shadow-lg rounded-lg ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
+        className={`backdrop-blur-sm border border-gray-600/30 shadow-lg rounded-xl ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
 
           open ? "translate-x-0" : "translate-x-full"
         } z-[10000] flex flex-col shadow-2xl`}
         style={{
+          background: 'linear-gradient(179.99deg, rgba(233, 232, 235, 0.14) 0.01%, rgba(24, 25, 28, 0.2) 79.99%)',
           width: 'calc(30% - 20px)',
           height: 'calc(106vh - 200px)',
           right: open ? '10px' : '-100%',
-          top: '110px'
+          top: '110px',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
         }}
       >
         {/* Header */}

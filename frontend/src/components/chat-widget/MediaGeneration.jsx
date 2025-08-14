@@ -23,10 +23,16 @@ const MediaGeneration = ({
   if (mediaEntries.length > 0) {
     return (
       <div className="mt-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {mediaEntries.map(([segmentId, mediaUrl]) => (
             <div key={segmentId} className="relative group">
-              <div className="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden hover:border-gray-500 transition-colors">
+              <div 
+                className="border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-colors"
+                style={{
+                  background: '#18191C80',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
                 {isImageGeneration ? (
                   <div 
                     className="cursor-pointer"
@@ -35,14 +41,14 @@ const MediaGeneration = ({
                     <img
                       src={mediaUrl}
                       alt={`Generated image for segment ${segmentId}`}
-                      className="w-full h-32 object-cover"
+                      className="w-full h-24 object-cover"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
                       }}
                     />
                     <div 
-                      className="hidden w-full h-32 bg-gray-700 items-center justify-center"
+                      className="hidden w-full h-24 bg-gray-700/50 items-center justify-center"
                     >
                       <span className="text-gray-400 text-xs">Failed to load image</span>
                     </div>
@@ -51,7 +57,7 @@ const MediaGeneration = ({
                   <div className="relative">
                     <video
                       src={mediaUrl}
-                      className="w-full h-32 object-cover cursor-pointer"
+                      className="w-full h-24 object-cover cursor-pointer"
                       onClick={() => onVideoClick?.(mediaUrl)}
                       onError={(e) => {
                         e.target.style.display = 'none';
@@ -59,16 +65,22 @@ const MediaGeneration = ({
                       }}
                     />
                     <div 
-                      className="hidden w-full h-32 bg-gray-700 items-center justify-center"
+                      className="hidden w-full h-24 bg-gray-700/50 items-center justify-center"
                     >
                       <span className="text-gray-400 text-xs">Failed to load video</span>
                     </div>
                     
                     {/* Play button overlay */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-black bg-opacity-50 rounded-full p-2">
+                      <div 
+                        className="rounded-full p-1.5"
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.6)',
+                          backdropFilter: 'blur(5px)'
+                        }}
+                      >
                         <svg 
-                          className="w-6 h-6 text-white" 
+                          className="w-4 h-4 text-white" 
                           fill="currentColor" 
                           viewBox="0 0 20 20"
                         >
@@ -79,7 +91,7 @@ const MediaGeneration = ({
                   </div>
                 )}
                 
-                <div className="p-2">
+                <div className="p-1.5">
                   <div className="text-xs text-gray-400 mb-1">
                     Segment {segmentId}
                   </div>
@@ -87,7 +99,10 @@ const MediaGeneration = ({
                   {!isImageGeneration && onAddSingleVideo && (
                     <button
                       onClick={() => onAddSingleVideo(segmentId)}
-                      className="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded transition-colors"
+                      className="w-full text-xs text-white py-1 px-2 rounded transition-colors"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.8) 0%, rgba(14, 165, 233, 0.9) 100%)'
+                      }}
                     >
                       Add to Timeline
                     </button>
@@ -109,9 +124,16 @@ const MediaGeneration = ({
           if (progress.type !== type) return null;
           
           return (
-            <div key={segmentId} className="bg-gray-800 border border-gray-600 rounded-lg p-3">
+            <div 
+              key={segmentId} 
+              className="border border-gray-600/40 rounded-lg p-2"
+              style={{
+                background: '#18191C80',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-300">
+                <span className="text-xs text-gray-300">
                   Segment {segmentId}
                 </span>
                 <span className="text-xs text-gray-400">
@@ -122,19 +144,19 @@ const MediaGeneration = ({
               <div className="flex items-center space-x-2">
                 {progress.status === "generating" && (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-cyan-400"></div>
                     <span className="text-xs text-gray-400">Generating...</span>
                   </>
                 )}
                 {progress.status === "completed" && (
                   <>
-                    <div className="h-3 w-3 bg-green-500 rounded-full"></div>
+                    <div className="h-2 w-2 bg-green-400 rounded-full"></div>
                     <span className="text-xs text-green-400">Completed</span>
                   </>
                 )}
                 {progress.status === "error" && (
                   <>
-                    <div className="h-3 w-3 bg-red-500 rounded-full"></div>
+                    <div className="h-2 w-2 bg-red-400 rounded-full"></div>
                     <span className="text-xs text-red-400">
                       Error: {progress.error || "Unknown error"}
                     </span>
@@ -155,8 +177,8 @@ const MediaGeneration = ({
     return (
       <div className="mt-3">
         <div className="flex items-center space-x-2 mb-3">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-          <span className="text-sm text-gray-300">
+          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-cyan-400"></div>
+          <span className="text-xs text-gray-300">
             Processing...
           </span>
         </div>

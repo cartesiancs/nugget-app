@@ -62,19 +62,20 @@ export default function InputArea({
 
   // Authenticated + project selected → show input
   return (
-    <div className="p-4">
+    <div className="p-3">
       <div
-        className="rounded-2xl shadow-2xl w-full max-w-4xl mx-auto p-4"
+        className="rounded-xl shadow-2xl w-full mx-auto p-3"
         style={{
-          background: "linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+          background: '#18191C80',
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backdropFilter: 'blur(10px)',
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
         }}
       >
         {/* Main Content */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Message Input */}
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-2">
             <div className="relative">
               <textarea
                 ref={textareaRef}
@@ -119,16 +120,17 @@ export default function InputArea({
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="text-gray-400 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 appearance-none cursor-pointer"
+                className="text-gray-300 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 appearance-none cursor-pointer"
                 style={{
-                  background: "rgba(28, 28, 28, 0.8)",
+                  background: "rgba(24, 25, 28, 0.6)",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
+                  backdropFilter: 'blur(5px)',
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: "right 6px center",
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "10px",
                   paddingRight: "22px",
-                  minWidth: "110px",
+                  minWidth: "100px",
                 }}
                 disabled={loading}
               >
@@ -213,12 +215,13 @@ export default function InputArea({
                   className="p-2 rounded-lg transition-all duration-200 flex items-center justify-center disabled:cursor-not-allowed ml-1"
                   style={{
                     background: prompt.trim() && !loading
-                      ? "linear-gradient(135deg, #374151 0%, #1f2937 100%)"
+                      ? "linear-gradient(135deg, rgba(6, 182, 212, 0.8) 0%, rgba(14, 165, 233, 0.9) 100%)"
                       : "rgba(55, 65, 81, 0.4)",
                     border: "1px solid rgba(255, 255, 255, 0.1)",
+                    backdropFilter: 'blur(5px)',
                     color: prompt.trim() && !loading ? "#ffffff" : "#6b7280",
-                    width: "32px",
-                    height: "32px",
+                    width: "28px",
+                    height: "28px",
                   }}
                   onClick={(e) => {
                     e.preventDefault();

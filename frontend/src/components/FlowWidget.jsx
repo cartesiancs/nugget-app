@@ -957,9 +957,22 @@ function FlowWidget() {
     (nodeType) => {
       const newNodeId = `${nodeType}-${Date.now()}`;
 
-      // Generate random position within the viewport
-      const randomX = Math.random() * 600 + 100;
-      const randomY = Math.random() * 400 + 100;
+      // Get viewport center position instead of random position
+      let centerX = 300; // fallback
+      let centerY = 300; // fallback
+
+      if (rfInstance) {
+        const viewport = rfInstance.getViewport();
+        const bounds = document
+          .querySelector(".react-flow__viewport")
+          ?.getBoundingClientRect();
+
+        if (bounds) {
+          // Calculate the center of the visible viewport in flow coordinates
+          centerX = (-viewport.x + bounds.width / 2) / viewport.zoom;
+          centerY = (-viewport.y + bounds.height / 2) / viewport.zoom;
+        }
+      }
 
       let newNodeType;
       let newNodeData = {
@@ -979,12 +992,14 @@ function FlowWidget() {
           newNodeData.segmentId = null;
           newNodeData.segmentData = null;
           newNodeData.hasExistingImages = false;
+          newNodeData.isStandalone = true; // Mark as standalone
           break;
         case "video":
           newNodeType = "addVideoNode";
           newNodeData.segmentId = null;
           newNodeData.imageId = null;
           newNodeData.segmentData = null;
+          newNodeData.isStandalone = true; // Mark as standalone
           break;
         case "segment":
           newNodeType = "segmentNode";
@@ -1000,13 +1015,13 @@ function FlowWidget() {
       const newNode = {
         id: newNodeId,
         type: newNodeType,
-        position: { x: randomX, y: randomY },
+        position: { x: centerX, y: centerY }, // Use viewport center
         data: newNodeData,
       };
 
       setNodes((prevNodes) => [...prevNodes, newNode]);
     },
-    [setNodes, handleChatClick],
+    [setNodes, handleChatClick, rfInstance], // Add rfInstance to dependencies
   );
 
   // Handle adding chat node when clicking on other nodes
@@ -1230,12 +1245,12 @@ function FlowWidget() {
       ),
       addImageNode: (props) => (
         <AddImageNode
-        {...props}
-        id={props.id} 
-        onCreateNewImage={handleCreateNewImage}
-        onImageGenerated={handleImageGenerated} 
-        creatingImages={creatingImages}
-        hasExistingImages={props.data?.hasExistingImages}
+          {...props}
+          id={props.id}
+          onCreateNewImage={handleCreateNewImage}
+          onImageGenerated={handleImageGenerated}
+          creatingImages={creatingImages}
+          hasExistingImages={props.data?.hasExistingImages}
         />
       ),
       addVideoNode: (props) => (
@@ -1269,8 +1284,75 @@ function FlowWidget() {
   }, [createFlowElements, projectData]);
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
+    (params) => {
+      // Create the edge
+      setEdges((eds) => addEdge(params, eds));
+
+      // Handle data inheritance when connecting AddImageNode to SegmentNode
+      const sourceNode = nodes.find((node) => node.id === params.source);
+      const targetNode = nodes.find((node) => node.id === params.target);
+
+      // If connecting SegmentNode to AddImageNode
+      if (
+        sourceNode?.type === "segmentNode" &&
+        targetNode?.type === "addImageNode"
+      ) {
+        setNodes((prevNodes) =>
+          prevNodes.map((node) => {
+            if (node.id === params.target && node.data.isStandalone) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  segmentId: sourceNode.data.id,
+                  segmentData: {
+                    id: sourceNode.data.id,
+                    visual: sourceNode.data.visual,
+                    animation: sourceNode.data.animation,
+                    artStyle:
+                      sourceNode.data.artStyle ||
+                      "cinematic photography with soft lighting",
+                  },
+                  hasExistingImages: !!flowData.images[sourceNode.data.id],
+                  isStandalone: false, // No longer standalone
+                },
+              };
+            }
+            return node;
+          }),
+        );
+      }
+      if (
+        sourceNode?.type === "addImageNode" &&
+        targetNode?.type === "segmentNode"
+      ) {
+        setNodes((prevNodes) =>
+          prevNodes.map((node) => {
+            if (node.id === params.source && node.data.isStandalone) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  segmentId: targetNode.data.id,
+                  segmentData: {
+                    id: targetNode.data.id,
+                    visual: targetNode.data.visual,
+                    animation: targetNode.data.animation,
+                    artStyle:
+                      targetNode.data.artStyle ||
+                      "cinematic photography with soft lighting",
+                  },
+                  hasExistingImages: !!flowData.images[targetNode.data.id],
+                  isStandalone: false, // No longer standalone
+                },
+              };
+            }
+            return node;
+          }),
+        );
+      }
+    },
+    [setEdges, nodes, setNodes, flowData.images],
   );
 
   // Keep the graph within bounds when nodes/edges change

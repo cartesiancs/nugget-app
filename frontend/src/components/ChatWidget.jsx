@@ -37,7 +37,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
   const [newProjectDesc, setNewProjectDesc] = useState("");
   const [showMenu, setShowMenu] = useState(false);
   const [collapseSteps, setCollapseSteps] = useState(true);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const nameInputRef = useRef(null);
 
   // Modal states
@@ -331,7 +330,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
       className='z-10'
       onClick={() => {
         setShowMenu(false);
-        setShowUserMenu(false);
       }}
     >
       {/* Sliding sidebar */}
@@ -353,8 +351,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
           open={open}
           showMenu={showMenu}
           setShowMenu={setShowMenu}
-          showUserMenu={showUserMenu}
-          setShowUserMenu={setShowUserMenu}
           showProjectHistory={showProjectHistory}
           setShowProjectHistory={setShowProjectHistory}
           isAuthenticated={isAuthenticated}
@@ -548,6 +544,27 @@ function ChatWidgetSidebar({ open, setOpen }) {
 // all heavy UI / logic to <ChatWidgetSidebar />.
 function ChatWidget() {
   const [open, setOpen] = React.useState(false);
+  
+  // Get auth data to expose globally
+  const { isAuthenticated, logout, user } = useAuth();
+
+  // Expose chat control functions and auth data globally
+  React.useEffect(() => {
+    window.openChat = () => setOpen(true);
+    window.closeChat = () => setOpen(false);
+    window.toggleChat = () => setOpen(prev => !prev);
+    window.isChatOpen = () => open;
+    window.getChatAuthData = () => ({ isAuthenticated, user, logout });
+
+    // Cleanup on unmount
+    return () => {
+      delete window.openChat;
+      delete window.closeChat;
+      delete window.toggleChat;
+      delete window.isChatOpen;
+      delete window.getChatAuthData;
+    };
+  }, [open, isAuthenticated, user, logout]);
 
   // Keep publish button visible when chat is open (removed hiding logic)
   React.useEffect(() => {
@@ -560,6 +577,12 @@ function ChatWidget() {
       window.toggleRightPanel(open);
     } else {
       console.warn('toggleRightPanel function not available on window');
+    }
+
+    // Set data-open attribute on the chat widget element for external monitoring
+    const chatWidget = document.querySelector('react-chat-widget');
+    if (chatWidget) {
+      chatWidget.setAttribute('data-open', open ? 'true' : 'false');
     }
 
     // Keep layout buttons visible (removed hiding logic)

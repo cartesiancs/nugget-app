@@ -88,13 +88,13 @@ export class App extends LitElement {
         };
         document.body.appendChild(publishButton);
 
-        /*** LAYOUT BUTTONS ***/
-        // Container to hold layout buttons
-        let layoutContainer = document.getElementById('layout-btn-group') as HTMLElement | null;
-        if (!layoutContainer) {
-          layoutContainer = document.createElement('div');
-          layoutContainer.id = 'layout-btn-group';
-          layoutContainer.style.cssText = `
+        /*** CHAT TOGGLE BUTTON ***/
+        // Container to hold chat toggle button
+        let chatToggleContainer = document.getElementById('chat-toggle-container') as HTMLElement | null;
+        if (!chatToggleContainer) {
+          chatToggleContainer = document.createElement('div');
+          chatToggleContainer.id = 'chat-toggle-container';
+          chatToggleContainer.style.cssText = `
             position: fixed;
             top: 50px;
             right: 130px; /* Keep a bit left to the publish button */
@@ -104,7 +104,7 @@ export class App extends LitElement {
             margin-right: 20px;
             z-index: 10000;
           `;
-          document.body.appendChild(layoutContainer);
+          document.body.appendChild(chatToggleContainer);
         }
 
         /*** VERTICAL ACTION BAR (persistent) ***/
@@ -844,18 +844,14 @@ export class App extends LitElement {
         const controlDrawer = document.querySelector('control-ui');
         if (controlDrawer) layoutObserver.observe(controlDrawer, { attributes: true, attributeFilter: ['is-panel-collapsed'] });
 
-        // Utility to create a single layout button
-        const addLayoutBtn = (
-          id: string,
-          icon: string,
-          tooltip: string,
-          layout: 'sidebar' | 'chat' | 'none'
-        ) => {
-          if (document.getElementById(id)) return; // avoid duplicates
+        // Create chat toggle button
+        const createChatToggleButton = () => {
+          if (document.getElementById('chat-toggle-btn')) return; // avoid duplicates
+          
           const btn = document.createElement('button');
-          btn.id = id;
-          btn.innerHTML = `<span class="material-symbols-outlined" style="color:#000000;font-size:18px;">${icon}</span>`;
-          btn.title = tooltip;
+          btn.id = 'chat-toggle-btn';
+          btn.innerHTML = `<span class="material-symbols-outlined" style="color:#000000;font-size:18px;">chat</span>`;
+          btn.title = 'Open Chat';
           btn.style.cssText = `
             background-color: #FFFFFF;
             color: #000000;
@@ -864,15 +860,285 @@ export class App extends LitElement {
             border-radius: 6px;
             cursor: pointer;
             font-family: inherit;
+            transition: background-color 0.2s ease;
           `;
-          btn.onclick = () => applyLayout(layout);
-          layoutContainer!.appendChild(btn);
+          
+          const updateButtonState = () => {
+            // Check if chat is open by looking for the chat widget's open state
+            const chatWidget = document.querySelector('react-chat-widget');
+            const isOpen = chatWidget && chatWidget.getAttribute('data-open') === 'true';
+            
+            if (isOpen) {
+              btn.style.backgroundColor = '#4CAF50'; // Green when chat is open
+              btn.innerHTML = `<span class="material-symbols-outlined" style="color:#ffffff;font-size:18px;">close</span>`;
+              btn.title = 'Close Chat';
+            } else {
+              btn.style.backgroundColor = '#FFFFFF';
+              btn.innerHTML = `<span class="material-symbols-outlined" style="color:#000000;font-size:18px;">chat</span>`;
+              btn.title = 'Open Chat';
+            }
+          };
+          
+          btn.onclick = () => {
+            console.log('Chat toggle button clicked');
+            
+            // Use the globally exposed functions from ChatWidget
+            if (typeof window.toggleChat === 'function') {
+              setSidebarCollapsed(true); // Always close sidebar when opening chat
+              window.toggleChat();
+              console.log('Chat toggled via window.toggleChat');
+            } else if (typeof window.openChat === 'function' && typeof window.closeChat === 'function') {
+              // Fallback: check current state and toggle manually
+              const chatWidget = document.querySelector('react-chat-widget');
+              const isOpen = chatWidget && chatWidget.getAttribute('data-open') === 'true';
+              
+              setSidebarCollapsed(true); // Always close sidebar when opening chat
+              
+              if (isOpen) {
+                window.closeChat();
+                console.log('Chat closed via window.closeChat');
+              } else {
+                window.openChat();
+                console.log('Chat opened via window.openChat');
+              }
+            } else {
+              console.warn('Chat control functions not available on window');
+              alert('Chat functionality not available yet. Please wait for the page to fully load.');
+            }
+            
+            // Update button state after a short delay to allow React to update
+            setTimeout(() => {
+              updateButtonState();
+              adjustOffsets();
+            }, 100);
+          };
+          
+          // Initial button state
+          updateButtonState();
+          
+          // Watch for chat widget state changes and update button accordingly
+          const chatWidget = document.querySelector('react-chat-widget');
+          if (chatWidget) {
+            const observer = new MutationObserver(updateButtonState);
+            observer.observe(chatWidget, { attributes: true, attributeFilter: ['data-open'] });
+          }
+          
+          chatToggleContainer!.appendChild(btn);
         };
 
-        // Create the three layout buttons
-        addLayoutBtn('layout-sidebar-btn', 'view_sidebar', 'Sidebar Layout', 'sidebar');
-        addLayoutBtn('layout-chat-btn', 'chat', 'Chat Layout', 'chat');
-        addLayoutBtn('layout-none-btn', 'close_fullscreen', 'Clean Layout', 'none');
+        createChatToggleButton();
+        
+        // Create user profile button
+        const createUserProfileButton = () => {
+          if (document.getElementById('user-profile-btn')) return; // avoid duplicates
+          
+          const btn = document.createElement('button');
+          btn.id = 'user-profile-btn';
+          btn.title = 'User Profile';
+          btn.style.cssText = `
+            background-color: #FFFFFF;
+            color: #000000;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          `;
+          
+          let showUserMenu = false;
+          let userMenuElement: HTMLElement | null = null;
+          
+          const updateProfileButton = () => {
+            const authData = (window as any).getChatAuthData?.();
+            
+            if (!authData || !authData.isAuthenticated || !authData.user) {
+              btn.style.display = 'none';
+              return;
+            }
+            
+            btn.style.display = 'flex';
+            const user = authData.user;
+            
+            // Clear existing content
+            btn.innerHTML = '';
+            
+            // Create avatar
+            if (user.avatar) {
+              const img = document.createElement('img');
+              img.src = user.avatar;
+              img.alt = 'Profile';
+              img.style.cssText = `
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                border: 1px solid #666;
+              `;
+              btn.appendChild(img);
+            } else {
+              const avatarDiv = document.createElement('div');
+              avatarDiv.style.cssText = `
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background-color: #4CAF50;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                font-weight: bold;
+                color: white;
+              `;
+              avatarDiv.textContent = user.name?.charAt(0) || user.email?.charAt(0) || 'U';
+              btn.appendChild(avatarDiv);
+            }
+            
+            // Create dropdown arrow
+            const arrow = document.createElement('span');
+            arrow.innerHTML = '▼';
+            arrow.style.cssText = `
+              font-size: 8px;
+              color: #666;
+              transition: transform 0.2s ease;
+            `;
+            btn.appendChild(arrow);
+          };
+          
+          const createUserMenu = () => {
+            if (userMenuElement) return;
+            
+            const authData = (window as any).getChatAuthData?.();
+            if (!authData || !authData.isAuthenticated || !authData.user) return;
+            
+            userMenuElement = document.createElement('div');
+            userMenuElement.style.cssText = `
+              position: absolute;
+              top: 100%;
+              right: 0;
+              margin-top: 4px;
+              width: 180px;
+              background: rgba(0,0,0,0.95);
+              backdrop-filter: blur(12px);
+              border: 1px solid rgba(255,255,255,0.2);
+              border-radius: 8px;
+              box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+              z-index: 10002;
+              overflow: hidden;
+            `;
+            
+            // Prevent menu from closing when clicking inside it
+            userMenuElement.onclick = (e) => {
+              e.stopPropagation();
+              console.log('Clicked inside user menu, preventing close');
+            };
+            
+            // User info section
+            const userInfo = document.createElement('div');
+            userInfo.style.cssText = `
+              padding: 12px;
+              border-bottom: 1px solid rgba(255,255,255,0.1);
+              color: white;
+              font-size: 12px;
+            `;
+            userInfo.textContent = authData.user.name || authData.user.email;
+            userMenuElement.appendChild(userInfo);
+            
+            // Sign out button
+            const signOutBtn = document.createElement('button');
+            signOutBtn.textContent = 'Sign Out';
+            signOutBtn.style.cssText = `
+              width: 100%;
+              padding: 10px 12px;
+              background: transparent;
+              border: none;
+              color: white;
+              text-align: left;
+              font-size: 12px;
+              cursor: pointer;
+              transition: background-color 0.2s ease;
+            `;
+            signOutBtn.onmouseenter = () => {
+              signOutBtn.style.backgroundColor = 'rgba(255,255,255,0.1)';
+            };
+            signOutBtn.onmouseleave = () => {
+              signOutBtn.style.backgroundColor = 'transparent';
+            };
+            signOutBtn.onclick = (e) => {
+              e.stopPropagation();
+              const authData = (window as any).getChatAuthData?.();
+              if (authData && authData.logout) {
+                authData.logout();
+                hideUserMenu();
+                updateProfileButton();
+              }
+            };
+            userMenuElement.appendChild(signOutBtn);
+            
+            btn.appendChild(userMenuElement);
+          };
+          
+          const showUserMenuFn = () => {
+            if (showUserMenu) return;
+            showUserMenu = true;
+            createUserMenu();
+            if (userMenuElement) {
+              userMenuElement.style.display = 'block';
+              // Rotate arrow
+              const arrow = btn.querySelector('span');
+              if (arrow) arrow.style.transform = 'rotate(180deg)';
+            }
+          };
+          
+          const hideUserMenu = () => {
+            if (!showUserMenu) return;
+            showUserMenu = false;
+            if (userMenuElement) {
+              userMenuElement.remove();
+              userMenuElement = null;
+              // Reset arrow
+              const arrow = btn.querySelector('span');
+              if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+          };
+          
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            console.log('Profile button clicked, current showUserMenu:', showUserMenu);
+            if (showUserMenu) {
+              hideUserMenu();
+            } else {
+              showUserMenuFn();
+            }
+          };
+          
+          // Close menu when clicking outside (but not on the button itself)
+          document.addEventListener('click', (e) => {
+            const target = e.target as Node;
+            if (showUserMenu && !btn.contains(target) && !userMenuElement?.contains(target)) {
+              console.log('Clicking outside profile menu, closing it');
+              hideUserMenu();
+            }
+          });
+          
+          // Initial update
+          updateProfileButton();
+          
+          // Watch for auth state changes
+          const checkAuthState = () => {
+            updateProfileButton();
+          };
+          
+          // Check periodically for auth state changes
+          setInterval(checkAuthState, 1000);
+          
+          chatToggleContainer!.appendChild(btn);
+        };
+        
+        createUserProfileButton();
 
         // Expose right panel functions globally for React components to use
         (window as any).toggleRightPanel = (isOpen: boolean) => {

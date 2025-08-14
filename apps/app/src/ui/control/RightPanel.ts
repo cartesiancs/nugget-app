@@ -24,7 +24,7 @@ export class RightPanel extends LitElement {
           <!-- Right panel content -->
           <div
             class="h-100 w-100"
-            style="background: #181a1c;"
+            style="background: #000000;"
           >
           </div>
         </div>

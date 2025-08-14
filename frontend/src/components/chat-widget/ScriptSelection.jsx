@@ -29,95 +29,139 @@ const ScriptSelection = ({
 
   if (showAsCollapsible) {
     return (
-      <div className="mt-3 space-y-3">
+      <div className="mt-3 w-full space-y-3">
         {/* Script 1 */}
-        <div className="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
+        <div className="w-full bg-gray-800 border border-gray-600 rounded-lg overflow-hidden hover:border-gray-500 transition-all duration-300 cursor-pointer">
           <div 
-            className="p-4 cursor-pointer hover:bg-gray-700 transition-colors"
+            className="p-4 flex flex-col relative"
             onClick={() => handleScriptClick(scripts.response1, 1)}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-white font-medium text-sm mb-1">
-                  Script 1: {scripts.response1.segments?.length || 0} segments
-                </div>
-                <div className="text-gray-400 text-xs">
-                  Art Style: {scripts.response1.artStyle || "Default"}
-                </div>
-              </div>
-              <button
-                onClick={(e) => handleExpandClick(e, 1)}
-                className="text-blue-400 text-xs hover:text-blue-300 transition-colors ml-4"
+            {/* Dropdown arrow in top right */}
+            <button
+              onClick={(e) => handleExpandClick(e, 1)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors p-1"
+            >
+              <svg 
+                className={`w-4 h-4 transition-transform duration-200 ${expandedScript === 1 ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                {expandedScript === 1 ? "Collapse" : "Expand"}
-              </button>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <div className="text-white font-bold text-base mb-3 pr-8">
+              Script 1
+            </div>
+
+            {/* Segments and Art Style */}
+            <div className="space-y-2 mb-3">
+              <div className="text-gray-300 text-sm">
+                <span className="text-gray-400">Segments:</span> {scripts.response1.segments?.length || 0}
+              </div>
+              <div className="text-gray-300 text-sm">
+                <span className="text-gray-400">Art Style:</span> {scripts.response1.artStyle || "Default"}
+              </div>
+            </div>
+
+            {/* Narration content */}
+            <div className="flex-1">
+              {expandedScript === 1 ? (
+                <div className="text-gray-300 text-sm leading-relaxed">
+                  <span className="text-gray-400">Narration:</span>
+                  <div className="mt-2 space-y-3 max-h-60 overflow-y-auto">
+                    {scripts.response1.segments?.map((segment, index) => (
+                      <div key={index} className="border-l-2 border-gray-600 pl-3">
+                        <div className="text-gray-500 text-xs mb-1">
+                          Narration {index + 1}:
+                        </div>
+                        <div className="text-gray-300 text-sm">
+                          {segment.narration || segment.visual}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="text-gray-300 text-sm leading-relaxed">
+                    <span className="text-gray-400">Narration:</span> {scripts.response1.segments?.[0]?.narration?.substring(0, 100) || scripts.response1.segments?.[0]?.visual?.substring(0, 100) || "No content"}...
+                  </div>
+                  {/* Blur effect at bottom when collapsed */}
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-800 to-transparent pointer-events-none"></div>
+                </div>
+              )}
             </div>
           </div>
-          
-          {expandedScript === 1 && scripts.response1.segments && (
-            <div className="border-t border-gray-700 bg-gray-900">
-              <div className="p-4">
-                <div className="text-white text-xs font-medium mb-2">Narration:</div>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {scripts.response1.segments.map((segment, index) => (
-                    <div key={index} className="flex">
-                      <div className="text-gray-500 text-xs w-16 flex-shrink-0">
-                        Narration {index + 1}:
-                      </div>
-                      <div className="text-gray-300 text-xs">
-                        {segment.narration || segment.visual}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Script 2 */}
-        <div className="bg-gray-800 border border-gray-600 rounded-lg overflow-hidden">
+        <div className="w-full bg-gray-800 border border-gray-600 rounded-lg overflow-hidden hover:border-gray-500 transition-all duration-300 cursor-pointer">
           <div 
-            className="p-4 cursor-pointer hover:bg-gray-700 transition-colors"
+            className="p-4 flex flex-col relative"
             onClick={() => handleScriptClick(scripts.response2, 2)}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-white font-medium text-sm mb-1">
-                  Script 2: {scripts.response2.segments?.length || 0} segments
-                </div>
-                <div className="text-gray-400 text-xs">
-                  Art Style: {scripts.response2.artStyle || "Default"}
-                </div>
-              </div>
-              <button
-                onClick={(e) => handleExpandClick(e, 2)}
-                className="text-blue-400 text-xs hover:text-blue-300 transition-colors ml-4"
+            {/* Dropdown arrow in top right */}
+            <button
+              onClick={(e) => handleExpandClick(e, 2)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors p-1"
+            >
+              <svg 
+                className={`w-4 h-4 transition-transform duration-200 ${expandedScript === 2 ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                {expandedScript === 2 ? "Collapse" : "Expand"}
-              </button>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <div className="text-white font-bold text-base mb-3 pr-8">
+              Script 2
+            </div>
+
+            {/* Segments and Art Style */}
+            <div className="space-y-2 mb-3">
+              <div className="text-gray-300 text-sm">
+                <span className="text-gray-400">Segments:</span> {scripts.response2.segments?.length || 0}
+              </div>
+              <div className="text-gray-300 text-sm">
+                <span className="text-gray-400">Art Style:</span> {scripts.response2.artStyle || "Default"}
+              </div>
+            </div>
+
+            {/* Narration content */}
+            <div className="flex-1">
+              {expandedScript === 2 ? (
+                <div className="text-gray-300 text-sm leading-relaxed">
+                  <span className="text-gray-400">Narration:</span>
+                  <div className="mt-2 space-y-3 max-h-60 overflow-y-auto">
+                    {scripts.response2.segments?.map((segment, index) => (
+                      <div key={index} className="border-l-2 border-gray-600 pl-3">
+                        <div className="text-gray-500 text-xs mb-1">
+                          Narration {index + 1}:
+                        </div>
+                        <div className="text-gray-300 text-sm">
+                          {segment.narration || segment.visual}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="text-gray-300 text-sm leading-relaxed">
+                    <span className="text-gray-400">Narration:</span> {scripts.response2.segments?.[0]?.narration?.substring(0, 100) || scripts.response2.segments?.[0]?.visual?.substring(0, 100) || "No content"}...
+                  </div>
+                  {/* Blur effect at bottom when collapsed */}
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-800 to-transparent pointer-events-none"></div>
+                </div>
+              )}
             </div>
           </div>
-          
-          {expandedScript === 2 && scripts.response2.segments && (
-            <div className="border-t border-gray-700 bg-gray-900">
-              <div className="p-4">
-                <div className="text-white text-xs font-medium mb-2">Narration:</div>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {scripts.response2.segments.map((segment, index) => (
-                    <div key={index} className="flex">
-                      <div className="text-gray-500 text-xs w-16 flex-shrink-0">
-                        Narration {index + 1}:
-                      </div>
-                      <div className="text-gray-300 text-xs">
-                        {segment.narration || segment.visual}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );

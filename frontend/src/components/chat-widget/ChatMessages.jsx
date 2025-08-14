@@ -92,17 +92,22 @@ const ChatMessages = ({
       newMessages.push({
         id: "script-request",
         type: "system",
-        content: "Creating scripts based on your selection...",
+        content: "",
         component: (
-          <ScriptSelection
-            scripts={chatFlow.scripts}
-            currentStep={chatFlow.currentStep}
-            onScriptSelect={(script) => 
-              chatFlow.handleScriptSelect(script, autoProgression)
-            }
-            selectedScript={chatFlow.selectedScript}
-            showAsCollapsible={true}
-          />
+          <div>
+            <div className="text-white font-bold text-base mb-4">
+              Creating scripts based on your selection...
+            </div>
+            <ScriptSelection
+              scripts={chatFlow.scripts}
+              currentStep={chatFlow.currentStep}
+              onScriptSelect={(script) => 
+                chatFlow.handleScriptSelect(script, autoProgression)
+              }
+              selectedScript={chatFlow.selectedScript}
+              showAsCollapsible={true}
+            />
+          </div>
         ),
         timestamp: Date.now() + 2,
       });
@@ -212,8 +217,8 @@ const ChatMessages = ({
         >
           <div
             className={`${
-              message.id === "concept-request" 
-                ? "w-full p-0" // Full width and no padding/background for concept request
+              message.id === "concept-request" || message.id === "script-request"
+                ? "w-full p-0" // Full width and no padding/background for concept/script requests
                 : `max-w-[80%] p-3 ${
                     message.type === "user"
                       ? "bg-blue-600 text-white"
@@ -223,7 +228,7 @@ const ChatMessages = ({
           >
             {message.content && <div className="text-sm">{message.content}</div>}
             {message.component && (
-              <div className={message.id === "concept-request" ? "" : "mt-3"}>
+              <div className={message.id === "concept-request" || message.id === "script-request" ? "" : "mt-3"}>
                 {message.component}
               </div>
             )}

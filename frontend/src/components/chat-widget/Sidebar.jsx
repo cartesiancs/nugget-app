@@ -89,7 +89,7 @@ const Sidebar = ({
         {/* Dropdown Menu */}
         {showMenu && (
           <div
-            className='absolute right-0 top-12 w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl z-[10002]'
+            className='absolute right-0 top-12 w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl z-[100000]'
             onClick={(e) => e.stopPropagation()}
           >
             <div className='py-1'>

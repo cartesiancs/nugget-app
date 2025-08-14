@@ -132,16 +132,21 @@ const ChatMessages = ({
       newMessages.push({
         id: "image-generation",
         type: "system",
-        content: isGenerating ? "Processing..." : hasImages ? "Generated Images:" : "Processing...",
+        content: "",
         component: (
-          <MediaGeneration
-            type="image"
-            generatedImages={chatFlow.generatedImages}
-            generationProgress={chatFlow.generationProgress}
-            currentStep={chatFlow.currentStep}
-            onImageClick={onImageClick}
-            loading={isGenerating}
-          />
+          <div>
+            <div className="text-white font-bold text-base mb-4">
+              {isGenerating ? "Processing..." : hasImages ? "Generated Images:" : "Processing..."}
+            </div>
+            <MediaGeneration
+              type="image"
+              generatedImages={chatFlow.generatedImages}
+              generationProgress={chatFlow.generationProgress}
+              currentStep={chatFlow.currentStep}
+              onImageClick={onImageClick}
+              loading={isGenerating}
+            />
+          </div>
         ),
         timestamp: Date.now() + 4,
       });
@@ -162,17 +167,22 @@ const ChatMessages = ({
       newMessages.push({
         id: "video-generation",
         type: "system",
-        content: isGeneratingVideos ? "Processing..." : hasVideos ? "Generated Videos:" : "Processing...",
+        content: "",
         component: (
-          <MediaGeneration
-            type="video"
-            combinedVideosMap={combinedVideosMap}
-            generationProgress={chatFlow.generationProgress}
-            currentStep={chatFlow.currentStep}
-            onVideoClick={onVideoClick}
-            onAddSingleVideo={onAddSingleVideo}
-            loading={isGeneratingVideos}
-          />
+          <div>
+            <div className="text-white font-bold text-base mb-4">
+              {isGeneratingVideos ? "Processing..." : hasVideos ? "Generated Videos:" : "Processing..."}
+            </div>
+            <MediaGeneration
+              type="video"
+              combinedVideosMap={combinedVideosMap}
+              generationProgress={chatFlow.generationProgress}
+              currentStep={chatFlow.currentStep}
+              onVideoClick={onVideoClick}
+              onAddSingleVideo={onAddSingleVideo}
+              loading={isGeneratingVideos}
+            />
+          </div>
         ),
         timestamp: Date.now() + 6,
       });
@@ -184,14 +194,19 @@ const ChatMessages = ({
       newMessages.push({
         id: "timeline-ready",
         type: "system",
-        content: "Your videos are ready!",
+        content: "",
         component: (
-          <TimelineButton
-            canSendTimeline={canSendTimeline}
-            addingTimeline={chatFlow.addingTimeline}
-            onSendToTimeline={sendVideosToTimeline}
-            inConversation={true}
-          />
+          <div>
+            <div className="text-white font-bold text-base mb-4">
+              Your videos are ready!
+            </div>
+            <TimelineButton
+              canSendTimeline={canSendTimeline}
+              addingTimeline={chatFlow.addingTimeline}
+              onSendToTimeline={sendVideosToTimeline}
+              inConversation={true}
+            />
+          </div>
         ),
         timestamp: Date.now() + 7,
       });
@@ -223,8 +238,8 @@ const ChatMessages = ({
         >
           <div
             className={`${
-              message.id === "concept-request" || message.id === "script-request"
-                ? "w-full p-0" // Full width and no padding/background for concept/script requests
+              message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready"
+                ? "w-full p-0" // Full width and no padding/background for media messages
                 : `max-w-[80%] p-3 ${
                     message.type === "user"
                       ? "bg-blue-600 text-white"
@@ -234,7 +249,7 @@ const ChatMessages = ({
           >
             {message.content && <div className="text-sm">{message.content}</div>}
             {message.component && (
-              <div className={message.id === "concept-request" || message.id === "script-request" ? "" : "mt-3"}>
+              <div className={message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready" ? "" : "mt-3"}>
                 {message.component}
               </div>
             )}

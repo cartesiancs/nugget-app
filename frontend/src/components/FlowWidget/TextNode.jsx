@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Handle } from "@xyflow/react";
+import { Edit3, Music, Image, Shuffle } from "lucide-react";
 
-function NewTextNode({ data, isConnectable, selected }) {
+function NewTextNode({ data, isConnectable, selected, onChatClick }) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(data.content || "Text content...");
 
@@ -26,81 +27,97 @@ function NewTextNode({ data, isConnectable, selected }) {
     }
   };
 
+  const handleChatClick = () => {
+    if (onChatClick) {
+      onChatClick(data.id || `text-${Date.now()}`, "textNode");
+    }
+  };
+
   return (
-    <div className="relative">
-      {/* Node Label */}
-      <div className="absolute -top-8 left-0 text-sm font-semibold text-blue-400 bg-gray-900/90 px-2 py-1 rounded-md border border-blue-400/30">
-        TEXT
+    <div className='relative'>
+      {/* Title */}
+      <div className='mb-4'>
+        <h1 className='text-2xl font-light text-gray-500 tracking-wide'>
+          Text
+        </h1>
       </div>
-      
+
       <div
-        className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
-          selected ? 'ring-4 ring-blue-400 ring-opacity-50 shadow-blue-500/50' : ''
+        className={`rounded-2xl p-6 w-[240px] h-[240px] relative transition-all duration-200 ${
+          selected ? "ring-2 ring-gray-600" : ""
         }`}
         style={{
-          background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
-          border: "1px solid rgba(233, 232, 235, 0.2)",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
+          background: "#1a1a1a",
+          border: "1px solid #333",
         }}
       >
         {/* Input Handle - Left side */}
         <Handle
-          type="target"
-          position="left"
-          style={{ 
+          type='target'
+          position='left'
+          style={{
             background: "#3b82f6",
-            width: 20,
-            height: 20,
-            border: '4px solid #fff',
-            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
-            zIndex: 9999,
-            left: -10
+            width: 16,
+            height: 16,
+            border: "2px solid #fff",
+            left: -8,
           }}
           isConnectable={isConnectable}
         />
 
-        {/* Node Content */}
-        <div 
-          className="text-center w-[220px] h-[220px] rounded-lg mx-auto p-2"
-          style={{
-            background: "rgba(17, 18, 21, 0.8)",
-            border: "1px solid rgba(233, 232, 235, 0.15)",
-            boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)"
-          }}
-        >
-          <div className="text-sm text-blue-200 mb-1 font-medium">TEXT</div>
-          {isEditing ? (
+        {/* Get started with text */}
+        <div className='text-gray-400 text-sm mb-3 font-light'>
+          Get started with
+        </div>
+
+        {/* Options List */}
+        <div className='space-y-2'>
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <Edit3 size={16} className='text-gray-400' />
+            <span className='text-xs'>Writing a Script</span>
+          </div>
+
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <Music size={16} className='text-gray-400' />
+            <span className='text-xs'>Writing Lyrics</span>
+          </div>
+
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <Image size={16} className='text-gray-400' />
+            <span className='text-xs'>Describe an image</span>
+          </div>
+
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <Shuffle size={16} className='text-gray-400' />
+            <span className='text-xs'>Combine Ideas</span>
+          </div>
+        </div>
+
+        {/* Hidden editable content for functionality */}
+        {isEditing && (
+          <div className='absolute inset-0 bg-gray-900 rounded-2xl p-4 z-10'>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               onBlur={handleBlur}
               onKeyPress={handleKeyPress}
-              className="w-full h-[190px] bg-gray-800 text-white text-sm p-2 rounded border border-gray-700 focus:outline-none focus:border-gray-500 resize-none"
+              className='w-full h-full bg-transparent text-white text-sm p-2 focus:outline-none resize-none'
               autoFocus
-              rows={8}
+              placeholder='Enter your text content...'
             />
-          ) : (
-            <div
-              className="text-white text-sm cursor-pointer h-[190px] flex items-center justify-center overflow-auto whitespace-pre-wrap break-words text-left w-full p-2"
-              onDoubleClick={handleDoubleClick}
-            >
-              {text}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Output Handle - Right side */}
         <Handle
-          type="source"
-          position="right"
-          style={{ 
+          type='source'
+          position='right'
+          style={{
             background: "#3b82f6",
-            width: 20,
-            height: 20,
-            border: '4px solid #fff',
-            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
-            zIndex: 9999,
-            right: -10
+            width: 16,
+            height: 16,
+            border: "2px solid #fff",
+            right: -8,
           }}
           isConnectable={isConnectable}
         />

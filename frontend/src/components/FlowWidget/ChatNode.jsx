@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Handle, Position } from "@xyflow/react";
 
 function ChatNode({ data, isConnectable }) {
   const [message, setMessage] = useState("");
   const [selectedModel, setSelectedModel] = useState("GPT-4o mini");
+  const textareaRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -30,173 +31,190 @@ function ChatNode({ data, isConnectable }) {
     return 'how about "A bird flying on the moon with a red cape"...';
   };
 
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+      // Set height to scrollHeight with min and max constraints
+      const newHeight = Math.min(Math.max(textarea.scrollHeight, 40), 200); // min 40px, max 200px
+      textarea.style.height = newHeight + 'px';
+    }
+  }, [message]);
+
+  const handleTextareaChange = (e) => {
+    setMessage(e.target.value);
+  };
+
   return (
     <div
-      className='bg-gray-800/95 rounded-xl shadow-2xl border border-gray-700/70 w-80 p-3'
+      className="rounded-2xl shadow-2xl w-80 p-4"
       style={{
-        background:
-          "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
-        border: "1px solid rgba(233, 232, 235, 0.2)",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+        background: "linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 100%)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
       }}
     >
-      {/* Input Handle - only on top to connect from the node above */}
+      {/* Input Handle */}
       <Handle
-        type='target'
+        type="target"
         position={Position.Top}
         isConnectable={isConnectable}
         style={{
           background: "#3b82f6",
-          width: 20,
-          height: 20,
-          border: "4px solid #fff",
-          boxShadow: "0 0 15px rgba(59, 130, 246, 0.8)",
+          width: 16,
+          height: 16,
+          border: "3px solid #fff",
+          boxShadow: "0 0 12px rgba(59, 130, 246, 0.6)",
           zIndex: 9999,
-          top: -10,
+          top: -8,
         }}
       />
 
-      {/* Chat Input Area */}
-      <div className='space-y-2'>
+      {/* Main Content */}
+      <div className="space-y-4">
         {/* Message Input */}
-        <form onSubmit={handleSubmit} className='space-y-2'>
-          <div className='relative'>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="relative">
             <textarea
+              ref={textareaRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleTextareaChange}
               placeholder={getDefaultMessage()}
-              className='w-full text-gray-300 text-sm p-2 rounded-lg border-0 focus:outline-none focus:border-blue-500 resize-none bg-transparent'
+              className="w-full text-sm p-0 border-0 focus:outline-none resize-none bg-transparent placeholder-gray-500 text-gray-300 leading-relaxed overflow-hidden"
               style={{
                 background: "transparent",
-                color: "#d1d5db",
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                fontSize: "14px",
+                lineHeight: "1.4",
+                minHeight: "40px",
+                maxHeight: "200px",
               }}
-              rows={2}
+              rows={1}
             />
           </div>
 
-          {/* Bottom Row */}
-          <div className='flex items-center justify-between gap-1.5'>
+          {/* Controls Row */}
+          <div className="flex items-center justify-between">
             {/* Model Selector */}
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className='text-gray-300 text-sm px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 appearance-none cursor-pointer flex-shrink-0'
+              className="text-gray-400 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 appearance-none cursor-pointer"
               style={{
-                background:
-                  "linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 0.9) 100%)",
-                border: "1px solid rgba(75, 85, 99, 0.3)",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                backgroundImage:
-                  "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
+                background: "rgba(28, 28, 28, 0.8)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                 backgroundPosition: "right 6px center",
                 backgroundRepeat: "no-repeat",
-                backgroundSize: "14px",
-                paddingRight: "24px",
-                minWidth: "120px",
-                maxWidth: "140px",
+                backgroundSize: "10px",
+                paddingRight: "22px",
+                minWidth: "110px",
               }}
             >
-              <option value='GPT-4o mini'>GPT-4o mini</option>
-              <option value='GPT-4o'>GPT-4o</option>
-              <option value='Claude 3.5 Sonnet'>Claude 3.5 Sonnet</option>
-              <option value='Gemini Pro'>Gemini Pro</option>
+              <option value="GPT-4o mini">GPT-4o mini</option>
+              <option value="GPT-4o">GPT-4o</option>
+              <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+              <option value="Gemini Pro">Gemini Pro</option>
             </select>
 
-            {/* Toolbar Icons */}
-            <div className='flex items-center gap-0.5'>
+            {/* Action Icons */}
+            <div className="flex items-center gap-0">
+              {/* Icon 1 - Palette/Color */}
               <button
-                type='button'
-                className='p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 rounded-lg'
+                type="button"
+                className="p-1 text-gray-500 hover:text-gray-300 transition-colors duration-200"
+                style={{ background: "transparent" }}
               >
                 <svg
-                  className='w-3.5 h-3.5'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z'
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
                   />
                 </svg>
               </button>
 
+              {/* Icon 2 - Settings/Options */}
               <button
-                type='button'
-                className='p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 rounded-lg'
+                type="button"
+                className="p-1 text-gray-500 hover:text-gray-300 transition-colors duration-200"
+                style={{ background: "transparent" }}
               >
                 <svg
-                  className='w-3.5 h-3.5'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z'
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 6h16M4 12h16M4 18h7"
                   />
                 </svg>
               </button>
 
+              {/* Icon 3 - Attachment */}
               <button
-                type='button'
-                className='p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 rounded-lg'
+                type="button"
+                className="p-1 text-gray-500 hover:text-gray-300 transition-colors duration-200"
+                style={{ background: "transparent" }}
               >
                 <svg
-                  className='w-3.5 h-3.5'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  />
+                </svg>
+              </button>
+
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={!message.trim()}
+                className="p-2 rounded-lg transition-all duration-200 flex items-center justify-center disabled:cursor-not-allowed ml-1"
+                style={{
+                  background: message.trim()
+                    ? "linear-gradient(135deg, #374151 0%, #1f2937 100%)"
+                    : "rgba(55, 65, 81, 0.4)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: message.trim() ? "#ffffff" : "#6b7280",
+                  width: "32px",
+                  height: "32px",
+                }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{ transform: "rotate(45deg)" }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     strokeWidth={2}
-                    d='M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13'
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                   />
                 </svg>
               </button>
             </div>
-
-            {/* Send Button */}
-            <button
-              type='submit'
-              disabled={!message.trim()}
-              className='p-1.5 rounded-lg transition-all duration-200 flex items-center justify-center disabled:cursor-not-allowed flex-shrink-0'
-              style={{
-                background: message.trim()
-                  ? "linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%)"
-                  : "linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.7) 100%)",
-                border: message.trim()
-                  ? "1px solid rgba(59, 130, 246, 0.3)"
-                  : "1px solid rgba(75, 85, 99, 0.3)",
-                boxShadow: message.trim()
-                  ? "0 2px 8px rgba(59, 130, 246, 0.25)"
-                  : "0 2px 8px rgba(0, 0, 0, 0.15)",
-                color: message.trim() ? "#ffffff" : "#9ca3af",
-                width: "32px",
-                height: "32px",
-              }}
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-                style={{ transform: "rotate(45deg)" }}
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M12 19l9 2-9-18-9 18 9-2zm0 0v-8'
-                />
-              </svg>
-            </button>
           </div>
         </form>
       </div>

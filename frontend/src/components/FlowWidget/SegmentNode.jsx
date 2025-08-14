@@ -56,7 +56,34 @@ const SegmentNode = ({ data }) => {
           }}
         >
           <div className="mb-1">
-            <h4 className="text-xs font-medium text-gray-300 mb-1">Visual</h4>
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-xs font-medium text-gray-300">Visual</h4>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(data.visual).then(() => {
+                    // Optional: You can add a toast notification here
+                    console.log('Visual text copied to clipboard');
+                  }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                  });
+                }}
+                className="text-gray-400 hover:text-blue-400 transition-colors duration-200 p-1 hover:bg-gray-700/50 rounded"
+                title="Copy visual text"
+              >
+                <svg 
+                  width="12" 
+                  height="12" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
             <p className="text-xs text-gray-400 line-clamp-4 leading-relaxed whitespace-pre-wrap break-words">{data.visual}</p>
           </div>
           {data.narration && (
@@ -89,4 +116,4 @@ const SegmentNode = ({ data }) => {
   );
 };
 
-export default SegmentNode; 
+export default SegmentNode;

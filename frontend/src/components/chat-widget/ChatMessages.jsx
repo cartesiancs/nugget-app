@@ -126,10 +126,13 @@ const ChatMessages = ({
 
     // Step 4: Image Generation
     if (chatFlow.currentStep >= 4 && chatFlow.selectedScript) {
+      const hasImages = Object.keys(chatFlow.generatedImages).length > 0;
+      const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
+      
       newMessages.push({
         id: "image-generation",
         type: "system",
-        content: "Generating images...",
+        content: isGenerating ? "Processing..." : hasImages ? "Generated Images:" : "Processing...",
         component: (
           <MediaGeneration
             type="image"
@@ -137,7 +140,7 @@ const ChatMessages = ({
             generationProgress={chatFlow.generationProgress}
             currentStep={chatFlow.currentStep}
             onImageClick={onImageClick}
-            loading={chatFlow.loading && chatFlow.currentStep === 4}
+            loading={isGenerating}
           />
         ),
         timestamp: Date.now() + 4,
@@ -153,10 +156,13 @@ const ChatMessages = ({
         timestamp: Date.now() + 5,
       });
 
+      const hasVideos = Object.keys(combinedVideosMap).length > 0;
+      const isGeneratingVideos = chatFlow.loading && chatFlow.currentStep === 5;
+      
       newMessages.push({
         id: "video-generation",
         type: "system",
-        content: "Generating videos...",
+        content: isGeneratingVideos ? "Processing..." : hasVideos ? "Generated Videos:" : "Processing...",
         component: (
           <MediaGeneration
             type="video"
@@ -165,7 +171,7 @@ const ChatMessages = ({
             currentStep={chatFlow.currentStep}
             onVideoClick={onVideoClick}
             onAddSingleVideo={onAddSingleVideo}
-            loading={chatFlow.loading && chatFlow.currentStep === 5}
+            loading={isGeneratingVideos}
           />
         ),
         timestamp: Date.now() + 6,

@@ -19,68 +19,7 @@ const MediaGeneration = ({
   const mediaEntries = Object.entries(mediaMap || {});
   const progressEntries = Object.entries(generationProgress || {});
 
-  // Show loading state
-  if (loading && mediaEntries.length === 0) {
-    return (
-      <div className="mt-3">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-          <span className="text-sm text-gray-300">
-            Generating {isImageGeneration ? "images" : "videos"}...
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // Show progress for ongoing generation
-  if (progressEntries.length > 0) {
-    return (
-      <div className="mt-3 space-y-2">
-        {progressEntries.map(([segmentId, progress]) => {
-          if (progress.type !== type) return null;
-          
-          return (
-            <div key={segmentId} className="bg-gray-800 border border-gray-600 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-300">
-                  Segment {segmentId}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {progress.index}/{progress.total}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {progress.status === "generating" && (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
-                    <span className="text-xs text-gray-400">Generating...</span>
-                  </>
-                )}
-                {progress.status === "completed" && (
-                  <>
-                    <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-green-400">Completed</span>
-                  </>
-                )}
-                {progress.status === "error" && (
-                  <>
-                    <div className="h-3 w-3 bg-red-500 rounded-full"></div>
-                    <span className="text-xs text-red-400">
-                      Error: {progress.error || "Unknown error"}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  // Show generated media
+  // Show generated media first if available
   if (mediaEntries.length > 0) {
     return (
       <div className="mt-3">
@@ -157,6 +96,69 @@ const MediaGeneration = ({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show progress for ongoing generation if no media yet
+  if (progressEntries.length > 0) {
+    return (
+      <div className="mt-3 space-y-2">
+        {progressEntries.map(([segmentId, progress]) => {
+          if (progress.type !== type) return null;
+          
+          return (
+            <div key={segmentId} className="bg-gray-800 border border-gray-600 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-300">
+                  Segment {segmentId}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {progress.index}/{progress.total}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {progress.status === "generating" && (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                    <span className="text-xs text-gray-400">Generating...</span>
+                  </>
+                )}
+                {progress.status === "completed" && (
+                  <>
+                    <div className="h-3 w-3 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-400">Completed</span>
+                  </>
+                )}
+                {progress.status === "error" && (
+                  <>
+                    <div className="h-3 w-3 bg-red-500 rounded-full"></div>
+                    <span className="text-xs text-red-400">
+                      Error: {progress.error || "Unknown error"}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+
+
+  // Show simple loading state
+  if (loading) {
+    return (
+      <div className="mt-3">
+        <div className="flex items-center space-x-2 mb-3">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+          <span className="text-sm text-gray-300">
+            Processing...
+          </span>
         </div>
       </div>
     );

@@ -714,6 +714,7 @@ function FlowWidget() {
             segmentData: {
               id: segment.id,
               visual: segment.visual,
+              animation: segment.animation,
               artStyle: "cinematic photography with soft lighting",
             },
             hasExistingImages: !!flowData.images[segment.id],
@@ -725,10 +726,10 @@ function FlowWidget() {
           target: `add-image-${segment.id}`,
           sourceHandle: "output",
           targetHandle: "input",
-          style: { 
-            stroke: "#8b5cf6", 
+          style: {
+            stroke: "#8b5cf6",
             strokeWidth: 3,
-            filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))"
+            filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
           },
         });
         // If segment has images, stack them vertically to the right of add image node
@@ -767,7 +768,7 @@ function FlowWidget() {
                 stroke: "#f59e0b",
                 strokeWidth: 2,
                 strokeDasharray: "5,5",
-                filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))"
+                filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))",
               },
             });
             // Video/add-video node to the right of each image
@@ -804,10 +805,10 @@ function FlowWidget() {
                 target: `video-${segment.id}-${image.id}`,
                 sourceHandle: "output",
                 targetHandle: "input",
-                style: { 
-                  stroke: "#10b981", 
+                style: {
+                  stroke: "#10b981",
                   strokeWidth: 3,
-                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))"
+                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
                 },
               });
             } else {
@@ -837,7 +838,7 @@ function FlowWidget() {
                   stroke: "#10b981",
                   strokeWidth: 2,
                   strokeDasharray: "5,5",
-                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))"
+                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
                 },
               });
             }
@@ -1040,7 +1041,6 @@ function FlowWidget() {
               "Model:",
               model,
             );
-            // Handle message sending logic here
           },
         },
       };
@@ -1055,11 +1055,11 @@ function FlowWidget() {
         target: chatNodeId,
         sourceHandle: "output",
         targetHandle: "target",
-        style: { 
-          stroke: "#3B82F6", 
-          strokeWidth: 2, 
+        style: {
+          stroke: "#3B82F6",
+          strokeWidth: 2,
           strokeDasharray: "5,5",
-          filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))"
+          filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))",
         },
         type: "smoothstep",
       };
@@ -1067,6 +1067,138 @@ function FlowWidget() {
       setEdges((prevEdges) => [...prevEdges, newEdge]);
     },
     [setNodes, setEdges],
+  );
+  const handleImageGenerated = useCallback(
+    ({ segmentId, imageData, segmentData, addImageNodeId }) => {
+      console.log("🎨 Auto-creating image node:", {
+        segmentId,
+        imageData,
+        segmentData,
+      });
+
+      // Find the AddImageNode to position the new ImageNode to its right
+      const addImageNode = nodes.find((node) => node.id === addImageNodeId);
+      if (!addImageNode) {
+        console.error(
+          "AddImageNode not found for positioning:",
+          addImageNodeId,
+        );
+        return;
+      }
+
+      // Calculate position for the new image node (to the right of AddImageNode)
+      const newImageNodePosition = {
+        x: addImageNode.position.x + 220, // 220px to the right
+        y: addImageNode.position.y,
+      };
+
+      // Create new image node ID
+      const newImageNodeId = `generated-image-${segmentId}-${
+        imageData.id || Date.now()
+      }`;
+
+      // Create the new image node
+      const newImageNode = {
+        id: newImageNodeId,
+        type: "imageNode",
+        position: newImageNodePosition,
+        data: {
+          segmentId: segmentId,
+          imageUrl: imageData.url,
+          imageId: imageData.id,
+          isPrimary: false, // Generated images are not primary by default
+          segmentData: {
+            id: segmentId,
+            visual: imageData.prompt,
+            animation: segmentData?.animation || "",
+            artStyle:
+              segmentData?.artStyle ||
+              "cinematic photography with soft lighting",
+          },
+          // Mark as generated for special styling
+          isGenerated: true,
+          generationModel: imageData.model,
+        },
+      };
+
+      // Create edge connecting AddImageNode to the new ImageNode
+      const newEdge = {
+        id: `${addImageNodeId}-to-${newImageNodeId}`,
+        source: addImageNodeId,
+        target: newImageNodeId,
+        sourceHandle: "output",
+        targetHandle: "input",
+        style: {
+          stroke: "#10b981", // Green for generated
+          strokeWidth: 3,
+          filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
+          strokeDasharray: "8,4", // Dashed to indicate it's generated
+        },
+      };
+
+      // Add the new node and edge to the flow
+      setNodes((prevNodes) => [...prevNodes, newImageNode]);
+      setEdges((prevEdges) => [...prevEdges, newEdge]);
+
+      // Also create an AddVideoNode to the right of the new ImageNode
+      const addVideoNodeId = `add-video-${segmentId}-${
+        imageData.id || Date.now()
+      }`;
+      const addVideoNode = {
+        id: addVideoNodeId,
+        type: "addVideoNode",
+        position: {
+          x: newImageNodePosition.x + 220, // Another 220px to the right
+          y: newImageNodePosition.y,
+        },
+        data: {
+          segmentId: segmentId,
+          imageId: imageData.id,
+          segmentData: {
+            id: segmentId,
+            animation: segmentData?.animation || "",
+            artStyle:
+              imageData?.artStyle ||
+              segmentData?.artStyle ||
+              "cinematic photography with soft lighting",
+          },
+        },
+      };
+
+      // Create edge connecting ImageNode to AddVideoNode
+      const imageToVideoEdge = {
+        id: `${newImageNodeId}-to-${addVideoNodeId}`,
+        source: newImageNodeId,
+        target: addVideoNodeId,
+        sourceHandle: "output",
+        targetHandle: "input",
+        style: {
+          stroke: "#8b5cf6", // Purple for video connection
+          strokeWidth: 2,
+          strokeDasharray: "5,5",
+          filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
+        },
+      };
+
+      // Add the AddVideoNode and its edge
+      setNodes((prevNodes) => [...prevNodes, addVideoNode]);
+      setEdges((prevEdges) => [...prevEdges, imageToVideoEdge]);
+
+      // Refresh project data to sync with backend
+      setTimeout(() => {
+        refreshProjectData();
+      }, 1000);
+
+      // Show success message
+      setFlowMessages((prev) => [
+        ...prev,
+        {
+          type: "assistant",
+          content: `✅ New image node created for scene ${segmentId}! Ready for video generation.`,
+        },
+      ]);
+    },
+    [nodes, setNodes, setEdges, refreshProjectData, setFlowMessages],
   );
 
   // Update nodeTypes to pass onAfterEdit to ImageNode and VideoNode
@@ -1098,10 +1230,12 @@ function FlowWidget() {
       ),
       addImageNode: (props) => (
         <AddImageNode
-          {...props}
-          onCreateNewImage={handleCreateNewImage}
-          creatingImages={creatingImages}
-          hasExistingImages={props.data?.hasExistingImages}
+        {...props}
+        id={props.id} 
+        onCreateNewImage={handleCreateNewImage}
+        onImageGenerated={handleImageGenerated} 
+        creatingImages={creatingImages}
+        hasExistingImages={props.data?.hasExistingImages}
         />
       ),
       addVideoNode: (props) => (
@@ -1125,6 +1259,7 @@ function FlowWidget() {
       handleCreateNewVideo,
       creatingVideos,
       handleChatClick,
+      handleImageGenerated,
     ],
   );
 
@@ -1203,7 +1338,9 @@ function FlowWidget() {
   // Update project name when component mounts or project changes
   useEffect(() => {
     try {
-      const storedProject = localStorage.getItem("project-store-selectedProject");
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const project = JSON.parse(storedProject);
         const projectName = project.name || project.title || "Untitled";
@@ -1565,7 +1702,10 @@ function FlowWidget() {
                     onNodeClick={(event, node) => {
                       setSelectedNode(node);
                       // Add chat node when clicking on non-chat nodes
-                      if (node.type !== "chatNode") {
+                      if (
+                        node.type !== "chatNode" &&
+                        node.type !== "addImageNode"
+                      ) {
                         handleAddChatNode(node);
                       }
                     }}

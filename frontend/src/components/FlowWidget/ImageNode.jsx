@@ -61,9 +61,9 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
       }
       // 1. POST to generate new image with new visual_prompt
       const genResponse = await chatApi.generateImage({
+        segmentId: data.segmentId,
         visual_prompt: editPrompt,
         art_style: data.segmentData.artStyle,
-        uuid: `seg-${data.segmentId}`,
         project_id: projectId,
         model: selectedImageModel,
       });

@@ -534,6 +534,13 @@ export const useChatFlow = () => {
 
       updateStepStatus(4, "done");
       setCurrentStep(5);
+      
+      // Auto-trigger video generation if there's a callback for it
+      if (window.autoTriggerVideoGeneration) {
+        setTimeout(async () => {
+          await runVideoGeneration();
+        }, 1000); // Delay to show images first
+      }
     } catch (error) {
       console.error("Error in image generation:", error);
       showRequestFailed("Image Generation");
@@ -724,21 +731,35 @@ export const useChatFlow = () => {
   ]);
 
   const handleConceptSelect = useCallback(
-    (concept) => {
+    async (concept, autoTriggerNext = false, prompt = null) => {
       setSelectedConcept(concept);
       updateStepStatus(1, "done");
       setCurrentStep(2);
+      
+      // Auto-trigger script generation if enabled
+      if (autoTriggerNext && prompt?.trim()) {
+        setTimeout(async () => {
+          await runScriptGeneration(prompt);
+        }, 800); // Small delay for better UX
+      }
     },
-    [updateStepStatus],
+    [updateStepStatus, runScriptGeneration],
   );
 
   const handleScriptSelect = useCallback(
-    (script) => {
+    async (script, autoTriggerNext = false) => {
       setSelectedScript(script);
       updateStepStatus(3, "done");
       setCurrentStep(4);
+      
+      // Auto-trigger image generation if enabled
+      if (autoTriggerNext) {
+        setTimeout(async () => {
+          await runImageGeneration();
+        }, 800); // Small delay for better UX
+      }
     },
-    [updateStepStatus],
+    [updateStepStatus, runImageGeneration],
   );
 
   const loadProjectData = useCallback(async () => {

@@ -20,6 +20,7 @@ import TimelineButton from "./chat-widget/TimelineButton";
 import AuthMessages from "./chat-widget/AuthMessages";
 import Sidebar from "./chat-widget/Sidebar";
 import Modals from "./chat-widget/Modals";
+import ChatMessages from "./chat-widget/ChatMessages";
 
 function ChatWidgetSidebar({ open, setOpen }) {
   const { isAuthenticated, logout, user } = useAuth();
@@ -37,6 +38,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
   const [newProjectDesc, setNewProjectDesc] = useState("");
   const [showMenu, setShowMenu] = useState(false);
   const [collapseSteps, setCollapseSteps] = useState(true);
+  const [useConversationalFlow, setUseConversationalFlow] = useState(true);
   const nameInputRef = useRef(null);
 
   // Modal states
@@ -335,7 +337,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
       {/* Sliding sidebar */}
       <div
 
-        className={`bg-gray-800/95 backdrop-blur-sm border border-gray-600/40 shadow-lg rounded-lg ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
+        className={`bg-gray-800/95 backdrop-blur-sm border-0 border-gray-600/40 shadow-lg rounded-lg ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
 
           open ? "translate-x-0" : "translate-x-full"
         } z-[10000] flex flex-col shadow-2xl`}
@@ -359,145 +361,198 @@ function ChatWidgetSidebar({ open, setOpen }) {
           onCreateProject={openCreateModal}
           onLogout={logout}
           onClose={() => setOpen(false)}
+          useConversationalFlow={useConversationalFlow}
+          setUseConversationalFlow={setUseConversationalFlow}
         />
 
         {/* Credit Widget Section */}
-        {isAuthenticated && (
+        {/* {isAuthenticated && (
           <div className='px-3 py-2 bg-gray-900/50 border-b border-gray-800'>
             <CreditWidget />
           </div>
-        )}
+        )} */}
 
         {/* Credit Deduction Notification */}
-        {chatFlow.creditDeductionMessage && (
+        {/* {chatFlow.creditDeductionMessage && (
           <div className='px-3 py-2 bg-green-900/50 border-b border-green-800'>
             <div className='flex items-center gap-2 text-green-200'>
               <span>💰</span>
               <span className='text-xs'>{chatFlow.creditDeductionMessage}</span>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Project banner */}
-        {isAuthenticated && <SelectedProjectBanner />}
+        {/* {isAuthenticated && <SelectedProjectBanner />} */}
 
         <div className='flex-1 overflow-hidden flex flex-col'>
-          {/* 6 Steps */}
-          <StepList
-            steps={steps}
-            stepStatus={chatFlow.stepStatus}
-            currentStep={chatFlow.currentStep}
-            loading={chatFlow.loading}
-            collapseSteps={collapseSteps}
-            setCollapseSteps={setCollapseSteps}
-            isStepDisabled={isStepDisabled}
-            getStepIcon={getStepIcon}
-            handleStepClick={handleStepClick}
-            handleRedoStep={handleRedoStep}
-            setCurrentStep={chatFlow.setCurrentStep}
-          />
+          {useConversationalFlow ? (
+            /* Hybrid Flow - StepList + Chat */
+            <>
+              {/* StepList at top */}
+              <StepList
+                steps={steps}
+                stepStatus={chatFlow.stepStatus}
+                currentStep={chatFlow.currentStep}
+                loading={chatFlow.loading}
+                collapseSteps={collapseSteps}
+                setCollapseSteps={setCollapseSteps}
+                isStepDisabled={isStepDisabled}
+                getStepIcon={getStepIcon}
+                handleStepClick={handleStepClick}
+                handleRedoStep={handleRedoStep}
+                setCurrentStep={chatFlow.setCurrentStep}
+              />
 
-          {/* Content Area */}
-          <div className='flex-1 overflow-y-auto p-4'>
-            {chatFlow.error && (
-              <div className='mb-4 p-3 bg-red-900 text-red-100 rounded text-sm'>
-                {chatFlow.error}
-                <button
-                  onClick={() => chatFlow.setError(null)}
-                  className='ml-2 text-red-300 hover:text-red-100'
-                >
-                  ✕
-                </button>
-              </div>
-            )}
+              {/* Chat Messages */}
+              <ChatMessages
+                chatFlow={chatFlow}
+                timeline={timeline}
+                onImageClick={handleImageClick}
+                onVideoClick={handleVideoClick}
+                onAddSingleVideo={addSingleVideoToTimeline}
+                sendVideosToTimeline={sendVideosToTimeline}
+                combinedVideosMap={combinedVideosMap}
+                autoProgression={true}
+                currentPrompt={prompt}
+              />
 
-            {chatFlow.loading && (
-              <div className='flex items-center justify-center py-8'>
-                <LoadingSpinner />
-                <span className='ml-2 text-gray-300'>Processing...</span>
-              </div>
-            )}
+              {/* Input area */}
+              <InputArea
+                isAuthenticated={isAuthenticated}
+                selectedProject={chatFlow.selectedProject}
+                prompt={prompt}
+                setPrompt={setPrompt}
+                loading={chatFlow.loading}
+                currentStep={chatFlow.currentStep}
+                handleStepClick={handleStepClick}
+              />
+            </>
+          ) : (
+            /* Legacy Step-based Flow */
+            <>
+              {/* 6 Steps */}
+              <StepList
+                steps={steps}
+                stepStatus={chatFlow.stepStatus}
+                currentStep={chatFlow.currentStep}
+                loading={chatFlow.loading}
+                collapseSteps={collapseSteps}
+                setCollapseSteps={setCollapseSteps}
+                isStepDisabled={isStepDisabled}
+                getStepIcon={getStepIcon}
+                handleStepClick={handleStepClick}
+                handleRedoStep={handleRedoStep}
+                setCurrentStep={chatFlow.setCurrentStep}
+              />
 
-            {/* Concepts Selection */}
-            <ConceptSelection
-              concepts={chatFlow.concepts}
-              currentStep={chatFlow.currentStep}
-              onConceptSelect={chatFlow.handleConceptSelect}
-              selectedConcept={chatFlow.selectedConcept}
-            />
+              {/* Content Area */}
+              <div className='flex-1 overflow-y-auto p-4'>
+                {chatFlow.error && (
+                  <div className='mb-4 p-3 bg-red-900 text-red-100 rounded text-sm'>
+                    {chatFlow.error}
+                    <button
+                      onClick={() => chatFlow.setError(null)}
+                      className='ml-2 text-red-300 hover:text-red-100'
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
 
-            {/* Scripts Selection */}
-            <ScriptSelection
-              scripts={chatFlow.scripts}
-              currentStep={chatFlow.currentStep}
-              onScriptSelect={chatFlow.handleScriptSelect}
-              selectedScript={chatFlow.selectedScript}
-            />
+                {chatFlow.loading && (
+                  <div className='flex items-center justify-center py-8'>
+                    <LoadingSpinner />
+                    <span className='ml-2 text-gray-300'>Processing...</span>
+                  </div>
+                )}
 
-            {/* Model Selection */}
-            <ModelSelection
-              currentStep={chatFlow.currentStep}
-              selectedImageModel={chatFlow.selectedImageModel}
-              setSelectedImageModel={chatFlow.setSelectedImageModel}
-              selectedVideoModel={chatFlow.selectedVideoModel}
-              setSelectedVideoModel={chatFlow.setSelectedVideoModel}
-              loading={chatFlow.loading}
-            />
+                {/* Concepts Selection */}
+                <ConceptSelection
+                  concepts={chatFlow.concepts}
+                  currentStep={chatFlow.currentStep}
+                  onConceptSelect={chatFlow.handleConceptSelect}
+                  selectedConcept={chatFlow.selectedConcept}
+                />
 
-            {/* Generation Progress */}
-            <GenerationProgress
-              generationProgress={chatFlow.generationProgress}
-              currentStep={chatFlow.currentStep}
-            />
+                {/* Scripts Selection */}
+                <ScriptSelection
+                  scripts={chatFlow.scripts}
+                  currentStep={chatFlow.currentStep}
+                  onScriptSelect={chatFlow.handleScriptSelect}
+                  selectedScript={chatFlow.selectedScript}
+                />
 
-            {/* Generated Images */}
-            <GeneratedImages
-              generatedImages={chatFlow.generatedImages}
-              currentStep={chatFlow.currentStep}
-              onImageClick={handleImageClick}
-            />
+                {/* Model Selection */}
+                <ModelSelection
+                  currentStep={chatFlow.currentStep}
+                  selectedImageModel={chatFlow.selectedImageModel}
+                  setSelectedImageModel={chatFlow.setSelectedImageModel}
+                  selectedVideoModel={chatFlow.selectedVideoModel}
+                  setSelectedVideoModel={chatFlow.setSelectedVideoModel}
+                  loading={chatFlow.loading}
+                />
 
-            {/* Generated Videos */}
-            <GeneratedVideos
-              combinedVideosMap={combinedVideosMap}
-              currentStep={chatFlow.currentStep}
-              onVideoClick={handleVideoClick}
-              onAddSingleVideo={addSingleVideoToTimeline}
-            />
+                {/* Generation Progress */}
+                <GenerationProgress
+                  generationProgress={chatFlow.generationProgress}
+                  currentStep={chatFlow.currentStep}
+                />
 
-            {/* Generated Content Summary */}
-            <ContentSummary
-              selectedScript={chatFlow.selectedScript}
-              currentStep={chatFlow.currentStep}
-              generatedImages={chatFlow.generatedImages}
-              generatedVideos={chatFlow.generatedVideos}
-            />
+                {/* Generated Images */}
+                <GeneratedImages
+                  generatedImages={chatFlow.generatedImages}
+                  currentStep={chatFlow.currentStep}
+                  onImageClick={handleImageClick}
+                />
 
-            {/* Timeline Button */}
-            <TimelineButton
-              canSendTimeline={canSendTimeline}
-              addingTimeline={chatFlow.addingTimeline}
-              onSendToTimeline={sendVideosToTimeline}
-            />
+                {/* Generated Videos */}
+                <GeneratedVideos
+                  combinedVideosMap={combinedVideosMap}
+                  currentStep={chatFlow.currentStep}
+                  onVideoClick={handleVideoClick}
+                  onAddSingleVideo={addSingleVideoToTimeline}
+                />
 
-            {/* Auth/Project Messages */}
-            <AuthMessages
-              isAuthenticated={isAuthenticated}
-              selectedProject={chatFlow.selectedProject}
-              onCreateProject={openCreateModal}
-            />
-          </div>
+                {/* Generated Content Summary */}
+                <ContentSummary
+                  selectedScript={chatFlow.selectedScript}
+                  currentStep={chatFlow.currentStep}
+                  generatedImages={chatFlow.generatedImages}
+                  generatedVideos={chatFlow.generatedVideos}
+                />
 
-          {/* Input area */}
-          <InputArea
-            isAuthenticated={isAuthenticated}
-            selectedProject={chatFlow.selectedProject}
-            prompt={prompt}
-            setPrompt={setPrompt}
-            loading={chatFlow.loading}
-            currentStep={chatFlow.currentStep}
-            handleStepClick={handleStepClick}
-          />
+                {/* Auth/Project Messages */}
+                 <AuthMessages
+                   isAuthenticated={isAuthenticated}
+                   selectedProject={chatFlow.selectedProject}
+                   onCreateProject={openCreateModal}
+                 />
+               </div>
+
+               {/* Timeline Button - Positioned just above input area */}
+               {canSendTimeline && (
+                 <div className=' px-4 py-2 border-t border-gray-800'>
+                   <TimelineButton
+                     canSendTimeline={canSendTimeline}
+                     addingTimeline={chatFlow.addingTimeline}
+                     onSendToTimeline={sendVideosToTimeline}
+                   />
+                 </div>
+               )}
+
+               {/* Input area */}
+               <InputArea
+                 isAuthenticated={isAuthenticated}
+                 selectedProject={chatFlow.selectedProject}
+                 prompt={prompt}
+                 setPrompt={setPrompt}
+                 loading={chatFlow.loading}
+                 currentStep={chatFlow.currentStep}
+                 handleStepClick={handleStepClick}
+               />
+            </>
+          )}
         </div>
       </div>
 

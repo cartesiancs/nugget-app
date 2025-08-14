@@ -75,7 +75,7 @@ export const chatApi = {
     image_s3_key,
     project_id,
     segmentId,
-    model = "kling-v2.1-master",
+    model = "gen4_turbo",
   }) => {
     try {
       const payload = {
@@ -112,6 +112,6 @@ export const chatApi = {
     if (!models) return null;
 
     // Return the first model as default
-    return Object.keys(models)[0];
+    return Object.keys(models)[1];
   },
 };

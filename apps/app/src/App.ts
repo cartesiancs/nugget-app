@@ -517,7 +517,7 @@ export class App extends LitElement {
               width: 30%;
               z-index: 10;
               pointer-events: auto;
-              background: #181a1c;
+              background: #000000;
               overflow: hidden;
             `;
             document.body.appendChild(rightPanelElement);

@@ -25,7 +25,7 @@ export const AVAILABLE_MODELS = {
       duration: "5 seconds",
       resolution: "Variable",
     },
-    "gen4-turbo": {
+    "gen4_turbo": {
       name: "RunwayML Gen4 Turbo",
       description: "Advanced video generation",
       provider: "RunwayML",
@@ -75,7 +75,7 @@ export const chatApi = {
     image_s3_key,
     project_id,
     segmentId,
-    model = "gen4-turbo",
+    model = "gen4_turbo",
   }) => {
     try {
       const payload = {

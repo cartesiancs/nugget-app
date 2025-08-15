@@ -11,9 +11,72 @@ export default function InputArea({
   loading,
   currentStep,
   handleStepClick,
+  chatFlow, // Add chatFlow to determine available models
 }) {
   const [selectedModel, setSelectedModel] = useState("GPT-4o mini");
   const textareaRef = useRef(null);
+
+  // Get available models based on current step and flow state
+  const getAvailableModels = () => {
+    // Initial concept generation - only Gemini 2.5 Flash
+    if (currentStep === 0 && !chatFlow?.concepts) {
+      return [{ value: "gpt-2.5", label: "Gemini 2.5 Flash" }];
+    }
+    
+    // Script generation after concept selection - Flash default, Pro option
+    if (currentStep === 2 || (chatFlow?.selectedConcept && !chatFlow?.selectedScript)) {
+      return [
+        { value: "gemini-flash", label: "Gemini Flash" },
+        { value: "gemini-pro", label: "Gemini Pro" }
+      ];
+    }
+    
+    // Image generation after script selection - Recraft default, Imagen option
+    if (currentStep === 4 || (chatFlow?.selectedScript && Object.keys(chatFlow?.generatedImages || {}).length === 0)) {
+      return [
+        { value: "recraft-v3", label: "Recraft" },
+        { value: "imagen", label: "Imagen" }
+      ];
+    }
+    
+    // Video generation after image generation - Runway default, Kling option
+    if (currentStep === 5 || (Object.keys(chatFlow?.generatedImages || {}).length > 0 && Object.keys(chatFlow?.generatedVideos || {}).length === 0)) {
+      return [
+        { value: "gen4-turbo", label: "RunwayML" },
+        { value: "kling-v2.1-master", label: "Kling" }
+      ];
+    }
+    
+    // Default models for other cases
+    return [
+      { value: "GPT-4o mini", label: "GPT-4o mini" },
+      { value: "GPT-4o", label: "GPT-4o" },
+      { value: "Claude 3.5 Sonnet", label: "Claude 3.5 Sonnet" },
+      { value: "Gemini Pro", label: "Gemini Pro" }
+    ];
+  };
+
+  // Update selected model when available models change
+  useEffect(() => {
+    const availableModels = getAvailableModels();
+    if (availableModels.length > 0) {
+      // Set default model based on step - always use the first option (which is the default)
+      if (currentStep === 0 && !chatFlow?.concepts) {
+        setSelectedModel("gpt-2.5");
+      } else if (currentStep === 2 || (chatFlow?.selectedConcept && !chatFlow?.selectedScript)) {
+        setSelectedModel("gemini-flash"); // Default to Gemini Flash
+        // Also ensure the chatFlow has the correct default
+        if (chatFlow && chatFlow.setSelectedScriptModel) {
+          chatFlow.setSelectedScriptModel("flash");
+        }
+        console.log("Set default script model to flash for step", currentStep);
+      } else if (currentStep === 4 || (chatFlow?.selectedScript && Object.keys(chatFlow?.generatedImages || {}).length === 0)) {
+        setSelectedModel("recraft-v3"); // Default to Recraft
+      } else if (currentStep === 5 || (Object.keys(chatFlow?.generatedImages || {}).length > 0 && Object.keys(chatFlow?.generatedVideos || {}).length === 0)) {
+        setSelectedModel("gen4-turbo"); // Default to RunwayML
+      }
+    }
+  }, [currentStep, chatFlow?.concepts, chatFlow?.selectedConcept, chatFlow?.selectedScript, chatFlow?.generatedImages, chatFlow?.generatedVideos]);
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -34,9 +97,69 @@ export default function InputArea({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (prompt.trim() && !loading) {
-      // For conversational flow, always start with step 0 (concept generation)
-      // The ChatMessages component will handle the flow progression
-      handleStepClick(0);
+      // Store the current prompt before clearing
+      const currentPrompt = prompt.trim();
+      
+      // Clear input immediately using state management
+      setPrompt("");
+      
+      // Pass the selected model to the appropriate step
+      // Store the model in chatFlow for use by generation functions
+      if (chatFlow) {
+        // Map model values to the correct format for each step
+        if (selectedModel === "recraft-v3" || selectedModel === "imagen") {
+          chatFlow.setSelectedImageModel(selectedModel);
+        } else if (selectedModel === "gen4-turbo") {
+          chatFlow.setSelectedVideoModel("gen4-turbo");
+        } else if (selectedModel === "kling-v2.1-master") {
+          chatFlow.setSelectedVideoModel(selectedModel);
+        }
+        
+        // Determine which step to execute based on current state
+        let stepToExecute = 0;
+        
+        // If we have concepts but no selected concept, we're at step 0 (concept generation)
+        if (!chatFlow?.concepts) {
+          stepToExecute = 0;
+        }
+        // If we have selected concept but no scripts, we're at step 2 (script generation)  
+        else if (chatFlow?.selectedConcept && !chatFlow?.selectedScript) {
+          stepToExecute = 2;
+        }
+        // If we have selected script but no images, we're at step 4 (image generation)
+        else if (chatFlow?.selectedScript && Object.keys(chatFlow?.generatedImages || {}).length === 0) {
+          stepToExecute = 4;
+        }
+        // If we have images but no videos, we're at step 5 (video generation)
+        else if (Object.keys(chatFlow?.generatedImages || {}).length > 0 && Object.keys(chatFlow?.generatedVideos || {}).length === 0) {
+          stepToExecute = 5;
+        }
+        
+        // Store the script generation model for segmentation API - use what user actually selected
+        if (selectedModel === "gemini-pro") {
+          chatFlow.setSelectedScriptModel("pro");
+        } else if (selectedModel === "gemini-flash") {
+          chatFlow.setSelectedScriptModel("flash");
+        }
+        
+        // Store the current user message for immediate display with unique counter
+        const newMessageId = chatFlow.messageCounter + 1;
+        chatFlow.setMessageCounter(newMessageId);
+        chatFlow.setCurrentUserMessage(currentPrompt);
+        
+        // Add to all user messages array
+        chatFlow.setAllUserMessages(prev => [
+          ...prev,
+          {
+            id: `user-message-${newMessageId}`,
+            content: currentPrompt,
+            timestamp: Date.now(),
+            step: stepToExecute
+          }
+        ]);
+        
+        handleStepClick(stepToExecute);
+      }
     }
   };
 
@@ -119,7 +242,27 @@ export default function InputArea({
               {/* Model Selector */}
               <select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                onChange={(e) => {
+                  const newModel = e.target.value;
+                  setSelectedModel(newModel);
+                  
+                  // Update chatFlow immediately when model changes
+                  if (chatFlow) {
+                    if (newModel === "recraft-v3" || newModel === "imagen") {
+                      chatFlow.setSelectedImageModel(newModel);
+                    } else if (newModel === "gen4-turbo") {
+                      chatFlow.setSelectedVideoModel("gen4-turbo");
+                    } else if (newModel === "kling-v2.1-master") {
+                      chatFlow.setSelectedVideoModel(newModel);
+                    } else if (newModel === "gemini-pro") {
+                      chatFlow.setSelectedScriptModel("pro");
+                      console.log("User selected Gemini Pro, set script model to 'pro'");
+                    } else if (newModel === "gemini-flash") {
+                      chatFlow.setSelectedScriptModel("flash");
+                      console.log("User selected Gemini Flash, set script model to 'flash'");
+                    }
+                  }
+                }}
                 className="text-gray-300 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 appearance-none cursor-pointer"
                 style={{
                   background: "rgba(24, 25, 28, 0.6)",
@@ -134,10 +277,11 @@ export default function InputArea({
                 }}
                 disabled={loading}
               >
-                <option value="GPT-4o mini">GPT-4o mini</option>
-                <option value="GPT-4o">GPT-4o</option>
-                <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
-                <option value="Gemini Pro">Gemini Pro</option>
+                {getAvailableModels().map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
               </select>
 
               {/* Action Icons */}
@@ -225,7 +369,7 @@ export default function InputArea({
                   }}
                   onClick={(e) => {
                     e.preventDefault();
-                    handleStepClick(0);
+                    handleSubmit(e);
                   }}
                 >
                   <svg

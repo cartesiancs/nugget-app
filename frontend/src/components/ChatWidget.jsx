@@ -337,7 +337,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
       {/* Sliding sidebar */}
       <div
 
-        className={`backdrop-blur-sm border border-gray-600/30 shadow-lg rounded-xl ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
+        className={`backdrop-blur-sm border-0 border-gray-600/30 shadow-lg rounded-xl ease-out fixed bottom-4 right-4 text-white transform transition-transform duration-500 ${
 
           open ? "translate-x-0" : "translate-x-full"
         } z-[10000] flex flex-col shadow-2xl`}
@@ -416,8 +416,10 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 onAddSingleVideo={addSingleVideoToTimeline}
                 sendVideosToTimeline={sendVideosToTimeline}
                 combinedVideosMap={combinedVideosMap}
-                autoProgression={true}
+                autoProgression={false}
                 currentPrompt={prompt}
+                setPrompt={setPrompt}
+                onSendMessage={handleStepClick}
               />
 
               {/* Input area */}
@@ -429,6 +431,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 loading={chatFlow.loading}
                 currentStep={chatFlow.currentStep}
                 handleStepClick={handleStepClick}
+                chatFlow={chatFlow}
               />
             </>
           ) : (
@@ -553,6 +556,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
                  loading={chatFlow.loading}
                  currentStep={chatFlow.currentStep}
                  handleStepClick={handleStepClick}
+                 chatFlow={chatFlow}
                />
             </>
           )}

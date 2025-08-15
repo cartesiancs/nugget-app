@@ -60,12 +60,16 @@ export const useChatFlow = () => {
   const [selectedVideoModel, setSelectedVideoModel] = useState(
     chatApi.getDefaultModel("VIDEO"),
   );
+  const [selectedScriptModel, setSelectedScriptModel] = useState("flash");
 
   // Credit deduction notification state
   const [creditDeductionMessage, setCreditDeductionMessage] = useState(null);
 
   // Timeline states
   const [addingTimeline, setAddingTimeline] = useState(false);
+  const [currentUserMessage, setCurrentUserMessage] = useState("");
+  const [messageCounter, setMessageCounter] = useState(0);
+  const [allUserMessages, setAllUserMessages] = useState([]);
   const [storedVideosMap, setStoredVideosMap] = useState(() => {
     try {
       const stored = localStorage.getItem("project-store-selectedProject");
@@ -216,6 +220,7 @@ export const useChatFlow = () => {
     // Reset model selections to defaults
     setSelectedImageModel(chatApi.getDefaultModel("IMAGE"));
     setSelectedVideoModel(chatApi.getDefaultModel("VIDEO"));
+    setSelectedScriptModel("flash");
   }, []);
 
   // Helper function to show credit deduction after successful API response
@@ -302,6 +307,8 @@ export const useChatFlow = () => {
       setLoading(true);
       setError(null);
       updateStepStatus(0, "loading");
+      
+      // Don't clear user message immediately - let it stay visible during processing
 
       try {
         console.log("Starting pipeline with web-info...");
@@ -341,6 +348,9 @@ export const useChatFlow = () => {
         setConcepts(conceptsResult.concepts);
         updateStepStatus(0, "done");
         setCurrentStep(1);
+        
+        // Clear user message after concepts are generated
+        setCurrentUserMessage("");
       } catch (error) {
         console.error("Error in concept writer:", error);
         showRequestFailed("Concept Generation");
@@ -371,20 +381,27 @@ export const useChatFlow = () => {
       setLoading(true);
       setError(null);
       updateStepStatus(2, "loading");
+      
+      // Don't clear user message immediately - let it stay visible during processing
 
       try {
+        const scriptModel = selectedScriptModel || "flash"; // Use the model from InputArea or default to "flash"
+        console.log("Using script model:", scriptModel, "selectedScriptModel:", selectedScriptModel);
+        
         const [res1, res2] = await Promise.all([
           segmentationApi.getSegmentation({
             prompt,
             concept: selectedConcept.title,
             negative_prompt: "",
             project_id: selectedProject?.id,
+            model: scriptModel
           }),
           segmentationApi.getSegmentation({
             prompt,
             concept: selectedConcept.title,
             negative_prompt: "",
             project_id: selectedProject?.id,
+            model: scriptModel
           }),
         ]);
 
@@ -393,6 +410,9 @@ export const useChatFlow = () => {
         setScripts({ response1: res1, response2: res2 });
         updateStepStatus(2, "done");
         setCurrentStep(3);
+        
+        // Clear user message after scripts are generated
+        setCurrentUserMessage("");
       } catch (error) {
         console.error("Error in script generation:", error);
         showRequestFailed("Script Generation");
@@ -423,6 +443,8 @@ export const useChatFlow = () => {
     setError(null);
     updateStepStatus(4, "loading");
     setGenerationProgress({});
+    
+    // Don't clear user message immediately - let it stay visible during processing
 
     try {
       const segments = selectedScript.segments;
@@ -443,13 +465,13 @@ export const useChatFlow = () => {
           },
         }));
 
-        console.log({
-          visual_prompt: segment.visual,
-          art_style: artStyle,
-          uuid: segment.id,
-          project_id: selectedProject?.id,
-          model: selectedImageModel,
-        });
+                  console.log("Image generation request:", {
+            visual_prompt: segment.visual,
+            art_style: artStyle,
+            uuid: segment.id,
+            project_id: selectedProject?.id,
+            model: selectedImageModel,
+          });
         try {
           const result = await chatApi.generateImage({
             visual_prompt: segment.visual,
@@ -458,6 +480,8 @@ export const useChatFlow = () => {
             project_id: selectedProject?.id,
             model: selectedImageModel,
           });
+
+          console.log("Image generation response:", result);
 
           if (result.s3_key) {
             const imageUrl = await s3Api.downloadImage(result.s3_key);
@@ -535,12 +559,10 @@ export const useChatFlow = () => {
       updateStepStatus(4, "done");
       setCurrentStep(5);
       
-      // Auto-trigger video generation if there's a callback for it
-      if (window.autoTriggerVideoGeneration) {
-        setTimeout(async () => {
-          await runVideoGeneration();
-        }, 1000); // Delay to show images first
-      }
+      // Clear user message after images are generated
+      setCurrentUserMessage("");
+      
+      // No auto-trigger - user must manually select model and send
     } catch (error) {
       console.error("Error in image generation:", error);
       showRequestFailed("Image Generation");
@@ -569,6 +591,8 @@ export const useChatFlow = () => {
     setError(null);
     updateStepStatus(5, "loading");
     setGenerationProgress({});
+    
+    // Don't clear user message immediately - let it stay visible during processing
 
     try {
       const segments = selectedScript.segments;
@@ -712,6 +736,9 @@ export const useChatFlow = () => {
       setGeneratedVideos(videosMap);
 
       updateStepStatus(5, "done");
+      
+      // Clear user message after videos are generated
+      setCurrentUserMessage("");
     } catch (error) {
       console.error("Error in video generation:", error);
       showRequestFailed("Video Generation");
@@ -736,14 +763,9 @@ export const useChatFlow = () => {
       updateStepStatus(1, "done");
       setCurrentStep(2);
       
-      // Auto-trigger script generation if enabled
-      if (autoTriggerNext && prompt?.trim()) {
-        setTimeout(async () => {
-          await runScriptGeneration(prompt);
-        }, 800); // Small delay for better UX
-      }
+      // No auto-trigger - user must manually select model and send
     },
-    [updateStepStatus, runScriptGeneration],
+    [updateStepStatus],
   );
 
   const handleScriptSelect = useCallback(
@@ -752,14 +774,9 @@ export const useChatFlow = () => {
       updateStepStatus(3, "done");
       setCurrentStep(4);
       
-      // Auto-trigger image generation if enabled
-      if (autoTriggerNext) {
-        setTimeout(async () => {
-          await runImageGeneration();
-        }, 800); // Small delay for better UX
-      }
+      // No auto-trigger - user must manually select model and send
     },
-    [updateStepStatus, runImageGeneration],
+    [updateStepStatus],
   );
 
   const loadProjectData = useCallback(async () => {
@@ -962,9 +979,17 @@ export const useChatFlow = () => {
     setSelectedImageModel,
     selectedVideoModel,
     setSelectedVideoModel,
+    selectedScriptModel,
+    setSelectedScriptModel,
     creditDeductionMessage,
     addingTimeline,
     setAddingTimeline,
+    currentUserMessage,
+    setCurrentUserMessage,
+    messageCounter,
+    setMessageCounter,
+    allUserMessages,
+    setAllUserMessages,
     storedVideosMap,
 
     // Actions

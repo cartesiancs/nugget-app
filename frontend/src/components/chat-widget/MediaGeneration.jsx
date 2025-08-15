@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 const MediaGeneration = ({
   type, // "image" or "video"
@@ -10,9 +10,22 @@ const MediaGeneration = ({
   onVideoClick,
   onAddSingleVideo,
   loading = false,
+  onImagesGenerated, // Callback when images are generated
 }) => {
   const isImageGeneration = type === "image";
   const mediaMap = isImageGeneration ? generatedImages : combinedVideosMap;
+  const prevImageCountRef = useRef(0);
+
+  // Trigger callback when images are first generated
+  useEffect(() => {
+    if (isImageGeneration && generatedImages && onImagesGenerated) {
+      const currentImageCount = Object.keys(generatedImages).length;
+      if (currentImageCount > 0 && prevImageCountRef.current === 0) {
+        onImagesGenerated();
+      }
+      prevImageCountRef.current = currentImageCount;
+    }
+  }, [isImageGeneration, generatedImages, onImagesGenerated]);
 
   if (!mediaMap && !loading) return null;
 

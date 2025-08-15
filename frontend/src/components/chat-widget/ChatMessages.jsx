@@ -14,6 +14,8 @@ const ChatMessages = ({
   combinedVideosMap,
   autoProgression = false,
   currentPrompt = "",
+  setPrompt, // Add this to control the input
+  onSendMessage, // Add this to handle message sending
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -27,13 +29,7 @@ const ChatMessages = ({
     scrollToBottom();
   }, [messages]);
 
-  // Set up auto-progression flag
-  useEffect(() => {
-    window.autoTriggerVideoGeneration = autoProgression;
-    return () => {
-      delete window.autoTriggerVideoGeneration;
-    };
-  }, [autoProgression]);
+  // Remove auto-progression - user controls all steps manually
 
   // Use the passed currentPrompt
 
@@ -41,8 +37,8 @@ const ChatMessages = ({
   useEffect(() => {
     const newMessages = [];
 
-    // Show initial user message if we have concepts (means user sent a message)
-    if (currentPrompt && chatFlow.concepts && chatFlow.concepts.length > 0) {
+    // Show initial user message if we have concepts (means user sent initial message) and no other messages
+    if (currentPrompt && chatFlow.concepts && chatFlow.concepts.length > 0 && (!chatFlow.allUserMessages || chatFlow.allUserMessages.length === 0)) {
       newMessages.push({
         id: "initial-prompt",
         type: "user",
@@ -50,8 +46,30 @@ const ChatMessages = ({
         timestamp: Date.now() - 1000,
       });
     }
+    
+    // Show all user messages in chronological order
+    if (chatFlow.allUserMessages && chatFlow.allUserMessages.length > 0) {
+      chatFlow.allUserMessages.forEach((userMsg) => {
+        newMessages.push({
+          id: userMsg.id,
+          type: "user",
+          content: userMsg.content,
+          timestamp: userMsg.timestamp,
+        });
+      });
+    }
+    
+    // Show current user message immediately when they send it (if not already in allUserMessages)
+    if (chatFlow.currentUserMessage && (!chatFlow.allUserMessages || !chatFlow.allUserMessages.find(msg => msg.content === chatFlow.currentUserMessage))) {
+      newMessages.push({
+        id: `current-user-message-${chatFlow.messageCounter}`,
+        type: "user",
+        content: chatFlow.currentUserMessage,
+        timestamp: Date.now() - 500,
+      });
+    }
 
-    // Step 0: Concept Generation
+    // Step 0: Concept Generation - always show concepts once generated
     if (chatFlow.concepts && chatFlow.concepts.length > 0) {
       newMessages.push({
         id: "concept-request",
@@ -62,32 +80,36 @@ const ChatMessages = ({
             <div className="text-white font-bold text-base mb-4">
               Please choose a concept to get started.
             </div>
-          <ConceptSelection
-            concepts={chatFlow.concepts}
-            currentStep={chatFlow.currentStep}
-            onConceptSelect={(concept) => 
-              chatFlow.handleConceptSelect(concept, autoProgression, currentPrompt)
-            }
-            selectedConcept={chatFlow.selectedConcept}
-            showAsCards={true}
-          />
+                      <ConceptSelection
+              concepts={chatFlow.concepts}
+              currentStep={chatFlow.currentStep}
+              onConceptSelect={(concept) => {
+                chatFlow.handleConceptSelect(concept, false, currentPrompt); // Never auto-progress
+                // Auto-populate input for script generation
+                if (setPrompt) {
+                  setPrompt(`Generate script for ${concept.title}`);
+                }
+              }}
+              selectedConcept={chatFlow.selectedConcept}
+              showAsCards={true}
+            />
           </div>
         ),
         timestamp: Date.now(),
       });
     }
 
-    // Step 1: Concept Selection Confirmation
-    if (chatFlow.selectedConcept) {
+    // Show script generation user message only when user manually sends it
+    if (chatFlow.currentUserMessage && chatFlow.selectedConcept && !chatFlow.scripts && chatFlow.loading && chatFlow.currentStep === 2) {
       newMessages.push({
-        id: "concept-selected",
-        type: "user",
-        content: `Selected concept: ${chatFlow.selectedConcept.title}`,
-        timestamp: Date.now() + 1,
+        id: "script-generation-request",
+        type: "user", 
+        content: chatFlow.currentUserMessage,
+        timestamp: Date.now() + 1.5,
       });
     }
 
-    // Step 2: Script Generation
+    // Step 2: Script Generation - always show scripts once generated
     if (chatFlow.scripts) {
       newMessages.push({
         id: "script-request",
@@ -101,9 +123,13 @@ const ChatMessages = ({
             <ScriptSelection
               scripts={chatFlow.scripts}
               currentStep={chatFlow.currentStep}
-              onScriptSelect={(script) => 
-                chatFlow.handleScriptSelect(script, autoProgression)
-              }
+              onScriptSelect={(script) => {
+                chatFlow.handleScriptSelect(script, false); // Never auto-progress
+                // Auto-populate input for image generation
+                if (setPrompt) {
+                  setPrompt(`Start generating image`);
+                }
+              }}
               selectedScript={chatFlow.selectedScript}
               showAsCollapsible={true}
             />
@@ -113,14 +139,13 @@ const ChatMessages = ({
       });
     }
 
-    // Step 3: Script Selection
-    if (chatFlow.selectedScript && chatFlow.currentStep >= 3) {
-      const scriptOption = chatFlow.scripts?.response1 === chatFlow.selectedScript ? "Script 1" : "Script 2";
+    // Show image generation user message only when user manually sends it
+    if (chatFlow.currentUserMessage && chatFlow.selectedScript && Object.keys(chatFlow.generatedImages || {}).length === 0 && chatFlow.loading && chatFlow.currentStep === 4) {
       newMessages.push({
-        id: "script-selected",
+        id: "image-generation-request",
         type: "user",
-        content: `Generate image for ${scriptOption}`,
-        timestamp: Date.now() + 3,
+        content: chatFlow.currentUserMessage,
+        timestamp: Date.now() + 3.5,
       });
     }
 
@@ -145,6 +170,12 @@ const ChatMessages = ({
               currentStep={chatFlow.currentStep}
               onImageClick={onImageClick}
               loading={isGenerating}
+              onImagesGenerated={() => {
+                // Auto-populate input for video generation
+                if (setPrompt && hasImages && !isGenerating) {
+                  setPrompt("Start generating video");
+                }
+              }}
             />
           </div>
         ),
@@ -152,14 +183,18 @@ const ChatMessages = ({
       });
     }
 
-    // Step 5: Video Generation Request
-    if (Object.keys(chatFlow.generatedImages).length > 0 && chatFlow.currentStep >= 5) {
+    // Show video generation user message only when user manually sends it
+    if (chatFlow.currentUserMessage && Object.keys(chatFlow.generatedImages || {}).length > 0 && Object.keys(chatFlow.generatedVideos || {}).length === 0 && chatFlow.loading && chatFlow.currentStep === 5) {
       newMessages.push({
-        id: "video-request",
+        id: "video-generation-request",
         type: "user",
-        content: "Generate video",
-        timestamp: Date.now() + 5,
+        content: chatFlow.currentUserMessage,
+        timestamp: Date.now() + 4.5,
       });
+    }
+
+    // Step 5: Video Generation
+    if (Object.keys(chatFlow.generatedImages).length > 0 && chatFlow.currentStep >= 5) {
 
       const hasVideos = Object.keys(combinedVideosMap).length > 0;
       const isGeneratingVideos = chatFlow.loading && chatFlow.currentStep === 5;
@@ -224,6 +259,9 @@ const ChatMessages = ({
     chatFlow.currentStep,
     chatFlow.loading,
     chatFlow.generationProgress,
+    chatFlow.currentUserMessage,
+    chatFlow.messageCounter,
+    chatFlow.allUserMessages,
     combinedVideosMap,
     autoProgression,
     currentPrompt,

@@ -24,7 +24,7 @@ export class RightPanel extends LitElement {
           <!-- Right panel content -->
           <div
             class="h-100 w-100"
-            style="background: #000000;"
+            style="background: linear-gradient(to bottom,#1B1D20 60%, #16181B 100%)";
           >
           </div>
         </div>

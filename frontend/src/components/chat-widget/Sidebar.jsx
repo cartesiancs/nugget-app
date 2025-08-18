@@ -24,7 +24,7 @@ const Sidebar = ({
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}
     >
-      <div className='flex items-center gap-2 relative'>
+      <div className='flex items-center gap-3 relative'>
         {/* Star Logo */}
         <svg
           width='24'
@@ -64,10 +64,9 @@ const Sidebar = ({
 
         {/* Credits Container */}
         <div 
-          className='flex items-center gap-1.5 border border-gray-600/30 rounded-lg px-2 py-1'
+          className='flex items-center gap-1.5  bg-[#FFFFFF0D] border-0  rounded-lg px-2 py-1'
           style={{
-            background: 'rgba(24, 25, 28, 0.6)',
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(10px)',
           }}
         >
           <svg

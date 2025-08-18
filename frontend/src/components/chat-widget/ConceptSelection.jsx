@@ -8,6 +8,7 @@ const ConceptSelection = ({
   showAsCards = false,
 }) => {
   const [expandedCard, setExpandedCard] = useState(null);
+  const containerRef = React.useRef(null);
 
   if (!concepts) return null;
 
@@ -24,13 +25,32 @@ const ConceptSelection = ({
 
   const handleExpandClick = (e, index) => {
     e.stopPropagation();
-    setExpandedCard(expandedCard === index ? null : index);
+    const newExpandedCard = expandedCard === index ? null : index;
+    setExpandedCard(newExpandedCard);
+    
+    // Center the expanded card
+    if (newExpandedCard !== null && containerRef.current) {
+      setTimeout(() => {
+        const container = containerRef.current;
+        const expandedElement = container.children[index];
+        if (expandedElement) {
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = expandedElement.getBoundingClientRect();
+          const scrollLeft = expandedElement.offsetLeft - (containerRect.width - elementRect.width)+50;
+          container.scrollTo({
+            left: Math.max(0, scrollLeft),
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    }
   };
 
   if (showAsCards) {
     return (
       <div className="mt-3 w-full">
         <div 
+          ref={containerRef}
           className="flex space-x-3 overflow-x-auto pb-4 w-full" 
           style={{ 
             scrollbarWidth: 'none', 
@@ -41,13 +61,13 @@ const ConceptSelection = ({
           {concepts.map((concept, index) => (
             <div
               key={index}
-              className={`flex-shrink-0 w-44 border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer ${
-                expandedCard === index ? 'h-auto min-h-44' : 'h-44'
+              className={`border-0 rounded-lg overflow-hidden  transition-all duration-300 cursor-pointer ${
+                expandedCard === index 
+                  ? 'flex-shrink-0 w-full h-auto min-h-44' 
+                  : 'flex-shrink-0 w-44 h-44'
               }`}
               style={{
-                background: '#18191C80',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+                background: '#FFFFFF1A',
               }}
               onClick={() => handleCardClick(concept, index)}
             >
@@ -55,7 +75,7 @@ const ConceptSelection = ({
                 {/* Dropdown arrow in top right */}
                 <button
                   onClick={(e) => handleExpandClick(e, index)}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
+                  className="absolute top-2 right-2 bg-white text-black transition-colors p-1 z-10"
                 >
                   <svg 
                     className={`w-3 h-3 transition-transform duration-200 ${expandedCard === index ? 'rotate-180' : ''}`} 
@@ -89,17 +109,10 @@ const ConceptSelection = ({
                       <span className="text-cyan-300">Concept:</span> {concept.concept}
                     </div>
                   ) : (
-                    <div className="relative">
-                      <div className="text-gray-300 text-xs leading-relaxed">
-                        <span className="text-cyan-300">Concept:</span> {concept.concept.substring(0, 80)}...
+                    <div className="relative blur-3xl">
+                      <div className="text-gray-300 text-xs leading-relaxed" style={{ maxHeight: '4rem', overflow: 'hidden' }}>
+                        <span className="text-cyan-300 ">Concept:</span> {concept.concept.substring(0, 120)}...
                       </div>
-                      {/* Blur effect at bottom when collapsed */}
-                      <div 
-                        className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none"
-                        style={{
-                          background: 'linear-gradient(to top, rgba(24, 25, 28, 0.8), transparent)'
-                        }}
-                      ></div>
                     </div>
                   )}
                 </div>

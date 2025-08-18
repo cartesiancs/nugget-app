@@ -288,7 +288,7 @@ const ChatMessages = ({
               message.id !== "concept-request" && message.id !== "script-request" && message.id !== "image-generation" && message.id !== "video-generation" && message.id !== "timeline-ready"
                 ? {
                     background: message.type === "user" 
-                      ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%)'
+                      ? '#18191C80'
                       : '#18191C80',
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255, 255, 255, 0.1)'

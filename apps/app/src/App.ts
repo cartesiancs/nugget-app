@@ -1042,212 +1042,26 @@ export class App extends LitElement {
           chatToggleContainer!.appendChild(btn);
         };
 
-        // Create user profile button
+                // Create user profile button using React component
         const createUserProfileButton = () => {
           if (document.getElementById("user-profile-btn")) return; // avoid duplicates
 
-          const btn = document.createElement("button");
-          btn.id = "user-profile-btn";
-          btn.title = "User Profile";
-          btn.style.cssText = `
-            background-color: #191B1D;
-            color: #ffffff;
-            border: none;
-            padding: 6px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background-color 0.2s ease;
-            position: relative;
+          // Create container for the React component
+          const container = document.createElement("div");
+          container.id = "user-profile-btn";
+          container.style.cssText = `
             display: flex;
             align-items: center;
-            gap: 4px;
           `;
 
-          let showUserMenu = false;
-          let userMenuElement: HTMLElement | null = null;
+          // Create the React component element
+          const reactDropdown = document.createElement("react-user-profile-dropdown");
+          console.log('Created React dropdown element:', reactDropdown);
+          
+          container.appendChild(reactDropdown);
+          console.log('React dropdown appended to container');
 
-          const updateProfileButton = () => {
-            const authData = (window as any).getChatAuthData?.();
-
-            if (!authData || !authData.isAuthenticated || !authData.user) {
-              btn.style.display = "none";
-              return;
-            }
-
-            btn.style.display = "flex";
-            const user = authData.user;
-
-            // Clear existing content
-            btn.innerHTML = "";
-
-            // Create avatar
-            if (user.avatar) {
-              const img = document.createElement("img");
-              img.src = user.avatar;
-              img.alt = "Profile";
-              img.style.cssText = `
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                border: 1px solid #666;
-              `;
-              btn.appendChild(img);
-            } else {
-              const avatarDiv = document.createElement("div");
-              avatarDiv.style.cssText = `
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background-color: #4CAF50;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 10px;
-                font-weight: bold;
-                color: white;
-              `;
-              avatarDiv.textContent =
-                user.name?.charAt(0) || user.email?.charAt(0) || "U";
-              btn.appendChild(avatarDiv);
-            }
-          };
-
-          const createUserMenu = () => {
-            if (userMenuElement) return;
-
-            const authData = (window as any).getChatAuthData?.();
-            if (!authData || !authData.isAuthenticated || !authData.user)
-              return;
-
-            userMenuElement = document.createElement("div");
-            userMenuElement.style.cssText = `
-              position: absolute;
-              top: 100%;
-              right: 0;
-              margin-top: 4px;
-              width: 180px;
-              background: rgba(0,0,0,0.95);
-              backdrop-filter: blur(12px);
-              border: 1px solid rgba(255,255,255,0.2);
-              border-radius: 8px;
-              box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-              z-index: 10002;
-              overflow: hidden;
-            `;
-
-            // Prevent menu from closing when clicking inside it
-            userMenuElement.onclick = (e) => {
-              e.stopPropagation();
-              console.log("Clicked inside user menu, preventing close");
-            };
-
-            // User info section
-            const userInfo = document.createElement("div");
-            userInfo.style.cssText = `
-              padding: 12px;
-              border-bottom: 1px solid rgba(255,255,255,0.1);
-              color: white;
-              font-size: 12px;
-            `;
-            userInfo.textContent = authData.user.name || authData.user.email;
-            userMenuElement.appendChild(userInfo);
-
-            // Sign out button
-            const signOutBtn = document.createElement("button");
-            signOutBtn.textContent = "Sign Out";
-            signOutBtn.style.cssText = `
-              width: 100%;
-              padding: 10px 12px;
-              background: transparent;
-              border: none;
-              color: white;
-              text-align: left;
-              font-size: 12px;
-              cursor: pointer;
-              transition: background-color 0.2s ease;
-            `;
-            signOutBtn.onmouseenter = () => {
-              signOutBtn.style.backgroundColor = "rgba(255,255,255,0.1)";
-            };
-            signOutBtn.onmouseleave = () => {
-              signOutBtn.style.backgroundColor = "transparent";
-            };
-            signOutBtn.onclick = (e) => {
-              e.stopPropagation();
-              const authData = (window as any).getChatAuthData?.();
-              if (authData && authData.logout) {
-                authData.logout();
-                hideUserMenu();
-                updateProfileButton();
-              }
-            };
-            userMenuElement.appendChild(signOutBtn);
-
-            btn.appendChild(userMenuElement);
-          };
-
-          const showUserMenuFn = () => {
-            if (showUserMenu) return;
-            showUserMenu = true;
-            createUserMenu();
-            if (userMenuElement) {
-              userMenuElement.style.display = "block";
-            }
-          };
-
-          const hideUserMenu = () => {
-            if (!showUserMenu) return;
-            showUserMenu = false;
-            if (userMenuElement) {
-              userMenuElement.remove();
-              userMenuElement = null;
-            }
-          };
-
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            console.log(
-              "Profile button clicked, current showUserMenu:",
-              showUserMenu,
-            );
-            if (showUserMenu) {
-              hideUserMenu();
-            } else {
-              showUserMenuFn();
-            }
-          };
-
-          // Close menu when clicking outside (but not on the button itself)
-          const handleDocumentClick = (e: Event) => {
-            const target = e.target as Node;
-            // Only close if clicking outside both the button and the menu
-            if (
-              showUserMenu &&
-              !btn.contains(target) &&
-              !userMenuElement?.contains(target)
-            ) {
-              console.log("Clicking outside profile menu, closing it");
-              hideUserMenu();
-            }
-          };
-
-          // Use a small delay to prevent immediate closing
-          document.addEventListener("click", handleDocumentClick, true);
-
-          // Initial update
-          updateProfileButton();
-
-          // Watch for auth state changes
-          const checkAuthState = () => {
-            updateProfileButton();
-          };
-
-          // Check periodically for auth state changes
-          setInterval(checkAuthState, 1000);
-
-          chatToggleContainer!.appendChild(btn);
+          chatToggleContainer!.appendChild(container);
         };
 
         createUserProfileButton();

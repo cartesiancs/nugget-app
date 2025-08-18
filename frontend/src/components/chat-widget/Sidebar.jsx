@@ -18,10 +18,10 @@ const Sidebar = ({
 }) => {
   return (
     <div 
-      className='flex justify-between items-center p-2 border-0 border-gray-700/30 sticky top-0 backdrop-blur-sm'
+      className='flex justify-between items-center p-2 sticky top-0 backdrop-blur-sm'
       style={{
         background: '#18191C80',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+        
       }}
     >
       <div className='flex items-center gap-3 relative'>

@@ -850,11 +850,10 @@ export class App extends LitElement {
           
           const btn = document.createElement('button');
           btn.id = 'chat-toggle-btn';
-          btn.innerHTML = `<span class="material-symbols-outlined" style="color:#000000;font-size:18px;">chat</span>`;
           btn.title = 'Open Chat';
           btn.style.cssText = `
-            background-color: #FFFFFF;
-            color: #000000;
+            background-color: #191B1D;
+            color: #ffffff;
             border: none;
             padding: 6px 8px;
             border-radius: 6px;
@@ -863,18 +862,32 @@ export class App extends LitElement {
             transition: background-color 0.2s ease;
           `;
           
+          // SVGs for open and close states
+          const openChatSVG = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 9.6C0 6.23969 0 4.55953 0.653961 3.27606C1.2292 2.14708 2.14708 1.2292 3.27606 0.653961C4.55953 0 6.23969 0 9.6 0H18.4C21.7603 0 23.4405 0 24.7239 0.653961C25.8529 1.2292 26.7708 2.14708 27.346 3.27606C28 4.55953 28 6.23969 28 9.6V18.4C28 21.7603 28 23.4405 27.346 24.7239C26.7708 25.8529 25.8529 26.7708 24.7239 27.346C23.4405 28 21.7603 28 18.4 28H9.6C6.23969 28 4.55953 28 3.27606 27.346C2.14708 26.7708 1.2292 25.8529 0.653961 24.7239C0 23.4405 0 21.7603 0 18.4V9.6Z" fill="#94E7ED" fill-opacity="0.15"/>
+<path d="M20.1734 5.7206C19.9524 5.6488 19.7144 5.6488 19.4934 5.7206C19.3166 5.77804 19.1921 5.87247 19.1186 5.93485C19.0575 5.9867 18.9953 6.04899 18.9522 6.09218L18.5922 6.45218C18.549 6.49531 18.4867 6.55752 18.4348 6.61861C18.3725 6.69208 18.278 6.81663 18.2206 6.9934C18.1488 7.21439 18.1488 7.45244 18.2206 7.67343C18.278 7.8502 18.3725 7.97475 18.4348 8.04822C18.4867 8.10932 18.549 8.17153 18.5922 8.21466L18.9522 8.57461C18.9953 8.6178 19.0575 8.68012 19.1186 8.73198C19.1921 8.79435 19.3166 8.88879 19.4934 8.94623C19.7144 9.01803 19.9524 9.01803 20.1734 8.94623C20.3502 8.88879 20.4748 8.79436 20.5482 8.73199C20.6093 8.68013 20.6715 8.61784 20.7146 8.57464L21.0746 8.21466C21.1178 8.17153 21.1802 8.10928 21.232 8.04822C21.2944 7.97475 21.3888 7.8502 21.4462 7.67343C21.518 7.45244 21.518 7.21439 21.4462 6.9934C21.3888 6.81662 21.2944 6.69208 21.232 6.61861C21.1801 6.55752 21.1178 6.4953 21.0746 6.45217L20.7146 6.0922C20.6715 6.049 20.6093 5.9867 20.5482 5.93484C20.4748 5.87247 20.3502 5.77804 20.1734 5.7206Z" fill="#94E7ED"/>
+<path d="M13.0406 6.81167C12.5925 6.60174 12.0743 6.60174 11.6263 6.81167C11.2738 6.97682 11.0554 7.27177 10.9079 7.50359C10.7593 7.73722 10.6008 8.04508 10.4237 8.38936L9.41392 10.351C9.37832 10.4202 9.3607 10.4541 9.34712 10.4785L9.34616 10.4802L9.34449 10.4813C9.32087 10.4961 9.28783 10.5154 9.22057 10.5545L7.2016 11.7277C6.90191 11.9018 6.62927 12.0602 6.42112 12.2082C6.20926 12.3587 5.94953 12.5749 5.80202 12.9072C5.61091 13.3378 5.61091 13.8291 5.80202 14.2596C5.94953 14.5919 6.20926 14.8081 6.42112 14.9587C6.62926 15.1066 6.90189 15.265 7.20157 15.4391L9.22057 16.6124C9.28783 16.6514 9.32087 16.6708 9.34449 16.6856L9.34616 16.6866L9.34712 16.6883C9.3607 16.7127 9.37831 16.7467 9.41392 16.8158L10.4237 18.7775C10.6009 19.1218 10.7593 19.4296 10.9079 19.6632C11.0554 19.8951 11.2738 20.19 11.6263 20.3552C12.0743 20.5651 12.5925 20.5651 13.0406 20.3552C13.393 20.19 13.6115 19.8951 13.7589 19.6632C13.9075 19.4296 14.066 19.1217 14.2432 18.7775L15.2529 16.8158C15.2885 16.7467 15.3061 16.7127 15.3197 16.6883L15.3207 16.6866L15.3224 16.6856C15.346 16.6708 15.379 16.6514 15.4463 16.6124L17.4653 15.4391C17.7649 15.265 18.0376 15.1066 18.2457 14.9587C18.4576 14.8081 18.7173 14.5919 18.8648 14.2596C19.0559 13.8291 19.0559 13.3378 18.8648 12.9072C18.7173 12.5749 18.4576 12.3587 18.2457 12.2082C18.0376 12.0602 17.7649 11.9018 17.4652 11.7277L15.4463 10.5545C15.379 10.5154 15.346 10.4961 15.3224 10.4813L15.3207 10.4802L15.3197 10.4785C15.3061 10.4541 15.2885 10.4202 15.2529 10.351L14.2432 8.38935C14.066 8.04509 13.9075 7.73722 13.7589 7.50359C13.6115 7.27177 13.393 6.97682 13.0406 6.81167Z" fill="#94E7ED"/>
+<path d="M20.312 16.594C20.0037 16.4688 19.6632 16.4688 19.3548 16.594C19.1301 16.6853 18.975 16.8319 18.876 16.937C18.7841 17.0345 18.6861 17.1571 18.5934 17.2729L17.899 18.141C17.8846 18.159 17.8694 18.1777 17.8538 18.1971C17.6927 18.3961 17.473 18.6675 17.3864 19.0008C17.3158 19.2724 17.3158 19.5611 17.3864 19.8326C17.473 20.166 17.6927 20.4374 17.8538 20.6364C17.8695 20.6558 17.8846 20.6745 17.899 20.6925L18.5934 21.5605C18.686 21.6763 18.7841 21.799 18.876 21.8965C18.975 22.0016 19.1301 22.1482 19.3548 22.2395C19.6632 22.3647 20.0037 22.3647 20.312 22.2395C20.5368 22.1482 20.6918 22.0016 20.7909 21.8965C20.8827 21.799 20.9808 21.6764 21.0734 21.5605L21.7679 20.6925C21.7822 20.6746 21.7972 20.656 21.8128 20.6368C21.9739 20.4377 22.1938 20.166 22.2805 19.8326C22.3511 19.5611 22.3511 19.2724 22.2805 19.0008C22.1938 18.6675 21.9742 18.3961 21.8131 18.1971C21.7974 18.1777 21.7823 18.159 21.7679 18.141L21.0734 17.273C20.9808 17.1572 20.8827 17.0344 20.7909 16.937C20.6918 16.8319 20.5368 16.6853 20.312 16.594Z" fill="#94E7ED"/>
+</svg>`;
+          
+          const closeChatSVG = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.1476 8.80306C11.5307 8.05886 11.7222 7.68676 11.9795 7.5662C12.2036 7.46123 12.4626 7.46123 12.6867 7.5662C12.944 7.68676 13.1355 8.05886 13.5186 8.80307L14.5117 10.7323C14.578 10.8612 14.6112 10.9257 14.6541 10.9826C14.6922 11.0332 14.736 11.0792 14.7845 11.1198C14.8392 11.1656 14.9019 11.202 15.0272 11.2749L17.0159 12.4305C17.6675 12.8091 17.9933 12.9985 18.1028 13.2452C18.1984 13.4605 18.1984 13.7062 18.1028 13.9214C17.9933 14.1682 17.6675 14.3575 17.0159 14.7362L15.0272 15.8918C14.9019 15.9646 14.8392 16.001 14.7845 16.0468C14.736 16.0875 14.6922 16.1335 14.6541 16.184C14.6112 16.241 14.578 16.3054 14.5117 16.4344L13.5186 18.3636C13.1355 19.1078 12.944 19.4799 12.6867 19.6005C12.4626 19.7054 12.2036 19.7054 11.9795 19.6005C11.7222 19.4799 11.5307 19.1078 11.1476 18.3636L10.1545 16.4344C10.0882 16.3054 10.055 16.241 10.012 16.184C9.97394 16.1335 9.9302 16.0875 9.88168 16.0468C9.82701 16.001 9.76432 15.9646 9.63894 15.8918L7.65029 14.7362C6.9987 14.3575 6.6729 14.1682 6.56336 13.9214C6.46781 13.7062 6.46781 13.4605 6.56336 13.2452C6.6729 12.9985 6.9987 12.8091 7.65029 12.4305L9.63894 11.2749C9.76432 11.202 9.82701 11.1656 9.88168 11.1198C9.9302 11.0792 9.97394 11.0332 10.012 10.9826C10.055 10.9257 10.0882 10.8612 10.1545 10.7323L11.1476 8.80306Z" stroke="white" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18.5494 20.1718C18.3379 19.9075 18.2322 19.7753 18.1926 19.6229C18.1577 19.4889 18.1577 19.3445 18.1926 19.2104C18.2322 19.058 18.3379 18.9259 18.5494 18.6615L19.229 17.812C19.4404 17.5477 19.5462 17.4155 19.6681 17.366C19.7753 17.3224 19.8909 17.3224 19.9981 17.366C20.12 17.4155 20.2257 17.5477 20.4372 17.812L21.1168 18.6615C21.3283 18.9259 21.434 19.058 21.4736 19.2104C21.5085 19.3445 21.5085 19.4889 21.4736 19.6229C21.434 19.7753 21.3283 19.9075 21.1168 20.1718L20.4372 21.0213C20.2257 21.2857 20.12 21.4178 19.9981 21.4673C19.8909 21.5109 19.7753 21.5109 19.6681 21.4673C19.5462 21.4178 19.4404 21.2857 19.229 21.0213L18.5494 20.1718Z" stroke="white" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.1912 7.63539C19.0855 7.52966 19.0326 7.47679 19.0128 7.41583C18.9954 7.36221 18.9954 7.30445 19.0128 7.25083C19.0326 7.18987 19.0855 7.13701 19.1912 7.03128L19.531 6.69147C19.6368 6.58574 19.6896 6.53287 19.7506 6.51307C19.8042 6.49564 19.862 6.49564 19.9156 6.51307C19.9766 6.53287 20.0294 6.58574 20.1351 6.69147L20.475 7.03128C20.5807 7.13701 20.6336 7.18987 20.6534 7.25083C20.6708 7.30445 20.6708 7.36221 20.6534 7.41583C20.6336 7.47679 20.5807 7.52966 20.475 7.63539L20.1351 7.9752C20.0294 8.08093 19.9766 8.13379 19.9156 8.1536C19.862 8.17102 19.8042 8.17102 19.7506 8.1536C19.6896 8.13379 19.6368 8.08093 19.531 7.9752L19.1912 7.63539Z" stroke="white" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+          
           const updateButtonState = () => {
             // Check if chat is open by looking for the chat widget's open state
             const chatWidget = document.querySelector('react-chat-widget');
             const isOpen = chatWidget && chatWidget.getAttribute('data-open') === 'true';
             
             if (isOpen) {
-              btn.style.backgroundColor = '#4CAF50'; // Green when chat is open
-              btn.innerHTML = `<span class="material-symbols-outlined" style="color:#ffffff;font-size:18px;">close</span>`;
+              btn.style.backgroundColor = '#191B1D'; // Keep consistent dark background
+              btn.innerHTML = openChatSVG; // Cyan/teal sparkle when chat is open
               btn.title = 'Close Chat';
             } else {
-              btn.style.backgroundColor = '#FFFFFF';
-              btn.innerHTML = `<span class="material-symbols-outlined" style="color:#000000;font-size:18px;">chat</span>`;
+              btn.style.backgroundColor = '#191B1D'; // Keep consistent dark background
+              btn.innerHTML = closeChatSVG; // Grey outline when chat is closed
               btn.title = 'Open Chat';
             }
           };
@@ -926,8 +939,6 @@ export class App extends LitElement {
           chatToggleContainer!.appendChild(btn);
         };
 
-        createChatToggleButton();
-        
         // Create user profile button
         const createUserProfileButton = () => {
           if (document.getElementById('user-profile-btn')) return; // avoid duplicates
@@ -936,8 +947,8 @@ export class App extends LitElement {
           btn.id = 'user-profile-btn';
           btn.title = 'User Profile';
           btn.style.cssText = `
-            background-color: #FFFFFF;
-            color: #000000;
+            background-color: #191B1D;
+            color: #ffffff;
             border: none;
             padding: 6px 8px;
             border-radius: 6px;
@@ -997,15 +1008,7 @@ export class App extends LitElement {
               btn.appendChild(avatarDiv);
             }
             
-            // Create dropdown arrow
-            const arrow = document.createElement('span');
-            arrow.innerHTML = '▼';
-            arrow.style.cssText = `
-              font-size: 8px;
-              color: #666;
-              transition: transform 0.2s ease;
-            `;
-            btn.appendChild(arrow);
+
           };
           
           const createUserMenu = () => {
@@ -1087,9 +1090,6 @@ export class App extends LitElement {
             createUserMenu();
             if (userMenuElement) {
               userMenuElement.style.display = 'block';
-              // Rotate arrow
-              const arrow = btn.querySelector('span');
-              if (arrow) arrow.style.transform = 'rotate(180deg)';
             }
           };
           
@@ -1099,14 +1099,12 @@ export class App extends LitElement {
             if (userMenuElement) {
               userMenuElement.remove();
               userMenuElement = null;
-              // Reset arrow
-              const arrow = btn.querySelector('span');
-              if (arrow) arrow.style.transform = 'rotate(0deg)';
             }
           };
           
           btn.onclick = (e) => {
             e.stopPropagation();
+            e.preventDefault();
             console.log('Profile button clicked, current showUserMenu:', showUserMenu);
             if (showUserMenu) {
               hideUserMenu();
@@ -1116,13 +1114,17 @@ export class App extends LitElement {
           };
           
           // Close menu when clicking outside (but not on the button itself)
-          document.addEventListener('click', (e) => {
+          const handleDocumentClick = (e: Event) => {
             const target = e.target as Node;
+            // Only close if clicking outside both the button and the menu
             if (showUserMenu && !btn.contains(target) && !userMenuElement?.contains(target)) {
               console.log('Clicking outside profile menu, closing it');
               hideUserMenu();
             }
-          });
+          };
+          
+          // Use a small delay to prevent immediate closing
+          document.addEventListener('click', handleDocumentClick, true);
           
           // Initial update
           updateProfileButton();
@@ -1139,6 +1141,7 @@ export class App extends LitElement {
         };
         
         createUserProfileButton();
+        createChatToggleButton();
 
         // Expose right panel functions globally for React components to use
         (window as any).toggleRightPanel = (isOpen: boolean) => {

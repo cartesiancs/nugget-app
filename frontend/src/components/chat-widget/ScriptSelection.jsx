@@ -34,7 +34,7 @@ const ScriptSelection = ({
         <div 
           className="w-full border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer"
           style={{
-            background: '#18191C80',
+            background: '#FFFFFF1A',
             backdropFilter: 'blur(10px)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
           }}
@@ -113,7 +113,7 @@ const ScriptSelection = ({
         <div 
           className="w-full border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer"
           style={{
-            background: '#18191C80',
+            background: '#FFFFFF1A',
             backdropFilter: 'blur(10px)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
           }}

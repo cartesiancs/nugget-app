@@ -168,17 +168,6 @@ const ChatMessages = ({
         id: "script-loading",
         type: "system",
         content: "",
-        component: (
-          <div>
-            <div className="text-white font-bold text-base mb-4">
-              Generating Scripts...
-            </div>
-            <div className="flex items-center space-x-2 text-gray-300">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-400"></div>
-              <span>Creating script and segmentation...</span>
-            </div>
-          </div>
-        ),
         timestamp: Date.now() + 1.8,
       });
     }
@@ -205,7 +194,7 @@ const ChatMessages = ({
         component: (
           <div>
             <div className="text-white font-bold text-base mb-4">
-              {hasImages ? "Generated Images:" : isGenerating ? "Generating Images..." : "Image Generation"}
+              {hasImages ? "Generated Images:" : isGenerating ? "Generating Images..." : ""}
             </div>
             <MediaGeneration
               type="image"
@@ -249,7 +238,7 @@ const ChatMessages = ({
         component: (
           <div>
             <div className="text-white font-bold text-base mb-4">
-              {isGeneratingVideos ? "Processing..." : hasVideos ? "Generated Videos:" : "Video Generation"}
+              {isGeneratingVideos ? "Processing..." : hasVideos ? "Generated Videos:" : ""}
             </div>
             <MediaGeneration
               type="video"

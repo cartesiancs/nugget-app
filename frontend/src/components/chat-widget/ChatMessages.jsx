@@ -57,18 +57,6 @@ const ChatMessages = ({
       });
     }
     
-    // Show all user messages in chronological order
-    if (chatFlow.allUserMessages && chatFlow.allUserMessages.length > 0) {
-      chatFlow.allUserMessages.forEach((userMsg) => {
-        newMessages.push({
-          id: userMsg.id,
-          type: "user",
-          content: userMsg.content,
-          timestamp: userMsg.timestamp,
-        });
-      });
-    }
-    
     // Show current user message immediately when they send it (if not already in allUserMessages)
     if (chatFlow.currentUserMessage && (!chatFlow.allUserMessages || !chatFlow.allUserMessages.find(msg => msg.content === chatFlow.currentUserMessage))) {
       newMessages.push({

@@ -182,6 +182,7 @@ export const useChatFlow = () => {
     // Step 5: Video Generation - check if videos exist (from API or generation)
     const hasVideos =
       Object.keys(generatedVideos).length > 0 ||
+      Object.keys(storedVideosMap).length > 0 ||
       selectedScript?.segments?.some((seg) => seg.videoUrl || seg.video_url);
     if (hasVideos) {
       newStepStatus[5] = "done";
@@ -198,6 +199,7 @@ export const useChatFlow = () => {
     selectedScript,
     generatedImages,
     generatedVideos,
+    storedVideosMap,
   ]);
 
   const resetFlow = useCallback(() => {
@@ -826,9 +828,17 @@ export const useChatFlow = () => {
       ) {
         console.log("Setting concepts:", projectConcepts.data);
         setConcepts(projectConcepts.data);
+        
+        // If we have concepts, set the first one as selected and move to step 1
+        if (projectConcepts.data.length > 0) {
+          setSelectedConcept(projectConcepts.data[0]);
+          setCurrentStep(1);
+        }
       } else {
         console.log("No concepts found in API response");
         setConcepts(null);
+        setSelectedConcept(null);
+        setCurrentStep(0);
       }
 
       // Set segments/scripts if available first (we need this to map images/videos correctly)
@@ -861,6 +871,9 @@ export const useChatFlow = () => {
             artStyle: firstSegmentation.artStyle,
             concept: firstSegmentation.concept,
           });
+          
+          // If we have a script, move to step 3 (script selection completed)
+          setCurrentStep(3);
         } else {
           console.log("No segments found in segmentation data");
           setSelectedScript(null);
@@ -901,6 +914,11 @@ export const useChatFlow = () => {
         });
         console.log("Setting generated images:", imagesMap);
         setGeneratedImages(imagesMap);
+        
+        // If we have images, move to step 4 (image generation completed)
+        if (Object.keys(imagesMap).length > 0) {
+          setCurrentStep(4);
+        }
       } else {
         console.log("No images found in API response");
         setGeneratedImages({});
@@ -939,6 +957,11 @@ export const useChatFlow = () => {
         console.log("Setting generated videos:", videosMap);
         setGeneratedVideos(videosMap);
         setStoredVideosMap(videosMap);
+        
+        // If we have videos, move to step 5 (video generation completed)
+        if (Object.keys(videosMap).length > 0) {
+          setCurrentStep(5);
+        }
       } else {
         console.log("No videos found in API response");
         setGeneratedVideos({});
@@ -946,8 +969,19 @@ export const useChatFlow = () => {
       }
 
       // Reset other states
-      setSelectedConcept(null);
       setScripts(null);
+
+      // Add initial project state message to chat
+      if (projectDetails && projectDetails.success) {
+        const projectName = projectDetails.data?.name || "Project";
+        const initialMessage = {
+          id: `project-loaded-${Date.now()}`,
+          type: "system",
+          content: `Loaded project: ${projectName}`,
+          timestamp: Date.now(),
+        };
+        setAllUserMessages(prev => [initialMessage, ...prev]);
+      }
 
       console.log("Project data loading completed");
     } catch (error) {

@@ -158,45 +158,73 @@ const Modals = ({
           document.body,
         )}
 
-      {/* Create Project Modal */}
+      {/* Create Project Modal - Themed */}
       {createModalOpen &&
         createPortal(
           <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10003]'>
             <form
               onSubmit={onCreateProject}
-              className='bg-gray-800 p-4 rounded-lg shadow-lg w-96 flex flex-col gap-3 relative'
+              className='p-4 rounded-lg shadow-lg w-96 flex flex-col gap-3 relative border border-gray-700/40'
+              style={{
+                background: '#18191C80',
+                backdropFilter: 'blur(10px)'
+              }}
             >
               <h3 className='text-lg font-semibold text-white mb-2'>
                 Create New Project
               </h3>
-              <label className='text-xs text-gray-300 mb-1'>Project Name</label>
-              <input
-                ref={nameInputRef}
-                className='p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none'
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                disabled={creatingProject}
-                required
-                autoFocus
-              />
-              <label className='text-xs text-gray-300 mb-1'>
-                Description (optional)
-              </label>
-              <textarea
-                className='p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none resize-y min-h-[60px] max-h-[300px]'
-                value={newProjectDesc}
-                onChange={(e) => setNewProjectDesc(e.target.value)}
-                disabled={creatingProject}
-                rows={4}
-                style={{ minHeight: 60 }}
-              />
+              
+              <div>
+                <label className='text-xs font-semibold text-white mb-2 block'>
+                  Project Name
+                </label>
+                <input
+                  ref={nameInputRef}
+                  className='w-full p-2 rounded text-white border border-gray-700/40 focus:outline-none focus:border-gray-600/60 transition-colors'
+                  style={{
+                    background: '#18191C80',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  disabled={creatingProject}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className='text-xs font-semibold text-white mb-2 block'>
+                  Description (optional)
+                </label>
+                <textarea
+                  className='w-full p-2 rounded text-white border border-gray-700/40 focus:outline-none focus:border-gray-600/60 transition-colors resize-y min-h-[60px] max-h-[300px]'
+                  style={{
+                    background: '#18191C80',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  value={newProjectDesc}
+                  onChange={(e) => setNewProjectDesc(e.target.value)}
+                  disabled={creatingProject}
+                  rows={4}
+                />
+              </div>
+
               {createProjectError && (
-                <div className='text-xs text-red-400'>{createProjectError}</div>
+                <div className='text-xs text-red-400 bg-red-900/20 border border-red-700/40 rounded p-2'>
+                  {createProjectError}
+                </div>
               )}
+
               <div className='flex gap-2 mt-2'>
                 <button
                   type='button'
-                  className='flex-1 bg-gray-600 hover:bg-gray-500 text-white rounded px-2 py-1'
+                  className='flex-1 px-2 py-1 text-xs rounded border border-gray-700/40 hover:border-gray-600/60 transition-colors'
+                  style={{
+                    background: '#18191C80',
+                    backdropFilter: 'blur(10px)',
+                    color: 'white'
+                  }}
                   onClick={onCloseCreateModal}
                   disabled={creatingProject}
                 >
@@ -204,7 +232,14 @@ const Modals = ({
                 </button>
                 <button
                   type='submit'
-                  className='flex-1 bg-green-600 hover:bg-green-500 text-white rounded px-2 py-1'
+                  className='flex-1 px-2 py-1 text-xs rounded transition-colors'
+                  style={{
+                    background: creatingProject || !newProjectName.trim() 
+                      ? 'rgba(34, 197, 94, 0.4)' 
+                      : 'linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.9) 100%)',
+                    color: 'white',
+                    opacity: creatingProject || !newProjectName.trim() ? 0.6 : 1
+                  }}
                   disabled={creatingProject || !newProjectName.trim()}
                 >
                   {creatingProject ? "Creating..." : "Create"}

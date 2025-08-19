@@ -97,7 +97,7 @@ const Sidebar = ({
           </span>
         </div>
 
-        {/* Dropdown Menu */}
+        {/* Options Menu */}
         {showMenu && (
           <div
             className='absolute right-0 top-10 w-44 backdrop-blur-md border border-gray-700/40 rounded-lg shadow-xl z-[100000]'
@@ -112,30 +112,11 @@ const Sidebar = ({
               {isAuthenticated && (
                 <>
                   <button
-                    className='w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors rounded-md mx-1'
-                    style={{
-                      ':hover': {
-                        background: 'rgba(24, 25, 28, 0.6)'
-                      }
-                    }}
-                    onClick={() => setShowProjectHistory((v) => !v)}
-                  >
-                    <span className='text-sm'>🕒</span>
-                    <span>Project History</span>
-                  </button>
-                  <button
                     onClick={onCharacterGenerator}
                     className='w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors rounded-md mx-1'
                   >
                     <span className='text-sm'>👤</span>
                     <span>Generate Character</span>
-                  </button>
-                  <button
-                    onClick={onCreateProject}
-                    className='w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors rounded-md mx-1'
-                  >
-                    <span className='text-sm'>➕</span>
-                    <span>Create Project</span>
                   </button>
                   <div className="border-t border-gray-700/50 my-1 mx-2"></div>
                   <button
@@ -151,26 +132,71 @@ const Sidebar = ({
           </div>
         )}
 
-        {isAuthenticated && (
-          <>
-            {showProjectHistory && (
-              <div className='absolute right-48 top-12 z-[10002]'>
-                <ProjectHistoryDropdown
-                  onSelect={() => setShowProjectHistory(false)}
-                />
-              </div>
-            )}
-          </>
+        {/* Project History Dropdown */}
+        {isAuthenticated && showProjectHistory && (
+          <div className='absolute left-0 top-12 z-[10002]'>
+            <ProjectHistoryDropdown
+              onSelect={() => setShowProjectHistory(false)}
+            />
+          </div>
         )}
       </div>
 
       {/* Right side icons */}
       <div className='flex items-center gap-2'>
-        {/* History/Menu Icon */}
-        <svg
+        {isAuthenticated && (
+          <>
+            {/* Project History Icon */}
+            <svg
+              width='18'
+              height='18'
+              viewBox='0 0 24 24'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+              className='text-gray-400 hover:text-gray-300 cursor-pointer transition-colors'
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProjectHistory((v) => !v);
+              }}
+            >
+              <path
+                d='M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+
+            {/* Create New Project Icon */}
+            <svg
+              width='18'
+              height='18'
+              viewBox='0 0 24 24'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+              className='text-gray-400 hover:text-gray-300 cursor-pointer transition-colors'
+              onClick={(e) => {
+                e.stopPropagation();
+                onCreateProject();
+              }}
+            >
+              <path
+                d='M12 5V19M5 12H19'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+          </>
+        )}
+
+        {/* Options Menu Icon (3 dots) */}
+        {/* <svg
           width='18'
           height='18'
-          viewBox='0 0 16 16'
+          viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
           className='text-gray-400 hover:text-gray-300 cursor-pointer transition-colors'
@@ -180,13 +206,27 @@ const Sidebar = ({
           }}
         >
           <path
-            d='M3.38073 2.46216C3.16206 3.29824 3.05278 4.15879 3.05535 5.02229C3.05603 5.24778 3.24467 5.32069 3.42843 5.36136L3.42987 5.36168M5.86932 5.59376C5.04925 5.61671 4.22996 5.53865 3.42987 5.36168M3.42987 5.36168C4.22971 4.09268 5.55725 3.16673 7.15729 2.92837C10.0707 2.49436 12.7842 4.50428 13.2183 7.41764C13.6523 10.331 11.6423 13.0446 8.72898 13.4786C5.92046 13.897 3.29759 12.0442 2.72363 9.30028M9.33383 9.99992L8.19576 8.86185C8.07074 8.73683 8.0005 8.56726 8.0005 8.39045V5.99992'
+            d='M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z'
             stroke='currentColor'
-            strokeWidth='1.2'
+            strokeWidth='2'
             strokeLinecap='round'
             strokeLinejoin='round'
           />
-        </svg>
+          <path
+            d='M19 13C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11C18.4477 11 18 11.4477 18 12C18 12.5523 18.4477 13 19 13Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M5 13C5.5523 13 6 12.5523 6 12C6 11.4477 5.5523 11 5 11C4.4477 11 4 11.4477 4 12C4 12.5523 4.4477 13 5 13Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg> */}
 
         {/* Close button */}
         <svg

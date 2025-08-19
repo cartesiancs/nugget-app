@@ -320,46 +320,16 @@ export default function InputArea({
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "10px",
                   paddingRight: "22px",
-                  minWidth: "180px", // Increased width to accommodate new content
+                  minWidth: "220px",
                 }}
                 disabled={loading}
               >
                 {getAvailableModels().map((model) => (
                   <option key={model.value} value={model.value}>
-                    {model.label} • {model.tokens} Token • ~{model.time}s
+                    {model.label} ◉ {model.tokens} Token ⏱ ~{model.time}s
                   </option>
                 ))}
               </select>
-
-              {/* Custom styled dropdown (for better visual control) */}
-              <div className="relative hidden">
-                <div
-                  className='text-gray-300 text-xs px-3 py-2 rounded-md cursor-pointer flex items-center justify-between min-w-[200px]'
-                  style={{
-                    background: "rgba(24, 25, 28, 0.6)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    backdropFilter: "blur(5px)",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{modelData[selectedModel]?.label}</span>
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z" stroke="#94E7ED" strokeOpacity="0.5" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z" stroke="#94E7ED" strokeOpacity="0.5" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span>{modelData[selectedModel]?.tokens}</span>
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M7.99984 5.33317V8.54413C7.99984 8.65809 8.05806 8.76416 8.15421 8.82535L9.99984 9.99984M14.0999 7.9999C14.0999 11.3688 11.3688 14.0999 7.9999 14.0999C4.63097 14.0999 1.8999 11.3688 1.8999 7.9999C1.8999 4.63097 4.63097 1.8999 7.9999 1.8999C11.3688 1.8999 14.0999 4.63097 14.0999 7.9999Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span>~{modelData[selectedModel]?.time}s</span>
-                    </div>
-                  </div>
-                  <svg width="12" height="12" fill="none" viewBox="0 0 20 20">
-                    <path stroke="#6b7280" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 8l4 4 4-4"/>
-                  </svg>
-                </div>
-              </div>
 
               {/* Action Icons */}
               <div className='flex items-center gap-0'>

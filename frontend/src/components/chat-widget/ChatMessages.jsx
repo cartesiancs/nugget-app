@@ -19,7 +19,6 @@ const ChatMessages = ({
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const [processedSteps, setProcessedSteps] = useState(new Set());
 
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
@@ -30,37 +29,46 @@ const ChatMessages = ({
     scrollToBottom();
   }, [messages]);
 
-  // Initialize messages when component mounts
+  // Remove auto-progression - user controls all steps manually
+
+  // Use the passed currentPrompt
+
+  // Generate messages based on current chat flow state
   useEffect(() => {
-    if (currentPrompt && chatFlow.concepts && chatFlow.concepts.length > 0 && messages.length === 0) {
-      setMessages([{
+    const newMessages = [];
+
+    // Show initial user message if we have concepts (means user sent initial message) and no other messages
+    if (currentPrompt && chatFlow.concepts && chatFlow.concepts.length > 0 && (!chatFlow.allUserMessages || chatFlow.allUserMessages.length === 0)) {
+      newMessages.push({
         id: "initial-prompt",
         type: "user",
         content: currentPrompt,
         timestamp: Date.now() - 1000,
-      }]);
+      });
     }
-  }, [currentPrompt, chatFlow.concepts, messages.length]);
-
-  // Add new messages based on chat flow changes
-  useEffect(() => {
-    const newMessages = [];
-    let hasChanges = false;
-
-    // Add current user message when it's new
-    if (chatFlow.currentUserMessage && !processedSteps.has(`user-${chatFlow.messageCounter}`)) {
+    
+    // Show project script info if loaded from project (not from user generation)
+    if (chatFlow.selectedScript && chatFlow.selectedScript.segments && !chatFlow.scripts && chatFlow.allUserMessages && chatFlow.allUserMessages.length > 0) {
       newMessages.push({
-        id: `user-message-${chatFlow.messageCounter}`,
+        id: "project-script-info",
+        type: "system",
+        content: `Project script loaded with ${chatFlow.selectedScript.segments.length} segments`,
+        timestamp: Date.now() - 100,
+      });
+    }
+    
+    // Show current user message immediately when they send it (if not already in allUserMessages)
+    if (chatFlow.currentUserMessage && (!chatFlow.allUserMessages || !chatFlow.allUserMessages.find(msg => msg.content === chatFlow.currentUserMessage))) {
+      newMessages.push({
+        id: `current-user-message-${chatFlow.messageCounter}`,
         type: "user",
         content: chatFlow.currentUserMessage,
-        timestamp: Date.now(),
+        timestamp: Date.now() - 500,
       });
-      setProcessedSteps(prev => new Set([...prev, `user-${chatFlow.messageCounter}`]));
-      hasChanges = true;
     }
 
-    // Add concept selection if not already processed
-    if (chatFlow.concepts && chatFlow.concepts.length > 0 && !processedSteps.has('concepts')) {
+    // Step 0: Concept Generation - always show concepts once generated
+    if (chatFlow.concepts && chatFlow.concepts.length > 0) {
       newMessages.push({
         id: "concept-request",
         type: "system",
@@ -74,7 +82,8 @@ const ChatMessages = ({
               concepts={chatFlow.concepts}
               currentStep={chatFlow.currentStep}
               onConceptSelect={(concept) => {
-                chatFlow.handleConceptSelect(concept, false, currentPrompt);
+                chatFlow.handleConceptSelect(concept, false, currentPrompt); // Never auto-progress
+                // Auto-populate input for script generation
                 if (setPrompt) {
                   setPrompt(`Generate script for ${concept.title}`);
                 }
@@ -86,24 +95,35 @@ const ChatMessages = ({
         ),
         timestamp: Date.now(),
       });
-      setProcessedSteps(prev => new Set([...prev, 'concepts']));
-      hasChanges = true;
     }
 
-    // Add project script info if loaded from project
-    // if (chatFlow.selectedScript && chatFlow.selectedScript.segments && !chatFlow.scripts && !processedSteps.has('project-script')) {
-    //   newMessages.push({
-    //     id: "project-script-info",
-    //     type: "system",
-    //     content: `Project script loaded with ${chatFlow.selectedScript.segments.length} segments`,
-    //     timestamp: Date.now(),
-    //   });
-    //   setProcessedSteps(prev => new Set([...prev, 'project-script']));
-    //   hasChanges = true;
-    // }
+    // Show script generation user message when user manually sends it
+    if (chatFlow.currentUserMessage && chatFlow.selectedConcept && chatFlow.currentStep === 2) {
+      // Check if this is a script generation request
+      const isScriptRequest = chatFlow.currentUserMessage.toLowerCase().includes('script') || 
+                             chatFlow.currentUserMessage.toLowerCase().includes('generate') ||
+                             chatFlow.currentUserMessage.toLowerCase().includes('segmentation');
+      
+      if (isScriptRequest) {
+        newMessages.push({
+          id: "script-generation-request",
+          type: "user", 
+          content: chatFlow.currentUserMessage,
+          timestamp: Date.now() + 1.5,
+        });
+      }
+    }
 
-    // Add script selection if not already processed
-    if ((chatFlow.scripts || chatFlow.selectedScript) && !processedSteps.has('scripts')) {
+    // Step 2: Script Generation - show scripts if they exist (either from API or newly generated)
+    console.log("Script display check:", {
+      hasScripts: !!chatFlow.scripts,
+      hasSelectedScript: !!chatFlow.selectedScript,
+      selectedScriptSegments: chatFlow.selectedScript?.segments,
+      currentStep: chatFlow.currentStep,
+      selectedScriptKeys: chatFlow.selectedScript ? Object.keys(chatFlow.selectedScript) : null
+    });
+    
+    if (chatFlow.scripts || chatFlow.selectedScript) {
       newMessages.push({
         id: "script-request",
         type: "system",
@@ -128,14 +148,30 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now(),
+        timestamp: Date.now() + 1,
       });
-      setProcessedSteps(prev => new Set([...prev, 'scripts']));
-      hasChanges = true;
+    } else if (chatFlow.loading && chatFlow.currentStep === 2) {
+      // Show loading state for script generation
+      newMessages.push({
+        id: "script-loading",
+        type: "system",
+        content: "",
+        timestamp: Date.now() + 1.8,
+      });
     }
 
-    // Add image generation if not already processed
-    if (chatFlow.currentStep >= 4 && chatFlow.selectedScript && !processedSteps.has('images')) {
+    // Show image generation user message only when user manually sends it
+    if (chatFlow.currentUserMessage && chatFlow.selectedScript && Object.keys(chatFlow.generatedImages || {}).length === 0 && chatFlow.loading && chatFlow.currentStep === 4) {
+      newMessages.push({
+        id: "image-generation-request",
+        type: "user",
+        content: chatFlow.currentUserMessage,
+        timestamp: Date.now() + 3.5,
+      });
+    }
+
+    // Step 4: Image Generation - show existing images or generation interface
+    if (chatFlow.currentStep >= 4 && chatFlow.selectedScript) {
       const hasImages = Object.keys(chatFlow.generatedImages).length > 0;
       const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
       
@@ -156,6 +192,7 @@ const ChatMessages = ({
               onImageClick={onImageClick}
               loading={isGenerating}
               onImagesGenerated={() => {
+                // Auto-populate input for video generation
                 if (setPrompt && hasImages && !isGenerating) {
                   setPrompt("Start generating video");
                 }
@@ -163,14 +200,22 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now(),
+        timestamp: Date.now() + 4,
       });
-      setProcessedSteps(prev => new Set([...prev, 'images']));
-      hasChanges = true;
     }
 
-    // Add video generation if not already processed
-    if (Object.keys(chatFlow.generatedImages).length > 0 && chatFlow.currentStep >= 5 && !processedSteps.has('videos')) {
+    // Show video generation user message only when user manually sends it
+    if (chatFlow.currentUserMessage && Object.keys(chatFlow.generatedImages || {}).length > 0 && Object.keys(chatFlow.generatedVideos || {}).length === 0 && chatFlow.loading && chatFlow.currentStep === 5) {
+      newMessages.push({
+        id: "video-generation-request",
+        type: "user",
+        content: chatFlow.currentUserMessage,
+        timestamp: Date.now() + 4.5,
+      });
+    }
+
+    // Step 5: Video Generation - show existing videos or generation interface
+    if (Object.keys(chatFlow.generatedImages).length > 0 && chatFlow.currentStep >= 5) {
       const hasVideos = Object.keys(combinedVideosMap).length > 0;
       const isGeneratingVideos = chatFlow.loading && chatFlow.currentStep === 5;
       
@@ -194,15 +239,13 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now(),
+        timestamp: Date.now() + 6,
       });
-      setProcessedSteps(prev => new Set([...prev, 'videos']));
-      hasChanges = true;
     }
 
-    // Add timeline integration if not already processed
+    // Timeline Integration
     const canSendTimeline = Object.keys(chatFlow.generatedVideos).length > 0 || Object.keys(chatFlow.storedVideosMap).length > 0;
-    if (canSendTimeline && !processedSteps.has('timeline')) {
+    if (canSendTimeline) {
       newMessages.push({
         id: "timeline-ready",
         type: "system",
@@ -220,16 +263,11 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now(),
+        timestamp: Date.now() + 7,
       });
-      setProcessedSteps(prev => new Set([...prev, 'timeline']));
-      hasChanges = true;
     }
 
-    // Append new messages to existing ones
-    if (hasChanges) {
-      setMessages(prevMessages => [...prevMessages, ...newMessages]);
-    }
+    setMessages(newMessages);
   }, [
     chatFlow.concepts,
     chatFlow.selectedConcept,
@@ -243,8 +281,10 @@ const ChatMessages = ({
     chatFlow.generationProgress,
     chatFlow.currentUserMessage,
     chatFlow.messageCounter,
+    chatFlow.allUserMessages,
     combinedVideosMap,
-    processedSteps,
+    autoProgression,
+    currentPrompt,
   ]);
 
   return (
@@ -256,7 +296,7 @@ const ChatMessages = ({
         >
           <div
             className={`${
-              message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready" || message.id === "project-script-info"
+              message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready" || message.id === "project-script-info" || message.id === "script-loading"
                 ? "w-full p-0" // Full width and no padding/background for media messages
                 : `max-w-[80%] p-2.5 ${
                     message.type === "user"
@@ -265,7 +305,7 @@ const ChatMessages = ({
                   }`
             }`}
             style={
-              message.id !== "concept-request" && message.id !== "script-request" && message.id !== "image-generation" && message.id !== "video-generation" && message.id !== "timeline-ready" && message.id !== "project-script-info"
+              message.id !== "concept-request" && message.id !== "script-request" && message.id !== "image-generation" && message.id !== "video-generation" && message.id !== "timeline-ready" && message.id !== "project-script-info" && message.id !== "script-loading"
                 ? {
                     background: message.type === "user" 
                       ? '#18191C80'
@@ -278,7 +318,7 @@ const ChatMessages = ({
           >
             {message.content && <div className="text-sm">{message.content}</div>}
             {message.component && (
-              <div className={message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready" || message.id === "project-script-info" ? "" : "mt-3"}>
+              <div className={message.id === "concept-request" || message.id === "script-request" || message.id === "image-generation" || message.id === "video-generation" || message.id === "timeline-ready" || message.id === "project-script-info" || message.id === "script-loading" ? "" : "mt-3"}>
                 {message.component}
               </div>
             )}

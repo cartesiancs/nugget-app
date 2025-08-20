@@ -73,6 +73,7 @@ const VideoGenerationComponent = ({
       </div>
       <MediaGeneration
         type='video'
+        generatedImages={chatFlow.generatedImages || {}}
         combinedVideosMap={combinedVideosMap || {}}
         generationProgress={chatFlow.generationProgress}
         currentStep={chatFlow.currentStep}
@@ -210,19 +211,6 @@ const ChatMessages = ({
       hasChanges = true;
     }
 
-    // Add project script info if loaded from project
-    // if (chatFlow.selectedScript && chatFlow.selectedScript.segments && !chatFlow.scripts && !processedSteps.has('project-script')) {
-    //   newMessages.push({
-    //     id: "project-script-info",
-    //     type: "system",
-    //     content: `Project script loaded with ${chatFlow.selectedScript.segments.length} segments`,
-    //     timestamp: Date.now(),
-    //   });
-    //   setProcessedSteps(prev => new Set([...prev, 'project-script']));
-    //   hasChanges = true;
-    // }
-
-    // Add script selection if not already processed
     if (
       (chatFlow.scripts || chatFlow.selectedScript) &&
       !processedSteps.has("scripts")
@@ -259,18 +247,6 @@ const ChatMessages = ({
       hasChanges = true;
     }
 
-    // Image generation is now handled dynamically in the render section
-
-    // Remove the complex message updating logic that was causing issues
-
-    // Video generation is now handled dynamically in the render section
-
-    // Remove the complex video message updating logic that was causing issues
-
-    // Timeline integration will be handled separately at the bottom
-    // Remove this from the message flow to prevent it from appearing in the middle
-
-    // Append new messages to existing ones
     if (hasChanges) {
       setMessages((prevMessages) => [...prevMessages, ...newMessages]);
     }

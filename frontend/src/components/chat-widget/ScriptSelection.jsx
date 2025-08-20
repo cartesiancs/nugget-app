@@ -72,7 +72,7 @@ const ScriptSelection = ({
               {/* Segments and Art Style */}
               <div className="space-y-1 mb-2">
                 <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Segments:</span> {selectedScript.segments?.length || 0}
+                  <span className="text-cyan-300">Seconds:</span> {selectedScript.segments?.length * 5 || 0}<span>s</span>
                 </div>
                 <div className="text-gray-300 text-xs">
                   <span className="text-cyan-300">Art Style:</span> {selectedScript.artStyle || "Default"}
@@ -162,7 +162,7 @@ const ScriptSelection = ({
               {/* Segments and Art Style */}
               <div className="space-y-1 mb-2">
                 <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Segments:</span> {selectedScript.segments?.length || 0}
+                  <span className="text-cyan-300">Seconds:</span> {selectedScript.segments?.length * 5 || 0}<span>s</span>
                 </div>
                 <div className="text-gray-300 text-xs">
                   <span className="text-cyan-300">Art Style:</span> {selectedScript.artStyle || "Default"}
@@ -262,7 +262,7 @@ const ScriptSelection = ({
               {/* Segments and Art Style */}
               <div className="space-y-1 mb-2">
                 <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Segments:</span> {scripts.response1.segments?.length || 0}
+                  <span className="text-cyan-300">Seconds:</span> {scripts.response1.segments?.length * 5 || 0}<span>s</span>
                 </div>
                 <div className="text-gray-300 text-xs">
                   <span className="text-cyan-300">Art Style:</span> {scripts.response1.artStyle || "Default"}
@@ -348,7 +348,7 @@ const ScriptSelection = ({
               {/* Segments and Art Style */}
               <div className="space-y-1 mb-2">
                 <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Segments:</span> {scripts.response2.segments?.length || 0}
+                  <span className="text-cyan-300">Seconds:</span> {scripts.response2.segments?.length * 5 || 0}<span>s</span>
                 </div>
                 <div className="text-gray-300 text-xs">
                   <span className="text-cyan-300">Art Style:</span> {scripts.response2.artStyle || "Default"}

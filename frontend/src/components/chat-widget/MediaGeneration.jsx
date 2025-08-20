@@ -232,53 +232,62 @@ const MediaGeneration = ({
   // Show progress for ongoing generation if no media yet
   if (progressEntries.length > 0) {
     return (
-      <div className='mt-3 space-y-2'>
-        {progressEntries.map(([segmentId, progress]) => {
-          if (progress.type !== type) return null;
+      <div className='mt-3'>
+        <div className='grid grid-cols-2 gap-2'>
+          {progressEntries.map(([segmentId, progress]) => {
+            if (progress.type !== type) return null;
 
-          return (
-            <div
-              key={segmentId}
-              className='border border-gray-600/40 rounded-lg p-2'
-              style={{
-                background: "#18191C80",
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              <div className='flex items-center justify-between mb-2'>
-                <span className='text-xs text-gray-300'>
-                  Segment {segmentId}
-                </span>
-                <span className='text-xs text-gray-400'>
-                  {progress.index}/{progress.total}
-                </span>
-              </div>
+            return (
+              <div key={segmentId} className='relative group'>
+                <div
+                  className='border-0 rounded-lg overflow-hidden transition-colors'
+                  style={{
+                    background: "#18191C80",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  {/* Skeleton Media Placeholder */}
+                  {isImageGeneration ? (
+                    // For image generation: gray skeleton box
+                    <div className='w-full h-24 bg-gray-700/30 animate-pulse relative'>
+                      {/* Skeleton shimmer effect */}
+                      <div className='absolute inset-0 bg-gradient-to-r from-transparent via-gray-600/20 to-transparent animate-pulse'></div>
+                    </div>
+                  ) : (
+                    // For video generation: blurred generated image as skeleton
+                    <div className='w-full h-24 relative'>
+                      {generatedImages && generatedImages[segmentId] ? (
+                        <img
+                          src={generatedImages[segmentId]}
+                          alt={`Generated image for segment ${segmentId}`}
+                          className='w-full h-24 object-cover filter blur-sm opacity-50'
+                        />
+                      ) : (
+                        <div className='w-full h-24 bg-gray-700/30 animate-pulse'></div>
+                      )}
+                    </div>
+                  )}
 
-              <div className='flex items-center space-x-2'>
-                {progress.status === "generating" && (
-                  <>
-                    <div className='animate-spin rounded-full h-2 w-2 border-b-2 border-cyan-400'></div>
-                    <span className='text-xs text-gray-400'>Generating...</span>
-                  </>
-                )}
-                {progress.status === "completed" && (
-                  <>
-                    <div className='h-2 w-2 bg-green-400 rounded-full'></div>
-                    <span className='text-xs text-green-400'>Completed</span>
-                  </>
-                )}
-                {progress.status === "error" && (
-                  <>
-                    <div className='h-2 w-2 bg-red-400 rounded-full'></div>
-                    <span className='text-xs text-red-400'>
-                      Error: {progress.error || "Unknown error"}
-                    </span>
-                  </>
-                )}
+                  {/* Floating Action Tab - Skeleton version */}
+                  <div className='absolute bottom-2 right-2'>
+                    <div
+                      className='flex items-center space-x-1 px-2 py-1 rounded-lg'
+                      style={{
+                        background: '#18191C33',
+                        backdropFilter: "blur(40px)",
+                      }}
+                    >
+                      {/* Skeleton icons */}
+                      <div className='w-4 h-4 bg-gray-600/50 rounded animate-pulse'></div>
+                      <div className='w-4 h-4 bg-gray-600/50 rounded animate-pulse'></div>
+                      <div className='w-4 h-4 bg-gray-600/50 rounded animate-pulse'></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   }

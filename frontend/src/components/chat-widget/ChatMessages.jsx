@@ -24,7 +24,7 @@ const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
           ? "Generated Images:"
           : isGenerating
           ? "Generating Images..."
-          : "Ready to generate images"}
+          : ""}
       </div>
       <MediaGeneration
         type='image'
@@ -69,7 +69,7 @@ const VideoGenerationComponent = ({
           ? "Processing..."
           : hasVideos
           ? "Generated Videos:"
-          : "Ready to generate videos"}
+          : ""}
       </div>
       <MediaGeneration
         type='video'
@@ -189,7 +189,7 @@ const ChatMessages = ({
             <div className='text-white font-bold text-base mb-4'>
               {chatFlow.selectedConcept
                 ? "Selected Concept:"
-                : "Please choose a concept to get started."}
+                : "Please choose a concept to get started out of the Four."}
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}

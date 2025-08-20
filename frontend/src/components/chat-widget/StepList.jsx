@@ -149,7 +149,7 @@ export default function StepList({
                 className={`flex items-center gap-2 p-2 rounded-full text-left transition-all duration-200 text-xs cursor-pointer min-h-[48px] ${
                   disabled
                     ? "text-gray-500 cursor-not-allowed"
-                    : "text-white hover:bg-gray-800/30"
+                    : "text-[#94E7ED] hover:bg-gray-800/30"
                 }`}
                 style={{
                   background: isDone

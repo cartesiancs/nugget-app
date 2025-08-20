@@ -60,12 +60,16 @@ export const useChatFlow = () => {
   const [selectedVideoModel, setSelectedVideoModel] = useState(
     chatApi.getDefaultModel("VIDEO"),
   );
+  const [selectedScriptModel, setSelectedScriptModel] = useState("flash");
 
   // Credit deduction notification state
   const [creditDeductionMessage, setCreditDeductionMessage] = useState(null);
 
   // Timeline states
   const [addingTimeline, setAddingTimeline] = useState(false);
+  const [currentUserMessage, setCurrentUserMessage] = useState("");
+  const [messageCounter, setMessageCounter] = useState(0);
+  const [allUserMessages, setAllUserMessages] = useState([]);
   const [storedVideosMap, setStoredVideosMap] = useState(() => {
     try {
       const stored = localStorage.getItem("project-store-selectedProject");
@@ -178,6 +182,7 @@ export const useChatFlow = () => {
     // Step 5: Video Generation - check if videos exist (from API or generation)
     const hasVideos =
       Object.keys(generatedVideos).length > 0 ||
+      Object.keys(storedVideosMap).length > 0 ||
       selectedScript?.segments?.some((seg) => seg.videoUrl || seg.video_url);
     if (hasVideos) {
       newStepStatus[5] = "done";
@@ -194,6 +199,7 @@ export const useChatFlow = () => {
     selectedScript,
     generatedImages,
     generatedVideos,
+    storedVideosMap,
   ]);
 
   const resetFlow = useCallback(() => {
@@ -216,6 +222,7 @@ export const useChatFlow = () => {
     // Reset model selections to defaults
     setSelectedImageModel(chatApi.getDefaultModel("IMAGE"));
     setSelectedVideoModel(chatApi.getDefaultModel("VIDEO"));
+    setSelectedScriptModel("flash");
   }, []);
 
   // Helper function to show credit deduction after successful API response
@@ -302,6 +309,8 @@ export const useChatFlow = () => {
       setLoading(true);
       setError(null);
       updateStepStatus(0, "loading");
+      
+      // Don't clear user message immediately - let it stay visible during processing
 
       try {
         console.log("Starting pipeline with web-info...");
@@ -341,6 +350,9 @@ export const useChatFlow = () => {
         setConcepts(conceptsResult.concepts);
         updateStepStatus(0, "done");
         setCurrentStep(1);
+        
+        // Clear user message after concepts are generated
+        setCurrentUserMessage("");
       } catch (error) {
         console.error("Error in concept writer:", error);
         showRequestFailed("Concept Generation");
@@ -371,20 +383,27 @@ export const useChatFlow = () => {
       setLoading(true);
       setError(null);
       updateStepStatus(2, "loading");
+      
+      // Don't clear user message immediately - let it stay visible during processing
 
       try {
+        const scriptModel = selectedScriptModel || "flash"; // Use the model from InputArea or default to "flash"
+        console.log("Using script model:", scriptModel, "selectedScriptModel:", selectedScriptModel);
+        
         const [res1, res2] = await Promise.all([
           segmentationApi.getSegmentation({
             prompt,
             concept: selectedConcept.title,
             negative_prompt: "",
             project_id: selectedProject?.id,
+            model: scriptModel
           }),
           segmentationApi.getSegmentation({
             prompt,
             concept: selectedConcept.title,
             negative_prompt: "",
             project_id: selectedProject?.id,
+            model: scriptModel
           }),
         ]);
 
@@ -393,6 +412,9 @@ export const useChatFlow = () => {
         setScripts({ response1: res1, response2: res2 });
         updateStepStatus(2, "done");
         setCurrentStep(3);
+        
+        // Clear user message after scripts are generated
+        setCurrentUserMessage("");
       } catch (error) {
         console.error("Error in script generation:", error);
         showRequestFailed("Script Generation");
@@ -423,6 +445,8 @@ export const useChatFlow = () => {
     setError(null);
     updateStepStatus(4, "loading");
     setGenerationProgress({});
+    
+    // Don't clear user message immediately - let it stay visible during processing
 
     try {
       const segments = selectedScript.segments;
@@ -443,13 +467,13 @@ export const useChatFlow = () => {
           },
         }));
 
-        console.log({
-          visual_prompt: segment.visual,
-          art_style: artStyle,
-          uuid: segment.id,
-          project_id: selectedProject?.id,
-          model: selectedImageModel,
-        });
+                  console.log("Image generation request:", {
+            visual_prompt: segment.visual,
+            art_style: artStyle,
+            uuid: segment.id,
+            project_id: selectedProject?.id,
+            model: selectedImageModel,
+          });
         try {
           const result = await chatApi.generateImage({
             visual_prompt: segment.visual,
@@ -458,6 +482,8 @@ export const useChatFlow = () => {
             project_id: selectedProject?.id,
             model: selectedImageModel,
           });
+
+          console.log("Image generation response:", result);
 
           if (result.s3_key) {
             const imageUrl = await s3Api.downloadImage(result.s3_key);
@@ -534,6 +560,11 @@ export const useChatFlow = () => {
 
       updateStepStatus(4, "done");
       setCurrentStep(5);
+      
+      // Clear user message after images are generated
+      setCurrentUserMessage("");
+      
+      // No auto-trigger - user must manually select model and send
     } catch (error) {
       console.error("Error in image generation:", error);
       showRequestFailed("Image Generation");
@@ -562,6 +593,8 @@ export const useChatFlow = () => {
     setError(null);
     updateStepStatus(5, "loading");
     setGenerationProgress({});
+    
+    // Don't clear user message immediately - let it stay visible during processing
 
     try {
       const segments = selectedScript.segments;
@@ -705,6 +738,9 @@ export const useChatFlow = () => {
       setGeneratedVideos(videosMap);
 
       updateStepStatus(5, "done");
+      
+      // Clear user message after videos are generated
+      setCurrentUserMessage("");
     } catch (error) {
       console.error("Error in video generation:", error);
       showRequestFailed("Video Generation");
@@ -724,19 +760,23 @@ export const useChatFlow = () => {
   ]);
 
   const handleConceptSelect = useCallback(
-    (concept) => {
+    async (concept, autoTriggerNext = false, prompt = null) => {
       setSelectedConcept(concept);
       updateStepStatus(1, "done");
       setCurrentStep(2);
+      
+      // No auto-trigger - user must manually select model and send
     },
     [updateStepStatus],
   );
 
   const handleScriptSelect = useCallback(
-    (script) => {
+    async (script, autoTriggerNext = false) => {
       setSelectedScript(script);
       updateStepStatus(3, "done");
       setCurrentStep(4);
+      
+      // No auto-trigger - user must manually select model and send
     },
     [updateStepStatus],
   );
@@ -788,9 +828,17 @@ export const useChatFlow = () => {
       ) {
         console.log("Setting concepts:", projectConcepts.data);
         setConcepts(projectConcepts.data);
+        
+        // If we have concepts, set the first one as selected and move to step 1
+        if (projectConcepts.data.length > 0) {
+          setSelectedConcept(projectConcepts.data[0]);
+          setCurrentStep(1);
+        }
       } else {
         console.log("No concepts found in API response");
         setConcepts(null);
+        setSelectedConcept(null);
+        setCurrentStep(0);
       }
 
       // Set segments/scripts if available first (we need this to map images/videos correctly)
@@ -823,6 +871,9 @@ export const useChatFlow = () => {
             artStyle: firstSegmentation.artStyle,
             concept: firstSegmentation.concept,
           });
+          
+          // If we have a script, move to step 3 (script selection completed)
+          setCurrentStep(3);
         } else {
           console.log("No segments found in segmentation data");
           setSelectedScript(null);
@@ -863,6 +914,11 @@ export const useChatFlow = () => {
         });
         console.log("Setting generated images:", imagesMap);
         setGeneratedImages(imagesMap);
+        
+        // If we have images, move to step 4 (image generation completed)
+        if (Object.keys(imagesMap).length > 0) {
+          setCurrentStep(4);
+        }
       } else {
         console.log("No images found in API response");
         setGeneratedImages({});
@@ -901,6 +957,11 @@ export const useChatFlow = () => {
         console.log("Setting generated videos:", videosMap);
         setGeneratedVideos(videosMap);
         setStoredVideosMap(videosMap);
+        
+        // If we have videos, move to step 5 (video generation completed)
+        if (Object.keys(videosMap).length > 0) {
+          setCurrentStep(5);
+        }
       } else {
         console.log("No videos found in API response");
         setGeneratedVideos({});
@@ -908,8 +969,19 @@ export const useChatFlow = () => {
       }
 
       // Reset other states
-      setSelectedConcept(null);
       setScripts(null);
+
+      // Add initial project state message to chat
+      if (projectDetails && projectDetails.success) {
+        const projectName = projectDetails.data?.name || "Project";
+        const initialMessage = {
+          id: `project-loaded-${Date.now()}`,
+          type: "system",
+          content: `Loaded project: ${projectName}`,
+          timestamp: Date.now(),
+        };
+        setAllUserMessages(prev => [initialMessage, ...prev]);
+      }
 
       console.log("Project data loading completed");
     } catch (error) {
@@ -941,9 +1013,17 @@ export const useChatFlow = () => {
     setSelectedImageModel,
     selectedVideoModel,
     setSelectedVideoModel,
+    selectedScriptModel,
+    setSelectedScriptModel,
     creditDeductionMessage,
     addingTimeline,
     setAddingTimeline,
+    currentUserMessage,
+    setCurrentUserMessage,
+    messageCounter,
+    setMessageCounter,
+    allUserMessages,
+    setAllUserMessages,
     storedVideosMap,
 
     // Actions

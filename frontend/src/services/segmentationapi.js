@@ -2,10 +2,10 @@ import { getAuthHeaders } from "./api";
 import { axiosInstance } from "../lib/axiosInstance";
 
 export const segmentationApi = {
-  getSegmentation: async ({ prompt, concept = "", negative_prompt = "", project_id }) => {
+  getSegmentation: async ({ prompt, concept = "", negative_prompt = "", project_id ,model}) => {
     try {
       const headers = await getAuthHeaders();
-      const payload = { prompt, concept, negative_prompt };
+      const payload = { prompt, concept, negative_prompt,model };
       if (project_id) payload.projectId = project_id;
       
       const { data } = await axiosInstance.post(

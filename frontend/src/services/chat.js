@@ -18,19 +18,19 @@ export const AVAILABLE_MODELS = {
     },
   },
   VIDEO: {
+    "gen4_turbo": {
+      name: "RunwayML Gen4 Turbo",
+      description: "Advanced video generation",
+      provider: "RunwayML",
+      duration: "5 seconds",
+      resolution: "1280:720",
+    },
     "kling-v2.1-master": {
       name: "Kling v2.1 Master",
       description: "Image-to-video generation",
       provider: "Fal.ai",
       duration: "5 seconds",
       resolution: "Variable",
-    },
-    gen4_turbo: {
-      name: "RunwayML Gen4 Turbo",
-      description: "Advanced video generation",
-      provider: "RunwayML",
-      duration: "5 seconds",
-      resolution: "1280:720",
     },
   },
 };
@@ -75,7 +75,7 @@ export const chatApi = {
     image_s3_key,
     project_id,
     segmentId,
-    model = "kling-v2.1-master",
+    model = "gen4_turbo",
   }) => {
     try {
       const payload = {
@@ -111,7 +111,7 @@ export const chatApi = {
     const models = AVAILABLE_MODELS[genType.toUpperCase()];
     if (!models) return null;
 
-    // Return the first model as default
+    // Return the first model as default (index 0, not 1)
     return Object.keys(models)[0];
   },
 };

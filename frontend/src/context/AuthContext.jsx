@@ -76,24 +76,40 @@ export const AuthProvider = ({ children }) => {
   // Initialize authentication on mount
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('Initializing authentication...');
+      console.log('isElectron:', isElectron);
+      console.log('electronAPI.req.auth available:', !!(window.electronAPI && window.electronAPI.req && window.electronAPI.req.auth));
+      
       try {
         if (isElectron && window.electronAPI.req.auth) {
+          console.log('Checking for stored token...');
           // In Electron, check for stored token
           const tokenResult = await window.electronAPI.req.auth.getToken();
+          console.log('Token result:', tokenResult);
+          
           if (tokenResult.status === 1 && tokenResult.token) {
+            console.log('Token found, checking status...');
             const authStatus = await window.electronAPI.req.auth.checkStatus();
+            console.log('Auth status:', authStatus);
+            
             if (authStatus.status === 1) {
+              console.log('Setting authenticated user:', authStatus.user);
               setToken(tokenResult.token);
               setUser(authStatus.user);
             } else {
+              console.log('Token invalid, logging out...');
               // Token is invalid, clear it
               await window.electronAPI.req.auth.logout();
             }
+          } else {
+            console.log('No valid token found');
           }
         } else if (token) {
           // In web browser, check if token is still valid
           // This would call your backend API
           console.log('Web token found:', token);
+        } else {
+          console.log('No authentication method available');
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -108,6 +124,10 @@ export const AuthProvider = ({ children }) => {
 
   // Listen for login success from Electron
   useEffect(() => {
+    console.log('Setting up Electron auth listener, isElectron:', isElectron);
+    console.log('electronAPI available:', !!window.electronAPI);
+    console.log('electronAPI.res.auth available:', !!(window.electronAPI && window.electronAPI.res && window.electronAPI.res.auth));
+    
     if (isElectron && window.electronAPI.res.auth) {
       const handleLoginSuccess = (event, data) => {
         console.log('Login success received from Electron:', data);
@@ -115,10 +135,14 @@ export const AuthProvider = ({ children }) => {
       };
 
       window.electronAPI.res.auth.loginSuccess(handleLoginSuccess);
+      console.log('Electron auth listener set up successfully');
 
       return () => {
         // Cleanup listener if needed
+        console.log('Cleaning up Electron auth listener');
       };
+    } else {
+      console.log('Electron auth not available, skipping listener setup');
     }
   }, [isElectron]);
 

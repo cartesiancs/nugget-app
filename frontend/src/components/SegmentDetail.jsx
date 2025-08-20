@@ -123,7 +123,8 @@ function SegmentDetail({ segment }) {
         art_style: segment.artStyle || '',
         imageS3Key: segment.s3Key,
         uuid: segment.id,
-        project_id: selectedProject?.id
+        project_id: selectedProject?.id,
+        model: "gen4_turbo"
       });
       
       if (result.s3Keys && result.s3Keys.length > 0) {

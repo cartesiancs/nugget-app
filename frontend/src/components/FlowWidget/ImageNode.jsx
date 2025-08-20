@@ -13,7 +13,7 @@ import ModelSelector from "../ModelSelector";
  * - isPrimary (optional): whether this image is the primary one
  * - onAfterEdit (optional): called after successful edit/regeneration to refresh parent data
  */
-const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary, isPrimary, onAfterEdit }) => {
+const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary, isPrimary, onAfterEdit, onChatClick, selected }) => {
   const isRegenerating = data.imageId && regeneratingImages.has(data.imageId);
   const [editOpen, setEditOpen] = useState(false);
   const [editPrompt, setEditPrompt] = useState(data.segmentData?.visual || "");
@@ -61,9 +61,9 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
       }
       // 1. POST to generate new image with new visual_prompt
       const genResponse = await chatApi.generateImage({
+        segmentId: data.segmentId,
         visual_prompt: editPrompt,
         art_style: data.segmentData.artStyle,
-        uuid: `seg-${data.segmentId}`,
         project_id: projectId,
         model: selectedImageModel,
       });
@@ -91,15 +91,29 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
 
   if (!data.imageUrl) {
     return (
-      <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative">
-        <div className="flex items-center justify-center h-20 bg-gray-800 rounded mb-2">
+      <div className="relative">
+        {/* Node Label */}
+        <div className="absolute -top-8 left-0 text-sm font-semibold text-yellow-400 bg-gray-900/90 px-2 py-1 rounded-md border border-yellow-400/30">
+          IMAGE
+        </div>
+        
+        <div
+          className={`bg-gray-800/90 rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+            selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
+          }`}
+          style={{
+            border: '1px solid rgba(233, 232, 235, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+        <div className="flex items-center justify-center w-[220px] h-[220px] bg-gray-900/80 rounded-lg mx-auto">
           <div className="text-center">
             <div className="text-2xl mb-1">🖼️</div>
-            <p className="text-xs text-gray-400">No image here</p>
+            <p className="text-sm text-gray-400">No image here</p>
             <p className="text-xs text-gray-500">Generate image</p>
           </div>
         </div>
-        <div className="text-xs text-gray-400 text-center">
+        <div className="absolute bottom-1 left-2 text-sm text-gray-400">
           Scene {data.segmentId}
         </div>
         {/* Input handle */}
@@ -109,9 +123,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="input"
           style={{
             background: '#8b5cf6',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(139, 92, 246, 0.8)',
+            zIndex: 9999,
+            left: -10
           }}
         />
         {/* Output handle */}
@@ -121,11 +138,15 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="output"
           style={{
             background: '#10b981',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+            zIndex: 9999,
+            right: -10
           }}
         />
+        </div>
       </div>
     );
   }
@@ -174,7 +195,22 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
         </div>,
         document.body
       )}
-      <div className={`bg-gray-700 border ${isPrimary ? 'border-yellow-400 border-2' : 'border-gray-600'} rounded-lg p-4 min-w-[150px] max-w-[200px] relative ${isRegenerating ? 'opacity-50 pointer-events-none' : ''}`}> 
+      <div className="relative">
+        {/* Node Label */}
+        <div className="absolute -top-8 left-0 text-sm font-semibold text-yellow-400 bg-gray-900/90 px-2 py-1 rounded-md border border-yellow-400/30">
+          IMAGE
+        </div>
+        
+        <div
+          className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible ${isRegenerating ? 'opacity-50 pointer-events-none' : ''} transition-all duration-200 ${
+            selected ? 'ring-4 ring-yellow-400 ring-opacity-50 shadow-yellow-500/50' : ''
+          }`}
+          style={{
+            background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
+            border: "1px solid rgba(233, 232, 235, 0.2)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
+          }}
+        >
         {/* Primary indicator */}
         {isPrimary && (
           <div className="absolute -top-2 -left-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold z-30">
@@ -186,34 +222,40 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
         {isRegenerating && (
           <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
             <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
-            <span className="text-white text-xs font-semibold">Regenerating...</span>
+            <span className="text-white text-sm font-semibold">Regenerating...</span>
           </div>
         )}
-        <div className="relative">
-          <img 
-            src={data.imageUrl} 
-            alt={`Scene ${data.segmentId}`} 
-            className="w-full h-20 object-cover rounded mb-2"
+        <div className="relative flex items-center justify-center w-[220px] h-[200px] rounded mx-auto"
+          style={{
+            background: "rgba(17, 18, 21, 0.8)",
+            border: "1px solid rgba(233, 232, 235, 0.15)",
+            boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)"
+          }}
+        >
+          <img
+            src={data.imageUrl}
+            alt={`Scene ${data.segmentId}`}
+            className="w-full h-full object-contain rounded"
           />
         </div>
-        <div className="text-xs text-gray-400 text-center">
+        <div className="absolute bottom-1 left-2 text-sm text-gray-300">
           Scene {data.segmentId} Image
         </div>
         
-        {/* Button container */}
-        <div className="absolute bottom-2 right-2 flex gap-1">
+        {/* Action buttons aligned with text height */}
+        <div className="absolute bottom-1 right-2 flex items-center gap-1">
           {/* Regenerate button */}
           <button
             onClick={handleRegenerate}
             disabled={isRegenerating || !data.imageId || !data.segmentData}
-            className="bg-purple-600 hover:bg-purple-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            className="bg-purple-600 hover:bg-purple-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
             title="Regenerate this image"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 28, height: 28 }}
           >
             {isRegenerating ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              <span role="img" aria-label="Regenerate">🔄</span>
+              <span className="text-sm">🔄</span>
             )}
           </button>
           
@@ -221,11 +263,11 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           <button
             onClick={handleEdit}
             disabled={isRegenerating || !data.imageId || !data.segmentData}
-            className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
+            className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
             title="Edit visual prompt"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 28, height: 28 }}
           >
-            <span role="img" aria-label="Edit">✏️</span>
+            <span className="text-sm">✏️</span>
           </button>
           
           {/* Star indicator for all images */}
@@ -233,15 +275,40 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
             <button
               onClick={isPrimary ? undefined : handleMakePrimary}
               disabled={isRegenerating || !data.imageId || !data.segmentId || isPrimary}
-              className={`rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 ${
+              className={`rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors ${
                 isPrimary 
                   ? 'bg-yellow-400 text-black cursor-default' 
                   : 'bg-gray-600 hover:bg-gray-500 text-white cursor-pointer'
               }`}
               title={isPrimary ? "This is the primary image" : "Make this image primary"}
-              style={{ width: 32, height: 32 }}
+              style={{ width: 28, height: 28 }}
             >
-              <span role="img" aria-label={isPrimary ? "Primary" : "Make Primary"}>⭐</span>
+              <span className="text-sm">⭐</span>
+            </button>
+          )}
+          
+          {/* Chat button */}
+          {onChatClick && (
+            <button
+              onClick={() => onChatClick(data.id || data.imageId, "image")}
+              disabled={isRegenerating}
+              className="bg-green-600 hover:bg-green-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
+              title="Open chat for this image"
+              style={{ width: 28, height: 28 }}
+            >
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
             </button>
           )}
         </div>
@@ -253,9 +320,12 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="input"
           style={{
             background: '#8b5cf6',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(139, 92, 246, 0.8)',
+            zIndex: 9999,
+            left: -10
           }}
         />
         {/* Output handle */}
@@ -265,11 +335,15 @@ const ImageNode = ({ data, onRegenerateImage, regeneratingImages, onMakePrimary,
           id="output"
           style={{
             background: '#10b981',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            width: 20,
+            height: 20,
+            border: '4px solid #fff',
+            boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+            zIndex: 9999,
+            right: -10
           }}
         />
+        </div>
       </div>
     </>
   );

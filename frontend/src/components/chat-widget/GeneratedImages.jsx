@@ -25,11 +25,6 @@ const GeneratedImages = ({ generatedImages, currentStep, onImageClick }) => {
                 e.target.style.display = "none";
               }}
             />
-            <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center'>
-              <span className='text-white text-xs opacity-0 group-hover:opacity-100'>
-                Segment {segmentId}
-              </span>
-            </div>
           </div>
         ))}
       </div>

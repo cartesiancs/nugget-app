@@ -3,7 +3,7 @@ import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
 import { videoApi } from "../../services/video-gen";
 
-const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit }) => {
+const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, onChatClick, selected }) => {
   const isRegenerating = data.videoId && regeneratingVideos && regeneratingVideos.has(data.videoId);
   const isTemporary = !data.videoId; // Temporary videos don't have videoId since they're not saved to DB
   const [editOpen, setEditOpen] = useState(false);
@@ -76,29 +76,47 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
 
   if (!data.videoUrl) {
     return (
-      <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative">
-        <div className="flex items-center justify-center h-20 bg-gray-800 rounded mb-2">
-          <div className="text-center">
-            <div className="text-2xl mb-1">🎬</div>
-            <p className="text-xs text-gray-400">No video</p>
-            <p className="text-xs text-gray-500">Generate video</p>
-          </div>
+      <div className="relative">
+        {/* Node Label */}
+        <div className="absolute -top-8 left-0 text-sm font-semibold text-green-400 bg-gray-900/90 px-2 py-1 rounded-md border border-green-400/30">
+          VIDEO
         </div>
-        <div className="text-xs text-gray-400 text-center">
-          Scene {data.segmentId}
-        </div>
-        {/* Input handle */}
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="input"
+        
+        <div
+          className={`bg-gray-800/90 rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+            selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
+          }`}
           style={{
-            background: '#10b981',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
+            border: '1px solid rgba(233, 232, 235, 0.2)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
           }}
-        />
+        >
+          <div className="flex items-center justify-center w-[220px] h-[220px] bg-gray-900/80 rounded-lg mx-auto">
+            <div className="text-center">
+              <div className="text-2xl mb-1">🎬</div>
+              <p className="text-sm text-gray-400">No video</p>
+              <p className="text-xs text-gray-500">Generate video</p>
+            </div>
+          </div>
+          <div className="absolute bottom-1 left-2 text-sm text-gray-400">
+            Scene {data.segmentId}
+          </div>
+          {/* Input handle */}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input"
+            style={{
+              background: '#10b981',
+              width: 20,
+              height: 20,
+              border: '4px solid #fff',
+              boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+              zIndex: 9999,
+              left: -10
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -139,70 +157,126 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit })
         </div>,
         document.body
       )}
-      <div className={`bg-gray-700 border border-gray-600 rounded-lg p-4 min-w-[150px] max-w-[200px] relative ${isRegenerating ? 'opacity-50 pointer-events-none' : ''}`}>
-        {/* Loader overlay when regenerating (covers whole node) */}
-        {isRegenerating && (
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
-            <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
-            <span className="text-white text-xs font-semibold">Regenerating...</span>
-          </div>
-        )}
-        <div className="relative">
-          <video
-            src={data.videoUrl}
-            className="w-full h-20 object-cover rounded mb-2"
-            muted
-            loop
-            onMouseEnter={e => e.target.play()}
-            onMouseLeave={e => e.target.pause()}
-          />
-          {/* Temporary video indicator */}
-          {isTemporary && (
-            <div className="absolute top-1 right-1 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-semibold">
-              PREVIEW
+      <div className="relative">
+        {/* Node Label */}
+        <div className="absolute -top-8 left-0 text-sm font-semibold text-green-400 bg-gray-900/90 px-2 py-1 rounded-md border border-green-400/30">
+          VIDEO
+        </div>
+        
+        <div
+          className={`rounded-xl p-2 w-[240px] h-[240px] relative overflow-visible transition-all duration-200 ${
+            selected ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-500/50' : ''
+          }`}
+          style={{
+            background: "linear-gradient(180deg, rgba(50, 53, 62, 0.9) 0%, rgba(17, 18, 21, 0.95) 100%)",
+            border: "1px solid rgba(233, 232, 235, 0.2)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
+          }}
+        >
+          {/* Loader overlay when regenerating (covers whole node) */}
+          {isRegenerating && (
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center rounded z-30">
+              <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
+              <span className="text-white text-sm font-semibold">Regenerating...</span>
             </div>
           )}
+          <div className="relative flex items-center justify-center w-[220px] h-[200px] rounded mx-auto"
+            style={{
+              background: "rgba(17, 18, 21, 0.8)",
+              border: "1px solid rgba(233, 232, 235, 0.15)",
+              boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.2)"
+            }}
+          >
+            <video
+              src={data.videoUrl}
+              className="w-full h-full object-contain rounded"
+              muted
+              loop
+              onMouseEnter={e => e.target.play()}
+              onMouseLeave={e => e.target.pause()}
+            />
+            {/* Temporary video indicator */}
+            {isTemporary && (
+              <div className="absolute top-1 right-1 bg-yellow-500 text-black text-xs px-2 py-1 rounded-full font-semibold">
+                PREVIEW
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-1 left-2 text-sm text-gray-300">
+            Scene {data.segmentId} Video
+            {isTemporary && <span className="text-yellow-400 ml-1">(Temporary)</span>}
+          </div>
+          
+          {/* Action buttons aligned with text height */}
+          <div className="absolute bottom-1 right-2 flex items-center gap-1">
+            {/* Regenerate button */}
+            <button
+              onClick={handleRegenerate}
+              disabled={isRegenerating || !data.videoId || !data.segmentData || isTemporary}
+              className="bg-purple-600 hover:bg-purple-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
+              title={isTemporary ? "Cannot regenerate temporary videos" : "Regenerate this video"}
+              style={{ width: 28, height: 28 }}
+            >
+              {isRegenerating ? (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="text-sm">🔄</span>
+              )}
+            </button>
+            
+            {/* Edit button */}
+            <button
+              onClick={handleEdit}
+              disabled={isRegenerating || !data.videoId || !data.segmentData || isTemporary}
+              className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
+              title={isTemporary ? "Cannot edit temporary videos" : "Edit animation prompt"}
+              style={{ width: 28, height: 28 }}
+            >
+              <span className="text-sm">✏️</span>
+            </button>
+            
+            {/* Chat button */}
+            {onChatClick && (
+              <button
+                onClick={() => onChatClick(data.id || data.videoId, "video")}
+                disabled={isRegenerating}
+                className="bg-green-600 hover:bg-green-500 text-white rounded-full p-1.5 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20 transition-colors"
+                title="Open chat for this video"
+                style={{ width: 28, height: 28 }}
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+          
+          {/* Input handle */}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="input"
+            style={{
+              background: '#10b981',
+              width: 20,
+              height: 20,
+              border: '4px solid #fff',
+              boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
+              zIndex: 9999,
+              left: -10
+            }}
+          />
         </div>
-        <div className="text-xs text-gray-400 text-center">
-          Scene {data.segmentId} Video
-          {isTemporary && <span className="text-yellow-400 block">(Temporary)</span>}
-        </div>
-        {/* Regenerate button always visible in bottom right of the node */}
-        <button
-          onClick={handleRegenerate}
-          disabled={isRegenerating || !data.videoId || !data.segmentData || isTemporary}
-          className="absolute bottom-2 right-2 bg-purple-600 hover:bg-purple-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
-          title={isTemporary ? "Cannot regenerate temporary videos" : "Regenerate this video"}
-          style={{ width: 32, height: 32 }}
-        >
-          {isRegenerating ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <span role="img" aria-label="Regenerate">🔄</span>
-          )}
-        </button>
-        {/* Edit button next to regenerate */}
-        <button
-          onClick={handleEdit}
-          disabled={isRegenerating || !data.videoId || !data.segmentData || isTemporary}
-          className="absolute bottom-2 right-12 bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed z-20"
-          title={isTemporary ? "Cannot edit temporary videos" : "Edit animation prompt"}
-          style={{ width: 32, height: 32 }}
-        >
-          <span role="img" aria-label="Edit">✏️</span>
-        </button>
-        {/* Input handle */}
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="input"
-          style={{
-            background: '#10b981',
-            width: 12,
-            height: 12,
-            border: '2px solid #fff',
-          }}
-        />
       </div>
     </>
   );

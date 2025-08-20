@@ -14,7 +14,9 @@ export default function InputArea({
   chatFlow, // Add chatFlow to determine available models
 }) {
   const [selectedModel, setSelectedModel] = useState("GPT-4o mini");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const textareaRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Model data with token usage and time information
   const modelData = {
@@ -113,6 +115,20 @@ export default function InputArea({
     chatFlow?.generatedVideos,
   ]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Auto-resize textarea based on content
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -127,6 +143,28 @@ export default function InputArea({
 
   const handleTextareaChange = (e) => {
     setPrompt(e.target.value);
+  };
+
+  const handleModelSelect = (modelValue) => {
+    setSelectedModel(modelValue);
+    setIsDropdownOpen(false);
+
+    // Update chatFlow immediately when model changes
+    if (chatFlow) {
+      if (modelValue === "recraft-v3" || modelValue === "imagen") {
+        chatFlow.setSelectedImageModel(modelValue);
+      } else if (modelValue === "gen4-turbo") {
+        chatFlow.setSelectedVideoModel("gen4-turbo");
+      } else if (modelValue === "kling-v2.1-master") {
+        chatFlow.setSelectedVideoModel(modelValue);
+      } else if (modelValue === "gemini-pro") {
+        chatFlow.setSelectedScriptModel("pro");
+        console.log("User selected Gemini Pro, set script model to 'pro'");
+      } else if (modelValue === "gemini-flash") {
+        chatFlow.setSelectedScriptModel("flash");
+        console.log("User selected Gemini Flash, set script model to 'flash'");
+      }
+    }
   };
 
   const handleSubmit = (e) => {
@@ -224,6 +262,9 @@ export default function InputArea({
     );
   }
 
+  const availableModels = getAvailableModels();
+  const currentModelData = availableModels.find(model => model.value === selectedModel) || availableModels[0];
+
   // Authenticated + project selected → show input
   return (
     <div className='p-3'>
@@ -282,54 +323,93 @@ export default function InputArea({
 
             {/* Controls Row */}
             <div className='flex items-center justify-between'>
-              {/* Model Selector */}
-              <select
-                value={selectedModel}
-                onChange={(e) => {
-                  const newModel = e.target.value;
-                  setSelectedModel(newModel);
+              {/* Custom Model Selector Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className='text-gray-300 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 cursor-pointer flex items-center justify-between'
+                  style={{
+                    background: "rgba(24, 25, 28, 0.6)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(5px)",
+                    minWidth: "220px",
+                  }}
+                  disabled={loading}
+                >
+                  <span>
+                    {currentModelData?.label} | {currentModelData?.tokens} Token |  ~{currentModelData?.time}s
+                  </span>
+                  <svg
+                    className={`ml-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    width="10"
+                    height="10"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
+                    <path stroke="#6b7280" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 8l4 4 4-4"/>
+                  </svg>
+                </button>
 
-                  // Update chatFlow immediately when model changes
-                  if (chatFlow) {
-                    if (newModel === "recraft-v3" || newModel === "imagen") {
-                      chatFlow.setSelectedImageModel(newModel);
-                    } else if (newModel === "gen4-turbo") {
-                      chatFlow.setSelectedVideoModel("gen4-turbo");
-                    } else if (newModel === "kling-v2.1-master") {
-                      chatFlow.setSelectedVideoModel(newModel);
-                    } else if (newModel === "gemini-pro") {
-                      chatFlow.setSelectedScriptModel("pro");
-                      console.log(
-                        "User selected Gemini Pro, set script model to 'pro'",
-                      );
-                    } else if (newModel === "gemini-flash") {
-                      chatFlow.setSelectedScriptModel("flash");
-                      console.log(
-                        "User selected Gemini Flash, set script model to 'flash'",
-                      );
-                    }
-                  }
-                }}
-                className='text-gray-300 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 appearance-none cursor-pointer'
-                style={{
-                  background: "rgba(24, 25, 28, 0.6)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  backdropFilter: "blur(5px)",
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: "right 6px center",
-                  backgroundRepeat: "no-repeat",
-                  backgroundSize: "10px",
-                  paddingRight: "22px",
-                  minWidth: "220px",
-                }}
-                disabled={loading}
-              >
-                {getAvailableModels().map((model) => (
-                  <option key={model.value} value={model.value}>
-                    {model.label} ◉ {model.tokens} Token ⏱ ~{model.time}s
-                  </option>
-                ))}
-              </select>
+                {/* Custom Dropdown Menu - Opens Upward */}
+                {isDropdownOpen && (
+                  <div
+                    className="absolute z-50 w-full rounded-lg shadow-lg overflow-hidden"
+                    style={{
+                      bottom: "calc(100% + 8px)", // Position above the button
+                      background: "rgba(30, 30, 34, 0.95)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+                    }}
+                  >
+                    {availableModels.map((model) => (
+                      <div
+                        key={model.value}
+                        onClick={() => handleModelSelect(model.value)}
+                        className="px-3 py-2 cursor-pointer transition-all duration-200 flex items-center justify-between group"
+                        style={{
+                          background: selectedModel === model.value 
+                            ? "rgba(59, 130, 246, 0.2)" 
+                            : "transparent",
+                          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = selectedModel === model.value 
+                            ? "rgba(59, 130, 246, 0.3)" 
+                            : "rgba(255, 255, 255, 0.05)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = selectedModel === model.value 
+                            ? "rgba(59, 130, 246, 0.2)" 
+                            : "transparent";
+                        }}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-gray-200 text-sm font-medium">
+                            {model.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-4 text-xs text-gray-400">
+                          <div className="flex items-center space-x-1">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <span>{model.tokens}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M7.99984 5.33317V8.54413C7.99984 8.65809 8.05806 8.76416 8.15421 8.82535L9.99984 9.99984M14.0999 7.9999C14.0999 11.3688 11.3688 14.0999 7.9999 14.0999C4.63097 14.0999 1.8999 11.3688 1.8999 7.9999C1.8999 4.63097 4.63097 1.8999 7.9999 1.8999C11.3688 1.8999 14.0999 4.63097 14.0999 7.9999Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <span>~{model.time}s</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Action Icons */}
               <div className='flex items-center gap-0'>

@@ -24,7 +24,7 @@ const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
           ? "Generated Images:"
           : isGenerating
           ? "Generating Images..."
-          : "Ready to generate images"}
+          : ""}
       </div>
       <MediaGeneration
         type='image'
@@ -69,7 +69,7 @@ const VideoGenerationComponent = ({
           ? "Processing..."
           : hasVideos
           ? "Generated Videos:"
-          : "Ready to generate videos"}
+          : ""}
       </div>
       <MediaGeneration
         type='video'
@@ -95,8 +95,8 @@ const ChatMessages = ({
   combinedVideosMap,
   autoProgression = false,
   currentPrompt = "",
-  setPrompt, // Add this to control the input
-  onSendMessage, // Add this to handle message sending
+  setPrompt, 
+  onSendMessage, 
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -137,8 +137,6 @@ const ChatMessages = ({
     }
   }, [currentPrompt, chatFlow.concepts, messages.length]);
 
-  // Remove the force re-render that was causing issues
-
   // Add new messages based on chat flow changes
   useEffect(() => {
     const newMessages = [];
@@ -157,10 +155,12 @@ const ChatMessages = ({
       loading: chatFlow.loading,
     });
 
-    // Add current user message when it's new
+    // Add current user message when it's new - but only if we're not in image/video generation steps
+    // This prevents user messages from appearing before dynamic components
     if (
       chatFlow.currentUserMessage &&
-      !processedSteps.has(`user-${chatFlow.messageCounter}`)
+      !processedSteps.has(`user-${chatFlow.messageCounter}`) &&
+      !(chatFlow.currentStep >= 4 && chatFlow.selectedScript) // Don't add user messages during image/video generation
     ) {
       newMessages.push({
         id: `user-message-${chatFlow.messageCounter}`,
@@ -189,7 +189,7 @@ const ChatMessages = ({
             <div className='text-white font-bold text-base mb-4'>
               {chatFlow.selectedConcept
                 ? "Selected Concept:"
-                : "Please choose a concept to get started."}
+                : "Please choose a concept to get started out of the Four."}
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}
@@ -389,6 +389,40 @@ const ChatMessages = ({
           </div>
         </div>
       )}
+
+      {/* User messages that occur during image/video generation - appear after dynamic components */}
+      {(() => {
+        const shouldShowUserMessage = 
+          chatFlow.currentUserMessage &&
+          !processedSteps.has(`user-${chatFlow.messageCounter}`) &&
+          chatFlow.currentStep >= 4 &&
+          chatFlow.selectedScript;
+
+        if (shouldShowUserMessage) {
+          // Mark as processed when we render it
+          setTimeout(() => {
+            setProcessedSteps(
+              (prev) => new Set([...prev, `user-${chatFlow.messageCounter}`])
+            );
+          }, 0);
+
+          return (
+            <div className="flex justify-end">
+              <div
+                className="max-w-[80%] p-2.5 text-white rounded-lg"
+                style={{
+                  background: "#18191C80",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <div className="text-sm">{chatFlow.currentUserMessage}</div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Timeline Integration - Always at the bottom */}
       {(() => {

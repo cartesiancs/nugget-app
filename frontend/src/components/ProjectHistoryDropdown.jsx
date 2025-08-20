@@ -120,21 +120,21 @@ export function ProjectHistoryDropdown({ onSelect }) {
 
   return (
     <div
-      className='absolute right-0 mt-2 w-80 rounded-lg shadow-lg z-[1100] max-h-96 overflow-y-auto border border-gray-700/40'
+      className='absolute right-0 mt-2 w-80 rounded-xl shadow-lg z-[1100] max-h-96 overflow-y-auto border-0'
       style={{
         background: "#18191C",
         backdropFilter: "blur(10px)",
       }}
     >
-      <div className='p-3 border-b border-gray-700/40'>
-        <h4 className='text-xs font-semibold text-white mb-2'>Your Projects</h4>
+      <div className='p-3  border-b border-gray-700/40'>
+        <h4 className='text-xs font-semibold text-white'>Your Projects</h4>
       </div>
 
       <div className='p-3'>
         <select
-          className='w-full p-2 rounded text-white text-xs border border-gray-700/40 focus:outline-none focus:border-gray-600/60 transition-colors'
+          className='w-full p-2 rounded text-white text-xs border-0 focus:outline-none  transition-colors'
           style={{
-            background: "#18191C",
+            background: "#FFFFFF0D",
             backdropFilter: "blur(10px)",
           }}
           value={selectedProject?.id || ""}
@@ -153,7 +153,7 @@ export function ProjectHistoryDropdown({ onSelect }) {
               value={project.id}
               style={{ background: "#2d2d30", color: "#fff" }}
             >
-              {project.name} - {project.description}
+              {project.name}  {project.description}
             </option>
           ))}
         </select>

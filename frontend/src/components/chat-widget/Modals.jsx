@@ -164,9 +164,9 @@ const Modals = ({
           <div className='fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10003]'>
             <form
               onSubmit={onCreateProject}
-              className='p-4 rounded-lg shadow-lg w-96 flex flex-col gap-3 relative border border-gray-700/40'
+              className='p-4 rounded-xl shadow-lg w-96 flex flex-col gap-3 relative border-0 '
               style={{
-                background: '#18191C80',
+                background: '#18191C',
                 backdropFilter: 'blur(10px)'
               }}
             >
@@ -180,9 +180,9 @@ const Modals = ({
                 </label>
                 <input
                   ref={nameInputRef}
-                  className='w-full p-2 rounded text-white border border-gray-700/40 focus:outline-none focus:border-gray-600/60 transition-colors'
+                  className='w-full p-2 rounded-xl text-white border-0  focus:outline-none  transition-colors'
                   style={{
-                    background: '#18191C80',
+                    background: '#FFFFFF0D',
                     backdropFilter: 'blur(10px)'
                   }}
                   value={newProjectName}
@@ -198,9 +198,9 @@ const Modals = ({
                   Description (optional)
                 </label>
                 <textarea
-                  className='w-full p-2 rounded text-white border border-gray-700/40 focus:outline-none focus:border-gray-600/60 transition-colors resize-y min-h-[60px] max-h-[300px]'
+                  className='w-full p-2 rounded-xl text-white border-0  focus:outline-none transition-colors resize-y min-h-[60px] max-h-[300px]'
                   style={{
-                    background: '#18191C80',
+                    background: '#FFFFFF0D',
                     backdropFilter: 'blur(10px)'
                   }}
                   value={newProjectDesc}
@@ -219,9 +219,9 @@ const Modals = ({
               <div className='flex gap-2 mt-2'>
                 <button
                   type='button'
-                  className='flex-1 px-2 py-1 text-xs rounded border border-gray-700/40 hover:border-gray-600/60 transition-colors'
+                  className='flex-1 px-2 py-1 text-xs rounded-xl border-0  transition-colors'
                   style={{
-                    background: '#18191C80',
+                    background: '#FFFFFF0D',
                     backdropFilter: 'blur(10px)',
                     color: 'white'
                   }}
@@ -232,12 +232,12 @@ const Modals = ({
                 </button>
                 <button
                   type='submit'
-                  className='flex-1 px-2 py-1 text-xs rounded transition-colors'
+                  className='flex-1 px-2 py-1 text-xs rounded-xl transition-colors'
                   style={{
                     background: creatingProject || !newProjectName.trim() 
-                      ? 'rgba(34, 197, 94, 0.4)' 
-                      : 'linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.9) 100%)',
-                    color: 'white',
+                      ? '#0D474D' 
+                      : '#017882',
+                    color: '#B6FFF9',
                     opacity: creatingProject || !newProjectName.trim() ? 0.6 : 1
                   }}
                   disabled={creatingProject || !newProjectName.trim()}

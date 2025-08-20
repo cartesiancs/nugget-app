@@ -27,7 +27,7 @@ const ConceptSelection = ({
     e.stopPropagation();
     const newExpandedCard = expandedCard === index ? null : index;
     setExpandedCard(newExpandedCard);
-    
+
     // Center the expanded card
     if (newExpandedCard !== null && containerRef.current) {
       setTimeout(() => {
@@ -36,10 +36,13 @@ const ConceptSelection = ({
         if (expandedElement) {
           const containerRect = container.getBoundingClientRect();
           const elementRect = expandedElement.getBoundingClientRect();
-          const scrollLeft = expandedElement.offsetLeft - (containerRect.width - elementRect.width)+50;
+          const scrollLeft =
+            expandedElement.offsetLeft -
+            (containerRect.width - elementRect.width) +
+            50;
           container.scrollTo({
             left: Math.max(0, scrollLeft),
-            behavior: 'smooth'
+            behavior: "smooth",
           });
         }
       }, 100);
@@ -48,70 +51,77 @@ const ConceptSelection = ({
 
   if (showAsCards) {
     return (
-      <div className="mt-3 w-full">
-        <div 
+      <div className='mt-3 w-full'>
+        <div
           ref={containerRef}
-          className="flex space-x-3 overflow-x-auto pb-4 w-full" 
-          style={{ 
-            scrollbarWidth: 'none', 
-            msOverflowStyle: 'none',
-            WebkitScrollbar: { display: 'none' }
-          }}
+          className='flex space-x-3 overflow-x-auto pb-2 w-full scrollbar-custom'
         >
           {concepts.map((concept, index) => (
             <div
               key={index}
               className={`border-0 rounded-lg overflow-hidden  transition-all duration-300 cursor-pointer ${
-                expandedCard === index 
-                  ? 'flex-shrink-0 w-full h-auto min-h-44' 
-                  : 'flex-shrink-0 w-44 h-44'
+                expandedCard === index
+                  ? "flex-shrink-0 w-full h-auto min-h-44"
+                  : "flex-shrink-0 w-44 h-44"
               }`}
               style={{
-                background: '#FFFFFF1A',
+                background: "#FFFFFF1A",
               }}
               onClick={() => handleCardClick(concept, index)}
             >
-              <div className="p-3 h-full flex flex-col relative">
+              <div className='p-3 h-full flex flex-col relative'>
                 {/* Dropdown arrow in top right */}
                 <button
                   onClick={(e) => handleExpandClick(e, index)}
-                  className="absolute top-2 right-2 bg-white text-black transition-colors p-1 z-10"
+                  className='absolute top-2 right-2 bg-white text-black transition-colors p-1 z-10'
                 >
-                  <svg 
-                    className={`w-3 h-3 transition-transform duration-200 ${expandedCard === index ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                  <svg
+                    className={`w-3 h-3 transition-transform duration-200 ${
+                      expandedCard === index ? "rotate-180" : ""
+                    }`}
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M19 9l-7 7-7-7'
+                    />
                   </svg>
                 </button>
 
                 {/* Title */}
-                <div className="text-white font-bold text-sm mb-2 pr-6">
+                <div className='text-white font-bold text-sm mb-2 pr-6'>
                   {concept.title}
                 </div>
 
                 {/* Tone and Goal */}
-                <div className="space-y-1 mb-2">
-                  <div className="text-gray-300 text-xs">
-                    <span className="text-cyan-300">Tone:</span> {concept.tone}
+                <div className='space-y-1 mb-2'>
+                  <div className='text-gray-300 text-xs'>
+                    <span className='text-cyan-300'>Tone:</span> {concept.tone}
                   </div>
-                  <div className="text-gray-300 text-xs">
-                    <span className="text-cyan-300">Goal:</span> {concept.goal}
+                  <div className='text-gray-300 text-xs'>
+                    <span className='text-cyan-300'>Goal:</span> {concept.goal}
                   </div>
                 </div>
 
                 {/* Concept text */}
-                <div className="flex-1">
+                <div className='flex-1'>
                   {expandedCard === index ? (
-                    <div className="text-gray-300 text-xs leading-relaxed">
-                      <span className="text-cyan-300">Concept:</span> {concept.concept}
+                    <div className='text-gray-300 text-xs leading-relaxed'>
+                      <span className='text-cyan-300'>Concept:</span>{" "}
+                      {concept.concept}
                     </div>
                   ) : (
-                    <div className="relative blur-3xl">
-                      <div className="text-gray-300 text-xs leading-relaxed" style={{ maxHeight: '4rem', overflow: 'hidden' }}>
-                        <span className="text-cyan-300 ">Concept:</span> {concept.concept.substring(0, 120)}...
+                    <div className='relative blur-3xl'>
+                      <div
+                        className='text-gray-300 text-xs leading-relaxed'
+                        style={{ maxHeight: "4rem", overflow: "hidden" }}
+                      >
+                        <span className='text-cyan-300 '>Concept:</span>{" "}
+                        {concept.concept.substring(0, 120)}...
                       </div>
                     </div>
                   )}
@@ -120,6 +130,21 @@ const ConceptSelection = ({
             </div>
           ))}
         </div>
+
+        {/* Custom Scrollbar Styles */}
+        <style jsx>{`
+          .scrollbar-custom::-webkit-scrollbar {
+            height: 6px;
+          }
+
+          .scrollbar-custom::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+          }
+        `}</style>
       </div>
     );
   }
@@ -137,8 +162,8 @@ const ConceptSelection = ({
             onClick={() => onConceptSelect(concept)}
             className='w-full p-2 border border-gray-700/40 rounded text-left hover:border-gray-600/60 transition-colors'
             style={{
-              background: '#18191C80',
-              backdropFilter: 'blur(10px)'
+              background: "#18191C80",
+              backdropFilter: "blur(10px)",
             }}
           >
             <div className='text-white font-medium text-xs mb-1'>
@@ -146,20 +171,22 @@ const ConceptSelection = ({
             </div>
             <div className='text-gray-300 text-xs mb-2'>{concept.concept}</div>
             <div className='flex flex-wrap gap-1'>
-              <span 
+              <span
                 className='px-2 py-0.5 text-xs rounded'
                 style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%)',
-                  color: 'white'
+                  background:
+                    "linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%)",
+                  color: "white",
                 }}
               >
                 Tone: {concept.tone}
               </span>
-              <span 
+              <span
                 className='px-2 py-0.5 text-xs rounded'
                 style={{
-                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.9) 100%)',
-                  color: 'white'
+                  background:
+                    "linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.9) 100%)",
+                  color: "white",
                 }}
               >
                 Goal: {concept.goal}

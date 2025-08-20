@@ -95,8 +95,8 @@ const ChatMessages = ({
   combinedVideosMap,
   autoProgression = false,
   currentPrompt = "",
-  setPrompt, // Add this to control the input
-  onSendMessage, // Add this to handle message sending
+  setPrompt, 
+  onSendMessage, 
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -136,8 +136,6 @@ const ChatMessages = ({
       ]);
     }
   }, [currentPrompt, chatFlow.concepts, messages.length]);
-
-  // Remove the force re-render that was causing issues
 
   // Add new messages based on chat flow changes
   useEffect(() => {

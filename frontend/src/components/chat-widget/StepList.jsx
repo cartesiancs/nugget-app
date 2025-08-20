@@ -146,7 +146,7 @@ export default function StepList({
             return (
               <div
                 key={step.id}
-                className={`flex items-center gap-2 p-2 rounded-xl text-left transition-all duration-200 text-xs cursor-pointer min-h-[48px] ${
+                className={`flex items-center gap-2 p-2 rounded-full text-left transition-all duration-200 text-xs cursor-pointer min-h-[48px] ${
                   disabled
                     ? "text-gray-500 cursor-not-allowed"
                     : "text-white hover:bg-gray-800/30"
@@ -167,8 +167,8 @@ export default function StepList({
                 }}
               >
                 <svg
-                  width='18'
-                  height='18'
+                  width='28'
+                  height='28'
                   viewBox='0 0 18 18'
                   fill='none'
                   xmlns='http://www.w3.org/2000/svg'
@@ -179,8 +179,6 @@ export default function StepList({
                     rx='9'
                     fill={isDone ? "#94E7ED" : "white"}
                     fillOpacity={isDone ? "0.2" : "0.1"}
-                    stroke={isDone ? "#94E7ED" : "rgba(255, 255, 255, 0.2)"}
-                    strokeWidth='1'
                   />
                   <g clipPath={`url(#clip0_640_38521_${step.id})`}>
                     <path
@@ -219,15 +217,11 @@ export default function StepList({
                         handleRedoStep(step.id);
                       }}
                       className='w-6 h-6 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer hover:scale-105'
-                      style={{
-                        background: "rgba(148, 231, 237, 0.15)",
-                        border: "1px solid rgba(148, 231, 237, 0.3)",
-                        boxShadow: "0 0 8px rgba(148, 231, 237, 0.2)",
-                      }}
+                      
                     >
                       <svg
-                        width='12'
-                        height='12'
+                        width='18'
+                        height='18'
                         viewBox='0 0 12 12'
                         fill='none'
                         xmlns='http://www.w3.org/2000/svg'
@@ -249,14 +243,10 @@ export default function StepList({
                         handleStepClick(step.id);
                       }}
                       className='w-6 h-6 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer hover:scale-105'
-                      style={{
-                        background: "rgba(255, 255, 255, 0.1)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                      }}
                     >
                       <svg
-                        width='12'
-                        height='12'
+                        width='18'
+                        height='18'
                         viewBox='0 0 12 12'
                         fill='none'
                         xmlns='http://www.w3.org/2000/svg'

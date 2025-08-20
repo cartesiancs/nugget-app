@@ -155,10 +155,12 @@ const ChatMessages = ({
       loading: chatFlow.loading,
     });
 
-    // Add current user message when it's new
+    // Add current user message when it's new - but only if we're not in image/video generation steps
+    // This prevents user messages from appearing before dynamic components
     if (
       chatFlow.currentUserMessage &&
-      !processedSteps.has(`user-${chatFlow.messageCounter}`)
+      !processedSteps.has(`user-${chatFlow.messageCounter}`) &&
+      !(chatFlow.currentStep >= 4 && chatFlow.selectedScript) // Don't add user messages during image/video generation
     ) {
       newMessages.push({
         id: `user-message-${chatFlow.messageCounter}`,
@@ -387,6 +389,40 @@ const ChatMessages = ({
           </div>
         </div>
       )}
+
+      {/* User messages that occur during image/video generation - appear after dynamic components */}
+      {(() => {
+        const shouldShowUserMessage = 
+          chatFlow.currentUserMessage &&
+          !processedSteps.has(`user-${chatFlow.messageCounter}`) &&
+          chatFlow.currentStep >= 4 &&
+          chatFlow.selectedScript;
+
+        if (shouldShowUserMessage) {
+          // Mark as processed when we render it
+          setTimeout(() => {
+            setProcessedSteps(
+              (prev) => new Set([...prev, `user-${chatFlow.messageCounter}`])
+            );
+          }, 0);
+
+          return (
+            <div className="flex justify-end">
+              <div
+                className="max-w-[80%] p-2.5 text-white rounded-lg"
+                style={{
+                  background: "#18191C80",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <div className="text-sm">{chatFlow.currentUserMessage}</div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Timeline Integration - Always at the bottom */}
       {(() => {

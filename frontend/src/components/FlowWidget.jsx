@@ -25,9 +25,9 @@ import AddVideoNode from "./FlowWidget/AddVideoNode";
 // Import new clean node components
 import NodeImage from "./FlowWidget/Node_Image";
 import NodeVideo from "./FlowWidget/Node_Video";
-import NodeScript from "./FlowWidget/Node_Script";
 import NodeSegment from "./FlowWidget/Node_Segment";
 import NodeConcept from "./FlowWidget/Node_Concept";
+import NodeScript from "./FlowWidget/Node_Script";
 import NodeChat from "./FlowWidget/NodeChat";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
@@ -70,6 +70,8 @@ function FlowWidget() {
 
   // New state for all fetched data
   const [allProjectData, setAllProjectData] = useState({
+    concepts: [],
+    scripts: [], // segmentations
     segments: [],
     images: [],
     videos: [],
@@ -109,25 +111,39 @@ function FlowWidget() {
     }
 
     console.log(
-      "Fetching project segmentations and related images/videos for project ID:",
+      "Fetching project concepts, segmentations and related images/videos for project ID:",
       projectId,
     );
     try {
       setLoading(true);
 
-      // Fetch project segmentations, images, and videos in parallel
-      const [segmentationsData, imagesData, videosData] = await Promise.all([
+      // Fetch project concepts, segmentations, images, and videos in parallel
+      const [conceptsData, segmentationsData, imagesData, videosData] = await Promise.all([
+        projectApi.getProjectConcepts(projectId),
         projectApi.getProjectSegmentations(projectId),
         projectApi.getProjectImages(projectId),
         projectApi.getProjectVideos(projectId),
       ]);
 
       console.log("Project data fetched successfully:");
+      console.log("Concepts:", conceptsData);
       console.log("Segmentations:", segmentationsData);
       console.log("Images:", imagesData);
       console.log("Videos:", videosData);
 
-      // Extract segments from the first segmentation
+      // Extract concepts
+      let concepts = [];
+      if (
+        conceptsData &&
+        conceptsData.success &&
+        conceptsData.data &&
+        Array.isArray(conceptsData.data)
+      ) {
+        concepts = conceptsData.data;
+      }
+
+      // Extract scripts (segmentations) and segments
+      let scripts = [];
       let segments = [];
       if (
         segmentationsData &&
@@ -135,6 +151,9 @@ function FlowWidget() {
         segmentationsData.data &&
         segmentationsData.data.length > 0
       ) {
+        scripts = segmentationsData.data;
+        
+        // Extract segments from the first segmentation for backward compatibility
         const firstSegmentation = segmentationsData.data[0];
         if (
           firstSegmentation.segments &&
@@ -145,6 +164,8 @@ function FlowWidget() {
       }
 
       setAllProjectData({
+        concepts: concepts,
+        scripts: scripts,
         segments: segments,
         images: imagesData?.data || [],
         videos: videosData?.data || [],
@@ -186,7 +207,27 @@ function FlowWidget() {
   const flowData = useMemo(() => {
     console.log("🔄 flowData useMemo called, allProjectData:", allProjectData);
 
-    // 1. Get segments from segmentation API response
+    // 1. Process concepts
+    const concepts = allProjectData.concepts.map((concept) => ({
+      ...concept,
+      id: concept.id,
+      content: concept.content || concept.text || "",
+      title: concept.title || `Concept ${concept.id}`,
+    }));
+    console.log("💡 Processed concepts:", concepts);
+
+    // 2. Process scripts (segmentations)
+    const scripts = allProjectData.scripts.map((script) => ({
+      ...script,
+      id: script.id,
+      artStyle: script.artStyle || "cinematic photography with soft lighting",
+      concept: script.concept || "",
+      segments: script.segments || [],
+      title: script.title || `Script ${script.id}`,
+    }));
+    console.log("📜 Processed scripts:", scripts);
+
+    // 3. Get segments from segmentation API response (backward compatibility)
     const segments = allProjectData.segments.map((seg) => ({
       ...seg,
       id: seg.segmentId || seg.id, // Use segmentId for mapping
@@ -282,7 +323,7 @@ function FlowWidget() {
     });
 
     console.log("🎬 Videos map (including temporary):", videos);
-    return { segments, images, videos, imageDetails, videoDetails };
+    return { concepts, scripts, segments, images, videos, imageDetails, videoDetails };
   }, [allProjectData, temporaryVideos]);
 
   // Handle image regeneration
@@ -665,46 +706,79 @@ function FlowWidget() {
     const newNodes = [];
     const newEdges = [];
 
-    // Create custom node types with regeneration callback
-    const nodeTypes = {
-      segmentNode: SegmentNode,
-      imageNode: (props) => (
-        <NodeImage
-          {...props}
-          onRegenerateImage={handleRegenerateImage}
-          regeneratingImages={regeneratingImages}
-        />
-      ),
-      videoNode: (props) => (
-        <NodeVideo
-          {...props}
-          onRegenerateVideo={handleRegenerateVideo}
-          regeneratingVideos={regeneratingVideos}
-        />
-      ),
-    };
+    // Layout configuration
+    const nodeSpacing = 450; // Vertical space between levels
+    const itemSpacing = 400; // Horizontal space between items in same level
+    const startX = 150;
+    const startY = 100;
 
-    if (flowData.segments && flowData.segments.length > 0) {
-      console.log(
-        "📊 Creating nodes for",
-        flowData.segments.length,
-        "segments",
-      );
-      const nodeSpacing = 400; // Increased vertical space between nodes
-      const rowSpacing = 400; // Increased horizontal space between columns
-      const startX = 100;
-      const startY = 100;
-      const segmentSpacing = 800; // Increased space between segments
+    let currentY = startY;
 
-      flowData.segments.forEach((segment, segIndex) => {
-        const x = startX;
-        const y = startY + segIndex * segmentSpacing; // segmentSpacing = enough vertical space for all images/videos
+    // 1. Create Concept Nodes
+    if (flowData.concepts && flowData.concepts.length > 0) {
+      console.log("💡 Creating concept nodes:", flowData.concepts.length);
+      
+      flowData.concepts.forEach((concept, index) => {
+        const conceptX = startX + index * itemSpacing;
         
-        // Segment node
+        newNodes.push({
+          id: `concept-${concept.id}`,
+          type: "conceptNode",
+          position: { x: conceptX, y: currentY },
+          data: concept,
+        });
+      });
+      
+      currentY += nodeSpacing; // Move to next level
+    }
+
+    // 2. Create Script Nodes  
+    if (flowData.scripts && flowData.scripts.length > 0) {
+      console.log("📜 Creating script nodes:", flowData.scripts.length);
+      
+      flowData.scripts.forEach((script, index) => {
+        const scriptX = startX + index * itemSpacing;
+        
+        newNodes.push({
+          id: `script-${script.id}`,
+          type: "scriptNode", 
+          position: { x: scriptX, y: currentY },
+          data: script,
+        });
+
+        // Connect to concepts if available
+        if (flowData.concepts && flowData.concepts.length > 0) {
+          // Connect to first concept for now (you can enhance this logic)
+          const conceptId = flowData.concepts[0].id;
+          newEdges.push({
+            id: `concept-${conceptId}-to-script-${script.id}`,
+            source: `concept-${conceptId}`,
+            target: `script-${script.id}`,
+            sourceHandle: "output",
+            targetHandle: "input",
+            style: {
+              stroke: "#8b5cf6",
+              strokeWidth: 3,
+              filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
+            },
+          });
+        }
+      });
+      
+      currentY += nodeSpacing; // Move to next level
+    }
+
+    // 3. Create Segment Nodes (show only if we have data)
+    if (flowData.segments && flowData.segments.length > 0) {
+      console.log("📊 Creating segment nodes:", flowData.segments.length);
+      
+      flowData.segments.forEach((segment, index) => {
+        const segmentX = startX + index * itemSpacing;
+        
         newNodes.push({
           id: `segment-${segment.id}`,
           type: "segmentNode",
-          position: { x, y },
+          position: { x: segmentX, y: currentY },
           data: {
             ...segment,
             status: flowData.videos[segment.id]
@@ -714,49 +788,41 @@ function FlowWidget() {
               : "pending",
           },
         });
-        
-        // Add Image node below segment
-        const addImageY = y + nodeSpacing;
-        newNodes.push({
-          id: `add-image-${segment.id}`,
-          type: "addImageNode",
-          position: { x, y: addImageY },
-          data: {
-            segmentId: segment.id,
-            segmentData: {
-              id: segment.id,
-              visual: segment.visual,
-              animation: segment.animation,
-              artStyle: "cinematic photography with soft lighting",
+
+        // Connect to scripts if available
+        if (flowData.scripts && flowData.scripts.length > 0) {
+          // Connect to first script for now (you can enhance this logic)
+          const scriptId = flowData.scripts[0].id;
+          newEdges.push({
+            id: `script-${scriptId}-to-segment-${segment.id}`,
+            source: `script-${scriptId}`,
+            target: `segment-${segment.id}`,
+            sourceHandle: "output",
+            targetHandle: "input",
+            style: {
+              stroke: "#3b82f6",
+              strokeWidth: 3,
+              filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))",
             },
-            hasExistingImages: !!flowData.images[segment.id],
-          },
-        });
-        
-        newEdges.push({
-          id: `segment-${segment.id}-to-add-image-${segment.id}`,
-          source: `segment-${segment.id}`,
-          target: `add-image-${segment.id}`,
-          sourceHandle: "output",
-          targetHandle: "input",
-          style: {
-            stroke: "#8b5cf6",
-            strokeWidth: 3,
-            filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
-          },
-        });
-        
-        // If segment has images, stack them horizontally to the right of add image node
+          });
+        }
+      });
+      
+      currentY += nodeSpacing; // Move to next level
+
+      // 4. Create Image Nodes for segments that have images
+      let hasImages = false;
+      flowData.segments.forEach((segment, segmentIndex) => {
         const imageDetail = flowData.imageDetails[segment.id];
         if (flowData.images[segment.id] && imageDetail?.allImages) {
+          hasImages = true;
           imageDetail.allImages.forEach((image, imageIndex) => {
-            const imageX = x + rowSpacing + imageIndex * rowSpacing; // Horizontal stacking
-            const imageY = addImageY; // Same Y level as add image node
+            const imageX = startX + segmentIndex * itemSpacing + imageIndex * 280; // Better spacing for images
             
             newNodes.push({
               id: `image-${segment.id}-${image.id}`,
               type: "imageNode",
-              position: { x: imageX, y: imageY },
+              position: { x: imageX, y: currentY },
               data: {
                 segmentId: segment.id,
                 imageUrl: image.url,
@@ -767,57 +833,63 @@ function FlowWidget() {
                   id: segment.id,
                   visual: segment.visual,
                   animation: segment.animation,
-                  artStyle:
-                    image.artStyle ||
-                    "cinematic photography with soft lighting",
+                  artStyle: image.artStyle || "cinematic photography with soft lighting",
                 },
               },
             });
             
+            // Connect image to segment
             newEdges.push({
-              id: `add-image-${segment.id}-to-image-${segment.id}-${image.id}`,
-              source: `add-image-${segment.id}`,
+              id: `segment-${segment.id}-to-image-${segment.id}-${image.id}`,
+              source: `segment-${segment.id}`,
               target: `image-${segment.id}-${image.id}`,
               sourceHandle: "output",
               targetHandle: "input",
               style: {
                 stroke: "#f59e0b",
                 strokeWidth: 2,
-                strokeDasharray: "5,5",
                 filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))",
               },
             });
+          });
+        }
+      });
+      
+      // Only move to next level if we have images
+      if (hasImages) {
+        currentY += nodeSpacing;
+      }
+
+      // 5. Create Video Nodes for images that have videos
+      flowData.segments.forEach((segment, segmentIndex) => {
+        const imageDetail = flowData.imageDetails[segment.id];
+        if (flowData.images[segment.id] && imageDetail?.allImages) {
+          imageDetail.allImages.forEach((image, imageIndex) => {
+            const videoUrl = flowData.videos[`${segment.id}-${image.id}`] || flowData.videos[segment.id];
+            const videoId = flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id || flowData?.videoDetails?.[segment.id]?.id;
             
-            // Video/add-video node below each image
-            const imageVideoUrl =
-              flowData.videos[`${segment.id}-${image.id}`] ||
-              flowData.videos[segment.id];
-            const imageVideoId =
-              flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id ||
-              flowData?.videoDetails?.[segment.id]?.id;
-            const videoY = imageY + nodeSpacing; // Below the image
-            
-            if (imageVideoUrl) {
+            if (videoUrl) {
+              const videoX = startX + segmentIndex * itemSpacing + imageIndex * 280; // Match image spacing
+              
               newNodes.push({
                 id: `video-${segment.id}-${image.id}`,
                 type: "videoNode",
-                position: { x: imageX, y: videoY },
+                position: { x: videoX, y: currentY },
                 data: {
                   segmentId: segment.id,
                   imageId: image.id,
-                  videoUrl: imageVideoUrl,
-                  videoId: imageVideoId,
+                  videoUrl: videoUrl,
+                  videoId: videoId,
                   segmentData: {
                     id: segment.id,
                     animation: segment.animation,
-                    artStyle:
-                      flowData?.videoDetails?.[segment.id]?.artStyle ||
-                      "cinematic photography with soft lighting",
+                    artStyle: flowData?.videoDetails?.[segment.id]?.artStyle || "cinematic photography with soft lighting",
                     imageS3Key: image.s3Key,
                   },
                 },
               });
               
+              // Connect video to image
               newEdges.push({
                 id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
                 source: `image-${segment.id}-${image.id}`,
@@ -827,37 +899,6 @@ function FlowWidget() {
                 style: {
                   stroke: "#10b981",
                   strokeWidth: 3,
-                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
-                },
-              });
-            } else {
-              newNodes.push({
-                id: `add-video-${segment.id}-${image.id}`,
-                type: "addVideoNode",
-                position: { x: imageX, y: videoY },
-                data: {
-                  segmentId: segment.id,
-                  imageId: image.id,
-                  segmentData: {
-                    id: segment.id,
-                    animation: segment.animation,
-                    artStyle:
-                      image.artStyle ||
-                      "cinematic photography with soft lighting",
-                  },
-                },
-              });
-              
-              newEdges.push({
-                id: `image-${segment.id}-${image.id}-to-add-video-${segment.id}-${image.id}`,
-                source: `image-${segment.id}-${image.id}`,
-                target: `add-video-${segment.id}-${image.id}`,
-                sourceHandle: "output",
-                targetHandle: "input",
-                style: {
-                  stroke: "#10b981",
-                  strokeWidth: 2,
-                  strokeDasharray: "5,5",
                   filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
                 },
               });
@@ -876,7 +917,7 @@ function FlowWidget() {
     await refreshProjectData();
   }, [refreshProjectData]);
 
-  // Function to fetch project segmentations and related images/videos
+  // Function to fetch project concepts, segmentations and related images/videos
   const fetchAllProjectData = useCallback(async () => {
     if (!isAuthenticated) {
       console.log("User not authenticated, skipping API calls");
@@ -907,25 +948,39 @@ function FlowWidget() {
     }
 
     console.log(
-      "Fetching project segmentations and related images/videos for project ID:",
+      "Fetching project concepts, segmentations and related images/videos for project ID:",
       projectId,
     );
     try {
       setLoading(true);
 
-      // Fetch project segmentations, images, and videos in parallel
-      const [segmentationsData, imagesData, videosData] = await Promise.all([
+      // Fetch project concepts, segmentations, images, and videos in parallel
+      const [conceptsData, segmentationsData, imagesData, videosData] = await Promise.all([
+        projectApi.getProjectConcepts(projectId),
         projectApi.getProjectSegmentations(projectId),
         projectApi.getProjectImages(projectId),
         projectApi.getProjectVideos(projectId),
       ]);
 
       console.log("Project data fetched successfully:");
+      console.log("Concepts:", conceptsData);
       console.log("Segmentations:", segmentationsData);
       console.log("Images:", imagesData);
       console.log("Videos:", videosData);
 
-      // Extract segments from the first segmentation
+      // Extract concepts
+      let concepts = [];
+      if (
+        conceptsData &&
+        conceptsData.success &&
+        conceptsData.data &&
+        Array.isArray(conceptsData.data)
+      ) {
+        concepts = conceptsData.data;
+      }
+
+      // Extract scripts (segmentations) and segments
+      let scripts = [];
       let segments = [];
       if (
         segmentationsData &&
@@ -933,6 +988,9 @@ function FlowWidget() {
         segmentationsData.data &&
         segmentationsData.data.length > 0
       ) {
+        scripts = segmentationsData.data;
+        
+        // Extract segments from the first segmentation for backward compatibility
         const firstSegmentation = segmentationsData.data[0];
         if (
           firstSegmentation.segments &&
@@ -943,6 +1001,8 @@ function FlowWidget() {
       }
 
       setAllProjectData({
+        concepts: concepts,
+        scripts: scripts,
         segments: segments,
         images: imagesData?.data || [],
         videos: videosData?.data || [],
@@ -1396,11 +1456,15 @@ function FlowWidget() {
   };
 
   const getWorkflowStats = () => {
+    const totalConcepts = flowData.concepts.length;
+    const totalScripts = flowData.scripts.length;
     const totalSegments = flowData.segments.length;
     const imagesGenerated = Object.keys(flowData.images).length;
     const videosGenerated = Object.keys(flowData.videos).length;
 
     return {
+      totalConcepts,
+      totalScripts,
       totalSegments,
       imagesGenerated,
       videosGenerated,
@@ -1743,7 +1807,7 @@ function FlowWidget() {
                     <ChatLoginButton />
                   </div>
                 </div>
-              ) : flowData.segments.length === 0 ? (
+              ) : (flowData.concepts.length === 0 && flowData.scripts.length === 0 && flowData.segments.length === 0) ? (
                 <div className='p-4 space-y-4'>
                   <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
                     <h3 className='text-lg font-semibold text-white mb-4'>
@@ -1751,7 +1815,7 @@ function FlowWidget() {
                     </h3>
                     <p className='text-gray-400 text-sm mb-4'>
                       Start creating a video in the chat widget to see the
-                      workflow flow here.
+                      workflow flow here. The flow will show: Concepts → Scripts → Segments → Images → Videos
                     </p>
                     <button
                       onClick={() => handleFlowAction("Refresh Data")}

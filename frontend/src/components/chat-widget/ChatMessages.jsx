@@ -344,7 +344,7 @@ const ChatMessages = ({
         </div>
       ))}
 
-      {/* Loading indicator */}
+      {/* Enhanced Loading indicator with agent activity */}
       {chatFlow.loading && (
         <div className='flex justify-start'>
           <div
@@ -357,9 +357,17 @@ const ChatMessages = ({
           >
             <div className='flex items-center space-x-2'>
               <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400'></div>
-              <span className='text-xs text-gray-100'>
-                {chatFlow.isStreaming ? 'Agent is working...' : 'Processing...'}
-              </span>
+              <div className='flex flex-col'>
+                <span className='text-xs text-gray-100'>
+                  {chatFlow.agentActivity || (chatFlow.isStreaming ? 'Agent is working...' : 'Processing...')}
+                </span>
+                {chatFlow.streamingProgress && (
+                  <span className='text-xs text-gray-400 mt-1'>
+                    {chatFlow.streamingProgress.step && `Step: ${chatFlow.streamingProgress.step}`}
+                    {chatFlow.streamingProgress.progress && ` (${chatFlow.streamingProgress.progress})`}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -369,6 +377,25 @@ const ChatMessages = ({
 
 
 
+
+      {/* Credit Deduction Notification */}
+      {chatFlow.creditDeductionMessage && (
+        <div className='flex justify-start'>
+          <div
+            className='text-green-100 rounded-lg p-2.5 max-w-[80%]'
+            style={{
+              background: "rgba(34, 197, 94, 0.1)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(34, 197, 94, 0.3)",
+            }}
+          >
+            <div className='flex items-center gap-2 text-xs'>
+              <span>💰</span>
+              <span>{chatFlow.creditDeductionMessage}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error message */}
       {chatFlow.error && (
@@ -405,15 +432,46 @@ const ChatMessages = ({
               border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
           >
-            {/* Agent Working Indicator */}
+            {/* Enhanced Agent Working Indicator */}
             {chatFlow.isStreaming && (
-              <div className='flex items-center gap-2 mb-3'>
-                <div className='flex space-x-1'>
-                  <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce'></div>
-                  <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce' style={{animationDelay: '0.1s'}}></div>
-                  <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce' style={{animationDelay: '0.2s'}}></div>
+              <div className='mb-3'>
+                <div className='flex items-center gap-2 mb-2'>
+                  <div className='flex space-x-1'>
+                    <div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce'></div>
+                    <div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce' style={{animationDelay: '0.1s'}}></div>
+                    <div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce' style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                  <span className='text-gray-100 font-medium'>Agent is working...</span>
                 </div>
-                <span className='text-gray-100'>Agent is working...</span>
+                <div className='text-gray-300 text-sm'>
+                  {chatFlow.agentActivity || "Processing your request and executing tools..."}
+                </div>
+                {chatFlow.streamingProgress && (
+                  <div className='text-gray-400 text-xs mt-1'>
+                    <div className='flex items-center gap-2 mb-1'>
+                      <span>📍 Progress:</span>
+                      <span>{chatFlow.streamingProgress.step || 'Unknown step'}</span>
+                      {chatFlow.streamingProgress.status && (
+                        <span className='text-blue-400'>({chatFlow.streamingProgress.status})</span>
+                      )}
+                    </div>
+                    {chatFlow.streamingProgress.total && chatFlow.streamingProgress.current !== undefined && (
+                      <div className='flex items-center gap-2'>
+                        <div className='flex-1 bg-gray-700 rounded-full h-1'>
+                          <div 
+                            className='bg-blue-400 h-1 rounded-full transition-all duration-300' 
+                            style={{
+                              width: `${(chatFlow.streamingProgress.current / chatFlow.streamingProgress.total) * 100}%`
+                            }}
+                          ></div>
+                        </div>
+                        <span className='text-xs'>
+                          {chatFlow.streamingProgress.current}/{chatFlow.streamingProgress.total}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -427,16 +485,34 @@ const ChatMessages = ({
                 
                 <div className='text-gray-300 text-sm mb-3'>
                   {approval.toolName === 'get_web_info' && (
-                    <>🔍 I need permission to research web information for your prompt</>
+                    <div>
+                      <div className='mb-1'>🔍 <strong>Web Research Request</strong></div>
+                      <div>I need permission to research web information for your prompt. This will help me understand current trends, gather relevant data, and provide more accurate and up-to-date concepts.</div>
+                    </div>
                   )}
                   {approval.toolName === 'generate_concepts_with_approval' && (
-                    <>💡 I'm ready to generate 4 content concepts based on the research</>
+                    <div>
+                      <div className='mb-1'>💡 <strong>Concept Generation Ready</strong></div>
+                      <div>I'm ready to generate 4 unique content concepts based on the research. Each concept will include a title, description, and creative direction tailored to your request.</div>
+                    </div>
                   )}
                   {approval.toolName === 'generate_segmentation' && (
-                    <>📜 I can now create script segmentation for the selected concept</>
+                    <div>
+                      <div className='mb-1'>📜 <strong>Script Creation Ready</strong></div>
+                      <div>I can now create detailed script segmentation for the selected concept. This will break down your content into scenes with visual descriptions, narration, and animation prompts.</div>
+                    </div>
                   )}
                   {approval.toolName === 'generate_image_with_approval' && (
-                    <>🖼️ I'm ready to generate images for each script segment</>
+                    <div>
+                      <div className='mb-1'>🎨 <strong>Image Generation Ready</strong></div>
+                      <div>I'm ready to generate high-quality images for each script segment. This will create visual assets that match your chosen art style and bring your script to life.</div>
+                    </div>
+                  )}
+                  {approval.toolName === 'generate_video_with_approval' && (
+                    <div>
+                      <div className='mb-1'>🎬 <strong>Video Generation Ready</strong></div>
+                      <div>I'm ready to create dynamic videos from your generated images. This will add motion and animation to transform static images into engaging video content.</div>
+                    </div>
                   )}
                 </div>
                 

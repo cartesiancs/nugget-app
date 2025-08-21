@@ -91,6 +91,8 @@ export const useChatFlow = () => {
   const [streamMessages, setStreamMessages] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [currentReader, setCurrentReader] = useState(null);
+  const [agentActivity, setAgentActivity] = useState(null); // Current agent activity description
+  const [streamingProgress, setStreamingProgress] = useState(null); // Progress information
 
 
   // Listen to localStorage changes for project selection
@@ -99,24 +101,48 @@ export const useChatFlow = () => {
       try {
         const stored = localStorage.getItem("project-store-selectedProject");
         const newSelectedProject = stored ? JSON.parse(stored) : null;
-        setSelectedProject(newSelectedProject);
+        
+        // Only update if the project actually changed
+        if (newSelectedProject?.id !== selectedProject?.id) {
+          console.log('🔄 Project changed, updating selected project:', newSelectedProject);
+          
+          // Show loading message for project switch
+          if (newSelectedProject) {
+            setAgentActivity(`🔄 Switching to project: ${newSelectedProject.name}...`);
+            setTimeout(() => setAgentActivity(null), 3000);
+          }
+          
+          setSelectedProject(newSelectedProject);
 
-        if (newSelectedProject) {
-          setStoredVideosMap(
-            JSON.parse(localStorage.getItem(`project-store-videos`) || "{}"),
-          );
-        } else {
-          setStoredVideosMap(
-            JSON.parse(localStorage.getItem("segmentVideos") || "{}"),
-          );
+          if (newSelectedProject) {
+            setStoredVideosMap(
+              JSON.parse(localStorage.getItem(`project-store-videos`) || "{}"),
+            );
+          } else {
+            setStoredVideosMap(
+              JSON.parse(localStorage.getItem("segmentVideos") || "{}"),
+            );
+          }
         }
       } catch (e) {
         console.error(e);
       }
     };
+
+    // Check for changes immediately on mount
+    handleStorage();
+
+    // Listen for storage events (from other tabs/windows)
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+
+    // Also listen for a custom event we'll dispatch when project changes in same tab
+    window.addEventListener("projectChanged", handleStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("projectChanged", handleStorage);
+    };
+  }, [selectedProject?.id]);
 
   // Load credit balance when user is authenticated
   useEffect(() => {
@@ -212,6 +238,9 @@ export const useChatFlow = () => {
   ]);
 
   const resetFlow = useCallback(() => {
+    console.log('🔄 Resetting chat flow state...');
+    
+    // Reset flow states
     setCurrentStep(0);
     setStepStatus({
       0: "pending",
@@ -221,6 +250,8 @@ export const useChatFlow = () => {
       4: "pending",
       5: "pending",
     });
+    
+    // Reset content states
     setConcepts(null);
     setSelectedConcept(null);
     setScripts(null);
@@ -228,10 +259,34 @@ export const useChatFlow = () => {
     setGeneratedImages({});
     setGeneratedVideos({});
     setGenerationProgress({});
+    
     // Reset model selections to defaults
     setSelectedImageModel(chatApi.getDefaultModel("IMAGE"));
     setSelectedVideoModel(chatApi.getDefaultModel("VIDEO"));
     setSelectedScriptModel("flash");
+    
+    // Reset loading and error states
+    setLoading(false);
+    setError(null);
+    
+    // Reset streaming states
+    setIsStreaming(false);
+    setStreamMessages([]);
+    setPendingApprovals([]);
+    setCurrentReader(null);
+    setAgentActivity(null);
+    setStreamingProgress(null);
+    
+    // Reset timeline states
+    setAddingTimeline(false);
+    setCurrentUserMessage("");
+    setMessageCounter(0);
+    setAllUserMessages([]);
+    
+    // Reset credit deduction message
+    setCreditDeductionMessage(null);
+    
+    console.log('✅ Chat flow state reset complete');
   }, []);
 
   // Helper function to show credit deduction after successful API response
@@ -239,6 +294,7 @@ export const useChatFlow = () => {
     (serviceName, model = null, count = 1) => {
       let credits = 0;
       let message = "";
+      let additionalInfo = "";
 
       switch (serviceName) {
         case "Web Info Processing":
@@ -251,42 +307,51 @@ export const useChatFlow = () => {
           break;
         case "Script Generation":
           credits = getTextCreditCost("script & segmentation") * count;
-          message = formatCreditDeduction("Script Generation", credits);
+          additionalInfo = count > 1 ? `${count} scripts` : "1 script";
+          message = formatCreditDeduction("Script Generation", credits, additionalInfo);
           break;
         case "Image Generation":
           if (model) {
             credits = getImageCreditCost(model) * count;
-            message = formatCreditDeduction(
-              `Image Generation (${model})`,
-              credits,
-            );
+            additionalInfo = `${count} image${count !== 1 ? "s" : ""} using ${model}`;
+            message = formatCreditDeduction("Image Generation", credits, additionalInfo);
           } else {
             credits = getImageCreditCost("imagen") * count; // default to imagen
-            message = formatCreditDeduction("Image Generation", credits);
+            additionalInfo = `${count} image${count !== 1 ? "s" : ""}`;
+            message = formatCreditDeduction("Image Generation", credits, additionalInfo);
           }
           break;
         case "Video Generation":
           if (model) {
-            credits = getVideoCreditCost(model, 5) * count; // 8 seconds default
-            message = formatCreditDeduction(
-              `Video Generation (${model})`,
-              credits,
-            );
+            credits = getVideoCreditCost(model, 5) * count; // 5 seconds default
+            additionalInfo = `${count} video${count !== 1 ? "s" : ""} using ${model} (5s each)`;
+            message = formatCreditDeduction("Video Generation", credits, additionalInfo);
           } else {
             credits = getVideoCreditCost("veo2", 5) * count; // default to veo2
-            message = formatCreditDeduction("Video Generation", credits);
+            additionalInfo = `${count} video${count !== 1 ? "s" : ""} (5s each)`;
+            message = formatCreditDeduction("Video Generation", credits, additionalInfo);
           }
           break;
+        case "Concept Writer Process":
+          // This is a combined operation
+          credits = getTextCreditCost("web-info") + getTextCreditCost("concept generator");
+          additionalInfo = "Web research + 4 concepts";
+          message = formatCreditDeduction("Concept Writer Process", credits, additionalInfo);
+          break;
         default:
-          message = `Credit deducted for ${serviceName}`;
+          message = `${credits} credit${credits !== 1 ? "s" : ""} deducted for ${serviceName}`;
       }
 
       setCreditDeductionMessage(message);
-      setTimeout(() => setCreditDeductionMessage(null), 3000); // Clear after 3 seconds
+      setTimeout(() => setCreditDeductionMessage(null), 5000); // Clear after 5 seconds
 
-      // Refresh balance if user is authenticated
+      // Refresh balance immediately and also with a slight delay to ensure backend processing is complete
       if (user?.id) {
         fetchBalance(user.id);
+        // Also refresh after a short delay to ensure any backend processing is complete
+        setTimeout(() => {
+          fetchBalance(user.id);
+        }, 1000);
       }
     },
     [user?.id, fetchBalance],
@@ -340,21 +405,7 @@ export const useChatFlow = () => {
         console.log("Concept-writer response:", conceptsResult);
 
         // Show combined credit deduction for both API calls (web-info + concept generation)
-        const webInfoCredits = getTextCreditCost("web-info");
-        const conceptCredits = getTextCreditCost("concept generator");
-        const totalCredits = webInfoCredits + conceptCredits;
-        const message = formatCreditDeduction(
-          "Concept Writer Process",
-          totalCredits,
-        );
-
-        setCreditDeductionMessage(message);
-        setTimeout(() => setCreditDeductionMessage(null), 3000);
-
-        // Refresh balance if user is authenticated
-        if (user?.id) {
-          fetchBalance(user.id);
-        }
+        showCreditDeduction("Concept Writer Process");
 
         setConcepts(conceptsResult.concepts);
         updateStepStatus(0, "done");
@@ -808,10 +859,15 @@ export const useChatFlow = () => {
     if (!selectedProject) return;
 
     try {
+      console.log(`🔄 Loading project data for project: ${selectedProject.name} (ID: ${selectedProject.id})`);
+      
+      // Reset all states first to ensure clean slate
+      resetFlow();
+      
       setLoading(true);
       setError(null);
 
-      console.log(`Loading project data for project ID: ${selectedProject.id}`);
+      console.log(`📡 Fetching project data from API...`);
 
       // Fetch project details and all related data from API
       const [
@@ -907,13 +963,13 @@ export const useChatFlow = () => {
       }
 
       // Set images if available - map to segments properly
+      let imagesMap = {};
       if (
         projectImages &&
         projectImages.success &&
         Array.isArray(projectImages.data) &&
         projectImages.data.length > 0
       ) {
-        const imagesMap = {};
         projectImages.data.forEach((img) => {
           const segmentId =
             img.uuid || img.segment_id || img.segmentId || img.id;
@@ -948,13 +1004,13 @@ export const useChatFlow = () => {
       }
 
       // Set videos if available - map to segments properly (supports new videoFiles array)
+      let videosMap = {};
       if (
         projectVideos &&
         projectVideos.success &&
         Array.isArray(projectVideos.data) &&
         projectVideos.data.length > 0
       ) {
-        const videosMap = {};
         projectVideos.data.forEach((video) => {
           const segmentId =
             video.uuid || video.segment_id || video.segmentId || video.id;
@@ -997,10 +1053,27 @@ export const useChatFlow = () => {
       // Add initial project state message to chat
       if (projectDetails && projectDetails.success) {
         const projectName = projectDetails.data?.name || "Project";
+        const hasContent = concepts || segments.length > 0 || Object.keys(imagesMap).length > 0 || Object.keys(videosMap).length > 0;
+        
+        let statusMessage = `📁 Loaded project: ${projectName}`;
+        if (hasContent) {
+          const contentSummary = [];
+          if (concepts) contentSummary.push(`${concepts.length} concepts`);
+          if (segments.length > 0) contentSummary.push(`${segments.length} script segments`);
+          if (Object.keys(imagesMap).length > 0) contentSummary.push(`${Object.keys(imagesMap).length} images`);
+          if (Object.keys(videosMap).length > 0) contentSummary.push(`${Object.keys(videosMap).length} videos`);
+          
+          if (contentSummary.length > 0) {
+            statusMessage += ` - Found: ${contentSummary.join(', ')}`;
+          }
+        } else {
+          statusMessage += ` - Ready to start creating content!`;
+        }
+        
         const initialMessage = {
           id: `project-loaded-${Date.now()}`,
           type: "system",
-          content: `Loaded project: ${projectName}`,
+          content: statusMessage,
           timestamp: Date.now(),
         };
         setAllUserMessages(prev => [initialMessage, ...prev]);
@@ -1013,7 +1086,7 @@ export const useChatFlow = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedProject?.id]); // Only depend on project ID
+  }, [selectedProject?.id, resetFlow]); // Include resetFlow dependency
 
   // Streaming functions
   const startAgentStream = useCallback(async (userInput) => {
@@ -1041,6 +1114,8 @@ export const useChatFlow = () => {
     setError(null);
     setStreamMessages([]);
     setPendingApprovals([]);
+    setAgentActivity("🚀 Initializing agent workflow...");
+    setStreamingProgress(null);
 
     try {
       const response = await agentApi.startAgentRunStream(
@@ -1132,13 +1207,44 @@ export const useChatFlow = () => {
     console.log('🎯 Processing message type:', message.type);
 
     switch (message.type) {
-      case 'log':
+      case 'log': {
         console.log('📋 Stream log:', message.data.message || message.data);
+        // Update agent activity with log message if it contains useful info
+        const logMessage = message.data.message || message.data;
+        if (typeof logMessage === 'string') {
+          setAgentActivity(logMessage);
+        }
+        break;
+      }
+
+      case 'thinking':
+        // Agent is thinking/processing
+        setAgentActivity(message.data.message || "Agent is analyzing your request...");
+        break;
+
+      case 'tool_start': {
+        // Tool execution started
+        const toolName = message.data.toolName || message.data.tool_name;
+        setAgentActivity(getToolStartMessage(toolName));
+        setStreamingProgress({ step: toolName, status: 'starting' });
+        break;
+      }
+
+      case 'tool_progress':
+        // Tool execution progress
+        setStreamingProgress(prev => ({
+          ...prev,
+          ...message.data,
+          status: 'in_progress'
+        }));
         break;
 
       case 'approval_required': {
         console.log('⏳ APPROVAL REQUIRED - Processing...');
         const { approvalId, toolName, arguments: args, agentName } = message.data;
+        
+        // Set agent activity to show what approval is needed
+        setAgentActivity(getApprovalMessage(toolName));
         
         // Parse arguments if they come as JSON string
         let parsedArgs = args;
@@ -1181,17 +1287,25 @@ export const useChatFlow = () => {
 
       case 'result':
         console.log('✅ Tool result received:', message.data);
+        setAgentActivity(getToolCompleteMessage(message.data.toolName || 'operation'));
+        setStreamingProgress(null); // Clear progress
         await handleToolResult(message.data);
         break;
 
       case 'completed':
         console.log('🎉 Agent run completed:', message.data);
+        setAgentActivity("✅ Task completed successfully!");
+        setStreamingProgress(null);
         setIsStreaming(false);
         setLoading(false);
+        // Clear activity after a delay
+        setTimeout(() => setAgentActivity(null), 3000);
         break;
 
       case 'error':
         console.error('❌ Stream error:', message.data.message);
+        setAgentActivity(`❌ Error: ${message.data.message}`);
+        setStreamingProgress(null);
         setError(message.data.message);
         setIsStreaming(false);
         setLoading(false);
@@ -1199,6 +1313,58 @@ export const useChatFlow = () => {
 
       default:
         console.log('❓ Unknown stream message type:', message.type, message);
+    }
+  }, []);
+
+  // Helper functions for verbose messaging
+  const getToolStartMessage = useCallback((toolName) => {
+    switch (toolName) {
+      case 'get_web_info':
+        return "🔍 Researching web information for your request...";
+      case 'generate_concepts_with_approval':
+        return "💡 Analyzing research and generating creative concepts...";
+      case 'generate_segmentation':
+        return "📜 Creating detailed script segments for your concept...";
+      case 'generate_image_with_approval':
+        return "🎨 Generating images for each script segment...";
+      case 'generate_video_with_approval':
+        return "🎬 Creating videos from your images...";
+      default:
+        return `🔄 Starting ${toolName}...`;
+    }
+  }, []);
+
+  const getApprovalMessage = useCallback((toolName) => {
+    switch (toolName) {
+      case 'get_web_info':
+        return "⏳ Ready to research web information - waiting for your approval";
+      case 'generate_concepts_with_approval':
+        return "⏳ Ready to generate concepts from research - waiting for your approval";
+      case 'generate_segmentation':
+        return "⏳ Ready to create script segments - waiting for your approval";
+      case 'generate_image_with_approval':
+        return "⏳ Ready to generate images - waiting for your approval";
+      case 'generate_video_with_approval':
+        return "⏳ Ready to generate videos - waiting for your approval";
+      default:
+        return `⏳ Waiting for approval to proceed with ${toolName}`;
+    }
+  }, []);
+
+  const getToolCompleteMessage = useCallback((toolName) => {
+    switch (toolName) {
+      case 'get_web_info':
+        return "✅ Web research completed successfully";
+      case 'generate_concepts_with_approval':
+        return "✅ Concepts generated and ready for selection";
+      case 'generate_segmentation':
+        return "✅ Script segments created successfully";
+      case 'generate_image_with_approval':
+        return "✅ Images generated for all segments";
+      case 'generate_video_with_approval':
+        return "✅ Videos generated successfully";
+      default:
+        return `✅ ${toolName} completed successfully`;
     }
   }, []);
 
@@ -1220,6 +1386,9 @@ export const useChatFlow = () => {
       hasDataResults: !!(result.data && result.data.results),
       dataResultsLength: result.data && result.data.results ? result.data.results.length : 0
     });
+
+    // Update agent activity based on result type
+    setAgentActivity("🔄 Processing results and updating interface...");
 
     console.log('🧪 TESTING: About to check image conditions...');
 
@@ -1248,6 +1417,8 @@ export const useChatFlow = () => {
     if (finalCondition) {
       console.log('✅ IMAGE CONDITION MET - Processing images...');
       
+      setAgentActivity("🎨 Processing generated images and creating URLs...");
+      
       console.log('🎨 Processing image generation results:', result);
       
       // Use either direct results or nested data.results
@@ -1255,6 +1426,8 @@ export const useChatFlow = () => {
       console.log('📋 Image results array:', imageResults.length, 'segments');
       const imagesMap = {};
       const failedSegments = [];
+      
+      setStreamingProgress({ step: 'image_processing', status: 'processing', total: imageResults.length, current: 0 });
       
       // Process results and convert S3 keys to full URLs
       const imagePromises = imageResults.map(async (item) => {
@@ -1296,6 +1469,11 @@ export const useChatFlow = () => {
           timestamp: Date.now(),
           type: 'system'
         }]);
+
+        // Show credit deduction for image generation
+        if (successCount > 0) {
+          showCreditDeduction("Image Generation", selectedImageModel || "flux-1.1-pro", successCount);
+        }
       }
       
       // Handle failed segments with retry via chat endpoint
@@ -1330,6 +1508,7 @@ export const useChatFlow = () => {
     if (result.data) {
       // Handle concept generation results
       if (result.data.concepts) {
+        setAgentActivity("💡 Processing generated concepts and preparing selection...");
         console.log('📝 Setting concepts in UI:', result.data.concepts);
         setConcepts(result.data.concepts);
         updateStepStatus(0, "done");
@@ -1342,10 +1521,14 @@ export const useChatFlow = () => {
           timestamp: Date.now(),
           type: 'system'
         }]);
+
+        // Show credit deduction for concept generation (includes web-info + concept generation)
+        showCreditDeduction("Concept Writer Process");
       }
       
       // Also check if result.data has concept array directly
       if (Array.isArray(result.data) && result.data.length > 0 && result.data[0].title) {
+        setAgentActivity("💡 Processing generated concepts and preparing selection...");
         console.log('📝 Setting concepts from array format:', result.data);
         setConcepts(result.data);
         updateStepStatus(0, "done");
@@ -1358,10 +1541,14 @@ export const useChatFlow = () => {
           timestamp: Date.now(),
           type: 'system'
         }]);
+
+        // Show credit deduction for concept generation (includes web-info + concept generation)
+        showCreditDeduction("Concept Writer Process");
       }
 
       // Handle segmentation results
       if (result.data.segments) {
+        setAgentActivity("📜 Processing script segments and preparing for image generation...");
         const script = {
           segments: result.data.segments,
           artStyle: result.data.artStyle || 'realistic',
@@ -1378,6 +1565,9 @@ export const useChatFlow = () => {
           timestamp: Date.now(),
           type: 'system'
         }]);
+
+        // Show credit deduction for script generation
+        showCreditDeduction("Script Generation", null, 1);
       }
 
 
@@ -1390,6 +1580,12 @@ export const useChatFlow = () => {
         fetchBalance(user.id);
       }
     }
+
+    // Clear activity after processing (with delay to let user see the final status)
+    setTimeout(() => {
+      setAgentActivity(null);
+      setStreamingProgress(null);
+    }, 2000);
   }, [updateStepStatus, user?.id, fetchBalance, generatedImages, selectedScript]);
 
   // Retry failed image generation using chat endpoint
@@ -1573,6 +1769,8 @@ export const useChatFlow = () => {
     isStreaming,
     streamMessages,
     pendingApprovals,
+    agentActivity,
+    streamingProgress,
 
     // Actions
     resetFlow,

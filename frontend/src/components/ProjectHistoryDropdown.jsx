@@ -37,20 +37,32 @@ export function ProjectHistoryDropdown({ onSelect }) {
   const handleSelect = async (e) => {
     const projectId = e.target.value;
     const selected = projects.find((p) => String(p.id) === String(projectId));
+    
+    console.log('🎯 Project selected in dropdown:', selected?.name, `(ID: ${projectId})`);
+    
     setSelectedProject(selected);
     localStorage.setItem(
       "project-store-selectedProject",
       JSON.stringify(selected),
     );
+    
+    // Dispatch custom event to notify other components about project change
+    window.dispatchEvent(new CustomEvent('projectChanged', { 
+      detail: { project: selected } 
+    }));
+    
     if (onSelect) onSelect(selected);
+    
     if (projectId) {
       try {
+        console.log('📡 Fetching project essentials for localStorage...');
         // Fetch essentials and store in localStorage
         const [images, videos, segmentations] = await Promise.all([
           projectApi.getProjectImages(projectId, { page: 1, limit: 100 }),
           projectApi.getProjectVideos(projectId, { page: 1, limit: 100 }),
           projectApi.getProjectSegmentations(projectId, { page: 1, limit: 50 }),
         ]);
+        
         localStorage.setItem(
           "project-store-images",
           JSON.stringify(images?.data || []),
@@ -63,9 +75,16 @@ export function ProjectHistoryDropdown({ onSelect }) {
           "project-store-segmentations",
           JSON.stringify(segmentations?.data || []),
         );
-        console.log("Fetched and stored essentials for project", projectId);
+        
+        console.log("✅ Fetched and stored essentials for project", selected?.name);
+        
+        // Dispatch another event after essentials are loaded
+        window.dispatchEvent(new CustomEvent('projectEssentialsLoaded', { 
+          detail: { project: selected, projectId } 
+        }));
+        
       } catch (err) {
-        console.error("Failed to fetch essentials for project", err);
+        console.error("❌ Failed to fetch essentials for project", err);
       }
     }
   };

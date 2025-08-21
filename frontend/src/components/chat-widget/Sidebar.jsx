@@ -1,21 +1,20 @@
 import React from "react";
 import { ProjectHistoryDropdown } from "../ProjectHistoryDropdown";
+import { useProjectStore } from "../../store/useProjectStore";
 
 const Sidebar = ({
-  open,
   showMenu,
-  setShowMenu,
   showProjectHistory,
   setShowProjectHistory,
   isAuthenticated,
-  user,
   onCharacterGenerator,
   onCreateProject,
-  onLogout,
   onClose,
   useConversationalFlow,
   setUseConversationalFlow,
 }) => {
+  const { creditBalance, loadingData } = useProjectStore();
+
   return (
     <div 
       className='flex justify-between items-center p-2 sticky top-0 backdrop-blur-sm'
@@ -93,7 +92,7 @@ const Sidebar = ({
             />
           </svg>
           <span className='text-gray-200 text-xs font-medium'>
-            {user.credits || "2000"}
+            {loadingData?.balance ? "..." : (creditBalance?.toFixed(1) || "2000")}
           </span>
         </div>
 
@@ -119,13 +118,15 @@ const Sidebar = ({
                     <span>Generate Character</span>
                   </button>
                   <div className="border-t border-gray-700/50 my-1 mx-2"></div>
-                  <button
-                    onClick={() => setUseConversationalFlow?.(!useConversationalFlow)}
-                    className='w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors rounded-md mx-1'
-                  >
-                    <span className='text-sm'>💬</span>
-                    <span>{useConversationalFlow ? 'Legacy Mode' : 'Hybrid Mode'}</span>
-                  </button>
+                  {setUseConversationalFlow && (
+                    <button
+                      onClick={() => setUseConversationalFlow(!useConversationalFlow)}
+                      className='w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-300 hover:text-white transition-colors rounded-md mx-1'
+                    >
+                      <span className='text-sm'>💬</span>
+                      <span>{useConversationalFlow ? 'Legacy Mode' : 'Hybrid Mode'}</span>
+                    </button>
+                  )}
                 </>
               )}
             </div>

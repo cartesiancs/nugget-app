@@ -3,7 +3,10 @@ import { Lightbulb, Sparkles, Zap, Target, MoreHorizontal } from "lucide-react";
 
 function NodeConcept({ data, isConnectable, selected }) {
   // Check if this is existing data or new/empty state
-  const hasData = data && (data.content || data.text);
+  const hasData = data && (data.content || data.text || data.concept || data.description || data.prompt);
+  
+  // Debug log to see what data we're getting
+  console.log("NodeConcept data:", data, "hasData:", hasData);
   
   return (
     <div className='relative'>
@@ -56,7 +59,7 @@ function NodeConcept({ data, isConnectable, selected }) {
             {/* Concept Content */}
             <div className='space-y-3'>
               <div className='text-gray-300 text-sm leading-relaxed max-h-[120px] overflow-y-auto'>
-                {data.content || data.text || "No concept content available"}
+                {data.content || data.text || data.concept || data.description || data.prompt || "No concept content available"}
               </div>
               
               {/* Concept Metadata */}

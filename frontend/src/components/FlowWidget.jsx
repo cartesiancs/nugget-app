@@ -209,12 +209,13 @@ function FlowWidget() {
 
     // 1. Process concepts
     const concepts = allProjectData.concepts.map((concept) => ({
-      ...concept,
+      ...concept, // Keep all original fields
       id: concept.id,
-      content: concept.content || concept.text || "",
-      title: concept.title || `Concept ${concept.id}`,
+      content: concept.content || concept.text || concept.concept || concept.description || concept.prompt || "",
+      title: concept.title || concept.name || `Concept ${concept.id}`,
     }));
     console.log("💡 Processed concepts:", concepts);
+    console.log("💡 Raw concept data:", allProjectData.concepts);
 
     // 2. Process scripts (segmentations)
     const scripts = allProjectData.scripts.map((script) => ({
@@ -717,9 +718,12 @@ function FlowWidget() {
     // 1. Create Concept Nodes
     if (flowData.concepts && flowData.concepts.length > 0) {
       console.log("💡 Creating concept nodes:", flowData.concepts.length);
+      console.log("💡 Concept data for nodes:", flowData.concepts);
       
       flowData.concepts.forEach((concept, index) => {
         const conceptX = startX + index * itemSpacing;
+        
+        console.log(`💡 Creating concept node ${index}:`, concept);
         
         newNodes.push({
           id: `concept-${concept.id}`,
@@ -730,6 +734,8 @@ function FlowWidget() {
       });
       
       currentY += nodeSpacing; // Move to next level
+    } else {
+      console.log("💡 No concepts found, flowData.concepts:", flowData.concepts);
     }
 
     // 2. Create Script Nodes  

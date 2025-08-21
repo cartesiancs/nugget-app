@@ -1057,8 +1057,8 @@ function FlowWidget() {
         id: chatNodeId,
         type: "chatNode",
         position: {
-          x: clickedNode.position.x, // Same X position
-          y: clickedNode.position.y + 400, // 400px below the clicked node
+          x: clickedNode.position.x - 40, 
+          y: clickedNode.position.y + 350, 
         },
         data: {
           nodeType: clickedNode.type,

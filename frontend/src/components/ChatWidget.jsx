@@ -410,16 +410,13 @@ function ChatWidgetSidebar({ open, setOpen }) {
               {/* Chat Messages */}
               <ChatMessages
                 chatFlow={chatFlow}
-                timeline={timeline}
                 onImageClick={handleImageClick}
                 onVideoClick={handleVideoClick}
                 onAddSingleVideo={addSingleVideoToTimeline}
                 sendVideosToTimeline={sendVideosToTimeline}
                 combinedVideosMap={combinedVideosMap}
-                autoProgression={false}
                 currentPrompt={prompt}
                 setPrompt={setPrompt}
-                onSendMessage={handleStepClick}
               />
 
               {/* Input area */}

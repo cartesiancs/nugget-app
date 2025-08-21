@@ -10,7 +10,7 @@ export default function InputArea({
   setPrompt,
   loading,
   currentStep,
-  handleStepClick,
+
   chatFlow, // Add chatFlow to determine available models
 }) {
   const [selectedModel, setSelectedModel] = useState("GPT-4o mini");
@@ -176,51 +176,8 @@ export default function InputArea({
       // Clear input immediately using state management
       setPrompt("");
 
-      // Pass the selected model to the appropriate step
-      // Store the model in chatFlow for use by generation functions
+      // Check if we should use streaming agent flow
       if (chatFlow) {
-        // Map model values to the correct format for each step
-        if (selectedModel === "recraft-v3" || selectedModel === "imagen") {
-          chatFlow.setSelectedImageModel(selectedModel);
-        } else if (selectedModel === "gen4-turbo") {
-          chatFlow.setSelectedVideoModel("gen4-turbo");
-        } else if (selectedModel === "kling-v2.1-master") {
-          chatFlow.setSelectedVideoModel(selectedModel);
-        }
-
-        // Determine which step to execute based on current state
-        let stepToExecute = 0;
-
-        // If we have concepts but no selected concept, we're at step 0 (concept generation)
-        if (!chatFlow?.concepts) {
-          stepToExecute = 0;
-        }
-        // If we have selected concept but no scripts, we're at step 2 (script generation)
-        else if (chatFlow?.selectedConcept && !chatFlow?.selectedScript) {
-          stepToExecute = 2;
-        }
-        // If we have selected script but no images, we're at step 4 (image generation)
-        else if (
-          chatFlow?.selectedScript &&
-          Object.keys(chatFlow?.generatedImages || {}).length === 0
-        ) {
-          stepToExecute = 4;
-        }
-        // If we have images but no videos, we're at step 5 (video generation)
-        else if (
-          Object.keys(chatFlow?.generatedImages || {}).length > 0 &&
-          Object.keys(chatFlow?.generatedVideos || {}).length === 0
-        ) {
-          stepToExecute = 5;
-        }
-
-        // Store the script generation model for segmentation API - use what user actually selected
-        if (selectedModel === "gemini-pro") {
-          chatFlow.setSelectedScriptModel("pro");
-        } else if (selectedModel === "gemini-flash") {
-          chatFlow.setSelectedScriptModel("flash");
-        }
-
         // Store the current user message for immediate display with unique counter
         const newMessageId = chatFlow.messageCounter + 1;
         chatFlow.setMessageCounter(newMessageId);
@@ -233,11 +190,13 @@ export default function InputArea({
             id: `user-message-${newMessageId}`,
             content: currentPrompt,
             timestamp: Date.now(),
-            step: stepToExecute,
+            type: 'user',
           },
         ]);
 
-        handleStepClick(stepToExecute);
+        // Start streaming agent flow
+        console.log('InputArea sending prompt to agent:', currentPrompt);
+        chatFlow.startAgentStream(currentPrompt);
       }
     }
   };
@@ -413,6 +372,8 @@ export default function InputArea({
 
               {/* Action Icons */}
               <div className='flex items-center gap-0'>
+
+
                 {/* Icon 1 - Palette/Color */}
                 <svg
                   width='28'

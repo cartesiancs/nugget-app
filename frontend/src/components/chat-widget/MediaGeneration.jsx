@@ -15,6 +15,21 @@ const MediaGeneration = ({
   const isImageGeneration = type === "image";
   const mediaMap = isImageGeneration ? generatedImages : combinedVideosMap;
   const prevImageCountRef = useRef(0);
+
+  // Debug logging
+  console.log(`📺 MediaGeneration (${type}) render:`, {
+    isImageGeneration,
+    mediaMapEntries: Object.entries(mediaMap || {}),
+    loading,
+    currentStep,
+  });
+
+  // Additional debug for image URLs
+  if (isImageGeneration && generatedImages) {
+    console.log('🖼️ MediaGeneration received generatedImages:', generatedImages);
+    console.log('🔗 Sample image URLs:', Object.entries(generatedImages).slice(0, 2));
+  }
+
   // Trigger callback when images are first generated
   useEffect(() => {
     if (isImageGeneration && generatedImages && onImagesGenerated) {
@@ -60,13 +75,25 @@ const MediaGeneration = ({
   const mediaEntries = Object.entries(mediaMap || {});
   const progressEntries = Object.entries(generationProgress || {});
 
+  // Sort media entries by segment ID to maintain order (segment1, segment2, etc.)
+  const sortedMediaEntries = mediaEntries.sort((a, b) => {
+    const segmentA = a[0]; // segmentId
+    const segmentB = b[0]; // segmentId
+    
+    // Extract numeric part from segment IDs (e.g., "segment1" -> 1)
+    const numA = parseInt(segmentA.replace(/[^0-9]/g, '')) || 0;
+    const numB = parseInt(segmentB.replace(/[^0-9]/g, '')) || 0;
+    
+    return numA - numB;
+  });
+
   // Show generated media first if available
-  if (mediaEntries.length > 0) {
+  if (sortedMediaEntries.length > 0) {
     return (
       <>
         <div className='mt-3'>
           <div className='grid grid-cols-2 gap-2'>
-            {mediaEntries.map(([segmentId, mediaUrl]) => (
+            {sortedMediaEntries.map(([segmentId, mediaUrl]) => (
               <div key={segmentId} className='relative group'>
                 <div
                   className='border-0  rounded-lg overflow-hidden transition-colors'

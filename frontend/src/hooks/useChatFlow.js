@@ -7,6 +7,8 @@ import { segmentationApi } from "../services/segmentationapi";
 import { chatApi } from "../services/chat";
 import { s3Api } from "../services/s3";
 import { projectApi } from "../services/project";
+import { agentApi } from "../services/agent";
+
 import {
   getTextCreditCost,
   getImageCreditCost,
@@ -83,6 +85,13 @@ export const useChatFlow = () => {
       return {};
     }
   });
+
+  // Streaming states
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamMessages, setStreamMessages] = useState([]);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [currentReader, setCurrentReader] = useState(null);
+
 
   // Listen to localStorage changes for project selection
   useEffect(() => {
@@ -760,23 +769,37 @@ export const useChatFlow = () => {
   ]);
 
   const handleConceptSelect = useCallback(
-    async (concept, autoTriggerNext = false, prompt = null) => {
+    async (concept) => {
+      console.log('🎯 Concept selected:', concept.title);
       setSelectedConcept(concept);
       updateStepStatus(1, "done");
       setCurrentStep(2);
       
-      // No auto-trigger - user must manually select model and send
+      // Add agent message acknowledging concept selection
+      setAllUserMessages(prev => [...prev, {
+        id: `agent-concept-selected-${Date.now()}`,
+        content: `Perfect! I'll now create script segments for "${concept.title}". Let me work on that...`,
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
     },
     [updateStepStatus],
   );
 
   const handleScriptSelect = useCallback(
-    async (script, autoTriggerNext = false) => {
+    async (script) => {
+      console.log('📜 Script selected:', script);
       setSelectedScript(script);
       updateStepStatus(3, "done");
       setCurrentStep(4);
       
-      // No auto-trigger - user must manually select model and send
+      // Add agent message acknowledging script selection
+      setAllUserMessages(prev => [...prev, {
+        id: `agent-script-selected-${Date.now()}`,
+        content: `Excellent choice! I'll now generate images for each segment of your script. This will bring your concept to life visually!`,
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
     },
     [updateStepStatus],
   );
@@ -992,6 +1015,526 @@ export const useChatFlow = () => {
     }
   }, [selectedProject?.id]); // Only depend on project ID
 
+  // Streaming functions
+  const startAgentStream = useCallback(async (userInput) => {
+    if (!userInput || !userInput.trim()) {
+      setError("Please enter a prompt first");
+      return;
+    }
+
+    if (!selectedProject?.id) {
+      setError("Please select a project first");
+      return;
+    }
+
+    // Ensure prompt is a string and not empty
+    const cleanPrompt = String(userInput).trim();
+    if (!cleanPrompt) {
+      setError("Please enter a valid prompt");
+      return;
+    }
+
+    console.log('Starting agent stream with prompt:', cleanPrompt);
+
+    setIsStreaming(true);
+    setLoading(true);
+    setError(null);
+    setStreamMessages([]);
+    setPendingApprovals([]);
+
+    try {
+      const response = await agentApi.startAgentRunStream(
+        cleanPrompt,
+        user?.id,
+        'default', // segmentId
+        selectedProject.id
+      );
+
+      const reader = response.body.getReader();
+      setCurrentReader(reader);
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      console.log('🔄 Stream reader initialized, starting to read...');
+
+      // Create a better stream processor
+      const processStream = async () => {
+        try {
+          while (true) {
+            console.log('📖 Reading stream chunk...');
+            
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('✅ Stream reading completed');
+              break;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('📦 Raw chunk received:', chunk);
+            
+            buffer += chunk;
+            
+            // Process complete lines immediately
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              
+              console.log('🔍 Processing line:', line);
+              
+              if (line.startsWith('data: ')) {
+                try {
+                  const jsonData = line.slice(6).trim();
+                  console.log('🧾 JSON data to parse:', jsonData);
+                  const data = JSON.parse(jsonData);
+                  console.log('✅ Parsed stream message:', data);
+                  await handleStreamMessage(data);
+                } catch (parseError) {
+                  console.error('❌ Error parsing stream message:', parseError, 'Raw line:', line);
+                }
+              } else if (line.trim()) {
+                console.log('⚠️ Non-data line:', line);
+              }
+            }
+            
+            // Force immediate processing
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+        } catch (error) {
+          console.error('❌ Stream processing error:', error);
+          throw error;
+        }
+      };
+
+      await processStream();
+
+    } catch (error) {
+      console.error('Error in agent stream:', error);
+      setError(error.message || 'Failed to start agent stream');
+    } finally {
+      setIsStreaming(false);
+      setLoading(false);
+      setCurrentReader(null);
+    }
+  }, [selectedProject?.id, user?.id]);
+
+  const handleStreamMessage = useCallback(async (message) => {
+    console.log('🔄 Received stream message:', message);
+    
+    setStreamMessages(prev => {
+      console.log('📝 Adding to stream messages. Current count:', prev.length);
+      return [...prev, message];
+    });
+
+    console.log('🎯 Processing message type:', message.type);
+
+    switch (message.type) {
+      case 'log':
+        console.log('📋 Stream log:', message.data.message || message.data);
+        break;
+
+      case 'approval_required': {
+        console.log('⏳ APPROVAL REQUIRED - Processing...');
+        const { approvalId, toolName, arguments: args, agentName } = message.data;
+        
+        // Parse arguments if they come as JSON string
+        let parsedArgs = args;
+        if (typeof args === 'string') {
+          try {
+            parsedArgs = JSON.parse(args);
+          } catch {
+            console.error('Failed to parse arguments:', args);
+            parsedArgs = {};
+          }
+        }
+        
+        console.log('📊 Approval details:', { approvalId, toolName, parsedArgs, agentName });
+        
+        // Check if this approval already exists to prevent duplicates
+        setPendingApprovals(prev => {
+          const existingApproval = prev.find(a => a.id === approvalId);
+          if (existingApproval) {
+            console.log('⚠️ Approval already exists, skipping duplicate:', approvalId);
+            return prev;
+          }
+          
+          console.log('📋 Adding to pending approvals. Current count:', prev.length);
+          const newApproval = {
+            id: approvalId,
+            toolName,
+            arguments: parsedArgs,
+            agentName,
+            timestamp: message.timestamp
+          };
+          console.log('➕ New approval object:', newApproval);
+          return [...prev, newApproval];
+        });
+
+        // Handle approval based on tool type
+        console.log('🔧 Calling handleToolApproval...');
+        await handleToolApproval(approvalId, toolName, parsedArgs);
+        break;
+      }
+
+      case 'result':
+        console.log('✅ Tool result received:', message.data);
+        await handleToolResult(message.data);
+        break;
+
+      case 'completed':
+        console.log('🎉 Agent run completed:', message.data);
+        setIsStreaming(false);
+        setLoading(false);
+        break;
+
+      case 'error':
+        console.error('❌ Stream error:', message.data.message);
+        setError(message.data.message);
+        setIsStreaming(false);
+        setLoading(false);
+        break;
+
+      default:
+        console.log('❓ Unknown stream message type:', message.type, message);
+    }
+  }, []);
+
+  const handleToolApproval = useCallback(async (approvalId, toolName, args) => {
+    console.log('Tool approval required:', { approvalId, toolName, args });
+    // Manual approval required - approval will remain pending until user clicks approve
+    console.log('Manual approval needed for:', toolName);
+  }, []);
+
+  const handleToolResult = useCallback(async (result) => {
+    console.log('🎯 Tool result received:', result);
+    console.log('🔍 Result data structure:', {
+      hasData: !!result.data,
+      dataType: typeof result.data,
+      isArray: Array.isArray(result.data),
+      keys: result.data ? Object.keys(result.data) : 'no data',
+      firstItem: Array.isArray(result.data) ? result.data[0] : 'not array',
+      hasResults: !!result.results,
+      hasDataResults: !!(result.data && result.data.results),
+      dataResultsLength: result.data && result.data.results ? result.data.results.length : 0
+    });
+
+    console.log('🧪 TESTING: About to check image conditions...');
+
+    // Check for image generation results FIRST (highest priority)
+    const imageConditions = {
+      hasResults: !!result.results,
+      hasDataResults: !!(result.data && result.data.results),
+      resultType: typeof result.results,
+      dataResultType: typeof (result.data && result.data.results),
+      isResultsArray: Array.isArray(result.results),
+      isDataResultsArray: Array.isArray(result.data && result.data.results)
+    };
+    
+    console.log('🔍 Checking image generation conditions:', imageConditions);
+    
+    const condition1 = result.results && Array.isArray(result.results);
+    const condition2 = result.data?.results && Array.isArray(result.data.results);
+    const finalCondition = condition1 || condition2;
+    
+    console.log('🧮 Condition evaluation:', {
+      condition1: condition1,
+      condition2: condition2,
+      finalCondition: finalCondition
+    });
+
+    if (finalCondition) {
+      console.log('✅ IMAGE CONDITION MET - Processing images...');
+      
+      console.log('🎨 Processing image generation results:', result);
+      
+      // Use either direct results or nested data.results
+      const imageResults = result.results || result.data.results;
+      console.log('📋 Image results array:', imageResults.length, 'segments');
+      const imagesMap = {};
+      const failedSegments = [];
+      
+      // Process results and convert S3 keys to full URLs
+      const imagePromises = imageResults.map(async (item) => {
+        if (item.status === 'success' && item.imageData?.s3_key) {
+          try {
+            console.log(`🔄 Converting S3 key to URL for ${item.segmentId}:`, item.imageData.s3_key);
+            // Convert S3 key to full CloudFront URL
+            const imageUrl = await s3Api.downloadImage(item.imageData.s3_key);
+            console.log(`✅ Generated URL for ${item.segmentId}:`, imageUrl);
+            imagesMap[item.segmentId] = imageUrl;
+          } catch (error) {
+            console.error(`Failed to get image URL for segment ${item.segmentId}:`, error);
+            failedSegments.push(item.segmentId);
+          }
+        } else if (item.status === 'failed') {
+          // Failed case - track for retry
+          failedSegments.push(item.segmentId);
+        }
+      });
+      
+      // Wait for all image URL conversions to complete
+      await Promise.allSettled(imagePromises);
+      
+      console.log('🖼️ Final images map after URL conversion:', imagesMap);
+      
+      // Update generated images with successful ones
+      if (Object.keys(imagesMap).length > 0) {
+        setGeneratedImages(prev => {
+          const newImages = { ...prev, ...imagesMap };
+          console.log('🎯 Setting generated images:', newImages);
+          return newImages;
+        });
+        
+        // Add agent message showing image generation completion
+        const successCount = Object.keys(imagesMap).length;
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-images-${Date.now()}`,
+          content: `🎨 Perfect! I've generated ${successCount} images for your script segments. You can see them below and proceed to video generation!`,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+      }
+      
+      // Handle failed segments with retry via chat endpoint
+      if (failedSegments.length > 0 && selectedScript?.segments) {
+        await retryFailedImageGeneration(failedSegments);
+      }
+      
+      // If we have any images (successful or retried), mark step as done
+      const totalImages = { ...generatedImages, ...imagesMap };
+      if (Object.keys(totalImages).length > 0) {
+        updateStepStatus(4, "done");
+        setCurrentStep(5);
+      }
+      
+      // Return early to avoid processing other conditions
+      return;
+    } else {
+      console.log('❌ IMAGE CONDITION NOT MET - Skipping image processing');
+      console.log('📊 Detailed analysis:', {
+        'result.results exists': !!result.results,
+        'result.results type': typeof result.results,
+        'result.results isArray': Array.isArray(result.results),
+        'result.data exists': !!result.data,
+        'result.data.results exists': !!(result.data && result.data.results),
+        'result.data.results type': result.data ? typeof result.data.results : 'no data',
+        'result.data.results isArray': result.data ? Array.isArray(result.data.results) : false,
+        'Full result.data': result.data
+      });
+    }
+
+    // Update UI based on the tool result
+    if (result.data) {
+      // Handle concept generation results
+      if (result.data.concepts) {
+        console.log('📝 Setting concepts in UI:', result.data.concepts);
+        setConcepts(result.data.concepts);
+        updateStepStatus(0, "done");
+        setCurrentStep(1);
+        
+        // Add agent message showing concepts
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-concepts-${Date.now()}`,
+          content: "I've generated 4 video concepts for you! Please select the one you'd like to develop:",
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+      }
+      
+      // Also check if result.data has concept array directly
+      if (Array.isArray(result.data) && result.data.length > 0 && result.data[0].title) {
+        console.log('📝 Setting concepts from array format:', result.data);
+        setConcepts(result.data);
+        updateStepStatus(0, "done");
+        setCurrentStep(1);
+        
+        // Add agent message showing concepts
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-concepts-${Date.now()}`,
+          content: "I've generated 4 video concepts for you! Please select the one you'd like to develop:",
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+      }
+
+      // Handle segmentation results
+      if (result.data.segments) {
+        const script = {
+          segments: result.data.segments,
+          artStyle: result.data.artStyle || 'realistic',
+          concept: result.data.concept || ''
+        };
+        setSelectedScript(script);
+        updateStepStatus(2, "done");
+        setCurrentStep(4); // Skip to image generation
+        
+        // Add agent message showing scripts
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-scripts-${Date.now()}`,
+          content: "I've created script segments for your concept! Please select the script version you prefer:",
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+      }
+
+
+    }
+
+    // Show credit deduction if applicable
+    if (result.message && result.message.includes('completed successfully')) {
+      // Refresh balance
+      if (user?.id) {
+        fetchBalance(user.id);
+      }
+    }
+  }, [updateStepStatus, user?.id, fetchBalance, generatedImages, selectedScript]);
+
+  // Retry failed image generation using chat endpoint
+  const retryFailedImageGeneration = useCallback(async (failedSegmentIds) => {
+    if (!selectedScript?.segments) return;
+
+    console.log('Retrying failed image generation for segments:', failedSegmentIds);
+
+    try {
+      const retryPromises = failedSegmentIds.map(async (segmentId) => {
+        const segment = selectedScript.segments.find(seg => seg.id === segmentId);
+        if (!segment) return null;
+
+        try {
+          const result = await chatApi.generateImage({
+            visual_prompt: segment.visual,
+            art_style: selectedScript.artStyle || 'realistic',
+            segmentId: segment.id,
+            project_id: selectedProject?.id,
+            model: selectedImageModel || 'flux-1.1-pro',
+          });
+
+          if (result.s3_key) {
+            const imageUrl = await s3Api.downloadImage(result.s3_key);
+            return { segmentId, imageUrl, s3Key: result.s3_key };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Failed to retry image generation for segment ${segmentId}:`, error);
+          return null;
+        }
+      });
+
+      const retryResults = await Promise.allSettled(retryPromises);
+      const successfulRetries = {};
+
+      retryResults.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value) {
+          const { segmentId, imageUrl } = result.value;
+          successfulRetries[segmentId] = imageUrl;
+        }
+      });
+
+      if (Object.keys(successfulRetries).length > 0) {
+        setGeneratedImages(prev => ({ ...prev, ...successfulRetries }));
+        console.log('Successfully retried images for segments:', Object.keys(successfulRetries));
+      }
+
+    } catch (error) {
+      console.error('Error retrying failed image generation:', error);
+    }
+  }, [selectedScript, selectedProject?.id, selectedImageModel]);
+
+  const stopStream = useCallback(() => {
+    if (currentReader) {
+      currentReader.cancel();
+      setCurrentReader(null);
+    }
+    setIsStreaming(false);
+    setLoading(false);
+  }, [currentReader]);
+
+  const approveToolExecution = useCallback(async (approvalId, additionalData = null) => {
+    try {
+      // Find the approval to get tool context
+      const approval = pendingApprovals.find(a => a.id === approvalId);
+      let finalAdditionalData = additionalData;
+
+      // Prepare specific data based on tool type
+      if (!additionalData && approval) {
+        switch (approval.toolName) {
+          case 'generate_concepts_with_approval':
+            // For concept generation - match DTO exactly
+            finalAdditionalData = {
+              web_info: approval.arguments?.web_info || null,
+              prompt: approval.arguments?.prompt || null,
+              projectId: selectedProject?.id || approval.arguments?.projectId || null
+            };
+            break;
+
+          case 'generate_segmentation':
+            // For segmentation - check if concept is selected first
+            if (!selectedConcept) {
+              setError('Please select a concept first before generating segmentation');
+              return;
+            }
+            // For segmentation - match DTO exactly and ensure we use selected concept
+            finalAdditionalData = {
+              prompt: approval.arguments?.prompt || null,
+              concept: selectedConcept.title,
+              negative_prompt: approval.arguments?.negative_prompt || null,
+              projectId: selectedProject?.id || approval.arguments?.projectId || null
+            };
+            console.log('🎯 Using selected concept for segmentation:', selectedConcept.title);
+            break;
+
+          case 'generate_image_with_approval':
+            // For image generation - match DTO exactly
+            finalAdditionalData = {
+              segments: selectedScript?.segments || null,
+              art_style: selectedScript?.artStyle || approval.arguments?.art_style || 'realistic',
+              model: selectedImageModel || approval.arguments?.model || 'flux-1.1-pro',
+              projectId: selectedProject?.id || approval.arguments?.projectId || null,
+              segmentId: 'default'
+            };
+            break;
+
+          case 'get_web_info':
+            // For web info - match DTO exactly
+            finalAdditionalData = {
+              prompt: approval.arguments?.prompt || null,
+              projectId: selectedProject?.id || approval.arguments?.projectId || null
+            };
+            break;
+
+          default:
+            // For other tools, just pass the basic approval
+            finalAdditionalData = null;
+        }
+      }
+
+      console.log('Approving tool with data:', { approvalId, toolName: approval?.toolName, finalAdditionalData });
+
+      await agentApi.handleApproval(approvalId, true, finalAdditionalData);
+      
+      // Remove from pending approvals
+      setPendingApprovals(prev => prev.filter(approval => approval.id !== approvalId));
+    } catch (error) {
+      console.error('Error approving tool:', error);
+      setError('Failed to approve tool execution');
+    }
+  }, [pendingApprovals, selectedScript, selectedImageModel, selectedProject?.id, selectedConcept]);
+
+  const rejectToolExecution = useCallback(async (approvalId) => {
+    try {
+      await agentApi.handleApproval(approvalId, false);
+      
+      // Remove from pending approvals
+      setPendingApprovals(prev => prev.filter(approval => approval.id !== approvalId));
+    } catch (error) {
+      console.error('Error rejecting tool:', error);
+      setError('Failed to reject tool execution');
+    }
+  }, []);
+
   return {
     // States
     loading,
@@ -1026,6 +1569,11 @@ export const useChatFlow = () => {
     setAllUserMessages,
     storedVideosMap,
 
+    // Streaming states
+    isStreaming,
+    streamMessages,
+    pendingApprovals,
+
     // Actions
     resetFlow,
     updateStepStatus,
@@ -1038,5 +1586,14 @@ export const useChatFlow = () => {
     loadProjectData,
     showCreditDeduction,
     showRequestFailed,
+
+    // Streaming actions
+    startAgentStream,
+    stopStream,
+    approveToolExecution,
+    rejectToolExecution,
+    
+
+
   };
 };

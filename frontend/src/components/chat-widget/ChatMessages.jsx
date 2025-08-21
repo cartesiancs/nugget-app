@@ -9,22 +9,22 @@ const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
   const hasImages = Object.keys(chatFlow.generatedImages || {}).length > 0;
   const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
 
-  console.log("ImageGenerationComponent render:", {
-    hasImages,
-    isGenerating,
-    currentStep: chatFlow.currentStep,
-    generatedImagesCount: Object.keys(chatFlow.generatedImages || {}).length,
-    loading: chatFlow.loading,
-  });
+  // console.log("ImageGenerationComponent render:", {
+  //   hasImages,
+  //   isGenerating,
+  //   currentStep: chatFlow.currentStep,
+  //   generatedImagesCount: Object.keys(chatFlow.generatedImages || {}).length,
+  //   loading: chatFlow.loading,
+  // });
 
   return (
     <div>
-      <div className='text-white font-bold text-base mb-4'>
+      <div className='text-gray-100 text-sm mb-4'>
         {hasImages
-          ? "Generated Images:"
+          ? "🖼️ Generated Images:"
           : isGenerating
-          ? "Generating Images..."
-          : "Ready to generate images"}
+          ? "🎨 Generating Images..."
+          : "🎨 Ready to generate images"}
       </div>
       <MediaGeneration
         type='image'
@@ -64,12 +64,12 @@ const VideoGenerationComponent = ({
 
   return (
     <div>
-      <div className='text-white font-bold text-base mb-4'>
+      <div className='text-gray-100 text-sm mb-4'>
         {isGeneratingVideos
-          ? "Processing..."
+          ? "🎬 Processing..."
           : hasVideos
-          ? "Generated Videos:"
-          : "Ready to generate videos"}
+          ? "🎥 Generated Videos:"
+          : "🎥 Ready to generate videos"}
       </div>
       <MediaGeneration
         type='video'
@@ -87,20 +87,16 @@ const VideoGenerationComponent = ({
 
 const ChatMessages = ({
   chatFlow,
-  timeline,
   onImageClick,
   onVideoClick,
   onAddSingleVideo,
   sendVideosToTimeline,
   combinedVideosMap,
-  autoProgression = false,
   currentPrompt = "",
   setPrompt, // Add this to control the input
-  onSendMessage, // Add this to handle message sending
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const [processedSteps, setProcessedSteps] = useState(new Set());
 
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
@@ -118,78 +114,53 @@ const ChatMessages = ({
     }
   }, [messages.length, lastMessageCount]);
 
-  // Initialize messages when component mounts
+  // Build messages in proper order based on chat flow state
   useEffect(() => {
-    if (
-      currentPrompt &&
-      chatFlow.concepts &&
-      chatFlow.concepts.length > 0 &&
-      messages.length === 0
-    ) {
-      setMessages([
-        {
-          id: "initial-prompt",
-          type: "user",
-          content: currentPrompt,
-          timestamp: Date.now() - 1000,
-        },
-      ]);
-    }
-  }, [currentPrompt, chatFlow.concepts, messages.length]);
+    const orderedMessages = [];
 
-  // Remove the force re-render that was causing issues
-
-  // Add new messages based on chat flow changes
-  useEffect(() => {
-    const newMessages = [];
-    let hasChanges = false;
-
-    // Debug logging
-    console.log("ChatMessages useEffect triggered:", {
-      concepts: chatFlow.concepts?.length,
-      selectedConcept: chatFlow.selectedConcept,
-      scripts: chatFlow.scripts?.length,
-      selectedScript: chatFlow.selectedScript,
-      generatedImages: Object.keys(chatFlow.generatedImages || {}).length,
-      generatedVideos: Object.keys(chatFlow.generatedVideos || {}).length,
-      combinedVideosMap: Object.keys(combinedVideosMap || {}).length,
-      currentStep: chatFlow.currentStep,
-      loading: chatFlow.loading,
-    });
-
-    // Add current user message when it's new
-    if (
-      chatFlow.currentUserMessage &&
-      !processedSteps.has(`user-${chatFlow.messageCounter}`)
-    ) {
-      newMessages.push({
+    // Step 1: Add initial user prompt if we have concepts (meaning the flow started)
+    if (chatFlow.currentUserMessage && chatFlow.concepts?.length > 0) {
+      orderedMessages.push({
         id: `user-message-${chatFlow.messageCounter}`,
         type: "user",
         content: chatFlow.currentUserMessage,
-        timestamp: Date.now(),
+        timestamp: Date.now() - 4000, // Older timestamp to show first
       });
-      setProcessedSteps(
-        (prev) => new Set([...prev, `user-${chatFlow.messageCounter}`]),
-      );
-      hasChanges = true;
     }
 
-    // Add concept selection if not already processed
-    if (
-      chatFlow.concepts &&
-      chatFlow.concepts.length > 0 &&
-      !processedSteps.has("concepts")
-    ) {
-      newMessages.push({
+    // Step 1.5: Add key streaming messages in proper order
+    if (chatFlow.streamMessages && chatFlow.streamMessages.length > 0) {
+      // Only show important completion messages, not all stream messages
+      const importantMessages = chatFlow.streamMessages.filter(streamMsg => 
+        streamMsg.type === 'result' && 
+        streamMsg.data?.message && 
+        (streamMsg.data.message.includes('completed') || 
+         streamMsg.data.message.includes('generated') ||
+         streamMsg.data.message.includes('success'))
+      );
+      
+      importantMessages.forEach((streamMsg, index) => {
+        orderedMessages.push({
+          id: `stream-${index}-${streamMsg.timestamp}`,
+          type: "system",
+          content: `${streamMsg.data.message}`,
+          timestamp: new Date(streamMsg.timestamp).getTime() - 3500 + index,
+        });
+      });
+    }
+
+    // Step 2: Add concept selection after user prompt
+    if (chatFlow.concepts && chatFlow.concepts.length > 0) {
+      orderedMessages.push({
         id: "concept-request",
         type: "system",
         content: "",
         component: (
           <div>
-            <div className='text-white font-bold text-base mb-4'>
+            <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedConcept
-                ? "Selected Concept:"
-                : "Please choose a concept to get started."}
+                ? `✅ Selected Concept: "${chatFlow.selectedConcept.title}"`
+                : "I've generated 4 video concepts for you! Please choose one to develop:"}
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}
@@ -205,26 +176,22 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now(),
+        timestamp: Date.now() - 3000,
       });
-      setProcessedSteps((prev) => new Set([...prev, "concepts"]));
-      hasChanges = true;
     }
 
-    if (
-      (chatFlow.scripts || chatFlow.selectedScript) &&
-      !processedSteps.has("scripts")
-    ) {
-      newMessages.push({
+    // Step 3: Add script generation message after concept is selected
+    if (chatFlow.selectedConcept && (chatFlow.scripts || chatFlow.selectedScript)) {
+      orderedMessages.push({
         id: "script-request",
         type: "system",
         content: "",
         component: (
           <div>
-            <div className='text-white font-bold text-base mb-4'>
+            <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedScript
-                ? "Project Script:"
-                : "Generated Scripts - Please choose one:"}
+                ? "✅ Script Generated Successfully"
+                : "I've created script segments for your concept! Please choose the version you prefer:"}
             </div>
             <ScriptSelection
               scripts={chatFlow.scripts}
@@ -232,7 +199,7 @@ const ChatMessages = ({
               onScriptSelect={(script) => {
                 chatFlow.handleScriptSelect(script, false);
                 if (setPrompt) {
-                  setPrompt(`Start generating image`);
+                  setPrompt(`Start generating images`);
                 }
               }}
               selectedScript={chatFlow.selectedScript}
@@ -241,30 +208,95 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now(),
+        timestamp: Date.now() - 2000,
       });
-      setProcessedSteps((prev) => new Set([...prev, "scripts"]));
-      hasChanges = true;
     }
 
-    if (hasChanges) {
-      setMessages((prevMessages) => [...prevMessages, ...newMessages]);
+    // Step 4: Add image generation section after script is selected
+    if (chatFlow.selectedScript && chatFlow.currentStep >= 4) {
+      orderedMessages.push({
+        id: "image-generation",
+        type: "system",
+        content: "",
+        component: (
+          <ImageGenerationComponent 
+            chatFlow={chatFlow}
+            onImageClick={onImageClick}
+            setPrompt={setPrompt}
+          />
+        ),
+        timestamp: Date.now() - 1000,
+      });
     }
+
+    // Step 5: Add video generation section after images are generated
+    if (Object.keys(chatFlow.generatedImages || {}).length > 0 && chatFlow.currentStep >= 5) {
+      orderedMessages.push({
+        id: "video-generation",
+        type: "system",
+        content: "",
+        component: (
+          <VideoGenerationComponent
+            chatFlow={chatFlow}
+            combinedVideosMap={combinedVideosMap}
+            onVideoClick={onVideoClick}
+            onAddSingleVideo={onAddSingleVideo}
+          />
+        ),
+        timestamp: Date.now(),
+      });
+    }
+
+    // Step 6: Add timeline integration when videos are ready
+    const canSendTimeline =
+      Object.keys(chatFlow.generatedVideos || {}).length > 0 ||
+      Object.keys(chatFlow.storedVideosMap || {}).length > 0 ||
+      Object.keys(combinedVideosMap || {}).length > 0;
+
+    if (canSendTimeline) {
+      orderedMessages.push({
+        id: "timeline-integration",
+        type: "system",
+        content: "",
+        component: (
+          <div>
+            <div className='text-gray-100 text-sm mb-4'>
+              🎬 Your videos are ready!
+            </div>
+            <TimelineButton
+              canSendTimeline={canSendTimeline}
+              addingTimeline={chatFlow.addingTimeline}
+              onSendToTimeline={sendVideosToTimeline}
+              inConversation={true}
+            />
+          </div>
+        ),
+        timestamp: Date.now() + 1000,
+      });
+    }
+
+    // Only update if there are actual changes
+    setMessages(orderedMessages);
   }, [
+    chatFlow.currentUserMessage,
+    chatFlow.messageCounter,
     chatFlow.concepts,
     chatFlow.selectedConcept,
     chatFlow.scripts,
     chatFlow.selectedScript,
+    chatFlow.currentStep,
     chatFlow.generatedImages,
     chatFlow.generatedVideos,
     chatFlow.storedVideosMap,
-    chatFlow.currentStep,
-    chatFlow.loading,
-    chatFlow.generationProgress,
-    chatFlow.currentUserMessage,
-    chatFlow.messageCounter,
+    chatFlow.addingTimeline,
+    chatFlow.streamMessages,
     combinedVideosMap,
-    processedSteps,
+    currentPrompt,
+    setPrompt,
+    onImageClick,
+    onVideoClick,
+    onAddSingleVideo,
+    sendVideosToTimeline,
   ]);
 
   return (
@@ -280,21 +312,20 @@ const ChatMessages = ({
             className={`${
               message.id === "concept-request" ||
               message.id === "script-request" ||
-              message.id === "project-script-info"
-                ? "w-full p-0" // Full width and no padding/background for media messages
-                : `max-w-[80%] p-2.5 ${
-                    message.type === "user"
-                      ? "text-white rounded-lg"
-                      : "text-gray-100 rounded-lg"
-                  }`
+              message.id === "image-generation" ||
+              message.id === "video-generation" ||
+              message.id === "timeline-integration"
+                ? "w-full p-0" // Full width and no padding/background for component messages
+                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg`
             }`}
             style={
               message.id !== "concept-request" &&
               message.id !== "script-request" &&
-              message.id !== "project-script-info"
+              message.id !== "image-generation" &&
+              message.id !== "video-generation" &&
+              message.id !== "timeline-integration"
                 ? {
-                    background:
-                      message.type === "user" ? "#18191C80" : "#18191C80",
+                    background: "#18191C80",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                   }
@@ -305,15 +336,7 @@ const ChatMessages = ({
               <div className='text-sm'>{message.content}</div>
             )}
             {message.component && (
-              <div
-                className={
-                  message.id === "concept-request" ||
-                  message.id === "script-request" ||
-                  message.id === "project-script-info"
-                    ? ""
-                    : "mt-3"
-                }
-              >
+              <div>
                 {message.component}
               </div>
             )}
@@ -333,56 +356,35 @@ const ChatMessages = ({
             }}
           >
             <div className='flex items-center space-x-2'>
-              <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-cyan-400'></div>
-              <span className='text-xs'>Processing...</span>
+              <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400'></div>
+              <span className='text-xs text-gray-100'>
+                {chatFlow.isStreaming ? 'Agent is working...' : 'Processing...'}
+              </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dynamic Image Generation - Always shows current state */}
-      {chatFlow.currentStep >= 4 && chatFlow.selectedScript && (
-        <div className="flex justify-start">
-          <div className="w-full p-0">
-            <ImageGenerationComponent 
-              chatFlow={chatFlow}
-              onImageClick={onImageClick}
-              setPrompt={setPrompt}
-            />
-          </div>
-        </div>
-      )}
 
-      {/* Dynamic Video Generation - Always shows current state */}
-      {Object.keys(chatFlow.generatedImages || {}).length > 0 && chatFlow.currentStep >= 5 && (
-        <div className="flex justify-start">
-          <div className="w-full p-0">
-            <VideoGenerationComponent
-              chatFlow={chatFlow}
-              combinedVideosMap={combinedVideosMap}
-              onVideoClick={onVideoClick}
-              onAddSingleVideo={onAddSingleVideo}
-            />
-          </div>
-        </div>
-      )}
+
+
+
 
       {/* Error message */}
       {chatFlow.error && (
         <div className='flex justify-start'>
           <div
-            className='text-white rounded-lg p-2.5 max-w-[80%]'
+            className='text-gray-100 rounded-lg p-2.5 max-w-[80%]'
             style={{
-              background:
-                "linear-gradient(135deg, rgba(239, 68, 68, 0.8) 0%, rgba(220, 38, 38, 0.9) 100%)",
+              background: "#18191C80",
               backdropFilter: "blur(10px)",
               border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
           >
-            <div className='text-xs'>{chatFlow.error}</div>
+            <div className='text-xs'>❌ {chatFlow.error}</div>
             <button
               onClick={() => chatFlow.setError(null)}
-              className='mt-1 text-xs text-red-200 hover:text-white underline'
+              className='mt-1 text-xs text-gray-300 hover:text-gray-100 underline'
             >
               Dismiss
             </button>
@@ -390,32 +392,75 @@ const ChatMessages = ({
         </div>
       )}
 
-      {/* Timeline Integration - Always at the bottom */}
-      {(() => {
-        const canSendTimeline =
-          Object.keys(chatFlow.generatedVideos || {}).length > 0 ||
-          Object.keys(chatFlow.storedVideosMap || {}).length > 0 ||
-          Object.keys(combinedVideosMap || {}).length > 0;
 
-        if (canSendTimeline) {
-          return (
-            <div className='flex justify-start'>
-              <div className='w-full p-0'>
-                <div className='text-white font-bold text-base mb-4'>
-                  Your videos are ready!
+
+      {/* Agent Status and Approvals */}
+      {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
+        <div className='flex justify-start'>
+          <div 
+            className='max-w-[80%] p-2.5 text-gray-100 rounded-lg'
+            style={{
+              background: "#18191C80",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            {/* Agent Working Indicator */}
+            {chatFlow.isStreaming && (
+              <div className='flex items-center gap-2 mb-3'>
+                <div className='flex space-x-1'>
+                  <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce'></div>
+                  <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce' style={{animationDelay: '0.1s'}}></div>
+                  <div className='w-2 h-2 bg-gray-400 rounded-full animate-bounce' style={{animationDelay: '0.2s'}}></div>
                 </div>
-                <TimelineButton
-                  canSendTimeline={canSendTimeline}
-                  addingTimeline={chatFlow.addingTimeline}
-                  onSendToTimeline={sendVideosToTimeline}
-                  inConversation={true}
-                />
+                <span className='text-gray-100'>Agent is working...</span>
               </div>
-            </div>
-          );
-        }
-        return null;
-      })()}
+            )}
+
+            {/* Manual Approval Requests */}
+            {chatFlow.pendingApprovals && chatFlow.pendingApprovals.map((approval) => (
+              <div key={approval.id} className='mb-3 last:mb-0'>
+                <div className='text-gray-100 font-medium mb-2 flex items-center gap-2'>
+                  <span>⏳</span>
+                  <span>Approval Required</span>
+                </div>
+                
+                <div className='text-gray-300 text-sm mb-3'>
+                  {approval.toolName === 'get_web_info' && (
+                    <>🔍 I need permission to research web information for your prompt</>
+                  )}
+                  {approval.toolName === 'generate_concepts_with_approval' && (
+                    <>💡 I'm ready to generate 4 content concepts based on the research</>
+                  )}
+                  {approval.toolName === 'generate_segmentation' && (
+                    <>📜 I can now create script segmentation for the selected concept</>
+                  )}
+                  {approval.toolName === 'generate_image_with_approval' && (
+                    <>🖼️ I'm ready to generate images for each script segment</>
+                  )}
+                </div>
+                
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => chatFlow.approveToolExecution(approval.id)}
+                    className='bg-gray-600 hover:bg-gray-700 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
+                  >
+                    ✅ Approve
+                  </button>
+                  <button
+                    onClick={() => chatFlow.rejectToolExecution(approval.id)}
+                    className='bg-gray-800 hover:bg-gray-900 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
+                  >
+                    ❌ Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
 
       <div ref={messagesEndRef} />
     </div>

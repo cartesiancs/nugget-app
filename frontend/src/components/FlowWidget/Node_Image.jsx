@@ -21,16 +21,16 @@ function NodeImage({ isConnectable, selected }) {
           border: "1px solid #333",
         }}
       >
-        {/* Input Handle - Left side */}
+        {/* Input Handle - Top side */}
         <Handle
           type='target'
-          position='left'
+          position='top'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            left: -8,
+            top: -8,
           }}
           isConnectable={isConnectable}
         />
@@ -63,16 +63,16 @@ function NodeImage({ isConnectable, selected }) {
           </div>
         </div>
 
-        {/* Output Handle - Right side */}
+        {/* Output Handle - Bottom side */}
         <Handle
           type='source'
-          position='right'
+          position='bottom'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            right: -8,
+            bottom: -8,
           }}
           isConnectable={isConnectable}
         />

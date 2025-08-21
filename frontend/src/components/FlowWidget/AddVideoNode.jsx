@@ -61,7 +61,7 @@ const AddVideoNode = ({ data, onCreateNewVideo, creatingVideos }) => {
       {/* Input handle */}
       <Handle
         type="target"
-        position={Position.Left}
+        position={Position.Top}
         id="input"
         style={{
           background: '#10b981',
@@ -70,13 +70,13 @@ const AddVideoNode = ({ data, onCreateNewVideo, creatingVideos }) => {
           border: '4px solid #fff',
           boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
           zIndex: 9999,
-          left: -10
+          top: -10
         }}
       />
       {/* Output handle */}
       <Handle
         type="source"
-        position={Position.Right}
+        position={Position.Bottom}
         id="output"
         style={{
           background: '#3b82f6',
@@ -85,9 +85,9 @@ const AddVideoNode = ({ data, onCreateNewVideo, creatingVideos }) => {
           border: '4px solid #fff',
           boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
           zIndex: 9999,
-          right: -10
+          bottom: -10
         }}
-              />
+      />
         </div>
       </div>
     );

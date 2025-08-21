@@ -269,7 +269,7 @@ const AddImageNode = ({
         {/* Input handle */}
         <Handle
           type='target'
-          position={Position.Left}
+          position={Position.Top}
           id='input'
           className='w-3 h-3 bg-blue-500 border-2 border-white'
         />
@@ -277,7 +277,7 @@ const AddImageNode = ({
         {/* Output handle */}
         <Handle
           type='source'
-          position={Position.Right}
+          position={Position.Bottom}
           id='output'
           className='w-3 h-3 bg-blue-500 border-2 border-white'
         />

@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Video, Play, Film, Monitor } from "lucide-react";
+import { Video, Play, Film, Camera } from "lucide-react";
 
 function NodeVideo({ isConnectable, selected }) {
   return (
@@ -21,16 +21,16 @@ function NodeVideo({ isConnectable, selected }) {
           border: "1px solid #333",
         }}
       >
-        {/* Input Handle - Left side */}
+        {/* Input Handle - Top side */}
         <Handle
           type='target'
-          position='left'
+          position='top'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            left: -8,
+            top: -8,
           }}
           isConnectable={isConnectable}
         />
@@ -44,7 +44,12 @@ function NodeVideo({ isConnectable, selected }) {
         <div className='space-y-2'>
           <div className='flex items-center space-x-2 text-gray-300'>
             <Video size={16} className='text-gray-400' />
-            <span className='text-xs'>Video Recording</span>
+            <span className='text-xs'>Video Creation</span>
+          </div>
+
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <Play size={16} className='text-gray-400' />
+            <span className='text-xs'>Playback Control</span>
           </div>
 
           <div className='flex items-center space-x-2 text-gray-300'>
@@ -53,26 +58,21 @@ function NodeVideo({ isConnectable, selected }) {
           </div>
 
           <div className='flex items-center space-x-2 text-gray-300'>
-            <Monitor size={16} className='text-gray-400' />
-            <span className='text-xs'>Screen Capture</span>
-          </div>
-
-          <div className='flex items-center space-x-2 text-gray-300'>
-            <Play size={16} className='text-gray-400' />
-            <span className='text-xs'>Video Editing</span>
+            <Camera size={16} className='text-gray-400' />
+            <span className='text-xs'>Camera Work</span>
           </div>
         </div>
 
-        {/* Output Handle - Right side */}
+        {/* Output Handle - Bottom side */}
         <Handle
           type='source'
-          position='right'
+          position='bottom'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            right: -8,
+            bottom: -8,
           }}
           isConnectable={isConnectable}
         />

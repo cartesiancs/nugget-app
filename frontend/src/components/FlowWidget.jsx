@@ -690,15 +690,16 @@ function FlowWidget() {
         flowData.segments.length,
         "segments",
       );
-      const nodeSpacing = 220; // horizontal space between columns
-      const rowSpacing = 300; // vertical space between images
-      const startX = 50;
-      const startY = 50;
-      const segmentSpacing = 600; // Space between segments
+      const nodeSpacing = 400; // Increased vertical space between nodes
+      const rowSpacing = 400; // Increased horizontal space between columns
+      const startX = 100;
+      const startY = 100;
+      const segmentSpacing = 800; // Increased space between segments
 
       flowData.segments.forEach((segment, segIndex) => {
         const x = startX;
         const y = startY + segIndex * segmentSpacing; // segmentSpacing = enough vertical space for all images/videos
+        
         // Segment node
         newNodes.push({
           id: `segment-${segment.id}`,
@@ -713,12 +714,13 @@ function FlowWidget() {
               : "pending",
           },
         });
-        // Add Image node to the right of segment
-        const addImageX = x + nodeSpacing;
+        
+        // Add Image node below segment
+        const addImageY = y + nodeSpacing;
         newNodes.push({
           id: `add-image-${segment.id}`,
           type: "addImageNode",
-          position: { x: addImageX, y },
+          position: { x, y: addImageY },
           data: {
             segmentId: segment.id,
             segmentData: {
@@ -730,6 +732,7 @@ function FlowWidget() {
             hasExistingImages: !!flowData.images[segment.id],
           },
         });
+        
         newEdges.push({
           id: `segment-${segment.id}-to-add-image-${segment.id}`,
           source: `segment-${segment.id}`,
@@ -742,12 +745,14 @@ function FlowWidget() {
             filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
           },
         });
-        // If segment has images, stack them vertically to the right of add image node
+        
+        // If segment has images, stack them horizontally to the right of add image node
         const imageDetail = flowData.imageDetails[segment.id];
         if (flowData.images[segment.id] && imageDetail?.allImages) {
           imageDetail.allImages.forEach((image, imageIndex) => {
-            const imageX = addImageX + nodeSpacing;
-            const imageY = y + imageIndex * rowSpacing; // <--- THIS IS THE KEY
+            const imageX = x + rowSpacing + imageIndex * rowSpacing; // Horizontal stacking
+            const imageY = addImageY; // Same Y level as add image node
+            
             newNodes.push({
               id: `image-${segment.id}-${image.id}`,
               type: "imageNode",
@@ -768,6 +773,7 @@ function FlowWidget() {
                 },
               },
             });
+            
             newEdges.push({
               id: `add-image-${segment.id}-to-image-${segment.id}-${image.id}`,
               source: `add-image-${segment.id}`,
@@ -781,19 +787,21 @@ function FlowWidget() {
                 filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))",
               },
             });
-            // Video/add-video node to the right of each image
+            
+            // Video/add-video node below each image
             const imageVideoUrl =
               flowData.videos[`${segment.id}-${image.id}`] ||
               flowData.videos[segment.id];
             const imageVideoId =
               flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id ||
               flowData?.videoDetails?.[segment.id]?.id;
-            const videoX = imageX + nodeSpacing;
+            const videoY = imageY + nodeSpacing; // Below the image
+            
             if (imageVideoUrl) {
               newNodes.push({
                 id: `video-${segment.id}-${image.id}`,
                 type: "videoNode",
-                position: { x: videoX, y: imageY },
+                position: { x: imageX, y: videoY },
                 data: {
                   segmentId: segment.id,
                   imageId: image.id,
@@ -809,6 +817,7 @@ function FlowWidget() {
                   },
                 },
               });
+              
               newEdges.push({
                 id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
                 source: `image-${segment.id}-${image.id}`,
@@ -825,7 +834,7 @@ function FlowWidget() {
               newNodes.push({
                 id: `add-video-${segment.id}-${image.id}`,
                 type: "addVideoNode",
-                position: { x: videoX, y: imageY },
+                position: { x: imageX, y: videoY },
                 data: {
                   segmentId: segment.id,
                   imageId: image.id,
@@ -838,6 +847,7 @@ function FlowWidget() {
                   },
                 },
               });
+              
               newEdges.push({
                 id: `image-${segment.id}-${image.id}-to-add-video-${segment.id}-${image.id}`,
                 source: `image-${segment.id}-${image.id}`,
@@ -968,8 +978,8 @@ function FlowWidget() {
       const newNodeId = `${nodeType}-${Date.now()}`;
 
       // Get viewport center position instead of random position
-      let centerX = 300; // fallback
-      let centerY = 300; // fallback
+      let centerX = 400; // fallback
+      let centerY = 400; // fallback
 
       if (rfInstance) {
         const viewport = rfInstance.getViewport();
@@ -1047,8 +1057,8 @@ function FlowWidget() {
         id: chatNodeId,
         type: "chatNode",
         position: {
-          x: clickedNode.position.x - 50,
-          y: clickedNode.position.y + 125 + 120,
+          x: clickedNode.position.x, // Same X position
+          y: clickedNode.position.y + 400, // 400px below the clicked node
         },
         data: {
           nodeType: clickedNode.type,
@@ -1075,7 +1085,7 @@ function FlowWidget() {
         source: clickedNode.id,
         target: chatNodeId,
         sourceHandle: "output",
-        targetHandle: "target",
+        targetHandle: "input",
         style: {
           stroke: "#3B82F6",
           strokeWidth: 2,
@@ -1097,7 +1107,7 @@ function FlowWidget() {
         segmentData,
       });
 
-      // Find the AddImageNode to position the new ImageNode to its right
+      // Find the AddImageNode to position the new ImageNode below it
       const addImageNode = nodes.find((node) => node.id === addImageNodeId);
       if (!addImageNode) {
         console.error(
@@ -1107,10 +1117,10 @@ function FlowWidget() {
         return;
       }
 
-      // Calculate position for the new image node (to the right of AddImageNode)
+      // Calculate position for the new image node (below AddImageNode)
       const newImageNodePosition = {
-        x: addImageNode.position.x + 220, // 220px to the right
-        y: addImageNode.position.y,
+        x: addImageNode.position.x + 400, // 400px to the right (horizontal stacking)
+        y: addImageNode.position.y, // Same Y level
       };
 
       // Create new image node ID
@@ -1161,7 +1171,7 @@ function FlowWidget() {
       setNodes((prevNodes) => [...prevNodes, newImageNode]);
       setEdges((prevEdges) => [...prevEdges, newEdge]);
 
-      // Also create an AddVideoNode to the right of the new ImageNode
+      // Also create an AddVideoNode below the new ImageNode
       const addVideoNodeId = `add-video-${segmentId}-${
         imageData.id || Date.now()
       }`;
@@ -1169,8 +1179,8 @@ function FlowWidget() {
         id: addVideoNodeId,
         type: "addVideoNode",
         position: {
-          x: newImageNodePosition.x + 220, // Another 220px to the right
-          y: newImageNodePosition.y,
+          x: newImageNodePosition.x, // Same X position
+          y: newImageNodePosition.y + 400, // 400px below the image
         },
         data: {
           segmentId: segmentId,

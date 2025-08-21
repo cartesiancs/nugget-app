@@ -99,7 +99,7 @@ const SegmentNode = ({ data }) => {
         {/* Output handle */}
         <Handle
           type="source"
-          position={Position.Right}
+          position={Position.Bottom}
           id="output"
           style={{
             background: '#8b5cf6',
@@ -108,7 +108,7 @@ const SegmentNode = ({ data }) => {
             border: '4px solid #fff',
             boxShadow: '0 0 15px rgba(139, 92, 246, 0.8)',
             zIndex: 9999,
-            right: -10
+            bottom: -10
           }}
         />
       </div>

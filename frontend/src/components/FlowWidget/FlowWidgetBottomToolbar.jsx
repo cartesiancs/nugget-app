@@ -18,6 +18,40 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
             className='flex items-center gap-2 rounded-2xl px-3 py-2 shadow-2xl'
             style={{ background: "#18191CB2", backdropFilter: "blur(20px)" }}
           >
+            {/* Add Concept */}
+            <img
+              src={assets.ConceptIcon}
+              onClick={() => {
+                onAddNode("concept");
+                setAddMenuExpanded(false);
+              }}
+              className='h-8 w-8 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Concept'
+              alt='Add Concept'
+            />
+
+            {/* Add Script */}
+            <img
+              src={assets.TextIcon}
+              onClick={() => {
+                onAddNode("script");
+                setAddMenuExpanded(false);
+              }}
+              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Script'
+              alt='Add Script'
+            />
+            {/* Add Segment */}
+            <img
+              src={assets.SegmentIcon}
+              onClick={() => {
+                onAddNode("segment");
+                setAddMenuExpanded(false);
+              }}
+              className='h-8 w-8 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Segment'
+              alt='Add Segment'
+            />
             {/* Add Image */}
             <img
               src={assets.ImageIcon}
@@ -29,7 +63,6 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
               title='Add Image'
               alt='Add Image'
             />
-
             {/* Add Video */}
             <img
               src={assets.VideoIcon}
@@ -40,42 +73,6 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
               className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
               title='Add Video'
               alt='Add Video'
-            />
-
-            {/* Add Script (Text) */}
-            <img
-              src={assets.TextIcon}
-              onClick={() => {
-                onAddNode("script");
-                setAddMenuExpanded(false);
-              }}
-              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Add Script'
-              alt='Add Script'
-            />
-
-            {/* Add Segment */}
-            <img
-              src={assets.AssettIcon}
-              onClick={() => {
-                onAddNode("segment");
-                setAddMenuExpanded(false);
-              }}
-              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Add Segment'
-              alt='Add Segment'
-            />
-
-            {/* Add Concept */}
-            <img
-              src={assets.BrushIcon}
-              onClick={() => {
-                onAddNode("concept");
-                setAddMenuExpanded(false);
-              }}
-              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Add Concept'
-              alt='Add Concept'
             />
           </div>
         </div>

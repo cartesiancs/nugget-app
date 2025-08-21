@@ -104,7 +104,7 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
           {/* Input handle */}
           <Handle
             type="target"
-            position={Position.Left}
+            position={Position.Top}
             id="input"
             style={{
               background: '#10b981',
@@ -113,7 +113,7 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
               border: '4px solid #fff',
               boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
               zIndex: 9999,
-              left: -10
+              top: -10
             }}
           />
         </div>
@@ -264,7 +264,7 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
           {/* Input handle */}
           <Handle
             type="target"
-            position={Position.Left}
+            position={Position.Top}
             id="input"
             style={{
               background: '#10b981',
@@ -273,7 +273,7 @@ const VideoNode = ({ data, onRegenerateVideo, regeneratingVideos, onAfterEdit, o
               border: '4px solid #fff',
               boxShadow: '0 0 15px rgba(16, 185, 129, 0.8)',
               zIndex: 9999,
-              left: -10
+              top: -10
             }}
           />
         </div>

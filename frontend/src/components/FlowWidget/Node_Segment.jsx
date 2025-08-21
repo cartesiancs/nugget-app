@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Scissors, Layers, Split, Merge } from "lucide-react";
+import { Layers, Clock, Target, Zap } from "lucide-react";
 
 function NodeSegment({ isConnectable, selected }) {
   return (
@@ -21,16 +21,16 @@ function NodeSegment({ isConnectable, selected }) {
           border: "1px solid #333",
         }}
       >
-        {/* Input Handle - Left side */}
+        {/* Input Handle - Top side */}
         <Handle
           type='target'
-          position='left'
+          position='top'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            left: -8,
+            top: -8,
           }}
           isConnectable={isConnectable}
         />
@@ -43,36 +43,36 @@ function NodeSegment({ isConnectable, selected }) {
         {/* Options List */}
         <div className='space-y-2'>
           <div className='flex items-center space-x-2 text-gray-300'>
-            <Scissors size={16} className='text-gray-400' />
-            <span className='text-xs'>Content Splitting</span>
-          </div>
-
-          <div className='flex items-center space-x-2 text-gray-300'>
             <Layers size={16} className='text-gray-400' />
-            <span className='text-xs'>Layer Management</span>
+            <span className='text-xs'>Scene Division</span>
           </div>
 
           <div className='flex items-center space-x-2 text-gray-300'>
-            <Split size={16} className='text-gray-400' />
-            <span className='text-xs'>Timeline Division</span>
+            <Clock size={16} className='text-gray-400' />
+            <span className='text-xs'>Time Management</span>
           </div>
 
           <div className='flex items-center space-x-2 text-gray-300'>
-            <Merge size={16} className='text-gray-400' />
-            <span className='text-xs'>Segment Merging</span>
+            <Target size={16} className='text-gray-400' />
+            <span className='text-xs'>Content Focus</span>
+          </div>
+
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <Zap size={16} className='text-gray-400' />
+            <span className='text-xs'>Quick Actions</span>
           </div>
         </div>
 
-        {/* Output Handle - Right side */}
+        {/* Output Handle - Bottom side */}
         <Handle
           type='source'
-          position='right'
+          position='bottom'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            right: -8,
+            bottom: -8,
           }}
           isConnectable={isConnectable}
         />

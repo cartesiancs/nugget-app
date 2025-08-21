@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { FileText, Play, Pause, Clock } from "lucide-react";
+import { FileText, PenTool, BookOpen, Type } from "lucide-react";
 
 function NodeScript({ isConnectable, selected }) {
   return (
@@ -21,16 +21,16 @@ function NodeScript({ isConnectable, selected }) {
           border: "1px solid #333",
         }}
       >
-        {/* Input Handle - Left side */}
+        {/* Input Handle - Top side */}
         <Handle
           type='target'
-          position='left'
+          position='top'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            left: -8,
+            top: -8,
           }}
           isConnectable={isConnectable}
         />
@@ -44,35 +44,35 @@ function NodeScript({ isConnectable, selected }) {
         <div className='space-y-2'>
           <div className='flex items-center space-x-2 text-gray-300'>
             <FileText size={16} className='text-gray-400' />
-            <span className='text-xs'>Screenplay Writing</span>
+            <span className='text-xs'>Script Writing</span>
           </div>
 
           <div className='flex items-center space-x-2 text-gray-300'>
-            <Play size={16} className='text-gray-400' />
+            <PenTool size={16} className='text-gray-400' />
+            <span className='text-xs'>Creative Writing</span>
+          </div>
+
+          <div className='flex items-center space-x-2 text-gray-300'>
+            <BookOpen size={16} className='text-gray-400' />
             <span className='text-xs'>Story Development</span>
           </div>
 
           <div className='flex items-center space-x-2 text-gray-300'>
-            <Pause size={16} className='text-gray-400' />
-            <span className='text-xs'>Scene Planning</span>
-          </div>
-
-          <div className='flex items-center space-x-2 text-gray-300'>
-            <Clock size={16} className='text-gray-400' />
-            <span className='text-xs'>Timeline Scripts</span>
+            <Type size={16} className='text-gray-400' />
+            <span className='text-xs'>Content Creation</span>
           </div>
         </div>
 
-        {/* Output Handle - Right side */}
+        {/* Output Handle - Bottom side */}
         <Handle
           type='source'
-          position='right'
+          position='bottom'
           style={{
             background: "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
-            right: -8,
+            bottom: -8,
           }}
           isConnectable={isConnectable}
         />

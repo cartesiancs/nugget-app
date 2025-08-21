@@ -22,8 +22,12 @@ import ImageNode from "./FlowWidget/ImageNode";
 import VideoNode from "./FlowWidget/VideoNode";
 import AddImageNode from "./FlowWidget/AddImageNode";
 import AddVideoNode from "./FlowWidget/AddVideoNode";
-import NewTextNode from "./FlowWidget/TextNode";
-// Removed NewImageNode/NewVideoNode; using AddImageNode/AddVideoNode
+// Import new clean node components
+import NodeImage from "./FlowWidget/Node_Image";
+import NodeVideo from "./FlowWidget/Node_Video";
+import NodeScript from "./FlowWidget/Node_Script";
+import NodeSegment from "./FlowWidget/Node_Segment";
+import NodeConcept from "./FlowWidget/Node_Concept";
 import NodeChat from "./FlowWidget/NodeChat";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
@@ -665,13 +669,19 @@ function FlowWidget() {
     const nodeTypes = {
       segmentNode: SegmentNode,
       imageNode: (props) => (
-        <ImageNode
+        <NodeImage
           {...props}
           onRegenerateImage={handleRegenerateImage}
           regeneratingImages={regeneratingImages}
         />
       ),
-      videoNode: VideoNode,
+      videoNode: (props) => (
+        <NodeVideo
+          {...props}
+          onRegenerateVideo={handleRegenerateVideo}
+          regeneratingVideos={regeneratingVideos}
+        />
+      ),
     };
 
     if (flowData.segments && flowData.segments.length > 0) {
@@ -983,32 +993,28 @@ function FlowWidget() {
 
       // Set specific data based on node type
       switch (nodeType) {
-        case "text":
-          newNodeType = "textNode";
-          newNodeData.content = "New text content...";
+        case "script":
+          newNodeType = "scriptNode";
+          newNodeData.content = "New script content...";
           break;
         case "image":
-          newNodeType = "addImageNode";
-          newNodeData.segmentId = null;
-          newNodeData.segmentData = null;
-          newNodeData.hasExistingImages = false;
-          newNodeData.isStandalone = true; // Mark as standalone
+          newNodeType = "imageNode";
+          newNodeData.content = "New image content...";
           break;
         case "video":
-          newNodeType = "addVideoNode";
-          newNodeData.segmentId = null;
-          newNodeData.imageId = null;
-          newNodeData.segmentData = null;
-          newNodeData.isStandalone = true; // Mark as standalone
+          newNodeType = "videoNode";
+          newNodeData.content = "New video content...";
           break;
         case "segment":
           newNodeType = "segmentNode";
-          newNodeData.visual = "New segment visual...";
-          newNodeData.narration = "New segment narration...";
-          newNodeData.animation = "New segment animation...";
+          newNodeData.content = "New segment content...";
+          break;
+        case "concept":
+          newNodeType = "conceptNode";
+          newNodeData.content = "New concept content...";
           break;
         default:
-          newNodeType = "textNode";
+          newNodeType = "scriptNode";
           newNodeData.content = "New node...";
       }
 
@@ -1216,33 +1222,17 @@ function FlowWidget() {
     [nodes, setNodes, setEdges, refreshProjectData, setFlowMessages],
   );
 
-  // Update nodeTypes to pass onAfterEdit to ImageNode and VideoNode
+  // Update nodeTypes to include all new clean node components
   const nodeTypes = useMemo(
     () => ({
-      segmentNode: SegmentNode,
-      imageNode: (props) => (
-        <ImageNode
-          {...props}
-          onRegenerateImage={handleRegenerateImage}
-          regeneratingImages={regeneratingImages}
-          onAfterEdit={handleAfterImageEdit}
-          onMakePrimary={handleMakePrimary}
-          isPrimary={props.data?.isPrimary}
-          onChatClick={handleChatClick}
-        />
-      ),
-      videoNode: (props) => (
-        <VideoNode
-          {...props}
-          onRegenerateVideo={handleRegenerateVideo}
-          regeneratingVideos={regeneratingVideos}
-          onAfterEdit={handleAfterImageEdit}
-          onChatClick={handleChatClick}
-        />
-      ),
-      textNode: (props) => (
-        <NewTextNode {...props} onChatClick={handleChatClick} />
-      ),
+      // New clean nodes
+      imageNode: NodeImage,
+      videoNode: NodeVideo,
+      scriptNode: NodeScript,
+      segmentNode: NodeSegment,
+      conceptNode: NodeConcept,
+      
+      // Legacy nodes (keeping for backward compatibility)
       addImageNode: (props) => (
         <AddImageNode
           {...props}

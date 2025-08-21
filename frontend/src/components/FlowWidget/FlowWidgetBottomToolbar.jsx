@@ -42,37 +42,40 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
               alt='Add Video'
             />
 
-            {/* Add Text */}
+            {/* Add Script (Text) */}
             <img
               src={assets.TextIcon}
               onClick={() => {
-                onAddNode("text");
+                onAddNode("script");
                 setAddMenuExpanded(false);
               }}
               className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Add Text'
-              alt='Add Text'
+              title='Add Script'
+              alt='Add Script'
             />
 
-            {/* Import Button */}
+            {/* Add Segment */}
             <img
-              src={assets.ImportIcon}
+              src={assets.AssettIcon}
               onClick={() => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = ".json,.txt,.md";
-                input.onchange = (e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    console.log("Importing file:", file.name);
-                  }
-                };
-                input.click();
+                onAddNode("segment");
                 setAddMenuExpanded(false);
               }}
               className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Import'
-              alt='Import'
+              title='Add Segment'
+              alt='Add Segment'
+            />
+
+            {/* Add Concept */}
+            <img
+              src={assets.BrushIcon}
+              onClick={() => {
+                onAddNode("concept");
+                setAddMenuExpanded(false);
+              }}
+              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Concept'
+              alt='Add Concept'
             />
           </div>
         </div>

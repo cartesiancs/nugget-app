@@ -90,7 +90,7 @@ function NodeScript({ data, isConnectable, selected }) {
               <div className='flex items-center space-x-2'>
                 <FileText size={20} className={isGenerated ? 'text-green-400' : 'text-blue-400'} />
                 <span className='text-white font-medium text-sm'>
-                  {data.title || `Script`}
+                  Script
                 </span>
                 {isGenerated && (
                   <span className='text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded'>AI</span>
@@ -114,13 +114,6 @@ function NodeScript({ data, isConnectable, selected }) {
                 <div className='flex items-center space-x-2'>
                   <Palette size={16} className='text-gray-400' />
                   <span className='text-xs text-gray-300'>{data.artStyle}</span>
-                </div>
-              )}
-
-              {/* Concept Reference */}
-              {data.concept && (
-                <div className='text-xs text-gray-400 bg-gray-800/50 rounded p-2'>
-                  <strong>Concept:</strong> {data.concept}
                 </div>
               )}
 

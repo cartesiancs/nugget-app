@@ -129,28 +129,7 @@ function NodeVideo({ data, isConnectable, selected }) {
             </div>
 
             {/* Video Details */}
-            <div className='space-y-2'>
-              {(data.animationPrompt || data.segmentData?.animation) && (
-                <div>
-                  <div className='text-xs text-gray-400 mb-1'>Animation:</div>
-                  <div className='text-gray-300 text-xs bg-gray-800/50 rounded p-2 max-h-[40px] overflow-y-auto'>
-                    {data.animationPrompt || data.segmentData?.animation}
-                  </div>
-                </div>
-              )}
-              
-              {data.segmentData?.artStyle && (
-                <div className='text-xs text-gray-400'>
-                  Style: {data.segmentData.artStyle}
-                </div>
-              )}
-
-              {data.segmentId && data.imageId && (
-                <div className='text-xs text-gray-400'>
-                  From: Segment, Image
-                </div>
-              )}
-              
+            <div className='space-y-2'>              
               {isGenerated && (
                 <div className='text-xs text-gray-500 pt-1 border-t border-gray-700'>
                   <span className='text-emerald-400'>Ready for timeline</span>

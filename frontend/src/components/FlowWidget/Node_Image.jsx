@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Handle } from "@xyflow/react";
 import { Image, Camera, Images, Frame, Star, Loader2, AlertCircle } from "lucide-react";
 
@@ -134,21 +134,6 @@ function NodeImage({ data, isConnectable, selected }) {
 
             {/* Image Details */}
             <div className='space-y-2'>
-              {(data.visualPrompt || data.segmentData?.visual) && (
-                <div>
-                  <div className='text-xs text-gray-400 mb-1'>Prompt:</div>
-                  <div className='text-gray-300 text-xs bg-gray-800/50 rounded p-2 max-h-[40px] overflow-y-auto'>
-                    {data.visualPrompt || data.segmentData?.visual}
-                  </div>
-                </div>
-              )}
-              
-              {(data.artStyle || data.segmentData?.artStyle) && (
-                <div className='text-xs text-gray-400'>
-                  Style: {data.artStyle || data.segmentData?.artStyle}
-                </div>
-              )}
-              
               {isGenerated && (
                 <div className='text-xs text-gray-500 pt-1 border-t border-gray-700'>
                   <span className='text-orange-400'>Connect to video</span>

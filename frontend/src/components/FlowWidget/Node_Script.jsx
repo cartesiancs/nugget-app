@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Handle } from "@xyflow/react";
-import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle } from "lucide-react";
+import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 
 function NodeScript({ data, isConnectable, selected }) {
   // Check node state and data
@@ -10,6 +10,13 @@ function NodeScript({ data, isConnectable, selected }) {
   const isGenerated = nodeState === 'generated';
   const hasError = nodeState === 'error';
   const isNew = nodeState === 'new';
+  
+  // Expandable state
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Check if there's overflow content (for art style only display, we might not need expansion)
+  const hasOverflowContent = (data.content && data.content !== 'New script content...') || 
+                            (data.segments && data.segments.length > 0);
   
   return (
     <div className='relative'>
@@ -21,9 +28,9 @@ function NodeScript({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-6 w-[320px] min-h-[240px] relative transition-all duration-200 ${
+        className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
           selected ? (hasData ? "ring-2 ring-blue-500" : "ring-2 ring-gray-600") : ""
-        }`}
+        } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
         style={{
           background: isLoading ? "#1a1a2e" : isGenerated ? "#1a2e1a" : hasError ? "#2e1a1a" : "#1a1a1a",
           border: isLoading ? "1px solid #3b82f6" : isGenerated ? "1px solid #10b981" : hasError ? "1px solid #ef4444" : hasData ? "1px solid #444" : "1px solid #333",
@@ -98,35 +105,44 @@ function NodeScript({ data, isConnectable, selected }) {
               </div>
             </div>
 
-            {/* Script Content */}
-            {data.content && data.content !== 'New script content...' && (
-              <div className='mb-3 p-3 bg-gray-800/30 rounded-lg'>
-                <div className='text-xs text-gray-300 leading-relaxed max-h-[60px] overflow-y-auto'>
-                  {data.content}
+            {/* Art Style Only */}
+            <div className='mb-3'>
+              {data.artStyle ? (
+                <div className='p-2 bg-gray-800/30 rounded-lg'>
+                  <div className='text-xs text-gray-300 leading-relaxed'>
+                    {data.artStyle}
+                  </div>
                 </div>
+              ) : (
+                <div className='p-2 bg-gray-800/30 rounded-lg'>
+                  <div className='text-xs text-gray-500 italic'>
+                    No art style specified
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Details when expanded */}
+            {isExpanded && (
+              <div className='space-y-2 mb-3'>
+                {/* Script Content */}
+                {data.content && data.content !== 'New script content...' && (
+                  <div>
+                    <div className='text-xs text-gray-400 mb-1'>Script Content:</div>
+                    <div className='p-2 bg-gray-800/30 rounded-lg'>
+                      <div className='text-xs text-gray-300 leading-relaxed'>
+                        {data.content}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                
               </div>
             )}
 
             {/* Script Details */}
             <div className='space-y-3'>
-              {/* Art Style */}
-              {data.artStyle && (
-                <div className='flex items-center space-x-2'>
-                  <Palette size={16} className='text-gray-400' />
-                  <span className='text-xs text-gray-300'>{data.artStyle}</span>
-                </div>
-              )}
-
-              {/* Segments Count */}
-              {data.segments && (
-                <div className='flex items-center space-x-2'>
-                  <Hash size={16} className='text-gray-400' />
-                  <span className='text-xs text-gray-300'>
-                    {data.segments.length} segment{data.segments.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
-
               {/* Script Metadata */}
               {isGenerated && (
                 <div className='text-xs text-gray-500 pt-2 border-t border-gray-700 flex justify-end'>
@@ -134,6 +150,18 @@ function NodeScript({ data, isConnectable, selected }) {
                 </div>
               )}
             </div>
+
+            {/* Expand/Collapse Button */}
+            {hasOverflowContent && (
+              <div className='absolute bottom-2 right-2'>
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className='text-gray-400 hover:text-white transition-colors p-1 rounded'
+                >
+                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+              </div>
+            )}
           </>
         ) : (
           // New/empty state view

@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Handle } from "@xyflow/react";
 import { Image, Camera, Images, Frame, Star, Loader2, AlertCircle } from "lucide-react";
 
@@ -21,7 +22,7 @@ function NodeImage({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-6 w-[260px] min-h-[280px] relative transition-all duration-200 ${
+        className={`rounded-2xl p-4 w-[280px] h-[280px] relative transition-all duration-300 ${
           selected ? (hasData ? "ring-2 ring-orange-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
@@ -118,14 +119,14 @@ function NodeImage({ data, isConnectable, selected }) {
               <img 
                 src={data.imageUrl || data.url} 
                 alt="Generated"
-                className='w-full h-32 object-cover rounded-lg bg-gray-800'
+                className='w-full h-24 object-cover rounded-lg bg-gray-800'
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
               <div 
-                className='w-full h-32 bg-gray-800 rounded-lg hidden items-center justify-center'
+                className='w-full h-24 bg-gray-800 rounded-lg hidden items-center justify-center'
                 style={{display: 'none'}}
               >
                 <span className='text-gray-500 text-xs'>Image unavailable</span>

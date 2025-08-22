@@ -21,7 +21,7 @@ function NodeVideo({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-6 w-[280px] min-h-[320px] relative transition-all duration-200 ${
+        className={`rounded-2xl p-4 w-[280px] h-[280px] relative transition-all duration-300 ${
           selected ? (hasData ? "ring-2 ring-emerald-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
@@ -112,7 +112,7 @@ function NodeVideo({ data, isConnectable, selected }) {
             <div className='mb-3'>
               <video 
                 src={data.videoUrl || data.url} 
-                className='w-full h-36 object-cover rounded-lg bg-gray-800'
+                className='w-full h-24 object-cover rounded-lg bg-gray-800'
                 controls
                 muted
                 onError={(e) => {
@@ -121,7 +121,7 @@ function NodeVideo({ data, isConnectable, selected }) {
                 }}
               />
               <div 
-                className='w-full h-36 bg-gray-800 rounded-lg hidden items-center justify-center'
+                className='w-full h-24 bg-gray-800 rounded-lg hidden items-center justify-center'
                 style={{display: 'none'}}
               >
                 <span className='text-gray-500 text-xs'>Video unavailable</span>

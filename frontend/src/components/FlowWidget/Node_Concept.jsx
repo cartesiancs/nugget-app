@@ -1,5 +1,6 @@
+import React, { useState } from "react";
 import { Handle } from "@xyflow/react";
-import { Lightbulb, Sparkles, Zap, Target } from "lucide-react";
+import { Lightbulb, Sparkles, Zap, Target, ChevronDown, ChevronUp } from "lucide-react";
 
 function NodeConcept({ data, isConnectable, selected }) {
   // Check node state and data
@@ -9,6 +10,15 @@ function NodeConcept({ data, isConnectable, selected }) {
   const isGeneratedConcept = nodeState === 'generated';
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
+  
+  // Expandable state
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Get concept content
+  const conceptContent = data.content || data.userText || data.text || data.concept || data.description || data.prompt || "No concept content available";
+  
+  // Check if there's overflow content
+  const hasOverflowContent = conceptContent.length > 120;
   
   // Debug log to see what data we're getting
   console.log("NodeConcept data:", data, "hasData:", hasData, "nodeState:", nodeState);
@@ -23,9 +33,9 @@ function NodeConcept({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-6 w-[300px] min-h-[240px] relative transition-all duration-200 ${
+        className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
           selected ? (hasData ? "ring-2 ring-purple-500" : "ring-2 ring-gray-600") : ""
-        }`}
+        } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
         style={{
           background: isUserConcept ? "#1e1a2e" : isGeneratedConcept ? "#1a1a2e" : isLoading ? "#1a1a1a" : hasError ? "#2e1a1a" : "#1a1a1a",
           border: isUserConcept ? "1px solid #8b5cf6" : isGeneratedConcept ? "1px solid #6366f1" : hasError ? "1px solid #ef4444" : hasData ? "1px solid #444" : "1px solid #333",
@@ -107,8 +117,8 @@ function NodeConcept({ data, isConnectable, selected }) {
 
             {/* Concept Content */}
             <div className='space-y-3'>
-              <div className='text-gray-300 text-sm leading-relaxed max-h-[120px] overflow-y-auto'>
-                {data.content || data.userText || data.text || data.concept || data.description || data.prompt || "No concept content available"}
+              <div className='text-gray-300 text-sm leading-relaxed'>
+                {isExpanded ? conceptContent : `${conceptContent.substring(0, 120)}${conceptContent.length > 120 ? '...' : ''}`}
               </div>
               
               {/* Concept Metadata */}
@@ -118,6 +128,18 @@ function NodeConcept({ data, isConnectable, selected }) {
                 </div>
               )}
             </div>
+
+            {/* Expand/Collapse Button */}
+            {hasOverflowContent && (
+              <div className='absolute bottom-2 right-2'>
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className='text-gray-400 hover:text-white transition-colors p-1 rounded'
+                >
+                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+              </div>
+            )}
           </>
         ) : (
           // New/empty state view

@@ -72,7 +72,7 @@ function UserNode({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-6 w-[300px] min-h-[240px] relative transition-all duration-200 ${
+        className={`rounded-2xl p-4 w-[280px] h-[280px] relative transition-all duration-200 ${
           selected ? (hasData ? "ring-2 ring-blue-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
@@ -125,17 +125,8 @@ function UserNode({ data, isConnectable, selected }) {
             </div>
 
             {/* Content */}
-            <div className='text-gray-200 text-sm leading-relaxed mb-4 min-h-[80px] max-h-[120px] overflow-y-auto'>
+            <div className='text-gray-200 text-sm leading-relaxed'>
               {text}
-            </div>
-
-            {/* Status */}
-            <div className='flex items-center justify-between pt-3 border-t border-gray-600'>
-              <div className='flex items-center space-x-2'>
-                <div className='w-2 h-2 bg-blue-400 rounded-full'></div>
-                <span className='text-xs text-gray-400'>User Concept</span>
-              </div>
-              <MessageSquare size={12} className='text-gray-500' />
             </div>
           </>
         ) : (
@@ -146,24 +137,6 @@ function UserNode({ data, isConnectable, selected }) {
               <div className='space-y-2'>
                 <div className='text-gray-400 text-sm font-medium'>Start with your concept</div>
                 <div className='text-gray-500 text-xs'>Double-click to add your idea</div>
-              </div>
-            </div>
-
-            {/* Get started options */}
-            <div className='absolute bottom-6 left-6 right-6 space-y-2'>
-              <div className='flex items-center space-x-2 text-gray-400'>
-                <Lightbulb size={14} className='text-gray-500' />
-                <span className='text-xs'>Describe your vision</span>
-              </div>
-
-              <div className='flex items-center space-x-2 text-gray-400'>
-                <Edit3 size={14} className='text-gray-500' />
-                <span className='text-xs'>Share your concept</span>
-              </div>
-
-              <div className='flex items-center space-x-2 text-gray-400'>
-                <MessageSquare size={14} className='text-gray-500' />
-                <span className='text-xs'>Tell your story</span>
               </div>
             </div>
           </>

@@ -1,10 +1,13 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Layers, Clock, Target, Zap, Play } from "lucide-react";
+import { Layers, Clock, Target, Zap, Play, MoreHorizontal, Hash } from "lucide-react";
 
 function NodeSegment({ data, isConnectable, selected }) {
-  // Check if this is existing data or new/empty state
+  // Check node state and data
+  const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.visual || data.narration || data.animation);
+  const isGenerated = nodeState === 'generated';
+  const isNew = nodeState === 'new';
   
   return (
     <div className='relative'>
@@ -20,8 +23,8 @@ function NodeSegment({ data, isConnectable, selected }) {
           selected ? (hasData ? "ring-2 ring-green-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
-          background: "#1a1a1a",
-          border: hasData ? "1px solid #444" : "1px solid #333",
+          background: isGenerated ? "#1a2e1a" : "#1a1a1a",
+          border: isGenerated ? "1px solid #22c55e" : hasData ? "1px solid #444" : "1px solid #333",
           boxShadow: selected && hasData ? "0 0 20px rgba(34, 197, 94, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
         }}
       >
@@ -31,7 +34,7 @@ function NodeSegment({ data, isConnectable, selected }) {
           position='top'
           id="input"
           style={{
-            background: hasData ? "#22c55e" : "#3b82f6",
+            background: isGenerated ? "#22c55e" : hasData ? "#22c55e" : "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",
@@ -44,11 +47,19 @@ function NodeSegment({ data, isConnectable, selected }) {
           // Existing data view
           <>
             {/* Segment Header */}
-            <div className='flex items-center mb-4'>
+            <div className='flex items-center justify-between mb-4'>
               <div className='flex items-center space-x-2'>
                 <Play size={20} className='text-green-400' />
-                <span className='text-white font-medium'>Segment {data.id}</span>
+                <span className='text-white font-medium text-sm'>
+                  {data.title || `Segment ${data.id}`}
+                </span>
+                {isGenerated && (
+                  <span className='text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded'>AI</span>
+                )}
               </div>
+              <button className='text-gray-400 hover:text-white'>
+                <MoreHorizontal size={16} />
+              </button>
             </div>
 
             {/* Segment Content */}
@@ -123,7 +134,7 @@ function NodeSegment({ data, isConnectable, selected }) {
           position='bottom'
           id="output"
           style={{
-            background: hasData ? "#22c55e" : "#3b82f6",
+            background: isGenerated ? "#22c55e" : hasData ? "#22c55e" : "#3b82f6",
             width: 16,
             height: 16,
             border: "2px solid #fff",

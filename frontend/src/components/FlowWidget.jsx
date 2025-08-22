@@ -23,6 +23,13 @@ import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
 import { assets } from "../assets/assets";
 import FlowWidgetBottomToolbar from "./FlowWidget/FlowWidgetBottomToolbar";
+import { webInfoApi } from "../services/web-info";
+import { conceptWriterApi } from "../services/concept-writer";
+import { segmentationApi } from "../services/segmentationapi";
+import { imageApi } from "../services/image";
+import { videoApi } from "../services/video-gen";
+import { chatApi } from "../services/chat";
+import { s3Api } from "../services/s3";
 
 function FlowWidget() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -42,6 +49,14 @@ function FlowWidget() {
 
   // Selected node state for sidebar
   const [selectedNode, setSelectedNode] = useState(null);
+
+  // New project state management
+  const [userConcepts, setUserConcepts] = useState(new Map()); // Store user concept texts: nodeId -> text
+  const [generatingConcepts, setGeneratingConcepts] = useState(new Set()); // Track which concepts are generating
+  const [generatingScripts, setGeneratingScripts] = useState(new Set()); // Track which scripts are generating
+  const [generatingImages, setGeneratingImages] = useState(new Set()); // Track which images are generating
+  const [generatingVideos, setGeneratingVideos] = useState(new Set()); // Track which videos are generating
+  const [nodeConnections, setNodeConnections] = useState(new Map()); // Track node connections for generation
 
   // New state for all fetched data
   const [allProjectData, setAllProjectData] = useState({
@@ -436,6 +451,10 @@ function FlowWidget() {
                 imageId: image.id,
                 isPrimary: image.isPrimary,
                 allImages: imageDetail.allImages,
+                s3Key: image.s3Key, // Add s3Key for video generation
+                nodeState: 'existing', // Mark as existing image
+                visualPrompt: image.visualPrompt,
+                artStyle: image.artStyle || "cinematic photography with soft lighting",
                 segmentData: {
                   id: segment.id,
                   visual: segment.visual,
@@ -634,6 +653,168 @@ function FlowWidget() {
     setChatNodeType(null);
   }, []);
 
+  // Handle chat message for concept generation
+  const handleChatMessage = useCallback(async (message, nodeId, nodeType, model) => {
+    console.log('Chat message received:', { message, nodeId, nodeType, model });
+    
+    // Remove chat node after sending message
+    setNodes((prevNodes) =>
+      prevNodes.filter((node) => node.type !== "chatNode"),
+    );
+    setEdges((prevEdges) =>
+      prevEdges.filter((edge) => !edge.target.includes("chat-")),
+    );
+    
+    if (nodeType === 'conceptNode') {
+      // Get selected project from localStorage (following ChatWidget pattern)
+      let selectedProject = null;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      } catch (e) {
+        console.error('Error parsing project data:', e);
+      }
+      
+      if (!selectedProject) {
+        console.error('No project selected');
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                error: 'No project selected. Please select a project first.',
+                nodeState: 'error'
+              }
+            };
+          }
+          return node;
+        }));
+        return;
+      }
+      
+      // Store user concept in localStorage
+      const userConceptsKey = `user-concepts-${selectedProject.id}`;
+      const existingUserConcepts = JSON.parse(localStorage.getItem(userConceptsKey) || '{}');
+      existingUserConcepts[nodeId] = message;
+      localStorage.setItem(userConceptsKey, JSON.stringify(existingUserConcepts));
+      
+      // Update state
+      setUserConcepts(prev => new Map(prev.set(nodeId, message)));
+      
+      // Update the concept node to show user text and loading state
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: message,
+              nodeState: 'user', // Mark as user concept
+              userText: message
+            }
+          };
+        }
+        return node;
+      }));
+      
+      // Generate concepts from backend (following ChatWidget pattern)
+      try {
+        setGeneratingConcepts(prev => new Set(prev.add(nodeId)));
+        setLoading(true);
+        setError(null);
+        
+        console.log("Starting concept generation pipeline...");
+        
+        // First call web-info API (following ChatWidget pattern)
+        const webInfoResult = await webInfoApi.processWebInfo(
+          message,
+          selectedProject.id,
+        );
+        console.log("Web-info response:", webInfoResult);
+
+        // Then call concept-writer API
+        const webInfoContent = webInfoResult.choices[0].message.content;
+        const conceptsResponse = await conceptWriterApi.generateConcepts(
+          message,
+          webInfoContent,
+          selectedProject.id,
+        );
+        console.log("Concept-writer response:", conceptsResponse);
+        
+        if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
+          // Create concept nodes from backend response
+          const newConceptNodes = conceptsResponse.concepts.map((concept, index) => {
+            const conceptNodeId = `generated-concept-${nodeId}-${index}-${Date.now()}`;
+            return {
+              id: conceptNodeId,
+              type: 'conceptNode',
+              position: {
+                x: nodes.find(n => n.id === nodeId)?.position.x + (index - 1) * 350,
+                y: nodes.find(n => n.id === nodeId)?.position.y + 300
+              },
+              data: {
+                ...concept,
+                nodeState: 'generated',
+                content: concept.content || concept.text || concept.concept || concept.description || concept.title,
+                title: concept.title || `Generated Concept ${index + 1}`,
+                id: concept.id || `concept-${index}`
+              }
+            };
+          });
+          
+          // Create edges connecting user concept to generated concepts
+          const newEdges = conceptsResponse.concepts.map((_, index) => {
+            const conceptNodeId = `generated-concept-${nodeId}-${index}-${Date.now()}`;
+            return {
+              id: `${nodeId}-to-${conceptNodeId}`,
+              source: nodeId,
+              target: conceptNodeId,
+              sourceHandle: 'output',
+              targetHandle: 'input',
+              style: {
+                stroke: '#8b5cf6',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))'
+              }
+            };
+          });
+          
+          // Add new nodes and edges
+          setNodes(prevNodes => [...prevNodes, ...newConceptNodes]);
+          setEdges(prevEdges => [...prevEdges, ...newEdges]);
+          
+          console.log(`Generated ${conceptsResponse.concepts.length} concept nodes`);
+        } else {
+          throw new Error('Invalid response format from concept generation API');
+        }
+      } catch (error) {
+        console.error('Error generating concepts:', error);
+        // Show error in the concept node
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                error: error.message || 'Failed to generate concepts',
+                nodeState: 'error'
+              }
+            };
+          }
+          return node;
+        }));
+      } finally {
+        setGeneratingConcepts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(nodeId);
+          return newSet;
+        });
+        setLoading(false);
+      }
+    }
+  }, [nodes, setNodes, setEdges, setLoading, setError]);
+
   // Handle adding new nodes
   const handleAddNode = useCallback(
     (nodeType) => {
@@ -668,26 +849,32 @@ function FlowWidget() {
         case "script":
           newNodeType = "scriptNode";
           newNodeData.content = "New script content...";
+          newNodeData.nodeState = "new";
           break;
         case "image":
           newNodeType = "imageNode";
           newNodeData.content = "New image content...";
+          newNodeData.nodeState = "new";
           break;
         case "video":
           newNodeType = "videoNode";
           newNodeData.content = "New video content...";
+          newNodeData.nodeState = "new";
           break;
         case "segment":
           newNodeType = "segmentNode";
           newNodeData.content = "New segment content...";
+          newNodeData.nodeState = "new";
           break;
         case "concept":
           newNodeType = "conceptNode";
-          newNodeData.content = "New concept content...";
+          newNodeData.content = "";
+          newNodeData.nodeState = "new";
           break;
         default:
           newNodeType = "scriptNode";
           newNodeData.content = "New node...";
+          newNodeData.nodeState = "new";
       }
 
       const newNode = {
@@ -734,6 +921,8 @@ function FlowWidget() {
               "Model:",
               model,
             );
+            // Handle the message based on the parent node type
+            handleChatMessage(message, clickedNode.id, clickedNode.type, model);
           },
         },
       };
@@ -780,14 +969,473 @@ function FlowWidget() {
   useEffect(() => {
     createFlowElements();
   }, [createFlowElements]);
+  
+  // Load user concepts from localStorage on mount
+  useEffect(() => {
+    const projectId = localStorage.getItem('project-store-selectedProject');
+    if (projectId) {
+      try {
+        const projectData = JSON.parse(projectId);
+        const userConceptsKey = `user-concepts-${projectData.id || 'default'}`;
+        const existingUserConcepts = JSON.parse(localStorage.getItem(userConceptsKey) || '{}');
+        setUserConcepts(new Map(Object.entries(existingUserConcepts)));
+      } catch (e) {
+        console.error('Error loading user concepts:', e);
+      }
+    }
+  }, []);
 
   const onConnect = useCallback(
-    (params) => {
+    async (params) => {
       // Create the edge
       setEdges((eds) => addEdge(params, eds));
+      
+      // Handle special connection logic for new project flow
+      const sourceNode = nodes.find(n => n.id === params.source);
+      const targetNode = nodes.find(n => n.id === params.target);
+      
+      if (sourceNode && targetNode) {
+        // Script connected to concept - generate script
+        if (sourceNode.type === 'conceptNode' && targetNode.type === 'scriptNode' && targetNode.data?.nodeState === 'new') {
+          await handleScriptGeneration(sourceNode, targetNode);
+        }
+        
+        // Segment connected to script - create 5 segment nodes
+        if (sourceNode.type === 'scriptNode' && targetNode.type === 'segmentNode' && targetNode.data?.nodeState === 'new') {
+          await handleSegmentCreation(sourceNode, targetNode);
+        }
+        
+        // Image connected to segment - generate image
+        if (sourceNode.type === 'segmentNode' && targetNode.type === 'imageNode' && targetNode.data?.nodeState === 'new') {
+          await handleImageGeneration(sourceNode, targetNode);
+        }
+        
+        // Video connected to image - generate video
+        if (sourceNode.type === 'imageNode' && targetNode.type === 'videoNode' && targetNode.data?.nodeState === 'new') {
+          await handleVideoGeneration(sourceNode, targetNode);
+        }
+      }
     },
-    [setEdges],
+    [setEdges, nodes],
   );
+  
+  // Handle script generation from concept
+  const handleScriptGeneration = useCallback(async (conceptNode, scriptNode) => {
+    try {
+      setGeneratingScripts(prev => new Set(prev.add(scriptNode.id)));
+      setLoading(true);
+      setError(null);
+      
+      // Get selected project from localStorage (following ChatWidget pattern)
+      let selectedProject = null;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      } catch (e) {
+        console.error('Error parsing project data:', e);
+      }
+      
+      if (!selectedProject) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+      
+      // Update script node to show loading
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === scriptNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Generating script...',
+              nodeState: 'loading'
+            }
+          };
+        }
+        return node;
+      }));
+      
+      // Generate script using concept content (following ChatWidget pattern)
+      const conceptContent = conceptNode.data?.content || conceptNode.data?.userText || '';
+      const conceptTitle = conceptNode.data?.title || 'Selected Concept';
+      
+      console.log("Starting script generation...");
+      const scriptResponse = await segmentationApi.getSegmentation({
+        prompt: `Generate a detailed script for: ${conceptContent}`,
+        concept: conceptTitle,
+        negative_prompt: "",
+        project_id: selectedProject.id,
+        model: 'flash' // Using default model like ChatWidget
+      });
+      
+      console.log("Script generation response:", scriptResponse);
+      
+      if (scriptResponse && scriptResponse.segments && Array.isArray(scriptResponse.segments)) {
+        // Update script node with generated content
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === scriptNode.id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                content: `Script generated with ${scriptResponse.segments.length} segments`,
+                segments: scriptResponse.segments,
+                nodeState: 'generated',
+                title: `Script for: ${conceptTitle}`,
+                artStyle: scriptResponse.artStyle || 'cinematic photography with soft lighting',
+                concept: conceptTitle
+              }
+            };
+          }
+          return node;
+        }));
+        
+        console.log(`Generated script with ${scriptResponse.segments.length} segments`);
+      } else {
+        throw new Error('Invalid response format from script generation API');
+      }
+    } catch (error) {
+      console.error('Error generating script:', error);
+      // Show error in script node
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === scriptNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Failed to generate script',
+              error: error.message || 'Failed to generate script',
+              nodeState: 'error'
+            }
+          };
+        }
+        return node;
+      }));
+    } finally {
+      setGeneratingScripts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(scriptNode.id);
+        return newSet;
+      });
+      setLoading(false);
+    }
+  }, [setNodes, setLoading, setError]);
+  
+  // Handle automatic segment creation
+  const handleSegmentCreation = useCallback(async (scriptNode, segmentNode) => {
+    const segments = scriptNode.data?.segments || [];
+    
+    if (segments.length === 0) {
+      console.error('No segments found in script node');
+      return;
+    }
+    
+    // Remove the placeholder segment node
+    setNodes(prevNodes => prevNodes.filter(node => node.id !== segmentNode.id));
+    setEdges(prevEdges => prevEdges.filter(edge => edge.target !== segmentNode.id));
+    
+    // Create segment nodes from script segments (limit to 5)
+    const segmentsToCreate = segments.slice(0, 5);
+    const newSegmentNodes = segmentsToCreate.map((segment, index) => {
+      const segmentNodeId = `segment-${scriptNode.id}-${index}-${Date.now()}`;
+      return {
+        id: segmentNodeId,
+        type: 'segmentNode',
+        position: {
+          x: scriptNode.position.x + (index - 2) * 320,
+          y: scriptNode.position.y + 300
+        },
+        data: {
+          ...segment,
+          id: segment.segmentId || segment.id || index + 1,
+          nodeState: 'generated',
+          title: `Segment ${index + 1}`,
+          visual: segment.visual || '',
+          narration: segment.narration || '',
+          animation: segment.animation || ''
+        }
+      };
+    });
+    
+    // Create edges connecting script to segments
+    const newEdges = segmentsToCreate.map((_, index) => {
+      const segmentNodeId = `segment-${scriptNode.id}-${index}-${Date.now()}`;
+      return {
+        id: `${scriptNode.id}-to-${segmentNodeId}`,
+        source: scriptNode.id,
+        target: segmentNodeId,
+        sourceHandle: 'output',
+        targetHandle: 'input',
+        style: {
+          stroke: '#3b82f6',
+          strokeWidth: 2,
+          filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))'
+        }
+      };
+    });
+    
+    // Add new nodes and edges
+    setNodes(prevNodes => [...prevNodes, ...newSegmentNodes]);
+    setEdges(prevEdges => [...prevEdges, ...newEdges]);
+  }, [setNodes, setEdges]);
+  
+  // Handle image generation from segment
+  const handleImageGeneration = useCallback(async (segmentNode, imageNode) => {
+    try {
+      setGeneratingImages(prev => new Set(prev.add(imageNode.id)));
+      setLoading(true);
+      setError(null);
+      
+      // Get selected project from localStorage (following ChatWidget pattern)
+      let selectedProject = null;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      } catch (e) {
+        console.error('Error parsing project data:', e);
+      }
+      
+      if (!selectedProject) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+      
+      // Update image node to show loading
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === imageNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Generating image...',
+              nodeState: 'loading'
+            }
+          };
+        }
+        return node;
+      }));
+      
+      // Generate image using segment visual prompt (following ChatWidget pattern)
+      const visualPrompt = segmentNode.data?.visual || 'A cinematic scene';
+      const artStyle = segmentNode.data?.artStyle || 'cinematic photography with soft lighting';
+      const segmentId = segmentNode.data?.id || Date.now();
+      
+      console.log("Starting image generation...");
+      console.log("Image generation request:", {
+        visual_prompt: visualPrompt,
+        art_style: artStyle,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: 'imagen' // Using default model like ChatWidget
+      });
+      
+      const imageResponse = await chatApi.generateImage({
+        visual_prompt: visualPrompt,
+        art_style: artStyle,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: 'imagen' // Using default model like ChatWidget
+      });
+      
+      console.log("Image generation response:", imageResponse);
+      
+      if (imageResponse && imageResponse.s3_key) {
+        // Download image URL (following ChatWidget pattern)
+        const imageUrl = await s3Api.downloadImage(imageResponse.s3_key);
+        
+        // Update image node with generated image
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === imageNode.id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                imageUrl: imageUrl,
+                imageId: imageResponse.id,
+                s3Key: imageResponse.s3_key,
+                visualPrompt: visualPrompt,
+                artStyle: artStyle,
+                nodeState: 'generated',
+                segmentId: segmentId,
+                segmentData: segmentNode.data
+              }
+            };
+          }
+          return node;
+        }));
+        
+        console.log(`Generated image for segment ${segmentId}`);
+      } else {
+        throw new Error('No image key returned from API');
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+      // Show error in image node
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === imageNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Failed to generate image',
+              error: error.message || 'Failed to generate image',
+              nodeState: 'error'
+            }
+          };
+        }
+        return node;
+      }));
+    } finally {
+      setGeneratingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(imageNode.id);
+        return newSet;
+      });
+      setLoading(false);
+    }
+  }, [setNodes, setLoading, setError]);
+  
+  // Handle video generation from image
+  const handleVideoGeneration = useCallback(async (imageNode, videoNode) => {
+    try {
+      setGeneratingVideos(prev => new Set(prev.add(videoNode.id)));
+      setLoading(true);
+      setError(null);
+      
+      // Get selected project from localStorage (following ChatWidget pattern)
+      let selectedProject = null;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      } catch (e) {
+        console.error('Error parsing project data:', e);
+      }
+      
+      if (!selectedProject) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+      
+      // Update video node to show loading
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === videoNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Generating video...',
+              nodeState: 'loading'
+            }
+          };
+        }
+        return node;
+      }));
+      
+      // Generate video using image and segment animation prompt (following ChatWidget pattern)
+      const animationPrompt = imageNode.data?.segmentData?.animation || imageNode.data?.segmentData?.visual || 'Smooth cinematic movement';
+      const artStyle = imageNode.data?.artStyle || 'cinematic photography with soft lighting';
+      // Try multiple possible s3Key field names for backward compatibility
+      let imageS3Key = imageNode.data?.s3Key || imageNode.data?.imageS3Key || imageNode.data?.image_s3_key;
+      const segmentId = imageNode.data?.segmentId || Date.now();
+      
+      // If no direct s3Key, try to extract from imageUrl
+      if (!imageS3Key && imageNode.data?.imageUrl) {
+        const imageUrl = imageNode.data.imageUrl;
+        if (imageUrl.includes('cloudfront.net/')) {
+          const urlParts = imageUrl.split('cloudfront.net/');
+          if (urlParts.length > 1) {
+            imageS3Key = urlParts[1];
+            console.log('Extracted s3Key from imageUrl:', imageS3Key);
+          }
+        }
+      }
+      
+      if (!imageS3Key) {
+        console.error('Image node data:', imageNode.data);
+        console.error('Available keys:', Object.keys(imageNode.data));
+        throw new Error('No image S3 key found for video generation. Check if the image has s3Key property or valid imageUrl.');
+      }
+      
+      console.log("Starting video generation...");
+      console.log("Video generation request:", {
+        animation_prompt: animationPrompt,
+        art_style: artStyle,
+        image_s3_key: imageS3Key,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: 'gen4_turbo' // Using RunwayML gen4_turbo model
+      });
+      
+      const videoResponse = await chatApi.generateVideo({
+        animation_prompt: animationPrompt,
+        art_style: artStyle,
+        image_s3_key: imageS3Key,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: 'gen4_turbo' // Using RunwayML gen4_turbo model
+      });
+      
+      console.log("Video generation response:", videoResponse);
+      
+      if (videoResponse && videoResponse.s3_key) {
+        // Download video URL (following ChatWidget pattern)
+        const videoUrl = await s3Api.downloadVideo(videoResponse.s3_key);
+        
+        // Update video node with generated video
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === videoNode.id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                videoUrl: videoUrl,
+                videoId: videoResponse.id,
+                segmentId: segmentId,
+                imageId: imageNode.data?.imageId,
+                animationPrompt: animationPrompt,
+                nodeState: 'generated',
+                segmentData: imageNode.data?.segmentData
+              }
+            };
+          }
+          return node;
+        }));
+        
+        // Store temporary video for immediate display
+        setTemporaryVideos(prev => {
+          const newMap = new Map(prev);
+          const key = `${segmentId}-${imageNode.data?.imageId}`;
+          newMap.set(key, videoUrl);
+          return newMap;
+        });
+        
+        console.log(`Generated video for segment ${segmentId}`);
+      } else {
+        throw new Error('No video key returned from API');
+      }
+    } catch (error) {
+      console.error('Error generating video:', error);
+      // Show error in video node
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === videoNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Failed to generate video',
+              error: error.message || 'Failed to generate video',
+              nodeState: 'error'
+            }
+          };
+        }
+        return node;
+      }));
+    } finally {
+      setGeneratingVideos(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(videoNode.id);
+        return newSet;
+      });
+      setLoading(false);
+    }
+  }, [setNodes, setTemporaryVideos, setLoading, setError]);
 
   // Keep the graph within bounds when nodes/edges change
   useEffect(() => {

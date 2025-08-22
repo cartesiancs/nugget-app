@@ -18,11 +18,11 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
             className='flex items-center gap-2 rounded-2xl px-3 py-2 shadow-2xl'
             style={{ background: "#18191CB2", backdropFilter: "blur(20px)" }}
           >
-            {/* Add Concept */}
+            {/* Add Concept (User Node) */}
             <img
               src={assets.ConceptIcon}
               onClick={() => {
-                onAddNode("concept");
+                onAddNode("user");
                 setAddMenuExpanded(false);
               }}
               className='h-8 w-8 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'

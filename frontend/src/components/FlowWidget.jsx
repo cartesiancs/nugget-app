@@ -21,6 +21,7 @@ import NodeScript from "./FlowWidget/Node_Script";
 import NodeChat from "./FlowWidget/NodeChat";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
+import UserNode from "./FlowWidget/UserNode";
 import { assets } from "../assets/assets";
 import FlowWidgetBottomToolbar from "./FlowWidget/FlowWidgetBottomToolbar";
 import { webInfoApi } from "../services/web-info";
@@ -330,6 +331,62 @@ function FlowWidget() {
     const startY = 100;
 
     let currentY = startY;
+
+    // Check for user concepts that match current project
+    let selectedProject = null;
+    try {
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      selectedProject = storedProject ? JSON.parse(storedProject) : null;
+    } catch (e) {
+      console.error('Error parsing project data:', e);
+    }
+
+    // Add User Node if there are matching user node data for this project
+    if (selectedProject) {
+      const userNodeDataKey = `userNodeData-${selectedProject.id}`;
+      const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
+      
+      // Check if there are any user node data for this project
+      const userNodeEntries = Object.entries(existingUserNodeData).filter(
+        ([nodeId, data]) => data && data.projectId === selectedProject.id
+      );
+      
+      if (userNodeEntries.length > 0) {
+        // Create a single user node that represents all user inputs
+        const userNodeId = `user-${selectedProject.id}`;
+        const allUserTexts = userNodeEntries.map(([nodeId, data]) => data.text).join('\n\n');
+        
+        newNodes.push({
+          id: userNodeId,
+          type: "userNode",
+          position: { x: startX + 200, y: currentY - 200 }, // Position above concepts
+          data: {
+            id: userNodeId,
+            userText: allUserTexts,
+            projectId: selectedProject.id,
+            nodeState: 'user'
+          },
+        });
+        
+        // Connect user node to all existing concepts if they exist
+        if (flowData.concepts && flowData.concepts.length > 0) {
+          flowData.concepts.forEach((concept, index) => {
+            newEdges.push({
+              id: `${userNodeId}-to-concept-${concept.id}`,
+              source: userNodeId,
+              target: `concept-${concept.id}`,
+              sourceHandle: "output",
+              targetHandle: "input",
+              style: {
+                stroke: "#3b82f6",
+                strokeWidth: 2,
+                filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))",
+              },
+            });
+          });
+        }
+      }
+    }
 
     // 1. Create Concept Nodes
     if (flowData.concepts && flowData.concepts.length > 0) {
@@ -665,7 +722,7 @@ function FlowWidget() {
       prevEdges.filter((edge) => !edge.target.includes("chat-")),
     );
     
-    if (nodeType === 'conceptNode') {
+    if (nodeType === 'userNode') {
       // Get selected project from localStorage (following ChatWidget pattern)
       let selectedProject = null;
       try {
@@ -693,25 +750,28 @@ function FlowWidget() {
         return;
       }
       
-      // Store user concept in localStorage
-      const userConceptsKey = `user-concepts-${selectedProject.id}`;
-      const existingUserConcepts = JSON.parse(localStorage.getItem(userConceptsKey) || '{}');
-      existingUserConcepts[nodeId] = message;
-      localStorage.setItem(userConceptsKey, JSON.stringify(existingUserConcepts));
+      // Store user node data in localStorage with project ID and user text
+      const userNodeDataKey = `userNodeData-${selectedProject.id}`;
+      const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
+      existingUserNodeData[nodeId] = {
+        projectId: selectedProject.id,
+        text: message
+      };
+      localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
       
       // Update state
       setUserConcepts(prev => new Map(prev.set(nodeId, message)));
       
-      // Update the concept node to show user text and loading state
+      // Update the user node to show user text and loading state
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === nodeId) {
           return {
             ...node,
             data: {
               ...node.data,
-              content: message,
-              nodeState: 'user', // Mark as user concept
-              userText: message
+              userText: message,
+              nodeState: 'user', // Mark as user input
+              content: message
             }
           };
         }
@@ -763,7 +823,7 @@ function FlowWidget() {
             };
           });
           
-          // Create edges connecting user concept to generated concepts
+          // Create edges connecting user node to generated concepts
           const newEdges = conceptsResponse.concepts.map((_, index) => {
             const conceptNodeId = `generated-concept-${nodeId}-${index}-${Date.now()}`;
             return {
@@ -871,6 +931,13 @@ function FlowWidget() {
           newNodeData.content = "";
           newNodeData.nodeState = "new";
           break;
+        case "user":
+          newNodeType = "userNode";
+          newNodeData.userText = "";
+          newNodeData.nodeState = "new";
+          // Position user node at the top of the flow
+          centerY = 50;
+          break;
         default:
           newNodeType = "scriptNode";
           newNodeData.content = "New node...";
@@ -961,6 +1028,7 @@ function FlowWidget() {
       segmentNode: NodeSegment,
       conceptNode: NodeConcept,
       chatNode: ChatNode,
+      userNode: UserNode,
     }),
     [],
   );
@@ -972,11 +1040,11 @@ function FlowWidget() {
   
   // Load user concepts from localStorage on mount
   useEffect(() => {
-    const projectId = localStorage.getItem('project-store-selectedProject');
-    if (projectId) {
+    const projectData = localStorage.getItem('project-store-selectedProject');
+    if (projectData) {
       try {
-        const projectData = JSON.parse(projectId);
-        const userConceptsKey = `user-concepts-${projectData.id || 'default'}`;
+        const project = JSON.parse(projectData);
+        const userConceptsKey = `user-concepts-${project.id || 'default'}`;
         const existingUserConcepts = JSON.parse(localStorage.getItem(userConceptsKey) || '{}');
         setUserConcepts(new Map(Object.entries(existingUserConcepts)));
       } catch (e) {
@@ -1054,42 +1122,115 @@ function FlowWidget() {
         return node;
       }));
       
-      // Generate script using concept content (following ChatWidget pattern)
+      // Generate 2 different scripts using concept content
       const conceptContent = conceptNode.data?.content || conceptNode.data?.userText || '';
       const conceptTitle = conceptNode.data?.title || 'Selected Concept';
       
-      console.log("Starting script generation...");
-      const scriptResponse = await segmentationApi.getSegmentation({
-        prompt: `Generate a detailed script for: ${conceptContent}`,
-        concept: conceptTitle,
-        negative_prompt: "",
-        project_id: selectedProject.id,
-        model: 'flash' // Using default model like ChatWidget
-      });
+      console.log("Starting script generation for concept:", conceptTitle);
       
-      console.log("Script generation response:", scriptResponse);
+      // Generate 2 different scripts by making 2 API calls with different approaches
+      const [scriptResponse1, scriptResponse2] = await Promise.all([
+        segmentationApi.getSegmentation({
+          prompt: `Generate a detailed cinematic script for: ${conceptContent}`,
+          concept: `${conceptTitle} - Cinematic Style`,
+          negative_prompt: "",
+          project_id: selectedProject.id,
+          model: 'flash'
+        }),
+        segmentationApi.getSegmentation({
+          prompt: `Generate an alternative creative script for: ${conceptContent}`,
+          concept: `${conceptTitle} - Creative Style`,
+          negative_prompt: "",
+          project_id: selectedProject.id,
+          model: 'flash'
+        })
+      ]);
       
-      if (scriptResponse && scriptResponse.segments && Array.isArray(scriptResponse.segments)) {
-        // Update script node with generated content
-        setNodes(prevNodes => prevNodes.map(node => {
-          if (node.id === scriptNode.id) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                content: `Script generated with ${scriptResponse.segments.length} segments`,
-                segments: scriptResponse.segments,
-                nodeState: 'generated',
-                title: `Script for: ${conceptTitle}`,
-                artStyle: scriptResponse.artStyle || 'cinematic photography with soft lighting',
-                concept: conceptTitle
-              }
-            };
-          }
-          return node;
-        }));
+      console.log("Script generation responses:", { scriptResponse1, scriptResponse2 });
+      
+      if (scriptResponse1 && scriptResponse1.segments && Array.isArray(scriptResponse1.segments) &&
+          scriptResponse2 && scriptResponse2.segments && Array.isArray(scriptResponse2.segments)) {
         
-        console.log(`Generated script with ${scriptResponse.segments.length} segments`);
+        // Remove the placeholder script node
+        setNodes(prevNodes => prevNodes.filter(node => node.id !== scriptNode.id));
+        setEdges(prevEdges => prevEdges.filter(edge => edge.target !== scriptNode.id));
+        
+        // Create 2 new script nodes
+        const newScriptNodes = [];
+        const newEdges = [];
+        
+        // Create first script node (Cinematic)
+        const script1NodeId = `script-${conceptNode.id}-1-${Date.now()}`;
+        newScriptNodes.push({
+          id: script1NodeId,
+          type: 'scriptNode',
+          position: {
+            x: scriptNode.position.x - 150,
+            y: scriptNode.position.y
+          },
+          data: {
+            id: script1NodeId,
+            content: `Cinematic Script - ${scriptResponse1.segments.length} segments`,
+            segments: scriptResponse1.segments,
+            nodeState: 'generated',
+            title: `Cinematic Script`,
+            artStyle: scriptResponse1.artStyle || 'cinematic photography with soft lighting',
+            concept: conceptTitle
+          }
+        });
+        
+        // Create second script node (Creative)
+        const script2NodeId = `script-${conceptNode.id}-2-${Date.now()}`;
+        newScriptNodes.push({
+          id: script2NodeId,
+          type: 'scriptNode',
+          position: {
+            x: scriptNode.position.x + 150,
+            y: scriptNode.position.y
+          },
+          data: {
+            id: script2NodeId,
+            content: `Creative Script - ${scriptResponse2.segments.length} segments`,
+            segments: scriptResponse2.segments,
+            nodeState: 'generated',
+            title: `Creative Script`,
+            artStyle: scriptResponse2.artStyle || 'creative artistic style',
+            concept: conceptTitle
+          }
+        });
+        
+        // Create edges connecting concept to both script nodes
+        newEdges.push({
+          id: `${conceptNode.id}-to-${script1NodeId}`,
+          source: conceptNode.id,
+          target: script1NodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))'
+          }
+        });
+        
+        newEdges.push({
+          id: `${conceptNode.id}-to-${script2NodeId}`,
+          source: conceptNode.id,
+          target: script2NodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#3b82f6',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))'
+          }
+        });
+        
+        // Add new nodes and edges
+        setNodes(prevNodes => [...prevNodes, ...newScriptNodes]);
+        setEdges(prevEdges => [...prevEdges, ...newEdges]);
+        
+        console.log(`Generated 2 different script nodes from concept`);
       } else {
         throw new Error('Invalid response format from script generation API');
       }
@@ -1263,6 +1404,9 @@ function FlowWidget() {
         }));
         
         console.log(`Generated image for segment ${segmentId}`);
+        
+        // Refresh project data to update the flow
+        await refreshProjectData();
       } else {
         throw new Error('No image key returned from API');
       }
@@ -1291,7 +1435,7 @@ function FlowWidget() {
       });
       setLoading(false);
     }
-  }, [setNodes, setLoading, setError]);
+  }, [setNodes, setLoading, setError, refreshProjectData]);
   
   // Handle video generation from image
   const handleVideoGeneration = useCallback(async (imageNode, videoNode) => {
@@ -1407,6 +1551,9 @@ function FlowWidget() {
         });
         
         console.log(`Generated video for segment ${segmentId}`);
+        
+        // Refresh project data to update the flow
+        await refreshProjectData();
       } else {
         throw new Error('No video key returned from API');
       }
@@ -1435,7 +1582,7 @@ function FlowWidget() {
       });
       setLoading(false);
     }
-  }, [setNodes, setTemporaryVideos, setLoading, setError]);
+  }, [setNodes, setTemporaryVideos, setLoading, setError, refreshProjectData]);
 
   // Keep the graph within bounds when nodes/edges change
   useEffect(() => {
@@ -1763,8 +1910,8 @@ function FlowWidget() {
                     maxZoom={1.5}
                     onNodeClick={(event, node) => {
                       setSelectedNode(node);
-                      // Add chat node when clicking on non-chat nodes
-                      if (node.type !== "chatNode") {
+                      // Add chat node only when clicking on user nodes
+                      if (node.type === "userNode") {
                         handleAddChatNode(node);
                       }
                     }}

@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Handle } from "@xyflow/react";
 import { User, Edit3, MessageSquare, Lightbulb } from "lucide-react";
 
 function UserNode({ data, isConnectable, selected }) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(data.userText || "");
+
+  // Update text when data changes
+  useEffect(() => {
+    if (data.userText && data.userText !== text) {
+      setText(data.userText);
+    }
+  }, [data.userText]);
 
   // Check node state and data
   const nodeState = data?.nodeState || 'new';

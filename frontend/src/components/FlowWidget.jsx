@@ -762,7 +762,7 @@ function FlowWidget() {
       // Update state
       setUserConcepts(prev => new Map(prev.set(nodeId, message)));
       
-      // Update the user node to show user text and loading state
+      // Update the user node to show user text immediately
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === nodeId) {
           return {

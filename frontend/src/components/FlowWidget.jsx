@@ -778,11 +778,45 @@ function FlowWidget() {
         return node;
       }));
       
+      // Create a single loading concept node first
+      const loadingConceptNodeId = `loading-concept-${nodeId}-${Date.now()}`;
+      const userNodePosition = nodes.find(n => n.id === nodeId)?.position || { x: 0, y: 0 };
+      const loadingConceptNode = {
+        id: loadingConceptNodeId,
+        type: 'conceptNode',
+        position: {
+          x: userNodePosition.x,
+          y: userNodePosition.y + 300
+        },
+        data: {
+          id: loadingConceptNodeId,
+          content: 'Generating concepts...',
+          nodeState: 'loading',
+          title: 'Loading Concepts'
+        }
+      };
+      
+      // Create edge connecting user node to loading concept node
+      const loadingEdge = {
+        id: `${nodeId}-to-${loadingConceptNodeId}`,
+        source: nodeId,
+        target: loadingConceptNodeId,
+        sourceHandle: 'output',
+        targetHandle: 'input',
+        style: {
+          stroke: '#8b5cf6',
+          strokeWidth: 2,
+          filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))'
+        }
+      };
+      
+      // Add loading concept node and edge immediately
+      setNodes(prevNodes => [...prevNodes, loadingConceptNode]);
+      setEdges(prevEdges => [...prevEdges, loadingEdge]);
+
       // Generate concepts from backend (following ChatWidget pattern)
       try {
-        setGeneratingConcepts(prev => new Set(prev.add(nodeId)));
-        setLoading(true);
-        setError(null);
+        setGeneratingConcepts(prev => new Set(prev.add(loadingConceptNodeId)));
         
         console.log("Starting concept generation pipeline...");
         
@@ -801,17 +835,26 @@ function FlowWidget() {
           selectedProject.id,
         );
         console.log("Concept-writer response:", conceptsResponse);
+        console.log("Number of concepts returned:", conceptsResponse?.concepts?.length || 0);
         
         if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
+          // Remove the loading concept node and its edge
+          setNodes(prevNodes => prevNodes.filter(node => node.id !== loadingConceptNodeId));
+          setEdges(prevEdges => prevEdges.filter(edge => edge.target !== loadingConceptNodeId));
+          
           // Create concept nodes from backend response
+          const userNodePosition = nodes.find(n => n.id === nodeId)?.position || { x: 0, y: 0 };
+          const conceptCount = conceptsResponse.concepts.length;
+          const startX = userNodePosition.x - (conceptCount - 1) * 175; // Center the concepts
+          
           const newConceptNodes = conceptsResponse.concepts.map((concept, index) => {
             const conceptNodeId = `generated-concept-${nodeId}-${index}-${Date.now()}`;
             return {
               id: conceptNodeId,
               type: 'conceptNode',
               position: {
-                x: nodes.find(n => n.id === nodeId)?.position.x + (index - 1) * 350,
-                y: nodes.find(n => n.id === nodeId)?.position.y + 300
+                x: startX + index * 350,
+                y: userNodePosition.y + 300
               },
               data: {
                 ...concept,
@@ -822,6 +865,8 @@ function FlowWidget() {
               }
             };
           });
+          
+          console.log(`Creating ${conceptCount} concept nodes from backend response:`, conceptsResponse.concepts);
           
           // Create edges connecting user node to generated concepts
           const newEdges = conceptsResponse.concepts.map((_, index) => {
@@ -850,13 +895,14 @@ function FlowWidget() {
         }
       } catch (error) {
         console.error('Error generating concepts:', error);
-        // Show error in the concept node
+        // Show error in the loading concept node
         setNodes(prevNodes => prevNodes.map(node => {
-          if (node.id === nodeId) {
+          if (node.id === loadingConceptNodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
+                content: 'Failed to generate concepts',
                 error: error.message || 'Failed to generate concepts',
                 nodeState: 'error'
               }
@@ -867,13 +913,12 @@ function FlowWidget() {
       } finally {
         setGeneratingConcepts(prev => {
           const newSet = new Set(prev);
-          newSet.delete(nodeId);
+          newSet.delete(loadingConceptNodeId);
           return newSet;
         });
-        setLoading(false);
       }
     }
-  }, [nodes, setNodes, setEdges, setLoading, setError]);
+  }, [nodes, setNodes, setEdges, setError]);
 
   // Handle adding new nodes
   const handleAddNode = useCallback(
@@ -1091,8 +1136,21 @@ function FlowWidget() {
   const handleScriptGeneration = useCallback(async (conceptNode, scriptNode) => {
     try {
       setGeneratingScripts(prev => new Set(prev.add(scriptNode.id)));
-      setLoading(true);
-      setError(null);
+      
+      // Update script node to show loading
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.id === scriptNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Generating scripts...',
+              nodeState: 'loading'
+            }
+          };
+        }
+        return node;
+      }));
       
       // Get selected project from localStorage (following ChatWidget pattern)
       let selectedProject = null;
@@ -1257,9 +1315,8 @@ function FlowWidget() {
         newSet.delete(scriptNode.id);
         return newSet;
       });
-      setLoading(false);
     }
-  }, [setNodes, setLoading, setError]);
+  }, [setNodes, setError]);
   
   // Handle automatic segment creation
   const handleSegmentCreation = useCallback(async (scriptNode, segmentNode) => {
@@ -1323,8 +1380,6 @@ function FlowWidget() {
   const handleImageGeneration = useCallback(async (segmentNode, imageNode) => {
     try {
       setGeneratingImages(prev => new Set(prev.add(imageNode.id)));
-      setLoading(true);
-      setError(null);
       
       // Get selected project from localStorage (following ChatWidget pattern)
       let selectedProject = null;
@@ -1433,16 +1488,13 @@ function FlowWidget() {
         newSet.delete(imageNode.id);
         return newSet;
       });
-      setLoading(false);
     }
-  }, [setNodes, setLoading, setError, refreshProjectData]);
+  }, [setNodes, setError, refreshProjectData]);
   
   // Handle video generation from image
   const handleVideoGeneration = useCallback(async (imageNode, videoNode) => {
     try {
       setGeneratingVideos(prev => new Set(prev.add(videoNode.id)));
-      setLoading(true);
-      setError(null);
       
       // Get selected project from localStorage (following ChatWidget pattern)
       let selectedProject = null;
@@ -1580,9 +1632,8 @@ function FlowWidget() {
         newSet.delete(videoNode.id);
         return newSet;
       });
-      setLoading(false);
     }
-  }, [setNodes, setTemporaryVideos, setLoading, setError, refreshProjectData]);
+  }, [setNodes, setTemporaryVideos, setError, refreshProjectData]);
 
   // Keep the graph within bounds when nodes/edges change
   useEffect(() => {
@@ -1866,11 +1917,7 @@ function FlowWidget() {
               </div>
             </div>
             <div className='flex-1 overflow-auto'>
-              {loading ? (
-                <div className='flex items-center justify-center h-full'>
-                  <LoadingSpinner />
-                </div>
-              ) : error ? (
+              {error ? (
                 <div className='flex items-center justify-center h-full'>
                   <div className='text-red-400 text-center p-4'>
                     <p>{error}</p>

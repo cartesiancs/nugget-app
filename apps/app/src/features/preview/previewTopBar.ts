@@ -172,6 +172,8 @@ export class PreviewTopBar extends LitElement {
     if (mode === "sandbox") {
       console.log("PreviewTopBar: open FlowWidget overlay");
       window.dispatchEvent(new CustomEvent("flowWidget:open"));
+      // Dispatch event to hide timeline UI elements
+      window.dispatchEvent(new CustomEvent("sandbox:opened"));
       // Remain in timeline view; do not change layout
       return;
     }
@@ -179,6 +181,8 @@ export class PreviewTopBar extends LitElement {
     // Close overlay explicitly when timeline clicked
     this.viewMode = "timeline";
     window.dispatchEvent(new CustomEvent("flowWidget:close"));
+    // Dispatch event to show timeline UI elements
+    window.dispatchEvent(new CustomEvent("sandbox:closed"));
   }
 
   render() {

@@ -180,19 +180,7 @@ function FlowWidget() {
     }
   }, [open]);
 
-  // Re-add global open / close custom event listeners for external control
-  useEffect(() => {
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
 
-    window.addEventListener("flowWidget:open", handleOpen);
-    window.addEventListener("flowWidget:close", handleClose);
-
-    return () => {
-      window.removeEventListener("flowWidget:open", handleOpen);
-      window.removeEventListener("flowWidget:close", handleClose);
-    };
-  }, []);
 
   // Load data from API (no localStorage fallback)
   const flowData = useMemo(() => {
@@ -1674,11 +1662,17 @@ function FlowWidget() {
 
   // Listen for sandbox open/close events
   useEffect(() => {
-    const openHandler = () => setOpen(true);
+    const openHandler = () => {
+      setOpen(true);
+      // Dispatch sandbox opened event to hide timeline elements
+      window.dispatchEvent(new CustomEvent("sandbox:opened"));
+    };
     const closeHandler = () => {
       setOpen(false);
       // Clear temporary videos when closing the widget
       setTemporaryVideos(new Map());
+      // Dispatch sandbox closed event to show timeline elements
+      window.dispatchEvent(new CustomEvent("sandbox:closed"));
     };
     window.addEventListener("flowWidget:open", openHandler);
     window.addEventListener("flowWidget:close", closeHandler);
@@ -1792,7 +1786,10 @@ function FlowWidget() {
                 <button
                   className='h-8 px-3 py-1 text-gray-400 hover:text-white transition-colors flex items-center gap-2 rounded-md hover:bg-gray-700/50'
                   aria-label='Timeline tab'
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    // Use the event system to ensure timeline elements are shown
+                    window.dispatchEvent(new CustomEvent("flowWidget:close"));
+                  }}
                 >
                   <img
                     src={assets.TimelineTabIcon}

@@ -1320,49 +1320,49 @@ export const useChatFlow = () => {
   const getToolStartMessage = useCallback((toolName) => {
     switch (toolName) {
       case 'get_web_info':
-        return "🔍 Researching web information for your request...";
+        return "🔍 Researching web information - Gathering relevant content and insights for your video concept";
       case 'generate_concepts_with_approval':
-        return "💡 Analyzing research and generating creative concepts...";
+        return "💡 Concept generation running - Analyzing research data and creating multiple creative video concepts";
       case 'generate_segmentation':
-        return "📜 Creating detailed script segments for your concept...";
+        return "📜 Script generation running - Breaking down your concept into detailed segments with visuals and narration";
       case 'generate_image_with_approval':
-        return "🎨 Generating images for each script segment...";
+        return "🎨 Image generation running - Creating visual content for each script segment using AI";
       case 'generate_video_with_approval':
-        return "🎬 Creating videos from your images...";
+        return "🎬 Video generation running - Converting images into dynamic video content with animations";
       default:
-        return `🔄 Starting ${toolName}...`;
+        return `🔄 Agent processing - ${toolName}`;
     }
   }, []);
 
   const getApprovalMessage = useCallback((toolName) => {
     switch (toolName) {
       case 'get_web_info':
-        return "⏳ Ready to research web information - waiting for your approval";
+        return "⏳ Web research approval - Ready to gather relevant information for your video concept";
       case 'generate_concepts_with_approval':
-        return "⏳ Ready to generate concepts from research - waiting for your approval";
+        return "⏳ Concept generation approval - Ready to create multiple video concepts from research data";
       case 'generate_segmentation':
-        return "⏳ Ready to create script segments - waiting for your approval";
+        return "⏳ Script generation approval - Ready to break down your concept into detailed segments";
       case 'generate_image_with_approval':
-        return "⏳ Ready to generate images - waiting for your approval";
+        return "⏳ Image generation approval - Ready to create visual content for each script segment";
       case 'generate_video_with_approval':
-        return "⏳ Ready to generate videos - waiting for your approval";
+        return "⏳ Video generation approval - Ready to convert images into dynamic video content";
       default:
-        return `⏳ Waiting for approval to proceed with ${toolName}`;
+        return `⏳ Approval required - ${toolName}`;
     }
   }, []);
 
   const getToolCompleteMessage = useCallback((toolName) => {
     switch (toolName) {
       case 'get_web_info':
-        return "✅ Web research completed successfully";
+        return "✅ Web research completed - Information gathered and processed for concept creation";
       case 'generate_concepts_with_approval':
-        return "✅ Concepts generated and ready for selection";
+        return "✅ Concept generation completed - Multiple video concepts created and ready for selection";
       case 'generate_segmentation':
-        return "✅ Script segments created successfully";
+        return "✅ Script generation completed - Detailed segments with visuals and narration ready";
       case 'generate_image_with_approval':
-        return "✅ Images generated for all segments";
+        return "✅ Image generation completed - Visual content created for all script segments";
       case 'generate_video_with_approval':
-        return "✅ Videos generated successfully";
+        return "✅ Video generation completed - Dynamic video content ready for timeline";
       default:
         return `✅ ${toolName} completed successfully`;
     }

@@ -3,6 +3,7 @@ import ConceptSelection from "./ConceptSelection";
 import ScriptSelection from "./ScriptSelection";
 import MediaGeneration from "./MediaGeneration";
 import TimelineButton from "./TimelineButton";
+import VerboseAgentLoader from "./VerboseAgentLoader";
 
 // Dynamic image generation component that always shows current state
 const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
@@ -114,43 +115,32 @@ const ChatMessages = ({
     }
   }, [messages.length, lastMessageCount]);
 
-  // Build messages in proper order based on chat flow state
+  // Build messages in proper order based on chat flow state and real timestamps
   useEffect(() => {
     const orderedMessages = [];
 
-    // Step 1: Add initial user prompt if we have concepts (meaning the flow started)
-    if (chatFlow.currentUserMessage && chatFlow.concepts?.length > 0) {
-      orderedMessages.push({
-        id: `user-message-${chatFlow.messageCounter}`,
-        type: "user",
-        content: chatFlow.currentUserMessage,
-        timestamp: Date.now() - 4000, // Older timestamp to show first
-      });
-    }
-
-    // Step 1.5: Add key streaming messages in proper order
-    if (chatFlow.streamMessages && chatFlow.streamMessages.length > 0) {
-      // Only show important completion messages, not all stream messages
-      const importantMessages = chatFlow.streamMessages.filter(streamMsg => 
-        streamMsg.type === 'result' && 
-        streamMsg.data?.message && 
-        (streamMsg.data.message.includes('completed') || 
-         streamMsg.data.message.includes('generated') ||
-         streamMsg.data.message.includes('success'))
-      );
-      
-      importantMessages.forEach((streamMsg, index) => {
+    // Step 1: Add all real user/system messages from allUserMessages (with real timestamps)
+    if (chatFlow.allUserMessages && chatFlow.allUserMessages.length > 0) {
+      chatFlow.allUserMessages.forEach(msg => {
         orderedMessages.push({
-          id: `stream-${index}-${streamMsg.timestamp}`,
-          type: "system",
-          content: `${streamMsg.data.message}`,
-          timestamp: new Date(streamMsg.timestamp).getTime() - 3500 + index,
+          id: msg.id,
+          type: msg.type || "system",
+          content: msg.content,
+          timestamp: msg.timestamp || Date.now(),
         });
       });
     }
 
-    // Step 2: Add concept selection after user prompt
+    // Step 2: Add component-based messages with contextual timestamps based on related system messages
+    
+    // Find concept-related message timestamp
+    const conceptMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('generated') && msg.content.includes('concepts')
+    );
+    
+    // Add concept selection component
     if (chatFlow.concepts && chatFlow.concepts.length > 0) {
+      const conceptTimestamp = conceptMessage ? conceptMessage.timestamp + 50 : Date.now();
       orderedMessages.push({
         id: "concept-request",
         type: "system",
@@ -176,12 +166,19 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now() - 3000,
+        timestamp: conceptTimestamp,
       });
     }
 
-    // Step 3: Add script generation message after concept is selected
+    // Find script-related message timestamp
+    const scriptMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('script segments') || msg.content.includes('create script')
+    );
+
+    // Add script selection component
     if (chatFlow.selectedConcept && (chatFlow.scripts || chatFlow.selectedScript)) {
+      const scriptTimestamp = scriptMessage ? scriptMessage.timestamp + 50 : 
+                              (conceptMessage ? conceptMessage.timestamp + 1000 : Date.now());
       orderedMessages.push({
         id: "script-request",
         type: "system",
@@ -208,12 +205,20 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now() - 2000,
+        timestamp: scriptTimestamp,
       });
     }
 
-    // Step 4: Add image generation section after script is selected
+    // Find image-related message timestamp
+    const imageMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('generated') && msg.content.includes('images')
+    );
+
+    // Add image generation component
     if (chatFlow.selectedScript && chatFlow.currentStep >= 4) {
+      const imageTimestamp = imageMessage ? imageMessage.timestamp + 50 : 
+                             (scriptMessage ? scriptMessage.timestamp + 1000 : 
+                              (conceptMessage ? conceptMessage.timestamp + 2000 : Date.now()));
       orderedMessages.push({
         id: "image-generation",
         type: "system",
@@ -225,12 +230,21 @@ const ChatMessages = ({
             setPrompt={setPrompt}
           />
         ),
-        timestamp: Date.now() - 1000,
+        timestamp: imageTimestamp,
       });
     }
 
-    // Step 5: Add video generation section after images are generated
+    // Find video-related message timestamp
+    const videoMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('generated') && msg.content.includes('videos')
+    );
+
+    // Add video generation component
     if (Object.keys(chatFlow.generatedImages || {}).length > 0 && chatFlow.currentStep >= 5) {
+      const videoTimestamp = videoMessage ? videoMessage.timestamp + 50 : 
+                             (imageMessage ? imageMessage.timestamp + 1000 : 
+                              (scriptMessage ? scriptMessage.timestamp + 2000 : 
+                               (conceptMessage ? conceptMessage.timestamp + 3000 : Date.now())));
       orderedMessages.push({
         id: "video-generation",
         type: "system",
@@ -243,17 +257,21 @@ const ChatMessages = ({
             onAddSingleVideo={onAddSingleVideo}
           />
         ),
-        timestamp: Date.now(),
+        timestamp: videoTimestamp,
       });
     }
 
-    // Step 6: Add timeline integration when videos are ready
+    // Add timeline integration component
     const canSendTimeline =
       Object.keys(chatFlow.generatedVideos || {}).length > 0 ||
       Object.keys(chatFlow.storedVideosMap || {}).length > 0 ||
       Object.keys(combinedVideosMap || {}).length > 0;
 
     if (canSendTimeline) {
+      const timelineTimestamp = videoMessage ? videoMessage.timestamp + 50 : 
+                               (imageMessage ? imageMessage.timestamp + 1000 : 
+                                (scriptMessage ? scriptMessage.timestamp + 2000 : 
+                                 (conceptMessage ? conceptMessage.timestamp + 4000 : Date.now())));
       orderedMessages.push({
         id: "timeline-integration",
         type: "system",
@@ -271,15 +289,18 @@ const ChatMessages = ({
             />
           </div>
         ),
-        timestamp: Date.now() + 1000,
+        timestamp: timelineTimestamp,
       });
     }
 
+    // Sort all messages by timestamp to ensure chronological order
+    const sortedMessages = orderedMessages.sort((a, b) => a.timestamp - b.timestamp);
+    
     // Only update if there are actual changes
-    setMessages(orderedMessages);
+    setMessages(sortedMessages);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    chatFlow.currentUserMessage,
-    chatFlow.messageCounter,
+    chatFlow.allUserMessages, // Now using real messages with timestamps
     chatFlow.concepts,
     chatFlow.selectedConcept,
     chatFlow.scripts,
@@ -289,7 +310,6 @@ const ChatMessages = ({
     chatFlow.generatedVideos,
     chatFlow.storedVideosMap,
     chatFlow.addingTimeline,
-    chatFlow.streamMessages,
     combinedVideosMap,
     currentPrompt,
     setPrompt,
@@ -316,21 +336,8 @@ const ChatMessages = ({
               message.id === "video-generation" ||
               message.id === "timeline-integration"
                 ? "w-full p-0" // Full width and no padding/background for component messages
-                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg`
+                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-white/10`
             }`}
-            style={
-              message.id !== "concept-request" &&
-              message.id !== "script-request" &&
-              message.id !== "image-generation" &&
-              message.id !== "video-generation" &&
-              message.id !== "timeline-integration"
-                ? {
-                    background: "#18191C80",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }
-                : {}
-            }
           >
             {message.content && (
               <div className='text-sm'>{message.content}</div>
@@ -344,22 +351,15 @@ const ChatMessages = ({
         </div>
       ))}
 
-      {/* Enhanced Loading indicator with agent activity */}
-      {chatFlow.loading && (
+      {/* Simple Loading indicator - only show when NOT streaming */}
+      {chatFlow.loading && !chatFlow.isStreaming && (
         <div className='flex justify-start'>
-          <div
-            className='text-gray-100 rounded-lg p-2.5'
-            style={{
-              background: "#18191C80",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
+          <div className='text-gray-100 rounded-lg p-2.5 bg-gray-900/50 backdrop-blur-sm border border-white/10'>
             <div className='flex items-center space-x-2'>
               <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400'></div>
               <div className='flex flex-col'>
                 <span className='text-xs text-gray-100'>
-                  {chatFlow.agentActivity || (chatFlow.isStreaming ? 'Agent is working...' : 'Processing...')}
+                  {chatFlow.agentActivity || 'Processing...'}
                 </span>
                 {chatFlow.streamingProgress && (
                   <span className='text-xs text-gray-400 mt-1'>
@@ -381,14 +381,7 @@ const ChatMessages = ({
       {/* Credit Deduction Notification */}
       {chatFlow.creditDeductionMessage && (
         <div className='flex justify-start'>
-          <div
-            className='text-green-100 rounded-lg p-2.5 max-w-[80%]'
-            style={{
-              background: "rgba(34, 197, 94, 0.1)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(34, 197, 94, 0.3)",
-            }}
-          >
+          <div className='text-green-100 rounded-lg p-2.5 max-w-[80%] bg-green-500/10 backdrop-blur-sm border border-green-500/30'>
             <div className='flex items-center gap-2 text-xs'>
               <span>💰</span>
               <span>{chatFlow.creditDeductionMessage}</span>
@@ -400,14 +393,7 @@ const ChatMessages = ({
       {/* Error message */}
       {chatFlow.error && (
         <div className='flex justify-start'>
-          <div
-            className='text-gray-100 rounded-lg p-2.5 max-w-[80%]'
-            style={{
-              background: "#18191C80",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
+          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-gray-900/50 backdrop-blur-sm border border-white/10'>
             <div className='text-xs'>❌ {chatFlow.error}</div>
             <button
               onClick={() => chatFlow.setError(null)}
@@ -424,55 +410,14 @@ const ChatMessages = ({
       {/* Agent Status and Approvals */}
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
-          <div 
-            className='max-w-[80%] p-2.5 text-gray-100 rounded-lg'
-            style={{
-              background: "#18191C80",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
-            {/* Enhanced Agent Working Indicator */}
+          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-white/10'>
+            {/* Enhanced Agent Working Indicator - Primary loader during streaming */}
             {chatFlow.isStreaming && (
-              <div className='mb-3'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <div className='flex space-x-1'>
-                    <div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce'></div>
-                    <div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce' style={{animationDelay: '0.1s'}}></div>
-                    <div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce' style={{animationDelay: '0.2s'}}></div>
-                  </div>
-                  <span className='text-gray-100 font-medium'>Agent is working...</span>
-                </div>
-                <div className='text-gray-300 text-sm'>
-                  {chatFlow.agentActivity || "Processing your request and executing tools..."}
-                </div>
-                {chatFlow.streamingProgress && (
-                  <div className='text-gray-400 text-xs mt-1'>
-                    <div className='flex items-center gap-2 mb-1'>
-                      <span>📍 Progress:</span>
-                      <span>{chatFlow.streamingProgress.step || 'Unknown step'}</span>
-                      {chatFlow.streamingProgress.status && (
-                        <span className='text-blue-400'>({chatFlow.streamingProgress.status})</span>
-                      )}
-                    </div>
-                    {chatFlow.streamingProgress.total && chatFlow.streamingProgress.current !== undefined && (
-                      <div className='flex items-center gap-2'>
-                        <div className='flex-1 bg-gray-700 rounded-full h-1'>
-                          <div 
-                            className='bg-blue-400 h-1 rounded-full transition-all duration-300' 
-                            style={{
-                              width: `${(chatFlow.streamingProgress.current / chatFlow.streamingProgress.total) * 100}%`
-                            }}
-                          ></div>
-                        </div>
-                        <span className='text-xs'>
-                          {chatFlow.streamingProgress.current}/{chatFlow.streamingProgress.total}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <VerboseAgentLoader 
+                agentActivity={chatFlow.agentActivity}
+                streamingProgress={chatFlow.streamingProgress}
+                streamMessages={chatFlow.streamMessages}
+              />
             )}
 
             {/* Manual Approval Requests */}

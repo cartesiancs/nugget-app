@@ -204,8 +204,31 @@ const ScriptSelection = ({
         <div className="flex space-x-3 overflow-x-auto pb-4 w-full">
           {/* Script 1 */}
           {(() => {
-            const isSelected = selectedScript && selectedScript.segments && 
-              JSON.stringify(selectedScript.segments) === JSON.stringify(scripts.response1.segments);
+            // More robust selection comparison
+            const isSelected = selectedScript && selectedScript.segments && scripts.response1 && scripts.response1.segments &&
+              selectedScript.segments.length === scripts.response1.segments.length &&
+              selectedScript.segments.every((segment, index) => {
+                const response1Segment = scripts.response1.segments[index];
+                return response1Segment && 
+                  segment.id === response1Segment.id &&
+                  segment.visual === response1Segment.visual &&
+                  segment.narration === response1Segment.narration;
+              });
+            
+            // Debug logging
+            if (selectedScript && scripts.response1) {
+              console.log('Script 1 Selection Debug:', {
+                hasSelectedScript: !!selectedScript,
+                hasSelectedSegments: !!selectedScript?.segments,
+                hasResponse1: !!scripts.response1,
+                hasResponse1Segments: !!scripts.response1?.segments,
+                selectedSegmentsLength: selectedScript?.segments?.length,
+                response1SegmentsLength: scripts.response1?.segments?.length,
+                isSelected,
+                selectedScriptSample: selectedScript?.segments?.[0],
+                response1Sample: scripts.response1?.segments?.[0]
+              });
+            }
             return (
               <div 
                 className={`rounded-lg overflow-hidden transition-all duration-300 cursor-pointer flex-shrink-0 backdrop-blur-sm ${
@@ -302,8 +325,31 @@ const ScriptSelection = ({
 
           {/* Script 2 */}
           {(() => {
-            const isSelected = selectedScript && selectedScript.segments && 
-              JSON.stringify(selectedScript.segments) === JSON.stringify(scripts.response2.segments);
+            // More robust selection comparison
+            const isSelected = selectedScript && selectedScript.segments && scripts.response2 && scripts.response2.segments &&
+              selectedScript.segments.length === scripts.response2.segments.length &&
+              selectedScript.segments.every((segment, index) => {
+                const response2Segment = scripts.response2.segments[index];
+                return response2Segment && 
+                  segment.id === response2Segment.id &&
+                  segment.visual === response2Segment.visual &&
+                  segment.narration === response2Segment.narration;
+              });
+            
+            // Debug logging
+            if (selectedScript && scripts.response2) {
+              console.log('Script 2 Selection Debug:', {
+                hasSelectedScript: !!selectedScript,
+                hasSelectedSegments: !!selectedScript?.segments,
+                hasResponse2: !!scripts.response2,
+                hasResponse2Segments: !!scripts.response2?.segments,
+                selectedSegmentsLength: selectedScript?.segments?.length,
+                response2SegmentsLength: scripts.response2?.segments?.length,
+                isSelected,
+                selectedScriptSample: selectedScript?.segments?.[0],
+                response2Sample: scripts.response2?.segments?.[0]
+              });
+            }
             return (
               <div 
                 className={`rounded-lg overflow-hidden transition-all duration-300 cursor-pointer flex-shrink-0 backdrop-blur-sm ${

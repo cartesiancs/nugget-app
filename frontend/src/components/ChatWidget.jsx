@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useChatFlow } from "../hooks/useChatFlow";
 import { useTimeline } from "../hooks/useTimeline";
@@ -84,10 +84,33 @@ function ChatWidgetSidebar({ open, setOpen }) {
     },
   ];
 
+  // Force re-render state for videos
+  const [videoUpdateTrigger, setVideoUpdateTrigger] = useState(0);
+
+  // Listen for custom video update events
+  useEffect(() => {
+    const handleVideosUpdated = (event) => {
+      console.log('🔔 Received videosUpdated event:', event.detail);
+      setVideoUpdateTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener('videosUpdated', handleVideosUpdated);
+    return () => window.removeEventListener('videosUpdated', handleVideosUpdated);
+  }, []);
+
   // Combined videos map for display
   const combinedVideosMap = useMemo(
-    () => ({ ...chatFlow.generatedVideos, ...chatFlow.storedVideosMap }),
-    [chatFlow.generatedVideos, chatFlow.storedVideosMap],
+    () => {
+      const combined = { ...chatFlow.generatedVideos, ...chatFlow.storedVideosMap };
+      console.log('🔄 Combined videos map updated:', {
+        generatedVideos: chatFlow.generatedVideos,
+        storedVideosMap: chatFlow.storedVideosMap,
+        combined,
+        trigger: videoUpdateTrigger
+      });
+      return combined;
+    },
+    [chatFlow.generatedVideos, chatFlow.storedVideosMap, videoUpdateTrigger],
   );
 
   // Helper functions
@@ -489,11 +512,12 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 {/* Model Selection */}
                 <ModelSelection
                   currentStep={chatFlow.currentStep}
+                  selectedScriptModel={chatFlow.selectedScriptModel}
+                  setSelectedScriptModel={chatFlow.setSelectedScriptModel}
                   selectedImageModel={chatFlow.selectedImageModel}
                   setSelectedImageModel={chatFlow.setSelectedImageModel}
                   selectedVideoModel={chatFlow.selectedVideoModel}
                   setSelectedVideoModel={chatFlow.setSelectedVideoModel}
-                  loading={chatFlow.loading}
                 />
 
                 {/* Generation Progress */}

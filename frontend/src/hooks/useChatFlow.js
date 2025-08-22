@@ -56,13 +56,18 @@ export const useChatFlow = () => {
   const [generationProgress, setGenerationProgress] = useState({});
 
   // Model selection states
+  const [selectedConceptModel, setSelectedConceptModel] = useState(
+    chatApi.getDefaultModel("TEXT"),
+  );
+  const [selectedScriptModel, setSelectedScriptModel] = useState(
+    chatApi.getDefaultModel("TEXT"),
+  );
   const [selectedImageModel, setSelectedImageModel] = useState(
     chatApi.getDefaultModel("IMAGE"),
   );
   const [selectedVideoModel, setSelectedVideoModel] = useState(
     chatApi.getDefaultModel("VIDEO"),
   );
-  const [selectedScriptModel, setSelectedScriptModel] = useState("flash");
 
   // Credit deduction notification state
   const [creditDeductionMessage, setCreditDeductionMessage] = useState(null);
@@ -261,9 +266,10 @@ export const useChatFlow = () => {
     setGenerationProgress({});
     
     // Reset model selections to defaults
+    setSelectedConceptModel(chatApi.getDefaultModel("TEXT"));
+    setSelectedScriptModel(chatApi.getDefaultModel("TEXT"));
     setSelectedImageModel(chatApi.getDefaultModel("IMAGE"));
     setSelectedVideoModel(chatApi.getDefaultModel("VIDEO"));
-    setSelectedScriptModel("flash");
     
     // Reset loading and error states
     setLoading(false);
@@ -1131,24 +1137,17 @@ export const useChatFlow = () => {
       const decoder = new TextDecoder();
       let buffer = '';
 
-      console.log('🔄 Stream reader initialized, starting to read...');
-
       // Create a better stream processor
       const processStream = async () => {
         try {
           while (true) {
-            console.log('📖 Reading stream chunk...');
-            
             const { done, value } = await reader.read();
             
             if (done) {
-              console.log('✅ Stream reading completed');
               break;
             }
 
             const chunk = decoder.decode(value, { stream: true });
-            console.log('📦 Raw chunk received:', chunk);
-            
             buffer += chunk;
             
             // Process complete lines immediately
@@ -1158,20 +1157,14 @@ export const useChatFlow = () => {
             for (const line of lines) {
               if (line.trim() === '') continue;
               
-              console.log('🔍 Processing line:', line);
-              
               if (line.startsWith('data: ')) {
                 try {
                   const jsonData = line.slice(6).trim();
-                  console.log('🧾 JSON data to parse:', jsonData);
                   const data = JSON.parse(jsonData);
-                  console.log('✅ Parsed stream message:', data);
                   await handleStreamMessage(data);
                 } catch (parseError) {
-                  console.error('❌ Error parsing stream message:', parseError, 'Raw line:', line);
+                  console.error('Error parsing stream message:', parseError);
                 }
-              } else if (line.trim()) {
-                console.log('⚠️ Non-data line:', line);
               }
             }
             
@@ -1197,18 +1190,10 @@ export const useChatFlow = () => {
   }, [selectedProject?.id, user?.id]);
 
   const handleStreamMessage = useCallback(async (message) => {
-    console.log('🔄 Received stream message:', message);
-    
-    setStreamMessages(prev => {
-      console.log('📝 Adding to stream messages. Current count:', prev.length);
-      return [...prev, message];
-    });
-
-    console.log('🎯 Processing message type:', message.type);
+    setStreamMessages(prev => [...prev, message]);
 
     switch (message.type) {
       case 'log': {
-        console.log('📋 Stream log:', message.data.message || message.data);
         // Update agent activity with log message if it contains useful info
         const logMessage = message.data.message || message.data;
         if (typeof logMessage === 'string') {
@@ -1240,7 +1225,6 @@ export const useChatFlow = () => {
         break;
 
       case 'approval_required': {
-        console.log('⏳ APPROVAL REQUIRED - Processing...');
         const { approvalId, toolName, arguments: args, agentName } = message.data;
         
         // Set agent activity to show what approval is needed
@@ -1252,22 +1236,17 @@ export const useChatFlow = () => {
           try {
             parsedArgs = JSON.parse(args);
           } catch {
-            console.error('Failed to parse arguments:', args);
             parsedArgs = {};
           }
         }
-        
-        console.log('📊 Approval details:', { approvalId, toolName, parsedArgs, agentName });
         
         // Check if this approval already exists to prevent duplicates
         setPendingApprovals(prev => {
           const existingApproval = prev.find(a => a.id === approvalId);
           if (existingApproval) {
-            console.log('⚠️ Approval already exists, skipping duplicate:', approvalId);
             return prev;
           }
           
-          console.log('📋 Adding to pending approvals. Current count:', prev.length);
           const newApproval = {
             id: approvalId,
             toolName,
@@ -1275,25 +1254,21 @@ export const useChatFlow = () => {
             agentName,
             timestamp: message.timestamp
           };
-          console.log('➕ New approval object:', newApproval);
           return [...prev, newApproval];
         });
 
         // Handle approval based on tool type
-        console.log('🔧 Calling handleToolApproval...');
         await handleToolApproval(approvalId, toolName, parsedArgs);
         break;
       }
 
       case 'result':
-        console.log('✅ Tool result received:', message.data);
         setAgentActivity(getToolCompleteMessage(message.data.toolName || 'operation'));
         setStreamingProgress(null); // Clear progress
         await handleToolResult(message.data);
         break;
 
       case 'completed':
-        console.log('🎉 Agent run completed:', message.data);
         setAgentActivity("✅ Task completed successfully!");
         setStreamingProgress(null);
         setIsStreaming(false);
@@ -1303,7 +1278,6 @@ export const useChatFlow = () => {
         break;
 
       case 'error':
-        console.error('❌ Stream error:', message.data.message);
         setAgentActivity(`❌ Error: ${message.data.message}`);
         setStreamingProgress(null);
         setError(message.data.message);
@@ -1312,7 +1286,8 @@ export const useChatFlow = () => {
         break;
 
       default:
-        console.log('❓ Unknown stream message type:', message.type, message);
+        // Unknown message type - silently ignore
+        break;
     }
   }, []);
 
@@ -1491,7 +1466,198 @@ export const useChatFlow = () => {
       // Return early to avoid processing other conditions
       return;
     } else {
-      console.log('❌ IMAGE CONDITION NOT MET - Skipping image processing');
+      console.log('❌ IMAGE CONDITION NOT MET - Checking video conditions...');
+      
+      // Check for video generation results in multiple possible formats
+      const videoConditions = {
+        hasVideoResults: !!(result.videoResults && Array.isArray(result.videoResults)),
+        hasDataVideoResults: !!(result.data && result.data.videoResults && Array.isArray(result.data.videoResults)),
+        hasResults: !!result.results,
+        hasDataResults: !!(result.data && result.data.results),
+        hasVideos: !!(result.videos && Array.isArray(result.videos)),
+        hasDataVideos: !!(result.data && result.data.videos && Array.isArray(result.data.videos)),
+        toolName: result.toolName || (result.data && result.data.toolName)
+      };
+      
+      console.log('🔍 Checking video generation conditions:', videoConditions);
+      console.log('🔍 Full result structure for video detection:', {
+        resultKeys: Object.keys(result),
+        dataKeys: result.data ? Object.keys(result.data) : null,
+        toolName: result.toolName,
+        hasArrayResults: Array.isArray(result.results),
+        hasArrayDataResults: result.data ? Array.isArray(result.data.results) : false,
+        resultType: typeof result.results,
+        dataResultType: result.data ? typeof result.data.results : null
+      });
+      
+      // Check for video results in different possible locations
+      const videoResults = result.videoResults || 
+                          (result.data && result.data.videoResults) || 
+                          result.videos || 
+                          (result.data && result.data.videos) || 
+                          null;
+
+      // Also check if this is a video tool result based on tool name or message content
+      const isVideoToolResult = (result.toolName && result.toolName.includes('video')) ||
+                               (result.data && result.data.toolName && result.data.toolName.includes('video')) ||
+                               (result.message && result.message.includes('Video generation')) ||
+                               (result.data && result.data.message && result.data.message.includes('Video generation'));
+      
+      // Check if results array contains video-like data (has videoData property)
+      const hasVideoDataInResults = (result.results && Array.isArray(result.results) && 
+                                   result.results.some(item => item.videoData)) ||
+                                  (result.data?.results && Array.isArray(result.data.results) && 
+                                   result.data.results.some(item => item.videoData));
+      
+      console.log('🎬 Video detection results:', {
+        videoResults: !!videoResults,
+        videoResultsLength: videoResults ? videoResults.length : 0,
+        isVideoToolResult,
+        hasVideoDataInResults,
+        actualVideoResults: videoResults,
+        messageContent: result.message || (result.data && result.data.message)
+      });
+      
+      // Check if this is a video result - either dedicated videoResults or tool-based detection
+      const isVideoResult = (videoResults && Array.isArray(videoResults)) || 
+                           (isVideoToolResult && result.results && Array.isArray(result.results)) ||
+                           (isVideoToolResult && result.data?.results && Array.isArray(result.data.results)) ||
+                           // Also check if it's a video tool result with the specific success/results structure
+                           (result.toolName === 'generate_video_with_approval' && result.results && Array.isArray(result.results)) ||
+                           // Check if results array contains videoData (most reliable indicator)
+                           hasVideoDataInResults;
+
+      if (isVideoResult) {
+        console.log('✅ VIDEO CONDITION MET - Processing videos...');
+        
+        setAgentActivity("🎬 Processing generated videos and creating URLs...");
+        
+        // Use videoResults if available, otherwise fall back to results array for video tools or videoData detection
+        const actualVideoResults = videoResults || 
+                                  (isVideoToolResult ? (result.results || result.data?.results) : null) ||
+                                  (hasVideoDataInResults ? (result.results || result.data?.results) : null);
+        
+        console.log('🎬 Processing video generation results:', actualVideoResults);
+        
+        const videosMap = {};
+        const failedVideoSegments = [];
+        
+        setStreamingProgress({ step: 'video_processing', status: 'processing', total: actualVideoResults.length, current: 0 });
+        
+        // Process video results and convert S3 keys to full URLs
+        const videoPromises = actualVideoResults.map(async (item) => {
+          console.log('🎬 Processing video result item:', item);
+          
+          // Handle the exact backend format: { segmentId, status: 'success', videoData: response.data }
+          const hasVideoData = item.status === 'success' && item.videoData;
+          const segmentId = item.segmentId || item.id || item.uuid;
+          
+          if (hasVideoData && segmentId) {
+            try {
+              // The videoData contains the full response from /chat endpoint
+              // Look for s3_key in various possible locations within videoData
+              const s3Key = item.videoData.s3_key || 
+                          item.videoData.s3Keys?.[0] || 
+                          (item.videoData.data && item.videoData.data.s3_key) ||
+                          (item.videoData.data && item.videoData.data.s3Keys?.[0]);
+              
+              console.log(`🔄 Converting S3 key to URL for video ${segmentId}:`, s3Key);
+              console.log('🔍 Full videoData structure:', item.videoData);
+              
+              if (s3Key) {
+                // Convert S3 key to full CloudFront URL
+                const videoUrl = await s3Api.downloadVideo(s3Key);
+                console.log(`✅ Generated video URL for ${segmentId}:`, videoUrl);
+                videosMap[segmentId] = videoUrl;
+              } else {
+                console.warn(`No S3 key found in videoData for segment ${segmentId}:`, item.videoData);
+                failedVideoSegments.push(segmentId);
+              }
+            } catch (error) {
+              console.error(`Failed to get video URL for segment ${segmentId}:`, error);
+              failedVideoSegments.push(segmentId);
+            }
+          } else if (item.status === 'failed') {
+            // Failed case - track for retry
+            failedVideoSegments.push(segmentId);
+            console.warn(`Video generation failed for segment ${segmentId}:`, item.error);
+          } else {
+            console.warn('Unexpected video result format:', item);
+            console.warn('Expected: { segmentId, status: "success", videoData: {...} }');
+          }
+        });
+        
+        // Wait for all video URL conversions to complete
+        await Promise.allSettled(videoPromises);
+        
+        console.log('🎬 Final videos map after URL conversion:', videosMap);
+        
+        // Update generated videos with successful ones
+        if (Object.keys(videosMap).length > 0) {
+          console.log('🎯 About to update video states with:', videosMap);
+          
+          setGeneratedVideos(prev => {
+            const newVideos = { ...prev, ...videosMap };
+            console.log('🎯 Setting generated videos - prev:', prev, 'new:', newVideos);
+            return newVideos;
+          });
+          
+          // Update stored videos map for timeline
+          setStoredVideosMap(prev => {
+            const updatedMap = { ...prev, ...videosMap };
+            console.log('🎯 Setting stored videos map - prev:', prev, 'new:', updatedMap);
+            
+            // Save to localStorage for persistence
+            if (selectedProject) {
+              localStorage.setItem(`project-store-videos`, JSON.stringify(updatedMap));
+              console.log('💾 Saved videos to localStorage for project:', selectedProject.id);
+            } else {
+              localStorage.setItem('segmentVideos', JSON.stringify(updatedMap));
+              console.log('💾 Saved videos to localStorage (no project)');
+            }
+            return updatedMap;
+          });
+          
+          // Force a small delay and then trigger a custom event to ensure UI updates
+          setTimeout(() => {
+            console.log('🔔 Dispatching videosUpdated event to trigger UI refresh');
+            window.dispatchEvent(new CustomEvent('videosUpdated', { 
+              detail: { videos: videosMap, timestamp: Date.now() } 
+            }));
+          }, 100);
+          
+          // Add agent message showing video generation completion
+          const successCount = Object.keys(videosMap).length;
+          setAllUserMessages(prev => [...prev, {
+            id: `agent-videos-${Date.now()}`,
+            content: `🎬 Fantastic! I've generated ${successCount} videos from your images. Your content is now ready for the timeline!`,
+            timestamp: Date.now(),
+            type: 'system'
+          }]);
+
+          // Show credit deduction for video generation
+          if (successCount > 0) {
+            showCreditDeduction("Video Generation", selectedVideoModel || "gen4_turbo", successCount);
+          }
+        }
+        
+        // Handle failed video segments (could implement retry logic here if needed)
+        if (failedVideoSegments.length > 0) {
+          console.warn('Some video segments failed:', failedVideoSegments);
+          // Could add retry logic here similar to image generation
+        }
+        
+        // If we have any videos, mark step as done
+        const totalVideos = { ...generatedVideos, ...videosMap };
+        if (Object.keys(totalVideos).length > 0) {
+          updateStepStatus(5, "done");
+          // Stay on current step or could advance to a completion step
+        }
+        
+        // Return early to avoid processing other conditions
+        return;
+      } else {
+        console.log('❌ VIDEO CONDITION NOT MET - Checking other result types...');
       console.log('📊 Detailed analysis:', {
         'result.results exists': !!result.results,
         'result.results type': typeof result.results,
@@ -1500,8 +1666,11 @@ export const useChatFlow = () => {
         'result.data.results exists': !!(result.data && result.data.results),
         'result.data.results type': result.data ? typeof result.data.results : 'no data',
         'result.data.results isArray': result.data ? Array.isArray(result.data.results) : false,
+          'result.videoResults exists': !!result.videoResults,
+          'result.data.videoResults exists': !!(result.data && result.data.videoResults),
         'Full result.data': result.data
       });
+      }
     }
 
     // Update UI based on the tool result
@@ -1586,7 +1755,7 @@ export const useChatFlow = () => {
       setAgentActivity(null);
       setStreamingProgress(null);
     }, 2000);
-  }, [updateStepStatus, user?.id, fetchBalance, generatedImages, selectedScript]);
+  }, [updateStepStatus, user?.id, fetchBalance, generatedImages, generatedVideos, selectedScript, selectedVideoModel, selectedProject, showCreditDeduction]);
 
   // Retry failed image generation using chat endpoint
   const retryFailedImageGeneration = useCallback(async (failedSegmentIds) => {
@@ -1662,25 +1831,37 @@ export const useChatFlow = () => {
             finalAdditionalData = {
               web_info: approval.arguments?.web_info || null,
               prompt: approval.arguments?.prompt || null,
-              projectId: selectedProject?.id || approval.arguments?.projectId || null
+              projectId: selectedProject?.id || approval.arguments?.projectId || null,
+              model: selectedConceptModel || approval.arguments?.model || 'gemini-2.0-flash-exp'
             };
             break;
 
-          case 'generate_segmentation':
+          case 'generate_segmentation': {
             // For segmentation - check if concept is selected first
             if (!selectedConcept) {
               setError('Please select a concept first before generating segmentation');
               return;
             }
             // For segmentation - match DTO exactly and ensure we use selected concept
+            // Map frontend model names to backend expected values
+            const mapScriptModelToBackend = (frontendModel) => {
+              if (frontendModel === 'gemini-pro') {
+                return 'pro';
+              }
+              return 'flash'; // Default for gemini-2.0-flash-exp, gemini-flash, etc.
+            };
+
             finalAdditionalData = {
               prompt: approval.arguments?.prompt || null,
               concept: selectedConcept.title,
               negative_prompt: approval.arguments?.negative_prompt || null,
-              projectId: selectedProject?.id || approval.arguments?.projectId || null
+              projectId: selectedProject?.id || approval.arguments?.projectId || null,
+              model: mapScriptModelToBackend(selectedScriptModel || approval.arguments?.model || 'gemini-2.0-flash-exp')
             };
             console.log('🎯 Using selected concept for segmentation:', selectedConcept.title);
+            console.log('🎯 Using script model for segmentation:', selectedScriptModel);
             break;
+          }
 
           case 'generate_image_with_approval':
             // For image generation - match DTO exactly
@@ -1701,15 +1882,64 @@ export const useChatFlow = () => {
             };
             break;
 
+          case 'generate_video_with_approval': {
+            // For video generation - check if we have images and script first
+            if (!selectedScript?.segments || Object.keys(generatedImages).length === 0) {
+              setError('Please ensure images are generated first before generating videos');
+              return;
+            }
+            
+            // Prepare segments with imageS3Key from generated images
+            const videoSegments = selectedScript.segments
+              .filter(segment => generatedImages[segment.id]) // Only segments with images
+              .map(segment => {
+                // Extract S3 key from CloudFront URL
+                const imageUrl = generatedImages[segment.id];
+                let imageS3Key = null;
+                
+                if (imageUrl && imageUrl.includes("cloudfront.net/")) {
+                  const urlParts = imageUrl.split("cloudfront.net/");
+                  if (urlParts.length > 1) {
+                    imageS3Key = urlParts[1];
+                  }
+                }
+                
+                return {
+                  id: segment.id,
+                  animation_prompt: segment.animation || segment.visual,
+                  imageS3Key: imageS3Key
+                };
+              });
+
+            finalAdditionalData = {
+              segments: videoSegments,
+              art_style: selectedScript?.artStyle || approval.arguments?.art_style || 'realistic',
+              model: selectedVideoModel || approval.arguments?.model || 'gen4_turbo',
+              projectId: selectedProject?.id || approval.arguments?.projectId || null
+            };
+            console.log('🎬 Prepared video generation data:', finalAdditionalData);
+            break;
+          }
+
           default:
             // For other tools, just pass the basic approval
             finalAdditionalData = null;
         }
       }
 
-      console.log('Approving tool with data:', { approvalId, toolName: approval?.toolName, finalAdditionalData });
+      console.log('Approving tool with data:', { 
+        approvalId, 
+        toolName: approval?.toolName, 
+        finalAdditionalData,
+        currentModels: {
+          concept: selectedConceptModel,
+          script: selectedScriptModel, 
+          image: selectedImageModel,
+          video: selectedVideoModel
+        }
+      });
 
-      await agentApi.handleApproval(approvalId, true, finalAdditionalData);
+      await agentApi.handleApproval(approvalId, true, user?.id, finalAdditionalData);
       
       // Remove from pending approvals
       setPendingApprovals(prev => prev.filter(approval => approval.id !== approvalId));
@@ -1717,11 +1947,11 @@ export const useChatFlow = () => {
       console.error('Error approving tool:', error);
       setError('Failed to approve tool execution');
     }
-  }, [pendingApprovals, selectedScript, selectedImageModel, selectedProject?.id, selectedConcept]);
+  }, [pendingApprovals, selectedScript, selectedConceptModel, selectedScriptModel, selectedImageModel, selectedVideoModel, selectedProject?.id, selectedConcept, generatedImages, user?.id]);
 
   const rejectToolExecution = useCallback(async (approvalId) => {
     try {
-      await agentApi.handleApproval(approvalId, false);
+      await agentApi.handleApproval(approvalId, false, user?.id);
       
       // Remove from pending approvals
       setPendingApprovals(prev => prev.filter(approval => approval.id !== approvalId));
@@ -1729,7 +1959,7 @@ export const useChatFlow = () => {
       console.error('Error rejecting tool:', error);
       setError('Failed to reject tool execution');
     }
-  }, []);
+  }, [user?.id]);
 
   return {
     // States
@@ -1748,12 +1978,14 @@ export const useChatFlow = () => {
     generatedImages,
     generatedVideos,
     generationProgress,
+    selectedConceptModel,
+    setSelectedConceptModel,
+    selectedScriptModel,
+    setSelectedScriptModel,
     selectedImageModel,
     setSelectedImageModel,
     selectedVideoModel,
     setSelectedVideoModel,
-    selectedScriptModel,
-    setSelectedScriptModel,
     creditDeductionMessage,
     addingTimeline,
     setAddingTimeline,

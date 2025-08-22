@@ -154,16 +154,29 @@ export default function InputArea({
       if (modelValue === "recraft-v3" || modelValue === "imagen") {
         chatFlow.setSelectedImageModel(modelValue);
       } else if (modelValue === "gen4-turbo") {
-        chatFlow.setSelectedVideoModel("gen4-turbo");
+        chatFlow.setSelectedVideoModel("gen4_turbo");
       } else if (modelValue === "kling-v2.1-master") {
-        chatFlow.setSelectedVideoModel(modelValue);
+        chatFlow.setSelectedVideoModel("kling-v2.1-master");
       } else if (modelValue === "gemini-pro") {
-        chatFlow.setSelectedScriptModel("pro");
-        console.log("User selected Gemini Pro, set script model to 'pro'");
+        chatFlow.setSelectedScriptModel("gemini-pro");
+        console.log("User selected Gemini Pro, set script model to 'gemini-pro'");
       } else if (modelValue === "gemini-flash") {
-        chatFlow.setSelectedScriptModel("flash");
-        console.log("User selected Gemini Flash, set script model to 'flash'");
+        chatFlow.setSelectedScriptModel("gemini-flash");
+        console.log("User selected Gemini Flash, set script model to 'gemini-flash'");
+      } else if (modelValue === "gpt-2.5") {
+        chatFlow.setSelectedScriptModel("gemini-2.0-flash-exp");
+        console.log("User selected Gemini 2.5 Flash, set script model to 'gemini-2.0-flash-exp'");
       }
+      
+      console.log("Model selection updated:", {
+        inputAreaModel: modelValue,
+        currentStep: currentStep,
+        chatFlowModels: {
+          script: chatFlow?.selectedScriptModel,
+          image: chatFlow?.selectedImageModel,
+          video: chatFlow?.selectedVideoModel
+        }
+      });
     }
   };
 
@@ -294,7 +307,7 @@ export default function InputArea({
                     backdropFilter: "blur(5px)",
                     minWidth: "220px",
                   }}
-                  disabled={loading}
+                  disabled={false}
                 >
                   <span>
                     {currentModelData?.label} | {currentModelData?.tokens} Token |  ~{currentModelData?.time}s

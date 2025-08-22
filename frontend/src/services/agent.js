@@ -93,7 +93,7 @@ export const agentApi = {
   },
 
   // Handle approval request
-  handleApproval: async (approvalId, approved, additionalData = null) => {
+  handleApproval: async (approvalId, approved, userId, additionalData = null) => {
     try {
       const headers = await getAuthHeaders();
       

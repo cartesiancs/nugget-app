@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { FileText, PenTool, BookOpen, Type, MoreHorizontal, Palette, Hash, Loader2, AlertCircle } from "lucide-react";
+import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle } from "lucide-react";
 
 function NodeScript({ data, isConnectable, selected }) {
   // Check node state and data
@@ -90,15 +90,12 @@ function NodeScript({ data, isConnectable, selected }) {
               <div className='flex items-center space-x-2'>
                 <FileText size={20} className={isGenerated ? 'text-green-400' : 'text-blue-400'} />
                 <span className='text-white font-medium text-sm'>
-                  {data.title || `Script ${data.id}`}
+                  {data.title || `Script`}
                 </span>
                 {isGenerated && (
                   <span className='text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded'>AI</span>
                 )}
               </div>
-              <button className='text-gray-400 hover:text-white'>
-                <MoreHorizontal size={16} />
-              </button>
             </div>
 
             {/* Script Content */}
@@ -138,16 +135,9 @@ function NodeScript({ data, isConnectable, selected }) {
               )}
 
               {/* Script Metadata */}
-              {(data.createdAt || isGenerated) && (
-                <div className='text-xs text-gray-500 pt-2 border-t border-gray-700 flex justify-between'>
-                  {data.createdAt ? (
-                    <span>Created: {new Date(data.createdAt).toLocaleDateString()}</span>
-                  ) : isGenerated ? (
-                    <span>AI generated</span>
-                  ) : null}
-                  {isGenerated && (
-                    <span className='text-green-400'>Connect to segment</span>
-                  )}
+              {isGenerated && (
+                <div className='text-xs text-gray-500 pt-2 border-t border-gray-700 flex justify-end'>
+                  <span className='text-green-400'>Connect to segment</span>
                 </div>
               )}
             </div>

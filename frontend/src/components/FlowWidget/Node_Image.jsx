@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Image, Camera, Images, Frame, Star, Loader2, AlertCircle, MoreHorizontal } from "lucide-react";
+import { Image, Camera, Images, Frame, Star, Loader2, AlertCircle } from "lucide-react";
 
 function NodeImage({ data, isConnectable, selected }) {
   // Check node state and data
@@ -100,7 +100,7 @@ function NodeImage({ data, isConnectable, selected }) {
               <div className='flex items-center space-x-2'>
                 <Image size={20} className='text-orange-400' />
                 <span className='text-white font-medium text-sm'>
-                  Image {data.imageId || data.id}
+                  Image
                 </span>
                 {isGenerated && (
                   <span className='text-xs text-orange-400 bg-orange-400/10 px-2 py-1 rounded'>AI</span>
@@ -110,9 +110,6 @@ function NodeImage({ data, isConnectable, selected }) {
                 {data.isPrimary && (
                   <Star size={16} className='text-yellow-400 fill-current' />
                 )}
-                <button className='text-gray-400 hover:text-white'>
-                  <MoreHorizontal size={16} />
-                </button>
               </div>
             </div>
 

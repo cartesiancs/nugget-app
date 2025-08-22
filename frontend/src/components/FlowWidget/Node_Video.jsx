@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Video, Play, Film, Camera, PlayCircle, Loader2, AlertCircle, MoreHorizontal } from "lucide-react";
+import { Video, Play, Film, Camera, PlayCircle, Loader2, AlertCircle } from "lucide-react";
 
 function NodeVideo({ data, isConnectable, selected }) {
   // Check node state and data
@@ -100,15 +100,12 @@ function NodeVideo({ data, isConnectable, selected }) {
               <div className='flex items-center space-x-2'>
                 <PlayCircle size={20} className='text-emerald-400' />
                 <span className='text-white font-medium text-sm'>
-                  Video {data.videoId || data.id}
+                  Video
                 </span>
                 {isGenerated && (
                   <span className='text-xs text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded'>AI</span>
                 )}
               </div>
-              <button className='text-gray-400 hover:text-white'>
-                <MoreHorizontal size={16} />
-              </button>
             </div>
 
             {/* Video Preview */}
@@ -150,7 +147,7 @@ function NodeVideo({ data, isConnectable, selected }) {
 
               {data.segmentId && data.imageId && (
                 <div className='text-xs text-gray-400'>
-                  From: Segment {data.segmentId}, Image {data.imageId}
+                  From: Segment, Image
                 </div>
               )}
               

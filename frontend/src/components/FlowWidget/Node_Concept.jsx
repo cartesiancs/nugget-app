@@ -1,5 +1,5 @@
 import { Handle } from "@xyflow/react";
-import { Lightbulb, Sparkles, Zap, Target, MoreHorizontal } from "lucide-react";
+import { Lightbulb, Sparkles, Zap, Target } from "lucide-react";
 
 function NodeConcept({ data, isConnectable, selected }) {
   // Check node state and data
@@ -103,9 +103,6 @@ function NodeConcept({ data, isConnectable, selected }) {
                   {data.title || (isUserConcept ? 'Your Concept' : isGeneratedConcept ? 'Generated Concept' : `Concept ${data.id}`)}
                 </span>
               </div>
-              <button className='text-gray-400 hover:text-white'>
-                <MoreHorizontal size={16} />
-              </button>
             </div>
 
             {/* Concept Content */}
@@ -115,18 +112,9 @@ function NodeConcept({ data, isConnectable, selected }) {
               </div>
               
               {/* Concept Metadata */}
-              {(data.createdAt || isUserConcept || isGeneratedConcept) && (
-                <div className='text-xs text-gray-500 pt-2 border-t border-gray-700 flex justify-between'>
-                  {data.createdAt ? (
-                    <span>Created: {new Date(data.createdAt).toLocaleDateString()}</span>
-                  ) : isUserConcept ? (
-                    <span>Your input</span>
-                  ) : isGeneratedConcept ? (
-                    <span>AI generated</span>
-                  ) : null}
-                  {isUserConcept && (
-                    <span className='text-purple-400'>Click to generate concepts</span>
-                  )}
+              {isUserConcept && (
+                <div className='text-xs text-gray-500 pt-2 border-t border-gray-700 flex justify-end'>
+                  <span className='text-purple-400'>Click to generate concepts</span>
                 </div>
               )}
             </div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Layers, Clock, Target, Zap, Play, MoreHorizontal, Hash } from "lucide-react";
+import { Layers, Clock, Target, Zap, Play, Hash } from "lucide-react";
 
 function NodeSegment({ data, isConnectable, selected }) {
   // Check node state and data
@@ -57,9 +57,6 @@ function NodeSegment({ data, isConnectable, selected }) {
                   <span className='text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded'>AI</span>
                 )}
               </div>
-              <button className='text-gray-400 hover:text-white'>
-                <MoreHorizontal size={16} />
-              </button>
             </div>
 
             {/* Segment Content */}

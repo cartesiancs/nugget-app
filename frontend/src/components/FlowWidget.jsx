@@ -1101,32 +1101,6 @@ function FlowWidget() {
                     <ChatLoginButton />
                   </div>
                 </div>
-              ) : (flowData.concepts.length === 0 && flowData.scripts.length === 0 && flowData.segments.length === 0) ? (
-                <div className='p-4 space-y-4'>
-                  <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
-                    <h3 className='text-lg font-semibold text-white mb-4'>
-                      No Workflow Data
-                    </h3>
-                    <p className='text-gray-400 text-sm mb-4'>
-                      Start creating a video in the chat widget to see the
-                      workflow flow here. The flow will show: Concepts → Scripts → Segments → Images → Videos
-                    </p>
-                    <button
-                      onClick={() => fetchAllProjectData()}
-                      disabled={loading}
-                      className='w-full bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50'
-                    >
-                      {loading ? (
-                        <div className='flex items-center justify-center gap-2'>
-                          <LoadingSpinner />
-                          <span>Processing...</span>
-                        </div>
-                      ) : (
-                        "🔄 Refresh Data"
-                      )}
-                    </button>
-                  </div>
-                </div>
               ) : (
                 <div className='w-full h-full min-w-[1000px] min-h-[700px]'>
                   <ReactFlow

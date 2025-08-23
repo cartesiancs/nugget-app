@@ -9,8 +9,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
   const [composition, setComposition] = useState("Golden Ratio");
   const [angle, setAngle] = useState("Mid Shot");
   const [style, setStyle] = useState("Anime");
-  const [creativity, setCreativity] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
+
   const sidebarRef = useRef(null);
 
   useEffect(() => {
@@ -26,8 +25,9 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
         selectedNode.type === "imageNode"
       ) {
         setNodeType("image");
-        setModel("GPT image");
+        setModel("recraft-v3");
         setPrompt(
+          selectedNode.data?.segmentData?.visual ||
           selectedNode.data?.visual ||
             "A bird flying on the moon with a red cape zooming past an asteroid and uses its laser eyes to destroy the asteroid saving earth with animal people cheering",
         );
@@ -36,8 +36,9 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
         selectedNode.type === "videoNode"
       ) {
         setNodeType("video");
-        setModel("GPT video");
+        setModel("gen4-turbo");
         setPrompt(
+          selectedNode.data?.segmentData?.animation ||
           selectedNode.data?.animation ||
             "A bird flying on the moon with a red cape zooming past an asteroid and uses its laser eyes to destroy the asteroid saving earth with animal people cheering",
         );
@@ -80,7 +81,6 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
       composition,
       angle,
       style,
-      creativity,
     });
   };
 
@@ -94,36 +94,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
     console.log("Exporting node");
   };
 
-  const handleSliderClick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = ((e.clientX - rect.left) / rect.width) * 100;
-    setCreativity(Math.round(Math.max(0, Math.min(100, percent))));
-  };
 
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-
-    const handleMouseMove = (e) => {
-      const sliderTrack =
-        e.currentTarget?.parentElement?.querySelector(".slider-track") ||
-        document.querySelector(".slider-track");
-      if (sliderTrack) {
-        const rect = sliderTrack.getBoundingClientRect();
-        const percent = ((e.clientX - rect.left) / rect.width) * 100;
-        setCreativity(Math.round(Math.max(0, Math.min(100, percent))));
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
 
   return (
     <div
@@ -240,24 +211,44 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
                   color: "white",
                 }}
               >
-                <option
-                  value='GPT-4o mini'
-                  style={{ background: "#1a1a1a", color: "white" }}
-                >
-                  GPT-4o mini
-                </option>
-                <option
-                  value='GPT image'
-                  style={{ background: "#1a1a1a", color: "white" }}
-                >
-                  GPT image
-                </option>
-                <option
-                  value='GPT video'
-                  style={{ background: "#1a1a1a", color: "white" }}
-                >
-                  GPT video
-                </option>
+                {nodeType === "image" ? (
+                  <>
+                    <option
+                      value='recraft-v3'
+                      style={{ background: "#1a1a1a", color: "white" }}
+                    >
+                      Recraft (4s)
+                    </option>
+                    <option
+                      value='imagen'
+                      style={{ background: "#1a1a1a", color: "white" }}
+                    >
+                      Imagen (2s)
+                    </option>
+                  </>
+                ) : nodeType === "video" ? (
+                  <>
+                    <option
+                      value='gen4-turbo'
+                      style={{ background: "#1a1a1a", color: "white" }}
+                    >
+                      RunwayML (3s)
+                    </option>
+                    <option
+                      value='kling-v2.1-master'
+                      style={{ background: "#1a1a1a", color: "white" }}
+                    >
+                      Kling (4s)
+                    </option>
+                  </>
+                ) : (
+                  <option
+                    value='GPT-4o mini'
+                    style={{ background: "#1a1a1a", color: "white" }}
+                  >
+                    GPT-4o mini
+                  </option>
+                )}
               </select>
               <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                 <svg
@@ -499,60 +490,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
             </div>
           </div>
 
-          {/* Creativity */}
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <label
-                className='text-white'
-                style={{
-                  fontFamily: "Inter",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  lineHeight: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                Creativity
-              </label>
-              <span
-                className='text-white font-medium'
-                style={{ fontSize: "14px", fontFamily: "Inter" }}
-              >
-                {creativity}%
-              </span>
-            </div>
 
-            <div className='relative px-1'>
-              <div
-                className='slider-track w-full h-3 rounded-lg cursor-pointer'
-                style={{
-                  background: `linear-gradient(to right, #94E7ED 0%, #94E7ED ${creativity}%, rgba(255, 255, 255, 0.15) ${creativity}%, rgba(255, 255, 255, 0.15) 100%)`,
-                }}
-                onClick={handleSliderClick}
-              />
-              <div
-                className='absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full cursor-pointer bg-white select-none'
-                style={{
-                  left: `${creativity}%`,
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
-                  userSelect: "none",
-                }}
-                onMouseDown={handleMouseDown}
-              >
-                <div className='absolute inset-0 rounded-full flex items-center justify-center'>
-                  <div className='grid grid-cols-2 gap-0.5'>
-                    <div className='w-0.5 h-0.5 bg-gray-600 rounded-full'></div>
-                    <div className='w-0.5 h-0.5 bg-gray-600 rounded-full'></div>
-                    <div className='w-0.5 h-0.5 bg-gray-600 rounded-full'></div>
-                    <div className='w-0.5 h-0.5 bg-gray-600 rounded-full'></div>
-                    <div className='w-0.5 h-0.5 bg-gray-600 rounded-full'></div>
-                    <div className='w-0.5 h-0.5 bg-gray-600 rounded-full'></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Action Buttons */}

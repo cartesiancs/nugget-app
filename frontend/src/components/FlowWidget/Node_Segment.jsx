@@ -6,7 +6,8 @@ function NodeSegment({ data, isConnectable, selected }) {
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.visual || data.narration || data.animation);
-  const isGenerated = nodeState === 'generated';
+  const isLoading = nodeState === 'loading';
+  const hasError = nodeState === 'error';
   const isNew = nodeState === 'new';
   
   // Expandable state
@@ -29,8 +30,8 @@ function NodeSegment({ data, isConnectable, selected }) {
           selected ? (hasData ? "ring-2 ring-green-500" : "ring-2 ring-gray-600") : ""
         } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
         style={{
-          background: isGenerated ? "#1a2e1a" : "#1a1a1a",
-          border: isGenerated ? "1px solid #22c55e" : hasData ? "1px solid #444" : "1px solid #333",
+          background: "#1a1a1a",
+          border: hasData ? "1px solid #444" : "1px solid #333",
           boxShadow: selected && hasData ? "0 0 20px rgba(34, 197, 94, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
         }}
       >
@@ -40,7 +41,7 @@ function NodeSegment({ data, isConnectable, selected }) {
           position='top'
           id="input"
           style={{
-            background: isGenerated ? "#22c55e" : hasData ? "#22c55e" : "#3b82f6",
+            background: "#ffffff",
             width: 16,
             height: 16,
             border: "2px solid #fff",
@@ -49,8 +50,42 @@ function NodeSegment({ data, isConnectable, selected }) {
           isConnectable={isConnectable}
         />
 
-        {hasData ? (
-          // Existing data view
+        {isLoading ? (
+          // Loading state - styled same as existing state
+          <>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='flex items-center space-x-2'>
+                <Play size={20} className='text-green-400' />
+                <span className='text-white font-medium text-sm'>
+                  {data.title || `Segment ${data.id}`}
+                </span>
+              </div>
+            </div>
+            <div className='space-y-2 mb-3'>
+              <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
+                Generating segment...
+              </div>
+            </div>
+          </>
+        ) : hasError ? (
+          // Error state - styled same as existing state
+          <>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='flex items-center space-x-2'>
+                <Play size={20} className='text-green-400' />
+                <span className='text-white font-medium text-sm'>
+                  {data.title || `Segment ${data.id}`}
+                </span>
+              </div>
+            </div>
+            <div className='space-y-2 mb-3'>
+              <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
+                {data.error || 'Failed to generate segment'}
+              </div>
+            </div>
+          </>
+        ) : hasData ? (
+          // Existing data view - all look the same
           <>
             {/* Segment Header */}
             <div className='flex items-center justify-between mb-4'>
@@ -59,9 +94,6 @@ function NodeSegment({ data, isConnectable, selected }) {
                 <span className='text-white font-medium text-sm'>
                   {data.title || `Segment ${data.id}`}
                 </span>
-                {isGenerated && (
-                  <span className='text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded'>AI</span>
-                )}
               </div>
             </div>
 
@@ -70,8 +102,8 @@ function NodeSegment({ data, isConnectable, selected }) {
               {data.visual && (
                 <div>
                   <div className='text-xs text-gray-400 mb-1'>Visual:</div>
-                  <div className='text-gray-300 text-xs bg-gray-800/50 rounded p-2 leading-relaxed'>
-                    {isExpanded ? data.visual : `${data.visual.substring(0, 120)}${data.visual.length > 120 ? '...' : ''}`}
+                  <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
+                    {isExpanded ? data.visual : `${data.visual.substring(0, 250)}${data.visual.length > 250 ? '...' : ''}`}
                   </div>
                 </div>
               )}
@@ -82,7 +114,7 @@ function NodeSegment({ data, isConnectable, selected }) {
                   {data.narration && (
                     <div>
                       <div className='text-xs text-gray-400 mb-1'>Narration:</div>
-                      <div className='text-gray-300 text-xs bg-gray-800/50 rounded p-2 leading-relaxed'>
+                      <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
                         {data.narration}
                       </div>
                     </div>
@@ -91,7 +123,7 @@ function NodeSegment({ data, isConnectable, selected }) {
                   {data.animation && (
                     <div>
                       <div className='text-xs text-gray-400 mb-1'>Animation:</div>
-                      <div className='text-gray-300 text-xs bg-gray-800/50 rounded p-2 leading-relaxed'>
+                      <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
                         {data.animation}
                       </div>
                     </div>
@@ -123,23 +155,23 @@ function NodeSegment({ data, isConnectable, selected }) {
             {/* Options List */}
             <div className='space-y-2'>
               <div className='flex items-center space-x-2 text-gray-300'>
+                <Play size={16} className='text-gray-400' />
+                <span className='text-xs'>Scene Creation</span>
+              </div>
+
+              <div className='flex items-center space-x-2 text-gray-300'>
                 <Layers size={16} className='text-gray-400' />
-                <span className='text-xs'>Scene Division</span>
+                <span className='text-xs'>Visual Elements</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
                 <Clock size={16} className='text-gray-400' />
-                <span className='text-xs'>Time Management</span>
+                <span className='text-xs'>Timing Control</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
                 <Target size={16} className='text-gray-400' />
-                <span className='text-xs'>Content Focus</span>
-              </div>
-
-              <div className='flex items-center space-x-2 text-gray-300'>
-                <Zap size={16} className='text-gray-400' />
-                <span className='text-xs'>Quick Actions</span>
+                <span className='text-xs'>Story Focus</span>
               </div>
             </div>
           </>
@@ -151,7 +183,7 @@ function NodeSegment({ data, isConnectable, selected }) {
           position='bottom'
           id="output"
           style={{
-            background: isGenerated ? "#22c55e" : hasData ? "#22c55e" : "#3b82f6",
+            background: "#ffffff",
             width: 16,
             height: 16,
             border: "2px solid #fff",

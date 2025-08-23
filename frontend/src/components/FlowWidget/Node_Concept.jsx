@@ -5,9 +5,7 @@ import { Lightbulb, Sparkles, Zap, Target, ChevronDown, ChevronUp } from "lucide
 function NodeConcept({ data, isConnectable, selected }) {
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
-  const hasData = data && (data.content || data.text || data.concept || data.description || data.prompt);
-  const isUserConcept = nodeState === 'user';
-  const isGeneratedConcept = nodeState === 'generated';
+  const hasData = data && (data.content || data.text || data.concept || data.description || data.prompt || data.userText);
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
   
@@ -37,8 +35,8 @@ function NodeConcept({ data, isConnectable, selected }) {
           selected ? (hasData ? "ring-2 ring-purple-500" : "ring-2 ring-gray-600") : ""
         } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
         style={{
-          background: isUserConcept ? "#1e1a2e" : isGeneratedConcept ? "#1a1a2e" : isLoading ? "#1a1a1a" : hasError ? "#2e1a1a" : "#1a1a1a",
-          border: isUserConcept ? "1px solid #8b5cf6" : isGeneratedConcept ? "1px solid #6366f1" : hasError ? "1px solid #ef4444" : hasData ? "1px solid #444" : "1px solid #333",
+          background: "#1a1a1a",
+          border: hasData ? "1px solid #444" : "1px solid #333",
           boxShadow: selected && hasData ? "0 0 20px rgba(139, 92, 246, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
         }}
       >
@@ -48,7 +46,7 @@ function NodeConcept({ data, isConnectable, selected }) {
           position='top'
           id="input"
           style={{
-            background: isUserConcept ? "#8b5cf6" : isGeneratedConcept ? "#6366f1" : hasError ? "#ef4444" : hasData ? "#8b5cf6" : "#3b82f6",
+            background: "#ffffff",
             width: 16,
             height: 16,
             border: "2px solid #fff",
@@ -58,59 +56,48 @@ function NodeConcept({ data, isConnectable, selected }) {
         />
 
         {isLoading ? (
-          // Loading state
+          // Loading state - styled same as existing state
           <>
             <div className='flex items-center justify-between mb-4'>
               <div className='flex items-center space-x-2'>
-                <div className='animate-spin'>
-                  <Sparkles size={20} className='text-blue-400' />
-                </div>
-                <span className='text-white font-medium'>Generating Concepts...</span>
-              </div>
-            </div>
-            <div className='flex items-center justify-center py-8'>
-              <div className='animate-pulse text-gray-400 text-sm'>Please wait while we create concepts for you</div>
-            </div>
-          </>
-        ) : hasError ? (
-          // Error state
-          <>
-            <div className='flex items-center justify-between mb-4'>
-              <div className='flex items-center space-x-2'>
-                <Zap size={20} className='text-red-400' />
-                <span className='text-white font-medium'>Generation Failed</span>
+                <Lightbulb size={20} className='text-purple-400' />
+                <span className='text-white font-medium text-sm'>
+                  {data.title || `Concept ${data.id}`}
+                </span>
               </div>
             </div>
             <div className='space-y-3'>
-              <div className='text-red-300 text-sm'>
+              <div className='text-gray-300 text-sm leading-relaxed'>
+                Generating concepts...
+              </div>
+            </div>
+          </>
+        ) : hasError ? (
+          // Error state - styled same as existing state
+          <>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='flex items-center space-x-2'>
+                <Lightbulb size={20} className='text-purple-400' />
+                <span className='text-white font-medium text-sm'>
+                  {data.title || `Concept ${data.id}`}
+                </span>
+              </div>
+            </div>
+            <div className='space-y-3'>
+              <div className='text-gray-300 text-sm leading-relaxed'>
                 {data.error || 'Failed to generate concept'}
               </div>
-              <button className='text-xs text-red-400 hover:text-red-300 underline'>
-                Try Again
-              </button>
             </div>
           </>
         ) : hasData ? (
-          // Existing/Generated data view
+          // Existing/Generated data view - all look the same
           <>
             {/* Concept Header */}
             <div className='flex items-center justify-between mb-4'>
               <div className='flex items-center space-x-2'>
-                {isUserConcept ? (
-                  <div className='flex items-center space-x-1'>
-                    <Target size={16} className='text-purple-400' />
-                    <span className='text-xs text-purple-400'>USER</span>
-                  </div>
-                ) : isGeneratedConcept ? (
-                  <div className='flex items-center space-x-1'>
-                    <Sparkles size={16} className='text-indigo-400' />
-                    <span className='text-xs text-indigo-400'>AI</span>
-                  </div>
-                ) : (
-                  <Lightbulb size={20} className='text-purple-400' />
-                )}
+                <Lightbulb size={20} className='text-purple-400' />
                 <span className='text-white font-medium text-sm'>
-                  {data.title || (isUserConcept ? 'Your Concept' : isGeneratedConcept ? 'Generated Concept' : `Concept ${data.id}`)}
+                  {data.title || `Concept ${data.id}`}
                 </span>
               </div>
             </div>
@@ -120,13 +107,6 @@ function NodeConcept({ data, isConnectable, selected }) {
               <div className='text-gray-300 text-sm leading-relaxed'>
                 {isExpanded ? conceptContent : `${conceptContent.substring(0, 120)}${conceptContent.length > 120 ? '...' : ''}`}
               </div>
-              
-              {/* Concept Metadata */}
-              {isUserConcept && (
-                <div className='text-xs text-gray-500 pt-2 border-t border-gray-700 flex justify-end'>
-                  <span className='text-purple-400'>Click to generate concepts</span>
-                </div>
-              )}
             </div>
 
             {/* Expand/Collapse Button */}
@@ -180,7 +160,7 @@ function NodeConcept({ data, isConnectable, selected }) {
           position='bottom'
           id="output"
           style={{
-            background: isUserConcept ? "#8b5cf6" : isGeneratedConcept ? "#6366f1" : hasError ? "#ef4444" : hasData ? "#8b5cf6" : "#3b82f6",
+            background: "#ffffff",
             width: 16,
             height: 16,
             border: "2px solid #fff",

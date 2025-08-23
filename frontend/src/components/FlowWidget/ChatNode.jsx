@@ -62,11 +62,11 @@ function ChatNode({ data, isConnectable }) {
         position={Position.Top}
         isConnectable={isConnectable}
         style={{
-          background: "#3b82f6",
+          background: "#ffffff",
           width: 16,
           height: 16,
           border: "3px solid #fff",
-          boxShadow: "0 0 12px rgba(59, 130, 246, 0.6)",
+          boxShadow: "0 0 12px rgba(255, 255, 255, 0.6)",
           zIndex: 9999,
           top: -8,
         }}

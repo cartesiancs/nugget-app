@@ -56,7 +56,7 @@ function NewTextNode({ data, isConnectable, selected, onChatClick }) {
           type='target'
           position='left'
           style={{
-            background: "#3b82f6",
+            background: "#ffffff",
             width: 16,
             height: 16,
             border: "2px solid #fff",
@@ -113,7 +113,7 @@ function NewTextNode({ data, isConnectable, selected, onChatClick }) {
           type='source'
           position='right'
           style={{
-            background: "#3b82f6",
+            background: "#ffffff",
             width: 16,
             height: 16,
             border: "2px solid #fff",

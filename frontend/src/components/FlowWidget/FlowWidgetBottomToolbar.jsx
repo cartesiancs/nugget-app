@@ -155,12 +155,15 @@ function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
             src={assets.BrushIcon}
             onClick={() => {
               // Don't select the tool, just execute the action
+              // Instead of full refresh, just refresh project data without losing generated nodes
               if (onRefreshLayout) {
+                console.log("🎨 Brush tool clicked - refreshing project data only");
+                // This should call refreshProjectData instead of createFlowElements
                 onRefreshLayout();
               }
             }}
             className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-            title='Refresh Layout - Reorganize all nodes to default structure'
+            title='Refresh Layout - Update with latest project data'
             alt='Refresh Layout Tool'
           />
 

@@ -22,6 +22,7 @@ import NodeChat from "./FlowWidget/NodeChat";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
 import UserNode from "./FlowWidget/UserNode";
+import TaskList from "./FlowWidget/TaskList";
 import { assets } from "../assets/assets";
 import FlowWidgetBottomToolbar from "./FlowWidget/FlowWidgetBottomToolbar";
 import UserProfileDropdown from "./UserProfileDropdown";
@@ -71,6 +72,9 @@ function FlowWidget() {
 
   // Project name state
   const [projectName, setProjectName] = useState("Untitled");
+
+  // Flag to disable auto-generation during brush tool operations
+  const [disableAutoGeneration, setDisableAutoGeneration] = useState(false);
 
   // Helper function to refresh project data
   const refreshProjectData = useCallback(async () => {
@@ -819,6 +823,30 @@ function FlowWidget() {
     }
   }, [isAuthenticated]);
 
+  // Handle brush tool - refresh project data without auto-generation
+  const handleBrushTool = useCallback(async () => {
+    console.log("🎨 Brush tool: Refreshing project data with auto-generation disabled");
+    
+    try {
+      // Disable auto-generation during refresh
+      setDisableAutoGeneration(true);
+      
+      // Refresh project data normally
+      await refreshProjectData();
+      
+      console.log("🎨 Brush tool: Project data refreshed successfully");
+      
+    } catch (error) {
+      console.error("Brush tool: Failed to refresh project data:", error);
+    } finally {
+      // Re-enable auto-generation after a short delay
+      setTimeout(() => {
+        setDisableAutoGeneration(false);
+        console.log("🎨 Brush tool: Auto-generation re-enabled");
+      }, 1000);
+    }
+  }, [refreshProjectData]);
+
   // Handle chat click for nodes
   const handleChatClick = useCallback((nodeId, nodeType) => {
     setChatNodeId(nodeId);
@@ -1227,6 +1255,12 @@ function FlowWidget() {
       // Create the edge
       setEdges((eds) => addEdge(params, eds));
       
+      // Skip auto-generation if disabled (e.g., during brush tool operations)
+      if (disableAutoGeneration) {
+        console.log("🚫 Auto-generation disabled, skipping connection logic");
+        return;
+      }
+      
       // Handle special connection logic for new project flow
       const sourceNode = nodes.find(n => n.id === params.source);
       const targetNode = nodes.find(n => n.id === params.target);
@@ -1253,7 +1287,7 @@ function FlowWidget() {
         }
       }
     },
-    [setEdges, nodes],
+    [setEdges, nodes, disableAutoGeneration],
   );
   
   // Handle script generation from concept
@@ -1972,24 +2006,11 @@ function FlowWidget() {
                 Publish
               </button>
 
-              {/* Chat History - Click to open chat widget */}
-              <div
-                className='fixed top-24  right-4 z-[1001] w-16 h-16 hover:bg-gray-600 border-0 text-white rounded-full shadow-lg transition-all duration-200 flex items-center justify-center  backdrop-blur-sm cursor-pointer'
-                style={{ background: "#18191CCC" }}
-                onClick={() => {
-                  // Open chat widget if available
-                  if (typeof window.openChat === 'function') {
-                    window.openChat();
-                  } else {
-                    console.log('Chat widget not available');
-                  }
-                }}
-                title="Open Chat Widget"
-              >
-                <img
-                  src={assets.NewChatIcon}
-                  className='w-12 h-12'
-                  alt='New Chat'
+              {/* Task List */}
+              <div className='fixed top-24 right-4 z-[1001]'>
+                <TaskList 
+                  nodes={nodes}
+                  collapsed={true}
                 />
               </div>
             </div>
@@ -2107,7 +2128,7 @@ function FlowWidget() {
               )}
             </div>
           </div>
-          <FlowWidgetBottomToolbar onAddNode={handleAddNode} onRefreshLayout={createFlowElements} />
+          <FlowWidgetBottomToolbar onAddNode={handleAddNode} onRefreshLayout={handleBrushTool} />
         </div>
       </div>
 

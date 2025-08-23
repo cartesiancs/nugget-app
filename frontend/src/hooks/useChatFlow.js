@@ -1017,9 +1017,18 @@ export const useChatFlow = () => {
         Array.isArray(projectVideos.data) &&
         projectVideos.data.length > 0
       ) {
-        projectVideos.data.forEach((video) => {
-          const segmentId =
-            video.uuid || video.segment_id || video.segmentId || video.id;
+        // Sort videos by segment ID first
+        const sortedVideos = projectVideos.data
+          .filter(video => video.uuid)
+          .sort((a, b) => {
+            const aSegId = Number(a.uuid.replace(/^seg-/, ""));
+            const bSegId = Number(b.uuid.replace(/^seg-/, ""));
+            return aSegId - bSegId;
+          });
+          
+        sortedVideos.forEach((video) => {
+          // Extract segmentId from uuid (e.g., "seg-5" → "5")
+          const segmentId = video.uuid.replace(/^seg-/, "");
           if (!segmentId) return;
 
           let videoKey = null;
@@ -1123,6 +1132,28 @@ export const useChatFlow = () => {
     setAgentActivity("🚀 Initializing agent workflow...");
     setStreamingProgress(null);
 
+    // Add initial verbose messages to chat
+    setAllUserMessages(prev => [...prev, 
+      {
+        id: `agent-init-${Date.now()}`,
+        content: "🚀 Initializing agent workflow - Setting up processing pipeline...",
+        timestamp: Date.now(),
+        type: 'system'
+      },
+      {
+        id: `agent-analyzing-${Date.now() + 1}`,
+        content: "🔍 Analyzing your request and determining the best approach...",
+        timestamp: Date.now() + 1,
+        type: 'system'
+      },
+      {
+        id: `agent-preparing-${Date.now() + 2}`,
+        content: "⚙️ Preparing tools and resources for content generation...",
+        timestamp: Date.now() + 2,
+        type: 'system'
+      }
+    ]);
+
     try {
       const response = await agentApi.startAgentRunStream(
         cleanPrompt,
@@ -1198,20 +1229,47 @@ export const useChatFlow = () => {
         const logMessage = message.data.message || message.data;
         if (typeof logMessage === 'string') {
           setAgentActivity(logMessage);
+          
+          // Also add verbose log messages to chat for transparency
+          setAllUserMessages(prev => [...prev, {
+            id: `agent-log-${Date.now()}-${Math.random()}`,
+            content: `🔍 Agent: ${logMessage}`,
+            timestamp: Date.now(),
+            type: 'system'
+          }]);
         }
         break;
       }
 
-      case 'thinking':
+      case 'thinking': {
         // Agent is thinking/processing
-        setAgentActivity(message.data.message || "Agent is analyzing your request...");
+        const thinkingMessage = message.data.message || "Agent is analyzing your request...";
+        setAgentActivity(thinkingMessage);
+        
+        // Add thinking message to chat
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-thinking-${Date.now()}`,
+          content: `💭 ${thinkingMessage}`,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
         break;
+      }
 
       case 'tool_start': {
         // Tool execution started
         const toolName = message.data.toolName || message.data.tool_name;
-        setAgentActivity(getToolStartMessage(toolName));
+        const startMessage = getToolStartMessage(toolName);
+        setAgentActivity(startMessage);
         setStreamingProgress({ step: toolName, status: 'starting' });
+        
+        // Add detailed tool start message to chat
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-tool-start-${Date.now()}`,
+          content: startMessage,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
         break;
       }
 
@@ -1222,13 +1280,32 @@ export const useChatFlow = () => {
           ...message.data,
           status: 'in_progress'
         }));
+        
+        // Add progress updates to chat
+        if (message.data.message) {
+          setAllUserMessages(prev => [...prev, {
+            id: `agent-progress-${Date.now()}`,
+            content: `⚙️ Progress: ${message.data.message}`,
+            timestamp: Date.now(),
+            type: 'system'
+          }]);
+        }
         break;
 
       case 'approval_required': {
         const { approvalId, toolName, arguments: args, agentName } = message.data;
         
         // Set agent activity to show what approval is needed
-        setAgentActivity(getApprovalMessage(toolName));
+        const approvalMessage = getApprovalMessage(toolName);
+        setAgentActivity(approvalMessage);
+        
+        // Add approval request to chat with detailed information
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-approval-${Date.now()}`,
+          content: approvalMessage,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
         
         // Parse arguments if they come as JSON string
         let parsedArgs = args;
@@ -1262,28 +1339,60 @@ export const useChatFlow = () => {
         break;
       }
 
-      case 'result':
-        setAgentActivity(getToolCompleteMessage(message.data.toolName || 'operation'));
+      case 'result': {
+        const completeMessage = getToolCompleteMessage(message.data.toolName || 'operation');
+        setAgentActivity(completeMessage);
         setStreamingProgress(null); // Clear progress
+        
+        // Add completion message to chat
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-complete-${Date.now()}`,
+          content: completeMessage,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+        
         await handleToolResult(message.data);
         break;
+      }
 
-      case 'completed':
-        setAgentActivity("✅ Task completed successfully!");
+      case 'completed': {
+        const taskCompleteMessage = "✅ Task completed successfully!";
+        setAgentActivity(taskCompleteMessage);
         setStreamingProgress(null);
         setIsStreaming(false);
         setLoading(false);
+        
+        // Add final completion message to chat
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-task-complete-${Date.now()}`,
+          content: taskCompleteMessage,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+        
         // Clear activity after a delay
         setTimeout(() => setAgentActivity(null), 3000);
         break;
+      }
 
-      case 'error':
-        setAgentActivity(`❌ Error: ${message.data.message}`);
+      case 'error': {
+        const errorMessage = `❌ Error: ${message.data.message}`;
+        setAgentActivity(errorMessage);
         setStreamingProgress(null);
         setError(message.data.message);
         setIsStreaming(false);
         setLoading(false);
+        
+        // Add error message to chat
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-error-${Date.now()}`,
+          content: errorMessage,
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
         break;
+      }
 
       default:
         // Unknown message type - silently ignore
@@ -1343,6 +1452,23 @@ export const useChatFlow = () => {
     }
   }, []);
 
+  const getToolApprovalConfirmationMessage = useCallback((toolName) => {
+    switch (toolName) {
+      case 'get_web_info':
+        return "Starting web research to gather relevant information";
+      case 'generate_concepts_with_approval':
+        return "Starting concept generation to create video ideas";
+      case 'generate_segmentation':
+        return "Starting script generation to create detailed segments";
+      case 'generate_image_with_approval':
+        return "Starting image generation for visual content";
+      case 'generate_video_with_approval':
+        return "Starting video generation to create dynamic content";
+      default:
+        return `Starting ${toolName} process`;
+    }
+  }, []);
+
   const handleToolApproval = useCallback(async (approvalId, toolName, args) => {
     console.log('Tool approval required:', { approvalId, toolName, args });
     // Manual approval required - approval will remain pending until user clicks approve
@@ -1364,6 +1490,14 @@ export const useChatFlow = () => {
 
     // Update agent activity based on result type
     setAgentActivity("🔄 Processing results and updating interface...");
+    
+    // Add result processing message to chat
+    setAllUserMessages(prev => [...prev, {
+      id: `agent-processing-${Date.now()}`,
+      content: "🔄 Processing results and updating interface...",
+      timestamp: Date.now(),
+      type: 'system'
+    }]);
 
     console.log('🧪 TESTING: About to check image conditions...');
 
@@ -1394,6 +1528,14 @@ export const useChatFlow = () => {
       
       setAgentActivity("🎨 Processing generated images and creating URLs...");
       
+      // Add detailed image processing message to chat
+      setAllUserMessages(prev => [...prev, {
+        id: `agent-image-processing-${Date.now()}`,
+        content: "🎨 Image generation successful! Converting S3 keys to downloadable URLs...",
+        timestamp: Date.now(),
+        type: 'system'
+      }]);
+      
       console.log('🎨 Processing image generation results:', result);
       
       // Use either direct results or nested data.results
@@ -1409,10 +1551,27 @@ export const useChatFlow = () => {
         if (item.status === 'success' && item.imageData?.s3_key) {
           try {
             console.log(`🔄 Converting S3 key to URL for ${item.segmentId}:`, item.imageData.s3_key);
+            
+            // Add individual image processing message
+            setAllUserMessages(prev => [...prev, {
+              id: `agent-image-${item.segmentId}-${Date.now()}`,
+              content: `🖼️ Processing image for segment ${item.segmentId} - Converting to downloadable URL...`,
+              timestamp: Date.now(),
+              type: 'system'
+            }]);
+            
             // Convert S3 key to full CloudFront URL
             const imageUrl = await s3Api.downloadImage(item.imageData.s3_key);
             console.log(`✅ Generated URL for ${item.segmentId}:`, imageUrl);
             imagesMap[item.segmentId] = imageUrl;
+            
+            // Add success message for individual image
+            setAllUserMessages(prev => [...prev, {
+              id: `agent-image-success-${item.segmentId}-${Date.now()}`,
+              content: `✅ Image for segment ${item.segmentId} is ready!`,
+              timestamp: Date.now(),
+              type: 'system'
+            }]);
           } catch (error) {
             console.error(`Failed to get image URL for segment ${item.segmentId}:`, error);
             failedSegments.push(item.segmentId);
@@ -1532,6 +1691,14 @@ export const useChatFlow = () => {
         
         setAgentActivity("🎬 Processing generated videos and creating URLs...");
         
+        // Add detailed video processing message to chat
+        setAllUserMessages(prev => [...prev, {
+          id: `agent-video-processing-${Date.now()}`,
+          content: "🎬 Video generation successful! Converting S3 keys to downloadable URLs...",
+          timestamp: Date.now(),
+          type: 'system'
+        }]);
+        
         // Use videoResults if available, otherwise fall back to results array for video tools or videoData detection
         const actualVideoResults = videoResults || 
                                   (isVideoToolResult ? (result.results || result.data?.results) : null) ||
@@ -1565,10 +1732,26 @@ export const useChatFlow = () => {
               console.log('🔍 Full videoData structure:', item.videoData);
               
               if (s3Key) {
+                // Add individual video processing message
+                setAllUserMessages(prev => [...prev, {
+                  id: `agent-video-${segmentId}-${Date.now()}`,
+                  content: `🎬 Processing video for segment ${segmentId} - Converting to downloadable URL...`,
+                  timestamp: Date.now(),
+                  type: 'system'
+                }]);
+                
                 // Convert S3 key to full CloudFront URL
                 const videoUrl = await s3Api.downloadVideo(s3Key);
                 console.log(`✅ Generated video URL for ${segmentId}:`, videoUrl);
                 videosMap[segmentId] = videoUrl;
+                
+                // Add success message for individual video
+                setAllUserMessages(prev => [...prev, {
+                  id: `agent-video-success-${segmentId}-${Date.now()}`,
+                  content: `✅ Video for segment ${segmentId} is ready!`,
+                  timestamp: Date.now(),
+                  type: 'system'
+                }]);
               } else {
                 console.warn(`No S3 key found in videoData for segment ${segmentId}:`, item.videoData);
                 failedVideoSegments.push(segmentId);
@@ -1679,15 +1862,38 @@ export const useChatFlow = () => {
       if (result.data.concepts) {
         setAgentActivity("💡 Processing generated concepts and preparing selection...");
         console.log('📝 Setting concepts in UI:', result.data.concepts);
+        
+        // Add verbose processing messages
+        setAllUserMessages(prev => [...prev, 
+          {
+            id: `agent-concept-processing-${Date.now()}`,
+            content: "💡 Processing generated concepts and preparing selection interface...",
+            timestamp: Date.now(),
+            type: 'system'
+          },
+          {
+            id: `agent-concept-analysis-${Date.now() + 1}`,
+            content: `📊 Received ${result.data.concepts.length} unique video concepts from AI analysis`,
+            timestamp: Date.now() + 1,
+            type: 'system'
+          },
+          {
+            id: `agent-concept-ready-${Date.now() + 2}`,
+            content: "✨ Concepts are now ready for your review and selection!",
+            timestamp: Date.now() + 2,
+            type: 'system'
+          }
+        ]);
+        
         setConcepts(result.data.concepts);
         updateStepStatus(0, "done");
         setCurrentStep(1);
         
         // Add agent message showing concepts
         setAllUserMessages(prev => [...prev, {
-          id: `agent-concepts-${Date.now()}`,
+          id: `agent-concepts-${Date.now() + 3}`,
           content: "I've generated 4 video concepts for you! Please select the one you'd like to develop:",
-          timestamp: Date.now(),
+          timestamp: Date.now() + 3,
           type: 'system'
         }]);
 
@@ -1718,6 +1924,29 @@ export const useChatFlow = () => {
       // Handle segmentation results
       if (result.data.segments) {
         setAgentActivity("📜 Processing script segments and preparing for image generation...");
+        
+        // Add verbose script processing messages
+        setAllUserMessages(prev => [...prev, 
+          {
+            id: `agent-script-processing-${Date.now()}`,
+            content: "📜 Processing script segments and analyzing narrative structure...",
+            timestamp: Date.now(),
+            type: 'system'
+          },
+          {
+            id: `agent-script-breakdown-${Date.now() + 1}`,
+            content: `🎬 Successfully created ${result.data.segments.length} detailed script segments with visuals and narration`,
+            timestamp: Date.now() + 1,
+            type: 'system'
+          },
+          {
+            id: `agent-script-ready-${Date.now() + 2}`,
+            content: "🎯 Script is ready for image generation phase!",
+            timestamp: Date.now() + 2,
+            type: 'system'
+          }
+        ]);
+        
         const script = {
           segments: result.data.segments,
           artStyle: result.data.artStyle || 'realistic',
@@ -1729,9 +1958,9 @@ export const useChatFlow = () => {
         
         // Add agent message showing scripts
         setAllUserMessages(prev => [...prev, {
-          id: `agent-scripts-${Date.now()}`,
+          id: `agent-scripts-${Date.now() + 3}`,
           content: "I've created script segments for your concept! Please select the script version you prefer:",
-          timestamp: Date.now(),
+          timestamp: Date.now() + 3,
           type: 'system'
         }]);
 
@@ -1822,6 +2051,16 @@ export const useChatFlow = () => {
       // Find the approval to get tool context
       const approval = pendingApprovals.find(a => a.id === approvalId);
       let finalAdditionalData = additionalData;
+
+      // Add approval confirmation message to chat
+      if (approval) {
+        setAllUserMessages(prev => [...prev, {
+          id: `user-approval-${Date.now()}`,
+          content: `✅ Approved: ${getToolApprovalConfirmationMessage(approval.toolName)}`,
+          timestamp: Date.now(),
+          type: 'user'
+        }]);
+      }
 
       // Prepare specific data based on tool type
       if (!additionalData && approval) {

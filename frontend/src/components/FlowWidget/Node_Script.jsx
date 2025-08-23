@@ -13,9 +13,9 @@ function NodeScript({ data, isConnectable, selected }) {
   // Expandable state
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Check if there's overflow content (for art style only display, we might not need expansion)
+  // Check if there's overflow content (for segment narrations display)
   const hasOverflowContent = (data.content && data.content !== 'New script content...' && data.content.length > 120) || 
-                            (data.artStyle && data.artStyle.length > 120);
+                            (data.segments && Array.isArray(data.segments) && data.segments.some(segment => segment.narration));
   
   return (
     <div className='relative'>
@@ -106,11 +106,20 @@ function NodeScript({ data, isConnectable, selected }) {
                 </div>
               )}
 
-              {data.artStyle && (
+              {data.segments && Array.isArray(data.segments) && data.segments.length > 0 && (
                 <div>
-                  <div className='text-xs text-gray-400 mb-1'>Art Style:</div>
-                  <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
-                    {isExpanded ? data.artStyle : `${data.artStyle.substring(0, 120)}${data.artStyle.length > 120 ? '...' : ''}`}
+                  <div className='text-xs text-gray-400 mb-1'>All Segment Narrations:</div>
+                  <div className='text-gray-300 text-xs rounded p-2 leading-relaxed whitespace-pre-line' style={{ backgroundColor: "#1a1a1a" }}>
+                    {(() => {
+                      const allNarrations = data.segments
+                        .map((segment, index) => segment.narration ? `${index + 1}. ${segment.narration}` : '')
+                        .filter(narration => narration.length > 0)
+                        .join('\n\n');
+                      
+                      if (!allNarrations) return 'No narrations available';
+                      
+                      return isExpanded ? allNarrations : `${allNarrations.substring(0, 120)}${allNarrations.length > 120 ? '...' : ''}`;
+                    })()}
                   </div>
                 </div>
               )}

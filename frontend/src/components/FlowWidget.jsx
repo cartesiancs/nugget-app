@@ -687,6 +687,7 @@ function FlowWidget() {
               imageId: image.id,
               videoUrl: videoUrl,
               videoId: videoId,
+              nodeState: 'existing', // Mark as existing/generated so sidebar can show
               segmentData: {
                 id: segment.id,
                 animation: segment.animation,
@@ -2039,7 +2040,18 @@ function FlowWidget() {
                     minZoom={0.1}
                     maxZoom={1.5}
                     onNodeClick={(event, node) => {
-                      setSelectedNode(node);
+                      // Only show sidebar for generated image and video nodes
+                      const shouldShowSidebar = (
+                        (node.type === "imageNode" || node.type === "videoNode") &&
+                        node.data?.nodeState === "existing"
+                      );
+                      
+                      if (shouldShowSidebar) {
+                        setSelectedNode(node);
+                      } else {
+                        setSelectedNode(null);
+                      }
+                      
                       // Add chat node only when clicking on user nodes
                       if (node.type === "userNode") {
                         handleAddChatNode(node);
@@ -2095,7 +2107,7 @@ function FlowWidget() {
               )}
             </div>
           </div>
-          <FlowWidgetBottomToolbar onAddNode={handleAddNode} />
+          <FlowWidgetBottomToolbar onAddNode={handleAddNode} onRefreshLayout={createFlowElements} />
         </div>
       </div>
 
@@ -2115,7 +2127,6 @@ function FlowWidget() {
               "Model:",
               model,
             );
-            // Handle message sending logic here
           }}
         />
       )}

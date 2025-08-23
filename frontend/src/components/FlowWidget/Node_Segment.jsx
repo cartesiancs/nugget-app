@@ -13,8 +13,8 @@ function NodeSegment({ data, isConnectable, selected }) {
   // Expandable state
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Check if there's overflow content - more comprehensive check
-  const hasOverflowContent = (data.visual && data.visual.length > 80) || data.narration || data.animation;
+  // Check if there's overflow content - only for narration now
+  const hasOverflowContent = data.narration && data.narration.length > 200;
   
   return (
     <div className='relative'>
@@ -97,38 +97,21 @@ function NodeSegment({ data, isConnectable, selected }) {
               </div>
             </div>
 
-            {/* Segment Content */}
+            {/* Segment Content - Only show narration */}
             <div className='space-y-2 mb-3'>
-              {data.visual && (
+              {data.narration && (
                 <div>
-                  <div className='text-xs text-gray-400 mb-1'>Visual:</div>
+                  <div className='text-xs text-gray-400 mb-1'>Narration:</div>
                   <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
-                    {isExpanded ? data.visual : `${data.visual.substring(0, 250)}${data.visual.length > 250 ? '...' : ''}`}
+                    {isExpanded ? data.narration : `${data.narration.substring(0, 200)}${data.narration.length > 200 ? '...' : ''}`}
                   </div>
                 </div>
               )}
-
-              {/* Show narration and animation when expanded */}
-              {isExpanded && (
-                <>
-                  {data.narration && (
-                    <div>
-                      <div className='text-xs text-gray-400 mb-1'>Narration:</div>
-                      <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
-                        {data.narration}
-                      </div>
-                    </div>
-                  )}
-
-                  {data.animation && (
-                    <div>
-                      <div className='text-xs text-gray-400 mb-1'>Animation:</div>
-                      <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
-                        {data.animation}
-                      </div>
-                    </div>
-                  )}
-                </>
+              
+              {!data.narration && (
+                <div className='text-gray-400 text-xs italic'>
+                  No narration available for this segment
+                </div>
               )}
             </div>
 

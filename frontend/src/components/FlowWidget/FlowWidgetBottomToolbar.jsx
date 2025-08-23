@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { assets } from "../../assets/assets";
 
-function FlowWidgetBottomToolbar({ onAddNode }) {
+function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
   const [addMenuExpanded, setAddMenuExpanded] = useState(false);
   const [selectedTool, setSelectedTool] = useState("cursor"); // Track selected tool
 
@@ -110,17 +110,12 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
             alt='Hand Tool'
           />
 
-          {/* Assets/Grid Tool */}
+          {/* Assets/Grid Tool - Coming Soon */}
           <img
             src={assets.AssettIcon}
-            onClick={() => handleToolSelect("assets")}
-            className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "assets"
-                ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                : "hover:bg-gray-700/50 hover:shadow-md"
-            }`}
-            title='Assets'
-            alt='Assets Tool'
+            className='h-10 w-10 rounded-xl cursor-not-allowed transition-all duration-200 p-1 opacity-50 hover:opacity-70'
+            title='Coming Soon'
+            alt='Assets Tool - Coming Soon'
           />
 
           {/* Separator */}
@@ -155,30 +150,26 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
             alt='Palette Tool'
           />
 
-          {/* Brush/Edit Tool */}
+          {/* Brush/Edit Tool - Now functions as Refresh Layout (Click only, not selectable) */}
           <img
             src={assets.BrushIcon}
-            onClick={() => handleToolSelect("brush")}
-            className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "brush"
-                ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                : "hover:bg-gray-700/50 hover:shadow-md"
-            }`}
-            title='Brush Tool'
-            alt='Brush Tool'
+            onClick={() => {
+              // Don't select the tool, just execute the action
+              if (onRefreshLayout) {
+                onRefreshLayout();
+              }
+            }}
+            className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+            title='Refresh Layout - Reorganize all nodes to default structure'
+            alt='Refresh Layout Tool'
           />
 
-          {/* Comment/Chat Tool */}
+          {/* Comment/Chat Tool - Coming Soon */}
           <img
             src={assets.CommentIcon}
-            onClick={() => handleToolSelect("comment")}
-            className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "comment"
-                ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                : "hover:bg-gray-700/50 hover:shadow-md"
-            }`}
-            title='Comments'
-            alt='Comment Tool'
+            className='h-10 w-10 rounded-xl cursor-not-allowed transition-all duration-200 p-1 opacity-50 hover:opacity-70'
+            title='Coming Soon'
+            alt='Comment Tool - Coming Soon'
           />
         </div>
       </div>

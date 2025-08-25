@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-function FlowWidgetSidebar({ selectedNode, onClose }) {
+function FlowWidgetSidebar({ selectedNode, onClose, onRegenerate }) {
   const [isOpen, setIsOpen] = useState(true);
   const [prompt, setPrompt] = useState("");
   const [nodeType, setNodeType] = useState("image");
@@ -27,6 +27,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
         setNodeType("image");
         setModel("recraft-v3");
         setPrompt(
+          selectedNode.data?.visualPrompt ||
           selectedNode.data?.segmentData?.visual ||
           selectedNode.data?.visual ||
             "A bird flying on the moon with a red cape zooming past an asteroid and uses its laser eyes to destroy the asteroid saving earth with animal people cheering",
@@ -36,8 +37,9 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
         selectedNode.type === "videoNode"
       ) {
         setNodeType("video");
-        setModel("gen4-turbo");
+        setModel("gen4_turbo");
         setPrompt(
+          selectedNode.data?.animationPrompt ||
           selectedNode.data?.segmentData?.animation ||
           selectedNode.data?.animation ||
             "A bird flying on the moon with a red cape zooming past an asteroid and uses its laser eyes to destroy the asteroid saving earth with animal people cheering",
@@ -72,16 +74,49 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
   };
 
   const handleRegenerate = () => {
-    // TODO: Implement regeneration logic
-    console.log("Regenerating with:", {
-      prompt,
-      nodeType,
-      model,
-      light,
-      composition,
-      angle,
-      style,
-    });
+    if (!selectedNode || !onRegenerate) {
+      console.error("No selected node or onRegenerate callback");
+      return;
+    }
+
+    // Create the art style from selected options
+    const artStyle = `${style.toLowerCase()}, ${light.toLowerCase()}, ${composition.toLowerCase()}, ${angle.toLowerCase()}`;
+
+    let regenerationParams;
+
+    if (nodeType === "image") {
+      regenerationParams = {
+        prompt: prompt.trim() || selectedNode.data?.visualPrompt || selectedNode.data?.segmentData?.visual || "Generate a new image",
+        model: model,
+        artStyle: artStyle,
+        light,
+        composition,
+        angle,
+        style,
+        nodeType,
+        selectedNode
+      };
+    } else if (nodeType === "video") {
+      regenerationParams = {
+        prompt: prompt.trim() || selectedNode.data?.animationPrompt || selectedNode.data?.segmentData?.animation || "Generate a new video with smooth cinematic movement",
+        model: model,
+        artStyle: artStyle,
+        light,
+        composition,
+        angle,
+        style,
+        nodeType,
+        selectedNode
+      };
+    } else {
+      console.error("Unsupported node type for regeneration:", nodeType);
+      return;
+    }
+
+    console.log("Regenerating with:", regenerationParams);
+    
+    // Call the regeneration callback
+    onRegenerate(regenerationParams);
   };
 
   const handleRandomise = () => {
@@ -266,7 +301,7 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
                 ) : nodeType === "video" ? (
                   <>
                     <option
-                      value='gen4-turbo'
+                      value='gen4_turbo'
                       style={{ background: "#1a1a1a", color: "white" }}
                     >
                       RunwayML (3s)

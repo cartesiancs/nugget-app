@@ -630,11 +630,12 @@ function FlowWidget() {
           video.videoFiles.length > 0 &&
           video.videoFiles[0].s3Key
         ) {
-          const segmentId = video.uuid.replace(/^seg-/, "");
-          videos[
-            segmentId
-          ] = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
-          videoDetails[segmentId] = {
+          // Handle both old segment-based format (seg-1) and new image-specific format (seg-1-imageId)
+          const videoKey = video.uuid.replace(/^seg-/, "");
+          const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
+          
+          videos[videoKey] = videoUrl;
+          videoDetails[videoKey] = {
             id: video.id,
             artStyle: video.artStyle,
             imageS3Key: video.imageS3Key || null,
@@ -645,13 +646,43 @@ function FlowWidget() {
     console.log("🖼️ Images map:", images);
     console.log("📝 Image details:", imageDetails);
     console.log("🎬 Videos map:", videos);
+    console.log("🎬 Video keys:", Object.keys(videos));
 
     // Add temporary videos to the videos map
     temporaryVideos.forEach((videoUrl, key) => {
       videos[key] = videoUrl;
     });
 
-    console.log("🎬 Videos map (including temporary):", videos);
+    // Load saved videos from localStorage
+    try {
+      let selectedProject = null;
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      if (storedProject) {
+        selectedProject = JSON.parse(storedProject);
+        const videoStorageKey = `generated-videos-${selectedProject.id}`;
+        const savedVideos = JSON.parse(localStorage.getItem(videoStorageKey) || '{}');
+        
+        Object.entries(savedVideos).forEach(([key, videoData]) => {
+          if (videoData && videoData.videoUrl) {
+            videos[key] = videoData.videoUrl;
+            // Also add to video details if not already present
+            if (!videoDetails[key]) {
+              videoDetails[key] = {
+                id: videoData.videoId,
+                artStyle: videoData.artStyle,
+                imageS3Key: null
+              };
+            }
+          }
+        });
+        
+        console.log(`🎬 Loaded ${Object.keys(savedVideos).length} saved videos from localStorage`);
+      }
+    } catch (error) {
+      console.error('Error loading saved videos from localStorage:', error);
+    }
+
+    console.log("🎬 Videos map (including temporary and saved):", videos);
     return { concepts, scripts, segments, images, videos, imageDetails, videoDetails };
   }, [allProjectData, temporaryVideos]);
 
@@ -966,15 +997,43 @@ function FlowWidget() {
 
       // 5. Create Video Nodes for images that have videos (Level 5 - Leaf nodes)
       let videoNodesByImage = new Map(); // Group videos by their parent image
+      let usedSegmentVideos = new Set(); // Track which segment videos have been assigned
+      
       flowData.segments.forEach((segment, segmentIndex) => {
         const imageDetail = flowData.imageDetails[segment.id];
         if (flowData.images[segment.id] && imageDetail?.allImages) {
           imageDetail.allImages.forEach((image, imageIndex) => {
-            const videoUrl = flowData.videos[`${segment.id}-${image.id}`] || flowData.videos[segment.id];
-            const videoId = flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id || flowData?.videoDetails?.[segment.id]?.id;
+            // First, check for image-specific video
+            const imageVideoKey = `${segment.id}-${image.id}`;
+            let videoUrl = flowData.videos[imageVideoKey];
+            let videoId = flowData?.videoDetails?.[imageVideoKey]?.id;
+            let videoKey = imageVideoKey;
+            
+            // If no image-specific video, check for segment video (but only assign to first image to avoid duplicates)
+            if (!videoUrl && !usedSegmentVideos.has(segment.id)) {
+              const segmentVideoUrl = flowData.videos[segment.id];
+              const segmentVideoId = flowData?.videoDetails?.[segment.id]?.id;
+              
+              if (segmentVideoUrl) {
+                videoUrl = segmentVideoUrl;
+                videoId = segmentVideoId;
+                videoKey = `${segment.id}-${image.id}`; // Still use image-specific key for consistency
+                usedSegmentVideos.add(segment.id); // Mark this segment video as used
+                
+                console.log(`🎬 Assigning segment video ${segment.id} to first image ${image.id}`);
+              }
+            }
+            
+            console.log(`🎬 Checking video for segment ${segment.id}, image ${image.id}:`, {
+              imageVideoKey,
+              hasImageVideo: !!flowData.videos[imageVideoKey],
+              hasSegmentVideo: !!flowData.videos[segment.id],
+              finalVideoUrl: videoUrl ? videoUrl.substring(0, 50) + '...' : 'none',
+              videoKey
+            });
             
             if (videoUrl) {
-              videoNodesByImage.set(`${segment.id}-${image.id}`, {
+              videoNodesByImage.set(videoKey, {
                 segment: segment,
                 segmentIndex: segmentIndex,
                 image: image,
@@ -986,6 +1045,8 @@ function FlowWidget() {
           });
         }
       });
+      
+      console.log(`🎬 Found ${videoNodesByImage.size} video nodes to create`);
       
       if (videoNodesByImage.size > 0) {
         videoNodesByImage.forEach((videoData, key) => {
@@ -2054,6 +2115,423 @@ function FlowWidget() {
     }
   }, [setNodes, setError]);
   
+  // Handle image regeneration from sidebar
+  const handleImageRegeneration = useCallback(async (regenerationParams) => {
+    try {
+      const { selectedNode, prompt, model, artStyle } = regenerationParams;
+      
+      if (!selectedNode || selectedNode.type !== 'imageNode') {
+        console.error('Invalid node for image regeneration:', selectedNode);
+        return;
+      }
+
+      // Get selected project from localStorage
+      let selectedProject = null;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      } catch (e) {
+        console.error('Error parsing project data:', e);
+      }
+      
+      if (!selectedProject) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+
+      // Create a new image node for the regenerated image
+      const regeneratedImageNodeId = `regenerated-image-${selectedNode.id}-${Date.now()}`;
+      const segmentId = selectedNode.data?.segmentId || Date.now();
+      
+      // Position the new node next to the original image node
+      const newPosition = {
+        x: selectedNode.position.x + 350, // Place it to the right
+        y: selectedNode.position.y
+      };
+
+      // Create loading image node
+      const loadingImageNode = {
+        id: regeneratedImageNodeId,
+        type: 'imageNode',
+        position: newPosition,
+        data: {
+          id: regeneratedImageNodeId,
+          content: 'Regenerating image...',
+          nodeState: 'loading',
+          title: 'Regenerating Image',
+          visualPrompt: prompt,
+          artStyle: artStyle,
+          segmentId: segmentId,
+          segmentData: selectedNode.data?.segmentData
+        }
+      };
+
+      // Add the loading node immediately
+      setNodes(prevNodes => [...prevNodes, loadingImageNode]);
+
+      // Connect the new node to the same parent as the original image node
+      const parentEdge = edges.find(edge => edge.target === selectedNode.id);
+      if (parentEdge) {
+        const newEdge = {
+          id: `${parentEdge.source}-to-${regeneratedImageNodeId}`,
+          source: parentEdge.source,
+          target: regeneratedImageNodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#E9E8EB33',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+          }
+        };
+        setEdges(prevEdges => [...prevEdges, newEdge]);
+      }
+
+      // Save persistent generation state
+      saveGenerationState(selectedProject.id, 'image', regeneratedImageNodeId, {
+        loadingMessage: 'Regenerating image...',
+        title: 'Regenerating Image',
+        position: newPosition,
+        parentNodeId: parentEdge?.source,
+        visualPrompt: prompt,
+        artStyle: artStyle,
+        segmentId: segmentId
+      });
+
+      // Mark as generating
+      setGeneratingImages(prev => new Set(prev.add(regeneratedImageNodeId)));
+
+      console.log("Starting image regeneration...");
+      console.log("Image regeneration request:", {
+        visual_prompt: prompt,
+        art_style: artStyle,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: model
+      });
+
+      // Generate the image using the chat API
+      const imageResponse = await chatApi.generateImage({
+        visual_prompt: prompt,
+        art_style: artStyle,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: model
+      });
+
+      console.log("Image regeneration response:", imageResponse);
+
+      if (imageResponse && imageResponse.s3_key) {
+        // Remove persistent generation state
+        removeGenerationState(selectedProject.id, 'image', regeneratedImageNodeId);
+
+        // Download image URL
+        const imageUrl = await s3Api.downloadImage(imageResponse.s3_key);
+
+        // Update the loading node with the generated image
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === regeneratedImageNodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                imageUrl: imageUrl,
+                imageId: imageResponse.id,
+                s3Key: imageResponse.s3_key,
+                visualPrompt: prompt,
+                artStyle: artStyle,
+                nodeState: 'existing',
+                segmentId: segmentId,
+                segmentData: selectedNode.data?.segmentData,
+                title: 'Regenerated Image'
+              }
+            };
+          }
+          return node;
+        }));
+
+        console.log(`Successfully regenerated image for segment ${segmentId}`);
+      } else {
+        throw new Error('No image key returned from API');
+      }
+    } catch (error) {
+      console.error('Error regenerating image:', error);
+      
+      // Show error in the loading node if it exists
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.data?.nodeState === 'loading' && node.data?.title === 'Regenerating Image') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Failed to regenerate image',
+              error: error.message || 'Failed to regenerate image',
+              nodeState: 'error'
+            }
+          };
+        }
+        return node;
+      }));
+    } finally {
+      // Clean up generating state
+      setGeneratingImages(prev => {
+        const newSet = new Set(prev);
+        // Remove any loading nodes from generating set
+        nodes.forEach(node => {
+          if (node.data?.nodeState === 'loading' && node.data?.title === 'Regenerating Image') {
+            newSet.delete(node.id);
+          }
+        });
+        return newSet;
+      });
+    }
+  }, [nodes, edges, setNodes, setEdges, setGeneratingImages, saveGenerationState, removeGenerationState]);
+
+  // Handle video regeneration from sidebar
+  const handleVideoRegeneration = useCallback(async (regenerationParams) => {
+    try {
+      const { selectedNode, prompt, model, artStyle } = regenerationParams;
+      
+      if (!selectedNode || selectedNode.type !== 'videoNode') {
+        console.error('Invalid node for video regeneration:', selectedNode);
+        return;
+      }
+
+      // Get selected project from localStorage
+      let selectedProject = null;
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      } catch (e) {
+        console.error('Error parsing project data:', e);
+      }
+      
+      if (!selectedProject) {
+        throw new Error('No project selected. Please select a project first.');
+      }
+
+      // Create a new video node for the regenerated video
+      const regeneratedVideoNodeId = `regenerated-video-${selectedNode.id}-${Date.now()}`;
+      const segmentId = selectedNode.data?.segmentId || Date.now();
+      const imageId = selectedNode.data?.imageId || Date.now();
+      
+      // Position the new node next to the original video node
+      const newPosition = {
+        x: selectedNode.position.x + 350, // Place it to the right
+        y: selectedNode.position.y
+      };
+
+      // Create loading video node
+      const loadingVideoNode = {
+        id: regeneratedVideoNodeId,
+        type: 'videoNode',
+        position: newPosition,
+        data: {
+          id: regeneratedVideoNodeId,
+          content: 'Regenerating video...',
+          nodeState: 'loading',
+          title: 'Regenerating Video',
+          animationPrompt: prompt,
+          artStyle: artStyle,
+          segmentId: segmentId,
+          imageId: imageId,
+          segmentData: selectedNode.data?.segmentData
+        }
+      };
+
+      // Add the loading node immediately
+      setNodes(prevNodes => [...prevNodes, loadingVideoNode]);
+
+      // Connect the new node to the same parent as the original video node
+      const parentEdge = edges.find(edge => edge.target === selectedNode.id);
+      if (parentEdge) {
+        const newEdge = {
+          id: `${parentEdge.source}-to-${regeneratedVideoNodeId}`,
+          source: parentEdge.source,
+          target: regeneratedVideoNodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#E9E8EB33',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+          }
+        };
+        setEdges(prevEdges => [...prevEdges, newEdge]);
+      }
+
+      // Save persistent generation state
+      saveGenerationState(selectedProject.id, 'video', regeneratedVideoNodeId, {
+        loadingMessage: 'Regenerating video...',
+        title: 'Regenerating Video',
+        position: newPosition,
+        parentNodeId: parentEdge?.source,
+        animationPrompt: prompt,
+        artStyle: artStyle,
+        segmentId: segmentId,
+        imageId: imageId
+      });
+
+      // Mark as generating
+      setGeneratingVideos(prev => new Set(prev.add(regeneratedVideoNodeId)));
+
+      // We need the parent image's S3 key for video generation
+      const parentImageNode = nodes.find(node => node.id === parentEdge?.source);
+      let imageS3Key = parentImageNode?.data?.s3Key || parentImageNode?.data?.imageS3Key;
+
+      // If no direct s3Key, try to extract from imageUrl
+      if (!imageS3Key && parentImageNode?.data?.imageUrl) {
+        const imageUrl = parentImageNode.data.imageUrl;
+        if (imageUrl.includes('cloudfront.net/')) {
+          const urlParts = imageUrl.split('cloudfront.net/');
+          if (urlParts.length > 1) {
+            imageS3Key = urlParts[1];
+          }
+        }
+      }
+
+      if (!imageS3Key) {
+        throw new Error('No parent image S3 key found for video regeneration. Video generation requires a source image.');
+      }
+
+      console.log("Starting video regeneration...");
+      console.log("Video regeneration request:", {
+        animation_prompt: prompt,
+        art_style: artStyle,
+        image_s3_key: imageS3Key,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: model
+      });
+
+      // Generate the video using the chat API
+      const videoResponse = await chatApi.generateVideo({
+        animation_prompt: prompt,
+        art_style: artStyle,
+        image_s3_key: imageS3Key,
+        segmentId: segmentId,
+        project_id: selectedProject.id,
+        model: model
+      });
+
+      console.log("Video regeneration response:", videoResponse);
+
+      if (videoResponse && videoResponse.s3_key) {
+        // Remove persistent generation state
+        removeGenerationState(selectedProject.id, 'video', regeneratedVideoNodeId);
+
+        // Download video URL
+        const videoUrl = await s3Api.downloadVideo(videoResponse.s3_key);
+
+        // Update the loading node with the generated video
+        setNodes(prevNodes => prevNodes.map(node => {
+          if (node.id === regeneratedVideoNodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                videoUrl: videoUrl,
+                videoId: videoResponse.id,
+                segmentId: segmentId,
+                imageId: imageId,
+                animationPrompt: prompt,
+                artStyle: artStyle,
+                nodeState: 'existing',
+                segmentData: selectedNode.data?.segmentData,
+                title: 'Regenerated Video'
+              }
+            };
+          }
+          return node;
+        }));
+
+        // Store temporary video for immediate display
+        setTemporaryVideos(prev => {
+          const newMap = new Map(prev);
+          const key = `${segmentId}-${imageId}`;
+          newMap.set(key, videoUrl);
+          return newMap;
+        });
+
+        // Save video to localStorage for persistence across refreshes
+        try {
+          const videoStorageKey = `generated-videos-${selectedProject.id}`;
+          const existingVideos = JSON.parse(localStorage.getItem(videoStorageKey) || '{}');
+          existingVideos[`${segmentId}-${imageId}`] = {
+            videoUrl: videoUrl,
+            videoId: videoResponse.id,
+            segmentId: segmentId,
+            imageId: imageId,
+            animationPrompt: prompt,
+            artStyle: artStyle,
+            model: model,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(videoStorageKey, JSON.stringify(existingVideos));
+          console.log(`💾 Saved regenerated video to localStorage for ${segmentId}-${imageId}`);
+          
+          // Clean up old videos (keep only last 50 videos per project)
+          const videoEntries = Object.entries(existingVideos);
+          if (videoEntries.length > 50) {
+            const sortedVideos = videoEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+            const videosToKeep = sortedVideos.slice(0, 50);
+            const cleanedVideos = Object.fromEntries(videosToKeep);
+            localStorage.setItem(videoStorageKey, JSON.stringify(cleanedVideos));
+            console.log(`🧹 Cleaned up old videos, kept ${videosToKeep.length} most recent`);
+          }
+        } catch (error) {
+          console.error('Error saving video to localStorage:', error);
+        }
+
+        console.log(`Successfully regenerated video for segment ${segmentId}`);
+      } else {
+        throw new Error('No video key returned from API');
+      }
+    } catch (error) {
+      console.error('Error regenerating video:', error);
+      
+      // Show error in the loading node if it exists
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.data?.nodeState === 'loading' && node.data?.title === 'Regenerating Video') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: 'Failed to regenerate video',
+              error: error.message || 'Failed to regenerate video',
+              nodeState: 'error'
+            }
+          };
+        }
+        return node;
+      }));
+    } finally {
+      // Clean up generating state
+      setGeneratingVideos(prev => {
+        const newSet = new Set(prev);
+        // Remove any loading nodes from generating set
+        nodes.forEach(node => {
+          if (node.data?.nodeState === 'loading' && node.data?.title === 'Regenerating Video') {
+            newSet.delete(node.id);
+          }
+        });
+        return newSet;
+      });
+    }
+  }, [nodes, edges, setNodes, setEdges, setGeneratingVideos, setTemporaryVideos, saveGenerationState, removeGenerationState]);
+
+  // Unified regeneration handler that routes to image or video regeneration
+  const handleRegeneration = useCallback(async (regenerationParams) => {
+    const { nodeType } = regenerationParams;
+    
+    if (nodeType === 'image') {
+      await handleImageRegeneration(regenerationParams);
+    } else if (nodeType === 'video') {
+      await handleVideoRegeneration(regenerationParams);
+    } else {
+      console.error('Unsupported node type for regeneration:', nodeType);
+    }
+  }, [handleImageRegeneration, handleVideoRegeneration]);
+
   // Handle video generation from image
   const handleVideoGeneration = useCallback(async (imageNode, videoNode) => {
     try {
@@ -2179,6 +2657,36 @@ function FlowWidget() {
           newMap.set(key, videoUrl);
           return newMap;
         });
+
+        // Save video to localStorage for persistence across refreshes
+        try {
+          const videoStorageKey = `generated-videos-${selectedProject.id}`;
+          const existingVideos = JSON.parse(localStorage.getItem(videoStorageKey) || '{}');
+          existingVideos[`${segmentId}-${imageNode.data?.imageId}`] = {
+            videoUrl: videoUrl,
+            videoId: videoResponse.id,
+            segmentId: segmentId,
+            imageId: imageNode.data?.imageId,
+            animationPrompt: animationPrompt,
+            artStyle: artStyle,
+            model: 'gen4_turbo', // Fixed: use the actual model name instead of undefined variable
+            timestamp: Date.now()
+          };
+          localStorage.setItem(videoStorageKey, JSON.stringify(existingVideos));
+          console.log(`💾 Saved generated video to localStorage for ${segmentId}-${imageNode.data?.imageId}`);
+          
+          // Clean up old videos (keep only last 50 videos per project)
+          const videoEntries = Object.entries(existingVideos);
+          if (videoEntries.length > 50) {
+            const sortedVideos = videoEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+            const videosToKeep = sortedVideos.slice(0, 50);
+            const cleanedVideos = Object.fromEntries(videosToKeep);
+            localStorage.setItem(videoStorageKey, JSON.stringify(cleanedVideos));
+            console.log(`🧹 Cleaned up old videos, kept ${videosToKeep.length} most recent`);
+          }
+        } catch (error) {
+          console.error('Error saving video to localStorage:', error);
+        }
         
         console.log(`Generated video for segment ${segmentId}`);
         
@@ -2408,8 +2916,8 @@ function FlowWidget() {
     };
     const closeHandler = () => {
       setOpen(false);
-      // Clear temporary videos when closing the widget
-      setTemporaryVideos(new Map());
+      // Don't clear temporary videos on close since they might be persistent now
+      // setTemporaryVideos(new Map()); // Commented out to preserve videos
       // Dispatch sandbox closed event to show timeline elements
       window.dispatchEvent(new CustomEvent("sandbox:closed"));
     };
@@ -2697,7 +3205,7 @@ function FlowWidget() {
                     minZoom={0.1}
                     maxZoom={1.5}
                     onNodeClick={(event, node) => {
-                      // Only show sidebar for generated image and video nodes
+                      // Show sidebar for generated image and video nodes
                       const shouldShowSidebar = (
                         (node.type === "imageNode" || node.type === "videoNode") &&
                         node.data?.nodeState === "existing"
@@ -2759,6 +3267,7 @@ function FlowWidget() {
                     selectedNode={selectedNode}
                     onClose={() => setSelectedNode(null)}
                     onChatClick={handleChatClick}
+                    onRegenerate={handleRegeneration}
                   />
                 </div>
               )}

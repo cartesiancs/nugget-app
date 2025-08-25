@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@xyflow/react": "^12.8.2",
+    "lucide-react": "^0.540.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-to-webcomponent": "^1.7.0",

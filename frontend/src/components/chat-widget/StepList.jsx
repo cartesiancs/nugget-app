@@ -1,4 +1,5 @@
 import React from "react";
+import { Brain, Image, Video } from "lucide-react";
 
 /**
  * Renders the list of 6 video creation steps along with their current status.
@@ -17,6 +18,21 @@ export default function StepList({
   handleRedoStep,
   setCurrentStep,
 }) {
+  // Function to get the appropriate Lucide icon based on step ID
+  const getStepIconComponent = (stepId) => {
+    switch (stepId) {
+      case 0: // Concept Writer
+        return Brain;
+      case 1: // Choose Concept
+        return Brain;
+      case 4: // Image Generation
+        return Image;
+      case 5: // Video Generation
+        return Video;
+      default:
+        return Brain;
+    }
+  };
   const completedSteps = steps.filter(
     (step) => stepStatus[step.id] === "done",
   ).length;
@@ -142,6 +158,7 @@ export default function StepList({
             const disabled = isStepDisabled(step.id) || loading;
             const isCurrent = currentStep === step.id;
             const isDone = stepStatus[step.id] === "done";
+            const IconComponent = getStepIconComponent(step.id);
 
             return (
               <div
@@ -149,7 +166,7 @@ export default function StepList({
                 className={`flex items-center gap-2 p-2 rounded-full text-left transition-all duration-200 text-xs cursor-pointer min-h-[48px] ${
                   disabled
                     ? "text-gray-500 cursor-not-allowed"
-                    : "text-white hover:bg-gray-800/30"
+                    : "text-[#94E7ED] hover:bg-gray-800/30"
                 }`}
                 style={{
                   background: isDone
@@ -166,40 +183,58 @@ export default function StepList({
                   }
                 }}
               >
-                <svg
-                  width='28'
-                  height='28'
-                  viewBox='0 0 18 18'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <rect
-                    width='18'
-                    height='18'
-                    rx='9'
-                    fill={isDone ? "#94E7ED" : "white"}
-                    fillOpacity={isDone ? "0.2" : "0.1"}
-                  />
-                  <g clipPath={`url(#clip0_640_38521_${step.id})`}>
-                    <path
-                      d='M5.437 12.562C5.437 12.1027 5.505 11.4506 5.693 10.7284M5.693 10.7284C6.268 8.5082 7.975 5.625 12.116 5.625C12.161 6.773 11.733 8.359 10.243 9.041M5.693 10.7284C9.899 11.373 10.486 10.019 10.243 9.041M10.243 9.041C9.786 9.251 9.228 9.375 8.453 9.375'
-                      stroke={isDone ? "#94E7ED" : "white"}
-                      strokeOpacity={isDone ? "0.8" : "0.5"}
-                      strokeWidth='1'
-                      strokeLinecap='round'
+                {/* Conditional rendering: Original SVG for script steps, Lucide icons for others */}
+                {step.id === 2 || step.id === 3 ? (
+                  // Original SVG for Script Generation and Choose Script
+                  <svg
+                    width='28'
+                    height='28'
+                    viewBox='0 0 18 18'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <rect
+                      width='18'
+                      height='18'
+                      rx='9'
+                      fill={isDone ? "#94E7ED" : "white"}
+                      fillOpacity={isDone ? "0.2" : "0.1"}
                     />
-                  </g>
-                  <defs>
-                    <clipPath id={`clip0_640_38521_${step.id}`}>
-                      <rect
-                        width='9'
-                        height='9'
-                        fill='white'
-                        transform='translate(4.5 4.5)'
+                    <g clipPath={`url(#clip0_640_38521_${step.id})`}>
+                      <path
+                        d='M5.437 12.562C5.437 12.1027 5.505 11.4506 5.693 10.7284M5.693 10.7284C6.268 8.5082 7.975 5.625 12.116 5.625C12.161 6.773 11.733 8.359 10.243 9.041M5.693 10.7284C9.899 11.373 10.486 10.019 10.243 9.041M10.243 9.041C9.786 9.251 9.228 9.375 8.453 9.375'
+                        stroke={isDone ? "#94E7ED" : "white"}
+                        strokeOpacity={isDone ? "0.8" : "0.5"}
+                        strokeWidth='1'
+                        strokeLinecap='round'
                       />
-                    </clipPath>
-                  </defs>
-                </svg>
+                    </g>
+                    <defs>
+                      <clipPath id={`clip0_640_38521_${step.id}`}>
+                        <rect
+                          width='9'
+                          height='9'
+                          fill='white'
+                          transform='translate(4.5 4.5)'
+                        />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                ) : (
+                  // Lucide icons for other steps
+                  <div
+                    className='w-7 h-7 rounded-full flex items-center justify-center'
+                    style={{
+                      background: isDone ? "rgba(148, 231, 237, 0.2)" : "rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <IconComponent
+                      size={16}
+                      color={isDone ? "#94E7ED" : "white"}
+                      opacity={isDone ? 0.8 : 0.5}
+                    />
+                  </div>
+                )}
 
                 <div className='flex-1 min-w-0'>
                   <div className='font-medium truncate text-xs leading-tight'>

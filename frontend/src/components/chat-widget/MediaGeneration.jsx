@@ -287,7 +287,7 @@ const MediaGeneration = ({
                         <img
                           src={generatedImages[segmentId]}
                           alt={`Generated image for segment ${segmentId}`}
-                          className='w-full h-24 object-cover filter blur-sm opacity-50'
+                          className='w-full h-24 object-cover filter blur-sm opacity-50 animate-pulse'
                         />
                       ) : (
                         <div className='w-full h-24 bg-gray-700/30 animate-pulse'></div>

@@ -24,7 +24,7 @@ export default function InputArea({
     "gemini-flash": { label: "Gemini Flash", tokens: "5", time: "2" },
     "gemini-pro": { label: "Gemini Pro", tokens: "4", time: "4" },
     "recraft-v3": { label: "Recraft", tokens: "1", time: "4" },
-    "imagen": { label: "Imagen", tokens: "2", time: "2" },
+    imagen: { label: "Imagen", tokens: "2", time: "2" },
     "gen4-turbo": { label: "RunwayML", tokens: "2.5", time: "3" },
     "kling-v2.1-master": { label: "Kling", tokens: "20", time: "4" },
   };
@@ -235,13 +235,15 @@ export default function InputArea({
   }
 
   const availableModels = getAvailableModels();
-  const currentModelData = availableModels.find(model => model.value === selectedModel) || availableModels[0];
+  const currentModelData =
+    availableModels.find((model) => model.value === selectedModel) ||
+    availableModels[0];
 
   // Authenticated + project selected → show input
   return (
-    <div className='p-3'>
+    <div className='p-2 sm:p-3'>
       <div
-        className='rounded-xl shadow-2xl w-full mx-auto p-3'
+        className='rounded-xl shadow-2xl w-full mx-auto p-2 sm:p-3'
         style={{
           background: "#18191C80",
           border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -251,7 +253,7 @@ export default function InputArea({
         }}
       >
         {/* Main Content */}
-        <div className='space-y-3'>
+        <div className='space-y-2 sm:space-y-3'>
           {/* Message Input */}
           <form onSubmit={handleSubmit} className='space-y-2'>
             <div className='relative'>
@@ -294,85 +296,135 @@ export default function InputArea({
             </div>
 
             {/* Controls Row */}
-            <div className='flex items-center justify-between'>
+            <div className='flex items-center justify-between gap-2'>
               {/* Custom Model Selector Dropdown */}
-              <div className="relative" ref={dropdownRef}>
+              <div className='relative flex-1 min-w-0' ref={dropdownRef}>
                 <button
-                  type="button"
+                  type='button'
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className='text-gray-300 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 cursor-pointer flex items-center justify-between'
+                  className='text-gray-300 text-xs px-2 py-1 rounded-md focus:outline-none transition-all duration-200 cursor-pointer flex items-center justify-between w-full overflow-hidden'
                   style={{
                     background: "rgba(24, 25, 28, 0.6)",
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                     backdropFilter: "blur(5px)",
-                    minWidth: "220px",
+                    minWidth: "140px",
+                    maxWidth: "100%",
                   }}
                   disabled={false}
                 >
-                  <span>
-                    {currentModelData?.label} | {currentModelData?.tokens} Token |  ~{currentModelData?.time}s
+                  <span className='truncate'>
+                    <span className='hidden sm:inline'>
+                      {currentModelData?.label} | {currentModelData?.tokens}{" "}
+                      Token | ~{currentModelData?.time}s
+                    </span>
+                    <span className='sm:hidden'>{currentModelData?.label}</span>
                   </span>
                   <svg
-                    className={`ml-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                    width="10"
-                    height="10"
-                    viewBox="0 0 20 20"
-                    fill="none"
+                    className={`ml-1 sm:ml-2 flex-shrink-0 transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                    width='10'
+                    height='10'
+                    viewBox='0 0 20 20'
+                    fill='none'
                   >
-                    <path stroke="#6b7280" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 8l4 4 4-4"/>
+                    <path
+                      stroke='#6b7280'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='1.5'
+                      d='M6 8l4 4 4-4'
+                    />
                   </svg>
                 </button>
 
                 {/* Custom Dropdown Menu - Opens Upward */}
                 {isDropdownOpen && (
                   <div
-                    className="absolute z-50 w-full rounded-lg shadow-lg overflow-hidden"
+                    className='absolute z-50 w-full rounded-lg shadow-lg overflow-hidden'
                     style={{
                       bottom: "calc(100% + 8px)", // Position above the button
                       background: "rgba(30, 30, 34, 0.95)",
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       backdropFilter: "blur(10px)",
                       boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+                      minWidth: "200px",
                     }}
                   >
                     {availableModels.map((model) => (
                       <div
                         key={model.value}
                         onClick={() => handleModelSelect(model.value)}
-                        className="px-3 py-2 cursor-pointer transition-all duration-200 flex items-center justify-between group"
+                        className='px-3 py-2 cursor-pointer transition-all duration-200 flex flex-col sm:flex-row sm:items-center sm:justify-between group'
                         style={{
-                          background: selectedModel === model.value 
-                            ? "rgba(59, 130, 246, 0.2)" 
-                            : "transparent",
+                          background:
+                            selectedModel === model.value
+                              ? "rgba(59, 130, 246, 0.2)"
+                              : "transparent",
                           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
                         }}
                         onMouseEnter={(e) => {
-                          e.target.style.background = selectedModel === model.value 
-                            ? "rgba(59, 130, 246, 0.3)" 
-                            : "rgba(255, 255, 255, 0.05)";
+                          e.target.style.background =
+                            selectedModel === model.value
+                              ? "rgba(59, 130, 246, 0.3)"
+                              : "rgba(255, 255, 255, 0.05)";
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.background = selectedModel === model.value 
-                            ? "rgba(59, 130, 246, 0.2)" 
-                            : "transparent";
+                          e.target.style.background =
+                            selectedModel === model.value
+                              ? "rgba(59, 130, 246, 0.2)"
+                              : "transparent";
                         }}
                       >
-                        <div className="flex items-center space-x-3">
-                          <span className="text-gray-200 text-sm font-medium">
+                        <div className='flex items-center space-x-3'>
+                          <span className='text-gray-200 text-sm font-medium'>
                             {model.label}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 text-xs text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
+                        <div className='flex items-center space-x-4 text-xs text-gray-400 mt-1 sm:mt-0'>
+                          <div className='flex items-center space-x-1'>
+                            <svg
+                              width='16'
+                              height='16'
+                              viewBox='0 0 16 16'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.33'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.33'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
                             </svg>
                             <span>{model.tokens}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M7.99984 5.33317V8.54413C7.99984 8.65809 8.05806 8.76416 8.15421 8.82535L9.99984 9.99984M14.0999 7.9999C14.0999 11.3688 11.3688 14.0999 7.9999 14.0999C4.63097 14.0999 1.8999 11.3688 1.8999 7.9999C1.8999 4.63097 4.63097 1.8999 7.9999 1.8999C11.3688 1.8999 14.0999 4.63097 14.0999 7.9999Z" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <div className='flex items-center space-x-1'>
+                            <svg
+                              width='16'
+                              height='16'
+                              viewBox='0 0 16 16'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M7.99984 5.33317V8.54413C7.99984 8.65809 8.05806 8.76416 8.15421 8.82535L9.99984 9.99984M14.0999 7.9999C14.0999 11.3688 11.3688 14.0999 7.9999 14.0999C4.63097 14.0999 1.8999 11.3688 1.8999 7.9999C1.8999 4.63097 4.63097 1.8999 7.9999 1.8999C11.3688 1.8999 14.0999 4.63097 14.0999 7.9999Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
                             </svg>
                             <span>~{model.time}s</span>
                           </div>
@@ -437,41 +489,47 @@ export default function InputArea({
                   </defs>
                 </svg>
 
-                {/* Icon 2 - Settings/Options */}
-                <svg
-                  width='28'
-                  height='28'
-                  viewBox='0 0 28 28'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    d='M8.66699 14H15.0003M8.66699 18H12.667M8.66699 10H19.3337M15.3337 19.3333H15.3403M18.0003 14.6667C17.5753 15.7443 17.1076 16.23 16.0003 16.6667C17.1076 17.1034 17.5753 17.589 18.0003 18.6667C18.4253 17.589 18.8931 17.1034 20.0003 16.6667C18.8931 16.23 18.4253 15.7443 18.0003 14.6667Z'
-                    stroke='white'
-                    strokeOpacity='0.5'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  />
-                </svg>
+                {/* Icon 2 - Settings/Options - Hidden on mobile */}
+                <div className='hidden sm:block'>
+                  <svg
+                    width='28'
+                    height='28'
+                    viewBox='0 0 28 28'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='w-6 h-6 sm:w-7 sm:h-7'
+                  >
+                    <path
+                      d='M8.66699 14H15.0003M8.66699 18H12.667M8.66699 10H19.3337M15.3337 19.3333H15.3403M18.0003 14.6667C17.5753 15.7443 17.1076 16.23 16.0003 16.6667C17.1076 17.1034 17.5753 17.589 18.0003 18.6667C18.4253 17.589 18.8931 17.1034 20.0003 16.6667C18.8931 16.23 18.4253 15.7443 18.0003 14.6667Z'
+                      stroke='white'
+                      strokeOpacity='0.5'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                </div>
 
-                {/* Icon 3 - Attachment */}
-                <svg
-                  width='28'
-                  height='28'
-                  viewBox='0 0 28 28'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    d='M18.9832 14.5208L16.6097 18.6318C15.4862 20.5778 12.9977 21.2446 11.0517 20.121C9.1056 18.9975 8.43883 16.5091 9.56239 14.563L12.953 8.69021C13.7021 7.39283 15.361 6.94832 16.6584 7.69736C17.9558 8.4464 18.4003 10.1053 17.6513 11.4027L14.2606 17.2755C13.8861 17.9242 13.0566 18.1464 12.4079 17.7719C11.7592 17.3974 11.537 16.5679 11.9115 15.9192L14.9631 10.6337'
-                    stroke='white'
-                    strokeOpacity='0.5'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  />
-                </svg>
+                {/* Icon 3 - Attachment - Hidden on mobile */}
+                <div className='hidden sm:block'>
+                  <svg
+                    width='28'
+                    height='28'
+                    viewBox='0 0 28 28'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='w-6 h-6 sm:w-7 sm:h-7'
+                  >
+                    <path
+                      d='M18.9832 14.5208L16.6097 18.6318C15.4862 20.5778 12.9977 21.2446 11.0517 20.121C9.1056 18.9975 8.43883 16.5091 9.56239 14.563L12.953 8.69021C13.7021 7.39283 15.361 6.94832 16.6584 7.69736C17.9558 8.4464 18.4003 10.1053 17.6513 11.4027L14.2606 17.2755C13.8861 17.9242 13.0566 18.1464 12.4079 17.7719C11.7592 17.3974 11.537 16.5679 11.9115 15.9192L14.9631 10.6337'
+                      stroke='white'
+                      strokeOpacity='0.5'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                </div>
 
                 {/* Send Div (formerly Button) */}
                 <div
@@ -500,6 +558,7 @@ export default function InputArea({
                     viewBox='0 0 16 16'
                     fill='none'
                     xmlns='http://www.w3.org/2000/svg'
+                    className='w-4 h-4 sm:w-5 sm:h-5'
                   >
                     <path
                       d='M6.35939 9.64061L2.70896 7.64974C1.75627 7.13016 1.76571 5.76045 2.72538 5.26722C5.37188 3.90704 8.18598 2.89704 11.0973 2.26249C11.9332 2.08029 12.8885 1.70889 13.5898 2.41018C14.2911 3.11147 13.9197 4.06683 13.7375 4.90275C13.103 7.81403 12.093 10.6281 10.7328 13.2746C10.2395 14.2343 8.86984 14.2437 8.35026 13.291L6.35939 9.64061ZM6.35939 9.64061L8.56513 7.43487'

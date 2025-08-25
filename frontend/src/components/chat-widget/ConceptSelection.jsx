@@ -23,7 +23,7 @@ const ConceptSelection = ({
     e.stopPropagation();
     const newExpandedCard = expandedCard === index ? null : index;
     setExpandedCard(newExpandedCard);
-    
+
     // Center the expanded card
     if (newExpandedCard !== null && containerRef.current) {
       setTimeout(() => {
@@ -32,10 +32,13 @@ const ConceptSelection = ({
         if (expandedElement) {
           const containerRect = container.getBoundingClientRect();
           const elementRect = expandedElement.getBoundingClientRect();
-          const scrollLeft = expandedElement.offsetLeft - (containerRect.width - elementRect.width)+50;
+          const scrollLeft =
+            expandedElement.offsetLeft -
+            (containerRect.width - elementRect.width) +
+            50;
           container.scrollTo({
             left: Math.max(0, scrollLeft),
-            behavior: 'smooth'
+            behavior: "smooth",
           });
         }
       }, 100);
@@ -44,8 +47,8 @@ const ConceptSelection = ({
 
   if (showAsCards) {
     return (
-      <div className="mt-3 w-full">
-        <div 
+      <div className='mt-3 w-full'>
+        <div
           ref={containerRef}
           className="flex space-x-3 overflow-x-auto pb-4 w-full"
         >
@@ -99,20 +102,21 @@ const ConceptSelection = ({
                   </div>
 
                 {/* Tone and Goal */}
-                <div className="space-y-1 mb-2">
-                  <div className="text-gray-300 text-xs">
-                    <span className="text-cyan-300">Tone:</span> {concept.tone}
+                <div className='space-y-1 mb-2'>
+                  <div className='text-gray-300 text-xs'>
+                    <span className='text-cyan-300'>Tone:</span> {concept.tone}
                   </div>
-                  <div className="text-gray-300 text-xs">
-                    <span className="text-cyan-300">Goal:</span> {concept.goal}
+                  <div className='text-gray-300 text-xs'>
+                    <span className='text-cyan-300'>Goal:</span> {concept.goal}
                   </div>
                 </div>
 
                 {/* Concept text */}
-                <div className="flex-1">
+                <div className='flex-1'>
                   {expandedCard === index ? (
-                    <div className="text-gray-300 text-xs leading-relaxed">
-                      <span className="text-cyan-300">Concept:</span> {concept.concept}
+                    <div className='text-gray-300 text-xs leading-relaxed'>
+                      <span className='text-cyan-300'>Concept:</span>{" "}
+                      {concept.concept}
                     </div>
                   ) : (
                     <div className="relative blur-3xl">
@@ -127,6 +131,21 @@ const ConceptSelection = ({
             );
           })}
         </div>
+
+        {/* Custom Scrollbar Styles */}
+        <style jsx>{`
+          .scrollbar-custom::-webkit-scrollbar {
+            height: 6px;
+          }
+
+          .scrollbar-custom::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+          }
+        `}</style>
       </div>
     );
   }

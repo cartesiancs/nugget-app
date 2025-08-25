@@ -49,35 +49,92 @@ const FinalWorkingInterface = () => {
         // Set recent projects (first 6)
         setRecentProjects(sortedProjects.slice(0, 6));
         
-        // Load images for all projects
-        const projectsWithImages = await Promise.all(
+        // Load images and videos for all projects
+        const projectsWithMedia = await Promise.all(
           sortedProjects.map(async (project) => {
+            console.log(`🖼️ Loading media for project ${project.id} (${project.name})`);
             try {
-              const imagesResponse = await projectApi.getProjectImages(project.id, { page: 1, limit: 1 });
-              const images = imagesResponse?.data || [];
-              let segmentImage = null;
+              // Get both images and videos with error handling for each
+              let imagesResponse = { data: [] };
+              let videosResponse = { data: [] };
               
-              if (images.length > 0 && images[0]?.imageFiles?.[0]?.s3Key) {
-                segmentImage = `https://ds0fghatf06yb.cloudfront.net/${images[0].imageFiles[0].s3Key}`;
+              try {
+                imagesResponse = await projectApi.getProjectImages(project.id, { page: 1, limit: 3 });
+              } catch (imgErr) {
+                console.warn(`Failed to fetch images for project ${project.id}:`, imgErr);
               }
               
+              try {
+                videosResponse = await projectApi.getProjectVideos(project.id, { page: 1, limit: 1 });
+              } catch (vidErr) {
+                console.warn(`Failed to fetch videos for project ${project.id}:`, vidErr);
+              }
+              
+              console.log(`📸 Images response for ${project.id}:`, imagesResponse);
+              console.log(`🎥 Videos response for ${project.id}:`, videosResponse);
+              
+              const images = imagesResponse?.data || imagesResponse || [];
+              const videos = videosResponse?.data || videosResponse || [];
+              
+              console.log(`📊 Project ${project.id} - Images: ${images.length}, Videos: ${videos.length}`);
+              
+              let thumbnail = null;
+              let mediaType = 'none';
+              
+              // Only show images in preview, not videos
+              if (images.length > 0) {
+                const image = images[0];
+                console.log(`🖼️ First image for ${project.id}:`, image);
+                
+                if (image?.s3Key) {
+                  thumbnail = `https://ds0fghatf06yb.cloudfront.net/${image.s3Key}`;
+                  mediaType = 'image';
+                } else if (image?.imageFiles?.[0]?.s3Key) {
+                  thumbnail = `https://ds0fghatf06yb.cloudfront.net/${image.imageFiles[0].s3Key}`;
+                  mediaType = 'image';
+                } else if (image?.url) {
+                  thumbnail = image.url;
+                  mediaType = 'image';
+                }
+              }
+              
+              // Still log video info for debugging but don't use for thumbnails
+              if (videos.length > 0) {
+                console.log(`🎬 Videos found for ${project.id}: ${videos.length} (not shown in preview)`);
+              }
+              
+              console.log(`✅ Final media for ${project.id}: thumbnail=${thumbnail}, type=${mediaType}`);
+              
               return {
                 ...project,
-                segmentImage,
-                hasImage: images.length > 0
+                thumbnail,
+                mediaType,
+                imageCount: images.length,
+                videoCount: videos.length,
+                hasMedia: images.length > 0, // Only consider images for hasMedia since we only show images
+                allImages: images.slice(0, 3).map(img => ({
+                  url: img.s3Key ? `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}` : 
+                       img.imageFiles?.[0]?.s3Key ? `https://ds0fghatf06yb.cloudfront.net/${img.imageFiles[0].s3Key}` :
+                       img.url || null,
+                  alt: img.name || 'Project image'
+                })).filter(img => img.url)
               };
             } catch (err) {
-              console.error(`Failed to load image for project ${project.id}:`, err);
+              console.error(`❌ Failed to load media for project ${project.id}:`, err);
               return {
                 ...project,
-                segmentImage: null,
-                hasImage: false
+                thumbnail: null,
+                mediaType: 'none',
+                imageCount: 0,
+                videoCount: 0,
+                hasMedia: false,
+                allImages: []
               };
             }
           })
         );
         
-        setAllProjects(projectsWithImages);
+        setAllProjects(projectsWithMedia);
       }
       
       console.log('🔧 User data loaded successfully');
@@ -306,16 +363,48 @@ const FinalWorkingInterface = () => {
               recentProjects.slice(0, 3).map((project) => (
                 <div 
                   key={project.id}
-                  onClick={() => console.log('Selected project:', project)}
-                  className="bg-gray-700 rounded-lg p-3 hover:bg-gray-600 cursor-pointer transition-colors"
+                  onClick={() => {
+                    console.log('Selected project:', project);
+                    navigateToEditorWithChat(project, '');
+                  }}
+                  className="bg-gray-700 rounded-lg p-3 hover:bg-gray-600 cursor-pointer transition-colors group"
                 >
-                  <div className="w-full h-16 bg-gray-600 rounded mb-2 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
+                  <div className="w-full h-16 bg-gray-600 rounded mb-2 flex items-center justify-center overflow-hidden relative">
+                    {project.thumbnail ? (
+                      <>
+                        <img
+                          src={project.thumbnail}
+                          alt={project.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+
+                        <div 
+                          className="w-full h-full hidden items-center justify-center"
+                        >
+                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </>
+                    ) : (
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    )}
                   </div>
                   <p className="text-white text-sm font-medium truncate">{project.name}</p>
-                  <p className="text-gray-400 text-xs">{formatTimeAgo(project.updatedAt)}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-400 text-xs">{formatTimeAgo(project.updatedAt)}</p>
+                    {project.imageCount > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-blue-400">{project.imageCount}📷</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
@@ -395,26 +484,48 @@ const FinalWorkingInterface = () => {
                   }}
                   className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-blue-500 transition-colors cursor-pointer"
                 >
-                  {/* Project Image */}
-                  <div className="w-full h-32 bg-gray-700 flex items-center justify-center overflow-hidden">
-                    {showAllProjects && project.segmentImage ? (
-                      <img
-                        src={project.segmentImage}
-                        alt={project.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div 
-                      className={`w-full h-full flex items-center justify-center ${showAllProjects && project.segmentImage ? 'hidden' : 'flex'}`}
-                    >
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
+                  {/* Project Media */}
+                  <div className="w-full h-32 bg-gray-700 flex items-center justify-center overflow-hidden relative group">
+                    {project.thumbnail ? (
+                      <>
+                        <img
+                          src={project.thumbnail}
+                          alt={project.name}
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        
+                        {/* Image overlay for multiple images */}
+                        {project.mediaType === 'image' && project.allImages.length > 1 && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute bottom-2 left-2 flex items-center gap-1">
+                              <div className="bg-blue-600 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                +{project.allImages.length - 1}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      }
+                        <div className="w-full h-full hidden items-center justify-center">
+                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs text-gray-500">No media</span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Project Info */}
@@ -428,14 +539,12 @@ const FinalWorkingInterface = () => {
                         {project.description}
                       </p>
                     )}
-                    {showAllProjects && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className={`w-2 h-2 rounded-full ${project.hasImage ? 'bg-green-400' : 'bg-gray-500'}`}></div>
-                        <span className="text-xs text-gray-400">
-                          {project.hasImage ? 'Has content' : 'No content'}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className={`w-2 h-2 rounded-full ${project.hasMedia ? 'bg-green-400' : 'bg-gray-500'}`}></div>
+                      <span className="text-xs text-gray-400">
+                        {project.hasMedia ? 'Has content' : 'No content'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))

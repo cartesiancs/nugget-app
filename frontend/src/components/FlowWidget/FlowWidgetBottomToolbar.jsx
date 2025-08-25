@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { assets } from "../../assets/assets";
+import Styles from "./Styles";
 
 function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
   const [addMenuExpanded, setAddMenuExpanded] = useState(false);
   const [selectedTool, setSelectedTool] = useState("cursor"); // Track selected tool
+  const [stylesOpen, setStylesOpen] = useState(false); // Track styles panel visibility
 
   const handleToolSelect = (toolName) => {
     setSelectedTool(toolName);
@@ -11,6 +13,15 @@ function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
 
   return (
     <>
+      {/* Styles Panel - appears above main toolbar */}
+      <Styles 
+        isOpen={stylesOpen} 
+        onClose={() => {
+          setStylesOpen(false);
+          setSelectedTool("cursor"); // Reset tool selection when closing
+        }} 
+      />
+
       {/* Add Menu Toolbar - appears above main toolbar */}
       {addMenuExpanded && (
         <div className='fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[1002] animate-in fade-in slide-in-from-bottom-2 duration-200'>
@@ -124,7 +135,14 @@ function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
           {/* Add/Plus Tool */}
           <img
             src={assets.AddIcon}
-            onClick={() => setAddMenuExpanded(!addMenuExpanded)}
+            onClick={() => {
+              setAddMenuExpanded(!addMenuExpanded);
+              // Close styles panel if it's open
+              if (stylesOpen) {
+                setStylesOpen(false);
+                setSelectedTool("cursor");
+              }
+            }}
             className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
               addMenuExpanded
                 ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20 "
@@ -137,17 +155,24 @@ function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
           {/* Separator */}
           <div className='h-6 w-px bg-gray-600/50 mx-1'></div>
 
-          {/* Palette/Color Tool */}
+          {/* Styles Tool (formerly Palette/Color Tool) */}
           <img
             src={assets.PaletteIcon}
-            onClick={() => handleToolSelect("palette")}
+            onClick={() => {
+              handleToolSelect("palette");
+              setStylesOpen(!stylesOpen);
+              // Close add menu if it's open
+              if (addMenuExpanded) {
+                setAddMenuExpanded(false);
+              }
+            }}
             className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "palette"
+              selectedTool === "palette" || stylesOpen
                 ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
                 : "hover:bg-gray-700/50 hover:shadow-md"
             }`}
-            title='Color Palette'
-            alt='Palette Tool'
+            title='Styles'
+            alt='Styles Tool'
           />
 
           {/* Brush/Edit Tool - Now functions as Refresh Layout (Click only, not selectable) */}

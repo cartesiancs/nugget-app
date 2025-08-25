@@ -1,137 +1,233 @@
-import React from 'react';
+import React from "react";
 
-// Shared styles and constants for FlowWidget components
-export const FlowWidgetStyles = {
-  // Node loading state styles
-  loadingNode: {
-    background: "#1a1a1a",
-    border: "1px solid #444",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
-    opacity: 0.8,
-  },
-  
-  // Node error state styles  
-  errorNode: {
-    background: "#1a1a1a",
-    border: "1px solid #dc2626",
-    boxShadow: "0 4px 12px rgba(220, 38, 38, 0.3)",
-  },
-  
-  // Node existing state styles
-  existingNode: {
-    background: "#1a1a1a", 
-    border: "1px solid #444",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
-  },
-  
-  // Edge styles
-  defaultEdge: {
-    stroke: '#E9E8EB33',
-    strokeWidth: 2,
-    filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-  },
-  
-  // Handle styles
-  defaultHandle: {
-    background: "#ffffff",
-    width: 16,
-    height: 16,
-    border: "2px solid #fff",
-  },
-  
-  // Loading animation keyframes
-  loadingPulse: `
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-  `,
-  
-  // Generation state indicators
-  generationStateColors: {
-    loading: '#fbbf24', // amber
-    error: '#dc2626',   // red
-    completed: '#10b981', // emerald
-    pending: '#6b7280'  // gray
-  }
-};
+const Styles = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
 
-// Utility function to get node state styles
-export const getNodeStateStyles = (nodeState, selected = false, hasData = false) => {
-  const baseStyle = {
-    transition: 'all 0.3s ease',
-    borderRadius: '16px',
-    padding: '16px',
-    width: '280px',
-    position: 'relative',
-  };
-  
-  let stateStyles = {};
-  
-  switch (nodeState) {
-    case 'loading':
-      stateStyles = {
-        ...FlowWidgetStyles.loadingNode,
-        animation: 'pulse 2s infinite',
-      };
-      break;
-    case 'error':
-      stateStyles = FlowWidgetStyles.errorNode;
-      break;
-    case 'existing':
-    case 'completed':
-      stateStyles = FlowWidgetStyles.existingNode;
-      break;
-    default:
-      stateStyles = {
-        background: "#1a1a1a",
-        border: hasData ? "1px solid #444" : "1px solid #333",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.5)",
-      };
-  }
-  
-  // Add selection styles
-  if (selected) {
-    stateStyles.ring = hasData ? "2px solid #8b5cf6" : "2px solid #6b7280";
-    stateStyles.boxShadow = hasData 
-      ? "0 0 20px rgba(139, 92, 246, 0.3)" 
-      : "0 0 20px rgba(107, 114, 128, 0.3)";
-  }
-  
-  return { ...baseStyle, ...stateStyles };
-};
+  // Style categories and their options based on the design
+  const styleCategories = [
+    {
+      name: "Surreal",
+      styles: [
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)",
+        },
+      ],
+    },
+    {
+      name: "Photorealism",
+      styles: [
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+        },
+        {
+          name: "Style name",
+          gradient: "linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)",
+        },
+      ],
+    },
+  ];
 
-// Loading spinner component for generation states
-export const LoadingSpinner = ({ size = 20, color = '#fbbf24' }) => (
-  <div 
-    className="animate-spin"
-    style={{
-      width: size,
-      height: size,
-      border: `2px solid transparent`,
-      borderTop: `2px solid ${color}`,
-      borderRadius: '50%',
-    }}
-  />
-);
-
-// Generation state badge component
-export const GenerationStateBadge = ({ state, children }) => {
-  const color = FlowWidgetStyles.generationStateColors[state] || FlowWidgetStyles.generationStateColors.pending;
-  
   return (
-    <div 
-      className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium"
-      style={{
-        backgroundColor: `${color}20`,
-        color: color,
-        border: `1px solid ${color}40`,
-      }}
-    >
-      {state === 'loading' && <LoadingSpinner size={12} color={color} />}
-      {children}
+    <div className='fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[1002] animate-in fade-in slide-in-from-bottom-2 duration-200'>
+      <div
+        className='rounded-2xl shadow-2xl p-4 backdrop-blur-xl w-[600px]'
+        style={{
+          background:
+            "linear-gradient(179.96deg, rgba(85, 103, 113, 0.6) 0.04%, rgba(24, 25, 28, 0.6) 57.19%)",
+        }}
+      >
+        {/* Header */}
+        <div className='flex items-center justify-between mb-3 pb-3 border-b border-gray-600/30'>
+          <div className='flex items-center gap-3'>
+            {/* Search Input */}
+            <div className='relative flex-shrink-0'>
+              <svg
+                className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                />
+              </svg>
+              <input
+                type='text'
+                placeholder='Search Assets...'
+                className='pl-10 pr-4 py-2 bg-[#2A2D36] border border-gray-600/30 rounded-lg text-white text-sm placeholder-gray-400 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 w-48'
+              />
+            </div>
+
+            {/* Filter Tabs */}
+            <div className='flex items-center gap-1  rounded-lg p-1'>
+              <button className='px-3 py-2 text-sm text-white bg-gray-500/50 rounded-md font-medium'>
+                All Styles
+              </button>
+              <button className='px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-500/30 rounded-md transition-colors'>
+                Trending
+              </button>
+              <button className='px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-500/30 rounded-md transition-colors'>
+                My Styles
+              </button>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className='p-2 text-gray-400 hover:text-white hover:bg-gray-600/30 rounded-lg transition-colors flex-shrink-0'
+          >
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M6 18L18 6M6 6l12 12'
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className='space-y-4'>
+          {styleCategories.map((category, categoryIndex) => (
+            <div key={categoryIndex}>
+              {/* Category Header */}
+              <h3 className='text-white font-medium text-base mb-3'>
+                {category.name}
+              </h3>
+
+              {/* Style Horizontal Scroll Container - Shows max 7 circles */}
+              <div
+                className='overflow-x-auto overflow-y-hidden scrollbar-hide'
+                style={{ maxWidth: "560px" }} // Adjusted for smaller container
+              >
+                <div
+                  className='flex gap-4 pb-2'
+                  style={{
+                    width: `${category.styles.length * 84}px`, // Full width for all items to enable scroll
+                  }}
+                >
+                  {category.styles.map((style, styleIndex) => (
+                    <div
+                      key={styleIndex}
+                      className='flex flex-col items-center cursor-pointer group flex-shrink-0'
+                      style={{ width: "80px" }}
+                    >
+                      {/* Style Preview Circle */}
+                      <div
+                        className='w-14 h-14 rounded-full mb-2 border-2 border-transparent group-hover:border-white/30 transition-all duration-200 group-hover:shadow-lg group-hover:scale-105'
+                        style={{ background: style.gradient }}
+                      >
+                        {/* Inner circle for depth */}
+                        <div className='w-full h-full rounded-full flex items-center justify-center'>
+                          <div className='w-8 h-8 bg-white/10 rounded-full backdrop-blur-sm'></div>
+                        </div>
+                      </div>
+
+                      {/* Style Name */}
+                      <span className='text-xs text-gray-300 group-hover:text-white transition-colors text-center leading-tight'>
+                        {style.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Custom scrollbar styles */}
+        <style jsx>{`
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+      </div>
     </div>
   );
 };
 
-export default FlowWidgetStyles;
+export default Styles;

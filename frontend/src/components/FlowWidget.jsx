@@ -61,6 +61,57 @@ function FlowWidget() {
   const [generatingVideos, setGeneratingVideos] = useState(new Set()); // Track which videos are generating
   const [nodeConnections, setNodeConnections] = useState(new Map()); // Track node connections for generation
 
+  // Persistent generation states helper functions
+  const getGenerationStateKey = (projectId, type) => `generation-states-${projectId}-${type}`;
+  
+  const saveGenerationState = (projectId, type, nodeId, data) => {
+    try {
+      const key = getGenerationStateKey(projectId, type);
+      const existingStates = JSON.parse(localStorage.getItem(key) || '{}');
+      existingStates[nodeId] = {
+        ...data,
+        timestamp: Date.now(),
+        status: 'generating'
+      };
+      localStorage.setItem(key, JSON.stringify(existingStates));
+      console.log(`💾 Saved ${type} generation state for ${nodeId}:`, data);
+    } catch (error) {
+      console.error(`Error saving ${type} generation state:`, error);
+    }
+  };
+
+  const removeGenerationState = (projectId, type, nodeId) => {
+    try {
+      const key = getGenerationStateKey(projectId, type);
+      const existingStates = JSON.parse(localStorage.getItem(key) || '{}');
+      delete existingStates[nodeId];
+      localStorage.setItem(key, JSON.stringify(existingStates));
+      console.log(`🗑️ Removed ${type} generation state for ${nodeId}`);
+    } catch (error) {
+      console.error(`Error removing ${type} generation state:`, error);
+    }
+  };
+
+  const getGenerationStates = (projectId, type) => {
+    try {
+      const key = getGenerationStateKey(projectId, type);
+      const states = JSON.parse(localStorage.getItem(key) || '{}');
+      // Clean up states older than 1 hour (3600000 ms)
+      const now = Date.now();
+      const cleanedStates = {};
+      Object.entries(states).forEach(([nodeId, data]) => {
+        if (now - data.timestamp < 3600000) { // 1 hour
+          cleanedStates[nodeId] = data;
+        }
+      });
+      localStorage.setItem(key, JSON.stringify(cleanedStates));
+      return cleanedStates;
+    } catch (error) {
+      console.error(`Error getting ${type} generation states:`, error);
+      return {};
+    }
+  };
+
   // Task completion tracking
   const [taskCompletionStates, setTaskCompletionStates] = useState({
     userInput: false,
@@ -85,6 +136,287 @@ function FlowWidget() {
 
   // Flag to disable auto-generation during brush tool operations
   const [disableAutoGeneration, setDisableAutoGeneration] = useState(false);
+
+  // Restore generation states on component load
+  const restoreGenerationStates = useCallback(async () => {
+    let selectedProject = null;
+    try {
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      selectedProject = storedProject ? JSON.parse(storedProject) : null;
+    } catch (e) {
+      console.error('Error parsing project data:', e);
+      return;
+    }
+
+    if (!selectedProject) {
+      console.log('No project selected, skipping generation state restoration');
+      return;
+    }
+
+    const projectId = selectedProject.id;
+    console.log('🔄 Restoring generation states for project:', projectId);
+
+    // Restore concept generation states
+    const conceptStates = getGenerationStates(projectId, 'concept');
+    Object.entries(conceptStates).forEach(([nodeId, state]) => {
+      console.log('🔄 Restoring concept generation state:', nodeId, state);
+      setGeneratingConcepts(prev => new Set(prev.add(nodeId)));
+      
+      // Create or update the loading concept node
+      const loadingConceptNode = {
+        id: nodeId,
+        type: 'conceptNode',
+        position: state.position || { x: 400, y: 400 },
+        data: {
+          id: nodeId,
+          content: state.loadingMessage || 'Generating concepts...',
+          nodeState: 'loading',
+          title: state.title || 'Loading Concepts',
+          originalPrompt: state.originalPrompt
+        }
+      };
+
+      setNodes(prevNodes => {
+        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+        if (existingNodeIndex >= 0) {
+          // Only update if the existing node is not already completed
+          const existingNode = prevNodes[existingNodeIndex];
+          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+            return prevNodes; // Don't overwrite completed nodes
+          }
+          // Update existing node
+          const updatedNodes = [...prevNodes];
+          updatedNodes[existingNodeIndex] = loadingConceptNode;
+          return updatedNodes;
+        } else {
+          // Add new node
+          return [...prevNodes, loadingConceptNode];
+        }
+      });
+
+      // Restore edge if parent exists
+      if (state.parentNodeId) {
+        const loadingEdge = {
+          id: `${state.parentNodeId}-to-${nodeId}`,
+          source: state.parentNodeId,
+          target: nodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#E9E8EB33',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+          }
+        };
+        
+        setEdges(prevEdges => {
+          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
+          if (existingEdgeIndex < 0) {
+            return [...prevEdges, loadingEdge];
+          }
+          return prevEdges;
+        });
+      }
+    });
+
+    // Restore script generation states
+    const scriptStates = getGenerationStates(projectId, 'script');
+    Object.entries(scriptStates).forEach(([nodeId, state]) => {
+      console.log('🔄 Restoring script generation state:', nodeId, state);
+      setGeneratingScripts(prev => new Set(prev.add(nodeId)));
+      
+      const loadingScriptNode = {
+        id: nodeId,
+        type: 'scriptNode',
+        position: state.position || { x: 400, y: 500 },
+        data: {
+          id: nodeId,
+          content: state.loadingMessage || 'Generating scripts...',
+          nodeState: 'loading',
+          title: state.title || 'Loading Script',
+          conceptContent: state.conceptContent
+        }
+      };
+
+      setNodes(prevNodes => {
+        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+        if (existingNodeIndex >= 0) {
+          // Only update if the existing node is not already completed
+          const existingNode = prevNodes[existingNodeIndex];
+          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+            return prevNodes; // Don't overwrite completed nodes
+          }
+          const updatedNodes = [...prevNodes];
+          updatedNodes[existingNodeIndex] = loadingScriptNode;
+          return updatedNodes;
+        } else {
+          return [...prevNodes, loadingScriptNode];
+        }
+      });
+
+      if (state.parentNodeId) {
+        const loadingEdge = {
+          id: `${state.parentNodeId}-to-${nodeId}`,
+          source: state.parentNodeId,
+          target: nodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#E9E8EB33',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+          }
+        };
+        
+        setEdges(prevEdges => {
+          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
+          if (existingEdgeIndex < 0) {
+            return [...prevEdges, loadingEdge];
+          }
+          return prevEdges;
+        });
+      }
+    });
+
+    // Restore image generation states
+    const imageStates = getGenerationStates(projectId, 'image');
+    Object.entries(imageStates).forEach(([nodeId, state]) => {
+      console.log('🔄 Restoring image generation state:', nodeId, state);
+      setGeneratingImages(prev => new Set(prev.add(nodeId)));
+      
+      const loadingImageNode = {
+        id: nodeId,
+        type: 'imageNode',
+        position: state.position || { x: 400, y: 600 },
+        data: {
+          id: nodeId,
+          content: state.loadingMessage || 'Generating image...',
+          nodeState: 'loading',
+          title: state.title || 'Loading Image',
+          visualPrompt: state.visualPrompt,
+          artStyle: state.artStyle,
+          segmentId: state.segmentId
+        }
+      };
+
+      setNodes(prevNodes => {
+        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+        if (existingNodeIndex >= 0) {
+          // Only update if the existing node is not already completed
+          const existingNode = prevNodes[existingNodeIndex];
+          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+            return prevNodes; // Don't overwrite completed nodes
+          }
+          const updatedNodes = [...prevNodes];
+          updatedNodes[existingNodeIndex] = loadingImageNode;
+          return updatedNodes;
+        } else {
+          return [...prevNodes, loadingImageNode];
+        }
+      });
+
+      if (state.parentNodeId) {
+        const loadingEdge = {
+          id: `${state.parentNodeId}-to-${nodeId}`,
+          source: state.parentNodeId,
+          target: nodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#E9E8EB33',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+          }
+        };
+        
+        setEdges(prevEdges => {
+          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
+          if (existingEdgeIndex < 0) {
+            return [...prevEdges, loadingEdge];
+          }
+          return prevEdges;
+        });
+      }
+    });
+
+    // Restore video generation states
+    const videoStates = getGenerationStates(projectId, 'video');
+    Object.entries(videoStates).forEach(([nodeId, state]) => {
+      console.log('🔄 Restoring video generation state:', nodeId, state);
+      setGeneratingVideos(prev => new Set(prev.add(nodeId)));
+      
+      const loadingVideoNode = {
+        id: nodeId,
+        type: 'videoNode',
+        position: state.position || { x: 400, y: 700 },
+        data: {
+          id: nodeId,
+          content: state.loadingMessage || 'Generating video...',
+          nodeState: 'loading',
+          title: state.title || 'Loading Video',
+          animationPrompt: state.animationPrompt,
+          artStyle: state.artStyle,
+          segmentId: state.segmentId,
+          imageId: state.imageId
+        }
+      };
+
+      setNodes(prevNodes => {
+        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+        if (existingNodeIndex >= 0) {
+          // Only update if the existing node is not already completed
+          const existingNode = prevNodes[existingNodeIndex];
+          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+            return prevNodes; // Don't overwrite completed nodes
+          }
+          const updatedNodes = [...prevNodes];
+          updatedNodes[existingNodeIndex] = loadingVideoNode;
+          return updatedNodes;
+        } else {
+          return [...prevNodes, loadingVideoNode];
+        }
+      });
+
+      if (state.parentNodeId) {
+        const loadingEdge = {
+          id: `${state.parentNodeId}-to-${nodeId}`,
+          source: state.parentNodeId,
+          target: nodeId,
+          sourceHandle: 'output',
+          targetHandle: 'input',
+          style: {
+            stroke: '#E9E8EB33',
+            strokeWidth: 2,
+            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+          }
+        };
+        
+        setEdges(prevEdges => {
+          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
+          if (existingEdgeIndex < 0) {
+            return [...prevEdges, loadingEdge];
+          }
+          return prevEdges;
+        });
+      }
+    });
+
+    console.log('✅ Generation states restored successfully');
+    
+    // Show a brief notification to user that states were restored
+    const restoredCount = Object.keys(conceptStates).length + 
+                         Object.keys(scriptStates).length + 
+                         Object.keys(imageStates).length + 
+                         Object.keys(videoStates).length;
+    
+    if (restoredCount > 0) {
+      console.log(`🔄 Restored ${restoredCount} generating node(s)`);
+    }
+  }, [setNodes, setEdges, setGeneratingConcepts, setGeneratingScripts, setGeneratingImages, setGeneratingVideos]);
 
   // Helper function to refresh project data
   const refreshProjectData = useCallback(async () => {
@@ -959,6 +1291,15 @@ function FlowWidget() {
           title: 'Loading Concepts'
         }
       };
+
+      // Save persistent generation state
+      saveGenerationState(selectedProject.id, 'concept', loadingConceptNodeId, {
+        loadingMessage: 'Generating concepts...',
+        title: 'Loading Concepts',
+        position: { x: userNodePosition.x, y: userNodePosition.y + 300 },
+        parentNodeId: nodeId,
+        originalPrompt: message
+      });
       
       // Create edge connecting user node to loading concept node
       const loadingEdge = {
@@ -1002,6 +1343,9 @@ function FlowWidget() {
         console.log("Number of concepts returned:", conceptsResponse?.concepts?.length || 0);
         
         if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
+          // Remove persistent generation state
+          removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
+          
           // Remove the loading concept node and its edge
           setNodes(prevNodes => prevNodes.filter(node => node.id !== loadingConceptNodeId));
           setEdges(prevEdges => prevEdges.filter(edge => edge.target !== loadingConceptNodeId));
@@ -1063,6 +1407,9 @@ function FlowWidget() {
         }
       } catch (error) {
         console.error('Error generating concepts:', error);
+        // Remove persistent generation state on error
+        removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
+        
         // Show error in the loading concept node
         setNodes(prevNodes => prevNodes.map(node => {
           if (node.id === loadingConceptNodeId) {
@@ -1353,6 +1700,15 @@ function FlowWidget() {
         }
         return node;
       }));
+
+      // Save persistent generation state
+      saveGenerationState(selectedProject.id, 'script', scriptNode.id, {
+        loadingMessage: 'Generating script...',
+        title: 'Loading Script',
+        position: scriptNode.position,
+        parentNodeId: conceptNode.id,
+        conceptContent: conceptNode.data?.content || conceptNode.data?.userText || ''
+      });
       
       // Generate 2 different scripts using concept content
       const conceptContent = conceptNode.data?.content || conceptNode.data?.userText || '';
@@ -1382,6 +1738,9 @@ function FlowWidget() {
       
       if (scriptResponse1 && scriptResponse1.segments && Array.isArray(scriptResponse1.segments) &&
           scriptResponse2 && scriptResponse2.segments && Array.isArray(scriptResponse2.segments)) {
+        
+        // Remove persistent generation state
+        removeGenerationState(selectedProject.id, 'script', scriptNode.id);
         
         // Remove the placeholder script node
         setNodes(prevNodes => prevNodes.filter(node => node.id !== scriptNode.id));
@@ -1471,6 +1830,9 @@ function FlowWidget() {
       }
     } catch (error) {
       console.error('Error generating script:', error);
+      // Remove persistent generation state on error
+      removeGenerationState(selectedProject.id, 'script', scriptNode.id);
+      
       // Show error in script node
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === scriptNode.id) {
@@ -1590,11 +1952,22 @@ function FlowWidget() {
         }
         return node;
       }));
-      
+
       // Generate image using segment visual prompt (following ChatWidget pattern)
       const visualPrompt = segmentNode.data?.visual || 'A cinematic scene';
       const artStyle = segmentNode.data?.artStyle || 'cinematic photography with soft lighting';
       const segmentId = segmentNode.data?.id || Date.now();
+      
+      // Save persistent generation state
+      saveGenerationState(selectedProject.id, 'image', imageNode.id, {
+        loadingMessage: 'Generating image...',
+        title: 'Loading Image',
+        position: imageNode.position,
+        parentNodeId: segmentNode.id,
+        visualPrompt: visualPrompt,
+        artStyle: artStyle,
+        segmentId: segmentId
+      });
       
       console.log("Starting image generation...");
       console.log("Image generation request:", {
@@ -1616,6 +1989,9 @@ function FlowWidget() {
       console.log("Image generation response:", imageResponse);
       
       if (imageResponse && imageResponse.s3_key) {
+        // Remove persistent generation state
+        removeGenerationState(selectedProject.id, 'image', imageNode.id);
+        
         // Download image URL (following ChatWidget pattern)
         const imageUrl = await s3Api.downloadImage(imageResponse.s3_key);
         
@@ -1644,14 +2020,14 @@ function FlowWidget() {
         
         // Mark image generation as completed
         setTaskCompletionStates(prev => ({ ...prev, image: true }));
-        
-        // Refresh project data to update the flow
-        await refreshProjectData();
       } else {
         throw new Error('No image key returned from API');
       }
     } catch (error) {
       console.error('Error generating image:', error);
+      // Remove persistent generation state on error
+      removeGenerationState(selectedProject.id, 'image', imageNode.id);
+      
       // Show error in image node
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === imageNode.id) {
@@ -1674,7 +2050,7 @@ function FlowWidget() {
         return newSet;
       });
     }
-  }, [setNodes, setError, refreshProjectData]);
+  }, [setNodes, setError]);
   
   // Handle video generation from image
   const handleVideoGeneration = useCallback(async (imageNode, videoNode) => {
@@ -1708,13 +2084,25 @@ function FlowWidget() {
         }
         return node;
       }));
-      
+
       // Generate video using image and segment animation prompt (following ChatWidget pattern)
       const animationPrompt = imageNode.data?.segmentData?.animation || imageNode.data?.segmentData?.visual || 'Smooth cinematic movement';
       const artStyle = imageNode.data?.artStyle || 'cinematic photography with soft lighting';
+      const segmentId = imageNode.data?.segmentId || Date.now();
       // Try multiple possible s3Key field names for backward compatibility
       let imageS3Key = imageNode.data?.s3Key || imageNode.data?.imageS3Key || imageNode.data?.image_s3_key;
-      const segmentId = imageNode.data?.segmentId || Date.now();
+
+      // Save persistent generation state
+      saveGenerationState(selectedProject.id, 'video', videoNode.id, {
+        loadingMessage: 'Generating video...',
+        title: 'Loading Video',
+        position: videoNode.position,
+        parentNodeId: imageNode.id,
+        animationPrompt: animationPrompt,
+        artStyle: artStyle,
+        segmentId: segmentId,
+        imageId: imageNode.data?.imageId
+      });
       
       // If no direct s3Key, try to extract from imageUrl
       if (!imageS3Key && imageNode.data?.imageUrl) {
@@ -1756,6 +2144,9 @@ function FlowWidget() {
       console.log("Video generation response:", videoResponse);
       
       if (videoResponse && videoResponse.s3_key) {
+        // Remove persistent generation state
+        removeGenerationState(selectedProject.id, 'video', videoNode.id);
+        
         // Download video URL (following ChatWidget pattern)
         const videoUrl = await s3Api.downloadVideo(videoResponse.s3_key);
         
@@ -1791,14 +2182,14 @@ function FlowWidget() {
         
         // Mark video generation as completed
         setTaskCompletionStates(prev => ({ ...prev, video: true }));
-        
-        // Refresh project data to update the flow
-        await refreshProjectData();
       } else {
         throw new Error('No video key returned from API');
       }
     } catch (error) {
       console.error('Error generating video:', error);
+      // Remove persistent generation state on error
+      removeGenerationState(selectedProject.id, 'video', videoNode.id);
+      
       // Show error in video node
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === videoNode.id) {
@@ -1821,7 +2212,7 @@ function FlowWidget() {
         return newSet;
       });
     }
-  }, [setNodes, setTemporaryVideos, setError, refreshProjectData]);
+  }, [setNodes, setTemporaryVideos, setError]);
 
   // Keep the graph within bounds when nodes/edges change
   useEffect(() => {
@@ -1843,6 +2234,18 @@ function FlowWidget() {
   useEffect(() => {
     fetchAllProjectData();
   }, [fetchAllProjectData]);
+
+  // Restore generation states only after initial data is loaded
+  useEffect(() => {
+    if (allProjectData && Object.keys(allProjectData).length > 0) {
+      // Restore generation states after a short delay to ensure nodes are created
+      const timeoutId = setTimeout(() => {
+        restoreGenerationStates();
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [allProjectData, restoreGenerationStates]);
 
   // Reset task completion states when project changes
   useEffect(() => {
@@ -1956,12 +2359,50 @@ function FlowWidget() {
     }
   }, []);
 
+  // Cleanup old generation states periodically
+  useEffect(() => {
+    const cleanupOldStates = () => {
+      try {
+        const storedProject = localStorage.getItem('project-store-selectedProject');
+        if (!storedProject) return;
+        
+        const project = JSON.parse(storedProject);
+        const projectId = project.id;
+        
+        // Clean up each type of generation state
+        ['concept', 'script', 'image', 'video'].forEach(type => {
+          getGenerationStates(projectId, type); // This function already cleans up old states
+        });
+        
+        console.log('🧹 Periodic cleanup of old generation states completed');
+      } catch (error) {
+        console.error('Error during periodic cleanup:', error);
+      }
+    };
+
+    // Clean up immediately on mount
+    cleanupOldStates();
+    
+    // Set up periodic cleanup every 5 minutes
+    const cleanupInterval = setInterval(cleanupOldStates, 5 * 60 * 1000);
+    
+    return () => {
+      clearInterval(cleanupInterval);
+    };
+  }, []);
+
   // Listen for sandbox open/close events
   useEffect(() => {
     const openHandler = () => {
       setOpen(true);
       // Dispatch sandbox opened event to hide timeline elements
       window.dispatchEvent(new CustomEvent("sandbox:opened"));
+      
+      // Restore generation states when sandbox is opened
+      console.log('🔄 Sandbox opened - restoring generation states...');
+      setTimeout(() => {
+        restoreGenerationStates();
+      }, 100); // Shorter delay since we're just switching tabs
     };
     const closeHandler = () => {
       setOpen(false);
@@ -1976,7 +2417,7 @@ function FlowWidget() {
       window.removeEventListener("flowWidget:open", openHandler);
       window.removeEventListener("flowWidget:close", closeHandler);
     };
-  }, []);
+  }, [restoreGenerationStates]);
 
   // Reflect open state on host element attribute for CSS
   useEffect(() => {

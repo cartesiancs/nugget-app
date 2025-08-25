@@ -588,8 +588,58 @@ function FlowWidget() {
         });
 
         if (flowData.concepts && flowData.concepts.length > 0) {
-          // Default to first concept for now (simplified without project structure)
-          const parentConceptId = flowData.concepts[0].id;
+          // Find the concept that matches this script's concept
+          let parentConceptId = null;
+          
+          // Debug logging
+          console.log("🔍 DEBUG: Script concept matching for script:", script.id);
+          console.log("📝 Script concept field:", script.concept);
+          console.log("📋 Available concepts:", flowData.concepts.map(c => ({ id: c.id, title: c.title, name: c.name })));
+          
+          // First, try to find concept by matching the concept field (title/name)
+          if (script.concept) {
+            const matchingConcept = flowData.concepts.find(
+              (concept) => {
+                // Exact match first
+                if (concept.title === script.concept) return true;
+                
+                // Check if script.concept starts with the concept title (handles "Title - Style" format)
+                if (script.concept.startsWith(concept.title)) return true;
+                
+                // Check if concept title is contained in script.concept
+                if (script.concept.includes(concept.title)) return true;
+                
+                // Case-insensitive comparison
+                if (concept.title.toLowerCase() === script.concept.toLowerCase()) return true;
+                
+                return false;
+              }
+            );
+            console.log("🎯 Matching concept found:", matchingConcept);
+            if (matchingConcept) {
+              parentConceptId = matchingConcept.id;
+              console.log("✅ Using concept ID:", parentConceptId);
+            }
+          }
+          
+          // If no match found, try to find concept by conceptId field
+          if (!parentConceptId && script.conceptId) {
+            const matchingConcept = flowData.concepts.find(
+              (concept) => concept.id === script.conceptId
+            );
+            if (matchingConcept) {
+              parentConceptId = matchingConcept.id;
+            }
+          }
+          
+          // If still no match found, default to first concept as fallback
+          if (!parentConceptId) {
+            parentConceptId = flowData.concepts[0].id;
+            console.warn(`❌ No matching concept found for script ${script.id}`);
+            console.warn(`📝 Script concept: "${script.concept}"`);
+            console.warn(`📋 Available concept titles: [${flowData.concepts.map(c => `"${c.title}"`).join(', ')}]`);
+            console.warn(`🔄 Using first concept as fallback: ${parentConceptId}`);
+          }
 
           newEdges.push({
             id: `concept-${parentConceptId}-to-script-${script.id}`,
@@ -634,8 +684,26 @@ function FlowWidget() {
         });
 
         if (flowData.scripts && flowData.scripts.length > 0) {
-          // Default to first script for now (simplified without project structure)
-          const parentScriptId = flowData.scripts[0].id;
+          // Find the script that contains this segment
+          let parentScriptId = null;
+          
+          // Look for the script that contains this segment in its segments array
+          const matchingScript = flowData.scripts.find((script) => 
+            script.segments && Array.isArray(script.segments) &&
+            script.segments.some((seg) => 
+              seg.segmentId === segment.id || 
+              seg.id === segment.id ||
+              seg.segmentId === segment.segmentId
+            )
+          );
+          
+          if (matchingScript) {
+            parentScriptId = matchingScript.id;
+          } else {
+            // If no matching script found, default to first script as fallback
+            parentScriptId = flowData.scripts[0].id;
+            console.warn(`No matching script found for segment ${segment.id}, using first script as fallback`);
+          }
 
           newEdges.push({
             id: `script-${parentScriptId}-to-segment-${segment.id}`,

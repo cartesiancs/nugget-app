@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Brain, FileText, Scissors, Image, Video, User } from "lucide-react";
+import { Brain, Image, Video, User } from "lucide-react";
 import { assets } from "../../assets/assets";
 
 /**
@@ -16,12 +16,12 @@ export default function TaskList({
 
   // Define the 6 steps of the flow
   const steps = [
-    { id: 0, name: "User Input", description: "Add user input node", icon: User },
-    { id: 1, name: "Concept", description: "Generate concepts", icon: Brain },
-    { id: 2, name: "Script", description: "Create scripts", icon: FileText },
-    { id: 3, name: "Segment", description: "Generate segments", icon: Scissors },
-    { id: 4, name: "Image", description: "Create images", icon: Image },
-    { id: 5, name: "Video", description: "Generate videos", icon: Video },
+    { id: 0, name: "User Input", description: "Add user input node", icon: User, type: "lucide" },
+    { id: 1, name: "Concept", description: "Generate concepts", icon: Brain, type: "lucide" },
+    { id: 2, name: "Script", description: "Create scripts", icon: assets.TextIcon, type: "asset" },
+    { id: 3, name: "Segment", description: "Generate segments", icon: assets.SegmentIcon, type: "asset" },
+    { id: 4, name: "Image", description: "Create images", icon: Image, type: "lucide" },
+    { id: 5, name: "Video", description: "Generate videos", icon: Video, type: "lucide" },
   ];
 
   // Use completion states from parent component instead of node counting
@@ -138,12 +138,11 @@ export default function TaskList({
 
       {/* Icons-only vertical layout when expanded */}
       {!collapseSteps && (
-        <div className='absolute top-20 right-0 z-[1002] bg-[#18191CCC] backdrop-blur-sm rounded-xl p-2 shadow-xl'>
+        <div className='absolute top-20 left-1/2 transform -translate-x-1/2 z-[1002] bg-[#18191CCC] backdrop-blur-sm rounded-xl p-2 shadow-xl'>
           <div className='flex flex-col gap-2'>
             {steps.map((step) => {
               const isDone = stepStatus[step.id] === "done";
               const isCurrent = currentStep === step.id;
-              const IconComponent = step.icon;
 
               return (
                 <div
@@ -164,11 +163,65 @@ export default function TaskList({
                   }}
                   title={step.name}
                 >
-                  <IconComponent
-                    size={16}
-                    color={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
-                    opacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
-                  />
+                  {/* Render icon based on type */}
+                  {step.type === "asset" ? (
+                    step.id === 2 ? ( // Script icon - Text.svg
+                      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path 
+                          d="M6.08337 21.9167C6.08337 20.8948 6.234 19.4458 6.65039 17.8408M6.65039 17.8408C7.93037 12.9071 11.7217 6.5 21.3687 6.5C21.4692 9.05017 20.5173 12.5758 17.207 14.0918M6.65039 17.8408C15.9989 19.2739 17.303 16.2656 17.207 14.0918M17.207 14.0918C16.1904 14.5573 14.9513 14.8333 13.452 14.8333" 
+                          stroke={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
+                          strokeOpacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
+                          strokeWidth="1.5" 
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    ) : ( // Segment icon - segment.svg
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect 
+                          width="18" 
+                          height="18" 
+                          x="3" 
+                          y="3" 
+                          rx="2"
+                          stroke={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
+                          strokeOpacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
+                          strokeWidth="1.25" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                        <path 
+                          d="M7 8h10"
+                          stroke={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
+                          strokeOpacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
+                          strokeWidth="1.25" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                        <path 
+                          d="M7 12h10"
+                          stroke={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
+                          strokeOpacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
+                          strokeWidth="1.25" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                        <path 
+                          d="M7 16h10"
+                          stroke={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
+                          strokeOpacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
+                          strokeWidth="1.25" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )
+                  ) : (
+                    <step.icon
+                      size={16}
+                      color={isDone ? "#94E7ED" : isCurrent ? "#94E7ED" : "white"}
+                      opacity={isDone ? 1 : isCurrent ? 0.8 : 0.4}
+                    />
+                  )}
                   
                   {/* Completion indicator */}
                   {isDone && (

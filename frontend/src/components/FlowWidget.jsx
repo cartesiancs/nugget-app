@@ -60,19 +60,18 @@ function FlowWidget() {
   const [generatingImages, setGeneratingImages] = useState(new Set());
   const [generatingVideos, setGeneratingVideos] = useState(new Set());
 
-
-
   // Generation state helper functions
-  const getGenerationStateKey = (projectId, type) => `generation-states-${projectId}-${type}`;
-  
+  const getGenerationStateKey = (projectId, type) =>
+    `generation-states-${projectId}-${type}`;
+
   const saveGenerationState = (projectId, type, nodeId, data) => {
     try {
       const key = getGenerationStateKey(projectId, type);
-      const existingStates = JSON.parse(localStorage.getItem(key) || '{}');
+      const existingStates = JSON.parse(localStorage.getItem(key) || "{}");
       existingStates[nodeId] = {
         ...data,
         timestamp: Date.now(),
-        status: data.status || 'generating'
+        status: data.status || "generating",
       };
       localStorage.setItem(key, JSON.stringify(existingStates));
     } catch (error) {
@@ -83,7 +82,7 @@ function FlowWidget() {
   const removeGenerationState = (projectId, type, nodeId) => {
     try {
       const key = getGenerationStateKey(projectId, type);
-      const existingStates = JSON.parse(localStorage.getItem(key) || '{}');
+      const existingStates = JSON.parse(localStorage.getItem(key) || "{}");
       delete existingStates[nodeId];
       localStorage.setItem(key, JSON.stringify(existingStates));
     } catch (error) {
@@ -94,18 +93,18 @@ function FlowWidget() {
   const getGenerationStates = (projectId, type) => {
     try {
       const key = getGenerationStateKey(projectId, type);
-      const states = JSON.parse(localStorage.getItem(key) || '{}');
+      const states = JSON.parse(localStorage.getItem(key) || "{}");
       const now = Date.now();
       const cleanedStates = {};
-      
+
       Object.entries(states).forEach(([nodeId, data]) => {
-        const isGenerating = data.status === 'generating';
+        const isGenerating = data.status === "generating";
         const maxAge = isGenerating ? 3600000 : 600000;
         if (now - data.timestamp < maxAge) {
           cleanedStates[nodeId] = data;
         }
       });
-      
+
       localStorage.setItem(key, JSON.stringify(cleanedStates));
       return cleanedStates;
     } catch (error) {
@@ -121,7 +120,7 @@ function FlowWidget() {
     script: false,
     segment: false,
     image: false,
-    video: false
+    video: false,
   });
 
   // Project data state
@@ -146,7 +145,7 @@ function FlowWidget() {
     setTaskCompletionStates,
     saveGenerationState,
     removeGenerationState,
-    nodes
+    nodes,
   });
 
   const { generateScript } = useScriptGeneration({
@@ -155,13 +154,13 @@ function FlowWidget() {
     setGeneratingScripts,
     setTaskCompletionStates,
     saveGenerationState,
-    removeGenerationState
+    removeGenerationState,
   });
 
   const { createSegments } = useSegmentCreation({
     setNodes,
     setEdges,
-    setTaskCompletionStates
+    setTaskCompletionStates,
   });
 
   const { generateImage, regenerateImage } = useImageGeneration({
@@ -171,7 +170,7 @@ function FlowWidget() {
     setTaskCompletionStates,
     saveGenerationState,
     removeGenerationState,
-    edges
+    edges,
   });
 
   const { generateVideo, regenerateVideo } = useVideoGeneration({
@@ -183,32 +182,34 @@ function FlowWidget() {
     saveGenerationState,
     removeGenerationState,
     edges,
-    nodes
+    nodes,
   });
 
   // Restore generation states on component load
   const restoreGenerationStates = useCallback(async () => {
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       const selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      
+
       if (!selectedProject) return;
 
       const projectId = selectedProject.id;
-      const stateTypes = ['concept', 'script', 'image', 'video'];
+      const stateTypes = ["concept", "script", "image", "video"];
       const setterMap = {
         concept: setGeneratingConcepts,
-        script: setGeneratingScripts, 
+        script: setGeneratingScripts,
         image: setGeneratingImages,
-        video: setGeneratingVideos
+        video: setGeneratingVideos,
       };
 
-      stateTypes.forEach(type => {
+      stateTypes.forEach((type) => {
         const states = getGenerationStates(projectId, type);
         Object.entries(states).forEach(([nodeId, state]) => {
-          const isError = state.status === 'error';
-          const isTimedOut = (Date.now() - state.timestamp) > 900000;
-          
+          const isError = state.status === "error";
+          const isTimedOut = Date.now() - state.timestamp > 900000;
+
           if (isError || isTimedOut) {
             const errorNode = {
               id: nodeId,
@@ -216,30 +217,44 @@ function FlowWidget() {
               position: state.position || { x: 400, y: 400 },
               data: {
                 id: nodeId,
-                content: isTimedOut ? 'Generation timed out' : (state.errorMessage || `Failed to generate ${type}`),
-                nodeState: 'error',
-                title: state.title || 'Error',
-                error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed'),
-                ...state
-              }
+                content: isTimedOut
+                  ? "Generation timed out"
+                  : state.errorMessage || `Failed to generate ${type}`,
+                nodeState: "error",
+                title: state.title || "Error",
+                error: isTimedOut
+                  ? "Generation timed out after 15 minutes"
+                  : state.errorMessage || "Generation failed",
+                ...state,
+              },
             };
-            
-            setNodes(prevNodes => {
-              const existingIndex = prevNodes.findIndex(n => n.id === nodeId);
-              if (existingIndex >= 0 && prevNodes[existingIndex].data?.nodeState === 'existing') {
+
+            setNodes((prevNodes) => {
+              const existingIndex = prevNodes.findIndex((n) => n.id === nodeId);
+              if (
+                existingIndex >= 0 &&
+                prevNodes[existingIndex].data?.nodeState === "existing"
+              ) {
                 return prevNodes;
               }
               const updatedNodes = [...prevNodes];
-              updatedNodes[existingIndex >= 0 ? existingIndex : updatedNodes.length] = errorNode;
-              return existingIndex >= 0 ? updatedNodes : [...prevNodes, errorNode];
+              updatedNodes[
+                existingIndex >= 0 ? existingIndex : updatedNodes.length
+              ] = errorNode;
+              return existingIndex >= 0
+                ? updatedNodes
+                : [...prevNodes, errorNode];
             });
-            
-            setTimeout(() => removeGenerationState(projectId, type, nodeId), 5000);
+
+            setTimeout(
+              () => removeGenerationState(projectId, type, nodeId),
+              5000,
+            );
             return;
           }
-          
-          setterMap[type](prev => new Set(prev.add(nodeId)));
-          
+
+          setterMap[type]((prev) => new Set(prev.add(nodeId)));
+
           const loadingNode = {
             id: nodeId,
             type: `${type}Node`,
@@ -247,20 +262,27 @@ function FlowWidget() {
             data: {
               id: nodeId,
               content: state.loadingMessage || `Generating ${type}...`,
-              nodeState: 'loading',
+              nodeState: "loading",
               title: state.title || `Loading ${type}`,
-              ...state
-            }
+              ...state,
+            },
           };
-          
-          setNodes(prevNodes => {
-            const existingIndex = prevNodes.findIndex(n => n.id === nodeId);
-            if (existingIndex >= 0 && prevNodes[existingIndex].data?.nodeState === 'existing') {
+
+          setNodes((prevNodes) => {
+            const existingIndex = prevNodes.findIndex((n) => n.id === nodeId);
+            if (
+              existingIndex >= 0 &&
+              prevNodes[existingIndex].data?.nodeState === "existing"
+            ) {
               return prevNodes;
             }
             const updatedNodes = [...prevNodes];
-            updatedNodes[existingIndex >= 0 ? existingIndex : updatedNodes.length] = loadingNode;
-            return existingIndex >= 0 ? updatedNodes : [...prevNodes, loadingNode];
+            updatedNodes[
+              existingIndex >= 0 ? existingIndex : updatedNodes.length
+            ] = loadingNode;
+            return existingIndex >= 0
+              ? updatedNodes
+              : [...prevNodes, loadingNode];
           });
 
           if (state.parentNodeId) {
@@ -268,26 +290,35 @@ function FlowWidget() {
               id: `${state.parentNodeId}-to-${nodeId}`,
               source: state.parentNodeId,
               target: nodeId,
-              sourceHandle: 'output',
-              targetHandle: 'input',
+              sourceHandle: "output",
+              targetHandle: "input",
               style: {
-                stroke: '#E9E8EB33',
+                stroke: "#E9E8EB33",
                 strokeWidth: 2,
-                filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-              }
+                filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+              },
             };
-            
-            setEdges(prevEdges => {
-              const existingIndex = prevEdges.findIndex(e => e.id === edge.id);
+
+            setEdges((prevEdges) => {
+              const existingIndex = prevEdges.findIndex(
+                (e) => e.id === edge.id,
+              );
               return existingIndex < 0 ? [...prevEdges, edge] : prevEdges;
             });
           }
         });
       });
     } catch (error) {
-      console.error('Error restoring generation states:', error);
+      console.error("Error restoring generation states:", error);
     }
-  }, [setNodes, setEdges, setGeneratingConcepts, setGeneratingScripts, setGeneratingImages, setGeneratingVideos]);
+  }, [
+    setNodes,
+    setEdges,
+    setGeneratingConcepts,
+    setGeneratingScripts,
+    setGeneratingImages,
+    setGeneratingVideos,
+  ]);
 
   // Load data from API
   const flowData = useMemo(() => {
@@ -296,7 +327,13 @@ function FlowWidget() {
       ...concept,
       id: concept.id,
       conceptId: concept.id,
-      content: concept.content || concept.text || concept.concept || concept.description || concept.prompt || "",
+      content:
+        concept.content ||
+        concept.text ||
+        concept.concept ||
+        concept.description ||
+        concept.prompt ||
+        "",
       title: concept.title || concept.name || `Concept ${concept.id}`,
     }));
 
@@ -383,7 +420,7 @@ function FlowWidget() {
         ) {
           const videoKey = video.uuid.replace(/^seg-/, "");
           const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
-          
+
           videos[videoKey] = videoUrl;
           videoDetails[videoKey] = {
             id: video.id,
@@ -400,12 +437,16 @@ function FlowWidget() {
     });
 
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const selectedProject = JSON.parse(storedProject);
         const videoStorageKey = `generated-videos-${selectedProject.id}`;
-        const savedVideos = JSON.parse(localStorage.getItem(videoStorageKey) || '{}');
-        
+        const savedVideos = JSON.parse(
+          localStorage.getItem(videoStorageKey) || "{}",
+        );
+
         Object.entries(savedVideos).forEach(([key, videoData]) => {
           if (videoData && videoData.videoUrl) {
             videos[key] = videoData.videoUrl;
@@ -413,16 +454,24 @@ function FlowWidget() {
               videoDetails[key] = {
                 id: videoData.videoId,
                 artStyle: videoData.artStyle,
-                imageS3Key: null
+                imageS3Key: null,
               };
             }
           }
         });
       }
     } catch (error) {
-      console.error('Error loading saved videos from localStorage:', error);
+      console.error("Error loading saved videos from localStorage:", error);
     }
-    return { concepts, scripts, segments, images, videos, imageDetails, videoDetails };
+    return {
+      concepts,
+      scripts,
+      segments,
+      images,
+      videos,
+      imageDetails,
+      videoDetails,
+    };
   }, [allProjectData, temporaryVideos]);
 
   // Create nodes and edges from flow data
@@ -442,40 +491,46 @@ function FlowWidget() {
     // Check for user concepts that match current project
     let selectedProject = null;
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       selectedProject = storedProject ? JSON.parse(storedProject) : null;
     } catch (e) {
-      console.error('Error parsing project data:', e);
+      console.error("Error parsing project data:", e);
     }
 
     // Add User Node if there are matching user node data for this project (ROOT of tree)
     let userNodeId = null;
     if (selectedProject) {
       const userNodeDataKey = `userNodeData-${selectedProject.id}`;
-      const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-      
+      const existingUserNodeData = JSON.parse(
+        localStorage.getItem(userNodeDataKey) || "{}",
+      );
+
       // Check if there are any user node data for this project
       const userNodeEntries = Object.entries(existingUserNodeData).filter(
-        ([nodeId, data]) => data && data.projectId === selectedProject.id
+        ([nodeId, data]) => data && data.projectId === selectedProject.id,
       );
-      
+
       if (userNodeEntries.length > 0) {
         // Create a single user node that represents all user inputs (ROOT)
         userNodeId = `user-${selectedProject.id}`;
-        const allUserTexts = userNodeEntries.map(([nodeId, data]) => data.text).join('\n\n');
-        
+        const allUserTexts = userNodeEntries
+          .map(([nodeId, data]) => data.text)
+          .join("\n\n");
+
         newNodes.push({
           id: userNodeId,
           type: "userNode",
-          position: { x: startX, y: startY + (currentLevel * levelHeight) }, // Root position
+          position: { x: startX, y: startY + currentLevel * levelHeight }, // Root position
           data: {
             id: userNodeId,
             userText: allUserTexts,
             projectId: selectedProject.id,
-            nodeState: 'user'
+            nodeState: "user",
           },
         });
-        
+
         currentLevel++; // Move to next level for concepts
       }
     }
@@ -484,18 +539,18 @@ function FlowWidget() {
     if (flowData.concepts && flowData.concepts.length > 0) {
       const conceptCount = flowData.concepts.length;
       const totalWidth = (conceptCount - 1) * nodeWidth;
-      const conceptStartX = startX - (totalWidth / 2);
-      
+      const conceptStartX = startX - totalWidth / 2;
+
       flowData.concepts.forEach((concept, index) => {
-        const conceptX = conceptStartX + (index * nodeWidth);
-        
+        const conceptX = conceptStartX + index * nodeWidth;
+
         newNodes.push({
           id: `concept-${concept.id}`,
           type: "conceptNode",
-          position: { x: conceptX, y: startY + (currentLevel * levelHeight) },
+          position: { x: conceptX, y: startY + currentLevel * levelHeight },
           data: concept,
         });
-        
+
         if (userNodeId) {
           newEdges.push({
             id: `${userNodeId}-to-concept-${concept.id}`,
@@ -511,7 +566,7 @@ function FlowWidget() {
           });
         }
       });
-      
+
       currentLevel++;
     }
 
@@ -520,22 +575,22 @@ function FlowWidget() {
       const scriptCount = flowData.scripts.length;
       const scriptSpacing = 450;
       const totalWidth = (scriptCount - 1) * scriptSpacing;
-      const scriptStartX = startX - (totalWidth / 2);
-      
+      const scriptStartX = startX - totalWidth / 2;
+
       flowData.scripts.forEach((script, index) => {
-        const scriptX = scriptStartX + (index * scriptSpacing);
-        
+        const scriptX = scriptStartX + index * scriptSpacing;
+
         newNodes.push({
           id: `script-${script.id}`,
-          type: "scriptNode", 
-          position: { x: scriptX, y: startY + (currentLevel * levelHeight) },
+          type: "scriptNode",
+          position: { x: scriptX, y: startY + currentLevel * levelHeight },
           data: script,
         });
 
         if (flowData.concepts && flowData.concepts.length > 0) {
           // Default to first concept for now (simplified without project structure)
           const parentConceptId = flowData.concepts[0].id;
-          
+
           newEdges.push({
             id: `concept-${parentConceptId}-to-script-${script.id}`,
             source: `concept-${parentConceptId}`,
@@ -550,7 +605,7 @@ function FlowWidget() {
           });
         }
       });
-      
+
       currentLevel++;
     }
 
@@ -559,15 +614,15 @@ function FlowWidget() {
       const segmentCount = flowData.segments.length;
       const segmentSpacing = 480;
       const totalWidth = (segmentCount - 1) * segmentSpacing;
-      const segmentStartX = startX - (totalWidth / 2);
-      
+      const segmentStartX = startX - totalWidth / 2;
+
       flowData.segments.forEach((segment, index) => {
-        const segmentX = segmentStartX + (index * segmentSpacing);
-        
+        const segmentX = segmentStartX + index * segmentSpacing;
+
         newNodes.push({
           id: `segment-${segment.id}`,
           type: "segmentNode",
-          position: { x: segmentX, y: startY + (currentLevel * levelHeight) },
+          position: { x: segmentX, y: startY + currentLevel * levelHeight },
           data: {
             ...segment,
             status: flowData.videos[segment.id]
@@ -581,7 +636,7 @@ function FlowWidget() {
         if (flowData.scripts && flowData.scripts.length > 0) {
           // Default to first script for now (simplified without project structure)
           const parentScriptId = flowData.scripts[0].id;
-          
+
           newEdges.push({
             id: `script-${parentScriptId}-to-segment-${segment.id}`,
             source: `script-${parentScriptId}`,
@@ -596,7 +651,7 @@ function FlowWidget() {
           });
         }
       });
-      
+
       currentLevel++;
 
       // Create Image Nodes for segments that have images
@@ -608,32 +663,36 @@ function FlowWidget() {
             segment: segment,
             segmentIndex: segmentIndex,
             images: imageDetail.allImages,
-            imageDetail: imageDetail
+            imageDetail: imageDetail,
           });
         }
       });
-      
+
       if (imageNodesBySegment.size > 0) {
         const segmentSpacing = 480;
-        
+
         imageNodesBySegment.forEach((segmentData, segmentId) => {
           const { segment, segmentIndex, images, imageDetail } = segmentData;
-          
-          const segmentNode = newNodes.find(n => n.id === `segment-${segment.id}`);
-          const segmentX = segmentNode ? segmentNode.position.x : (startX + segmentIndex * segmentSpacing);
-          
+
+          const segmentNode = newNodes.find(
+            (n) => n.id === `segment-${segment.id}`,
+          );
+          const segmentX = segmentNode
+            ? segmentNode.position.x
+            : startX + segmentIndex * segmentSpacing;
+
           const imageSpacing = 320;
           const imageCount = images.length;
           const imagesTotalWidth = (imageCount - 1) * imageSpacing;
-          const imageStartX = segmentX - (imagesTotalWidth / 2);
-          
+          const imageStartX = segmentX - imagesTotalWidth / 2;
+
           images.forEach((image, imageIndex) => {
-            const imageX = imageStartX + (imageIndex * imageSpacing);
-            
+            const imageX = imageStartX + imageIndex * imageSpacing;
+
             newNodes.push({
               id: `image-${segment.id}-${image.id}`,
               type: "imageNode",
-              position: { x: imageX, y: startY + (currentLevel * levelHeight) },
+              position: { x: imageX, y: startY + currentLevel * levelHeight },
               data: {
                 segmentId: segment.id,
                 imageUrl: image.url,
@@ -641,18 +700,21 @@ function FlowWidget() {
                 isPrimary: image.isPrimary,
                 allImages: imageDetail.allImages,
                 s3Key: image.s3Key,
-                nodeState: 'existing',
+                nodeState: "existing",
                 visualPrompt: image.visualPrompt,
-                artStyle: image.artStyle || "cinematic photography with soft lighting",
+                artStyle:
+                  image.artStyle || "cinematic photography with soft lighting",
                 segmentData: {
                   id: segment.id,
                   visual: segment.visual,
                   animation: segment.animation,
-                  artStyle: image.artStyle || "cinematic photography with soft lighting",
+                  artStyle:
+                    image.artStyle ||
+                    "cinematic photography with soft lighting",
                 },
               },
             });
-            
+
             newEdges.push({
               id: `segment-${segment.id}-to-image-${segment.id}-${image.id}`,
               source: `segment-${segment.id}`,
@@ -667,14 +729,14 @@ function FlowWidget() {
             });
           });
         });
-        
+
         currentLevel++;
       }
 
       // Create Video Nodes for images that have videos
       let videoNodesByImage = new Map();
       let usedSegmentVideos = new Set();
-      
+
       flowData.segments.forEach((segment, segmentIndex) => {
         const imageDetail = flowData.imageDetails[segment.id];
         if (flowData.images[segment.id] && imageDetail?.allImages) {
@@ -683,11 +745,11 @@ function FlowWidget() {
             let videoUrl = flowData.videos[imageVideoKey];
             let videoId = flowData?.videoDetails?.[imageVideoKey]?.id;
             let videoKey = imageVideoKey;
-            
+
             if (!videoUrl && !usedSegmentVideos.has(segment.id)) {
               const segmentVideoUrl = flowData.videos[segment.id];
               const segmentVideoId = flowData?.videoDetails?.[segment.id]?.id;
-              
+
               if (segmentVideoUrl) {
                 videoUrl = segmentVideoUrl;
                 videoId = segmentVideoId;
@@ -695,7 +757,7 @@ function FlowWidget() {
                 usedSegmentVideos.add(segment.id);
               }
             }
-            
+
             if (videoUrl) {
               videoNodesByImage.set(videoKey, {
                 segment: segment,
@@ -703,40 +765,49 @@ function FlowWidget() {
                 image: image,
                 imageIndex: imageIndex,
                 videoUrl: videoUrl,
-                videoId: videoId
+                videoId: videoId,
               });
             }
           });
         }
       });
-      
+
       if (videoNodesByImage.size > 0) {
         videoNodesByImage.forEach((videoData, key) => {
-          const { segment, segmentIndex, image, imageIndex, videoUrl, videoId } = videoData;
-          
+          const {
+            segment,
+            segmentIndex,
+            image,
+            imageIndex,
+            videoUrl,
+            videoId,
+          } = videoData;
+
           const imageNodeId = `image-${segment.id}-${image.id}`;
-          const imageNode = newNodes.find(n => n.id === imageNodeId);
+          const imageNode = newNodes.find((n) => n.id === imageNodeId);
           const videoX = imageNode ? imageNode.position.x : startX;
-          
+
           newNodes.push({
             id: `video-${segment.id}-${image.id}`,
             type: "videoNode",
-            position: { x: videoX, y: startY + (currentLevel * levelHeight) },
+            position: { x: videoX, y: startY + currentLevel * levelHeight },
             data: {
               segmentId: segment.id,
               imageId: image.id,
               videoUrl: videoUrl,
               videoId: videoId,
-              nodeState: 'existing',
+              nodeState: "existing",
               segmentData: {
                 id: segment.id,
                 animation: segment.animation,
-                artStyle: flowData?.videoDetails?.[segment.id]?.artStyle || "cinematic photography with soft lighting",
+                artStyle:
+                  flowData?.videoDetails?.[segment.id]?.artStyle ||
+                  "cinematic photography with soft lighting",
                 imageS3Key: image.s3Key,
               },
             },
           });
-          
+
           newEdges.push({
             id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
             source: `image-${segment.id}-${image.id}`,
@@ -764,7 +835,9 @@ function FlowWidget() {
     let projectId;
     let projectName = "Untitled";
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const project = JSON.parse(storedProject);
         projectId = project.id;
@@ -781,12 +854,13 @@ function FlowWidget() {
     }
 
     try {
-      const [conceptsData, segmentationsData, imagesData, videosData] = await Promise.all([
-        projectApi.getProjectConcepts(projectId),
-        projectApi.getProjectSegmentations(projectId),
-        projectApi.getProjectImages(projectId),
-        projectApi.getProjectVideos(projectId),
-      ]);
+      const [conceptsData, segmentationsData, imagesData, videosData] =
+        await Promise.all([
+          projectApi.getProjectConcepts(projectId),
+          projectApi.getProjectSegmentations(projectId),
+          projectApi.getProjectImages(projectId),
+          projectApi.getProjectVideos(projectId),
+        ]);
 
       let concepts = [];
       if (conceptsData?.success && Array.isArray(conceptsData.data)) {
@@ -819,70 +893,70 @@ function FlowWidget() {
   // Handle tidy/layout arrangement
   const handleTidyLayout = useCallback(() => {
     if (!rfInstance) return;
-    
+
     try {
       const levelHeight = 500;
       const nodeSpacing = 450;
       const startX = 400;
       const startY = 100;
-      
+
       const currentNodes = nodes.map((node) => {
         let newPosition = { ...node.position };
-        
-        if (node.type === 'userNode') {
+
+        if (node.type === "userNode") {
           newPosition = { x: startX, y: startY };
-        } else if (node.type === 'conceptNode') {
-          const conceptNodes = nodes.filter(n => n.type === 'conceptNode');
-          const conceptIndex = conceptNodes.findIndex(n => n.id === node.id);
+        } else if (node.type === "conceptNode") {
+          const conceptNodes = nodes.filter((n) => n.type === "conceptNode");
+          const conceptIndex = conceptNodes.findIndex((n) => n.id === node.id);
           const totalWidth = (conceptNodes.length - 1) * nodeSpacing;
-          newPosition = { 
-            x: startX - (totalWidth / 2) + (conceptIndex * nodeSpacing), 
-            y: startY + levelHeight 
+          newPosition = {
+            x: startX - totalWidth / 2 + conceptIndex * nodeSpacing,
+            y: startY + levelHeight,
           };
-        } else if (node.type === 'scriptNode') {
-          const scriptNodes = nodes.filter(n => n.type === 'scriptNode');
-          const scriptIndex = scriptNodes.findIndex(n => n.id === node.id);
+        } else if (node.type === "scriptNode") {
+          const scriptNodes = nodes.filter((n) => n.type === "scriptNode");
+          const scriptIndex = scriptNodes.findIndex((n) => n.id === node.id);
           const totalWidth = (scriptNodes.length - 1) * nodeSpacing;
-          newPosition = { 
-            x: startX - (totalWidth / 2) + (scriptIndex * nodeSpacing), 
-            y: startY + (levelHeight * 2) 
+          newPosition = {
+            x: startX - totalWidth / 2 + scriptIndex * nodeSpacing,
+            y: startY + levelHeight * 2,
           };
-        } else if (node.type === 'segmentNode') {
-          const segmentNodes = nodes.filter(n => n.type === 'segmentNode');
-          const segmentIndex = segmentNodes.findIndex(n => n.id === node.id);
+        } else if (node.type === "segmentNode") {
+          const segmentNodes = nodes.filter((n) => n.type === "segmentNode");
+          const segmentIndex = segmentNodes.findIndex((n) => n.id === node.id);
           const totalWidth = (segmentNodes.length - 1) * 480;
-          newPosition = { 
-            x: startX - (totalWidth / 2) + (segmentIndex * 480), 
-            y: startY + (levelHeight * 3) 
+          newPosition = {
+            x: startX - totalWidth / 2 + segmentIndex * 480,
+            y: startY + levelHeight * 3,
           };
-        } else if (node.type === 'imageNode') {
-          const imageNodes = nodes.filter(n => n.type === 'imageNode');
-          const imageIndex = imageNodes.findIndex(n => n.id === node.id);
+        } else if (node.type === "imageNode") {
+          const imageNodes = nodes.filter((n) => n.type === "imageNode");
+          const imageIndex = imageNodes.findIndex((n) => n.id === node.id);
           const totalWidth = (imageNodes.length - 1) * 350;
-          newPosition = { 
-            x: startX - (totalWidth / 2) + (imageIndex * 350), 
-            y: startY + (levelHeight * 4) 
+          newPosition = {
+            x: startX - totalWidth / 2 + imageIndex * 350,
+            y: startY + levelHeight * 4,
           };
-        } else if (node.type === 'videoNode') {
-          const videoNodes = nodes.filter(n => n.type === 'videoNode');
-          const videoIndex = videoNodes.findIndex(n => n.id === node.id);
+        } else if (node.type === "videoNode") {
+          const videoNodes = nodes.filter((n) => n.type === "videoNode");
+          const videoIndex = videoNodes.findIndex((n) => n.id === node.id);
           const totalWidth = (videoNodes.length - 1) * 350;
-          newPosition = { 
-            x: startX - (totalWidth / 2) + (videoIndex * 350), 
-            y: startY + (levelHeight * 5) 
+          newPosition = {
+            x: startX - totalWidth / 2 + videoIndex * 350,
+            y: startY + levelHeight * 5,
           };
         }
-        
+
         return { ...node, position: newPosition };
       });
-      
+
       setNodes(currentNodes);
-      
+
       setTimeout(() => {
-        rfInstance.fitView({ 
-          padding: 0.2, 
+        rfInstance.fitView({
+          padding: 0.2,
           includeHiddenNodes: true,
-          duration: 800
+          duration: 800,
         });
       }, 100);
     } catch (error) {
@@ -905,22 +979,23 @@ function FlowWidget() {
   }, []);
 
   // Handle chat message for concept generation
-  const handleChatMessage = useCallback(async (message, nodeId, nodeType, model) => {
-    
-    
-    // Remove chat node after sending message
-    setNodes((prevNodes) =>
-      prevNodes.filter((node) => node.type !== "chatNode"),
-    );
-    setEdges((prevEdges) =>
-      prevEdges.filter((edge) => !edge.target.includes("chat-")),
-    );
-    
-    if (nodeType === 'userNode') {
-      // Use the concept generation hook
-      await generateConcepts(message, nodeId);
-    }
-  }, [nodes, setNodes, setEdges, setError]);
+  const handleChatMessage = useCallback(
+    async (message, nodeId, nodeType, model) => {
+      // Remove chat node after sending message
+      setNodes((prevNodes) =>
+        prevNodes.filter((node) => node.type !== "chatNode"),
+      );
+      setEdges((prevEdges) =>
+        prevEdges.filter((edge) => !edge.target.includes("chat-")),
+      );
+
+      if (nodeType === "userNode") {
+        // Use the concept generation hook
+        await generateConcepts(message, nodeId);
+      }
+    },
+    [nodes, setNodes, setEdges, setError],
+  );
 
   // Handle adding new nodes
   const handleAddNode = useCallback(
@@ -1020,8 +1095,8 @@ function FlowWidget() {
         id: chatNodeId,
         type: "chatNode",
         position: {
-          x: clickedNode.position.x - 40, 
-          y: clickedNode.position.y + 350, 
+          x: clickedNode.position.x - 40,
+          y: clickedNode.position.y + 350,
         },
         data: {
           nodeType: clickedNode.type,
@@ -1084,20 +1159,22 @@ function FlowWidget() {
   useEffect(() => {
     createFlowElements();
   }, [createFlowElements]);
-  
+
   // Load user concepts on mount
   useEffect(() => {
-    const projectData = localStorage.getItem('project-store-selectedProject');
+    const projectData = localStorage.getItem("project-store-selectedProject");
     if (projectData) {
       try {
         const project = JSON.parse(projectData);
         const projectId = project.id;
-        
-        const userConceptsKey = `user-concepts-${projectId || 'default'}`;
-        const existingUserConcepts = JSON.parse(localStorage.getItem(userConceptsKey) || '{}');
+
+        const userConceptsKey = `user-concepts-${projectId || "default"}`;
+        const existingUserConcepts = JSON.parse(
+          localStorage.getItem(userConceptsKey) || "{}",
+        );
         setUserConcepts(new Map(Object.entries(existingUserConcepts)));
       } catch (e) {
-        console.error('Error loading user concepts:', e);
+        console.error("Error loading user concepts:", e);
       }
     }
   }, []);
@@ -1106,64 +1183,83 @@ function FlowWidget() {
     async (params) => {
       // Create the edge
       setEdges((eds) => addEdge(params, eds));
-      
+
       // Skip auto-generation if disabled (e.g., during brush tool operations)
       if (disableAutoGeneration) {
-
         return;
       }
-      
+
       // Handle special connection logic for new project flow
-      const sourceNode = nodes.find(n => n.id === params.source);
-      const targetNode = nodes.find(n => n.id === params.target);
-      
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      const targetNode = nodes.find((n) => n.id === params.target);
+
       if (sourceNode && targetNode) {
         // Script connected to concept - generate script
-        if (sourceNode.type === 'conceptNode' && targetNode.type === 'scriptNode' && targetNode.data?.nodeState === 'new') {
+        if (
+          sourceNode.type === "conceptNode" &&
+          targetNode.type === "scriptNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
           await generateScript(sourceNode, targetNode);
         }
-        
+
         // Segment connected to script - create 5 segment nodes
-        if (sourceNode.type === 'scriptNode' && targetNode.type === 'segmentNode' && targetNode.data?.nodeState === 'new') {
+        if (
+          sourceNode.type === "scriptNode" &&
+          targetNode.type === "segmentNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
           await createSegments(sourceNode, targetNode);
         }
-        
+
         // Image connected to segment - generate image
-        if (sourceNode.type === 'segmentNode' && targetNode.type === 'imageNode' && targetNode.data?.nodeState === 'new') {
+        if (
+          sourceNode.type === "segmentNode" &&
+          targetNode.type === "imageNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
           await generateImage(sourceNode, targetNode);
         }
-        
+
         // Video connected to image - generate video
-        if (sourceNode.type === 'imageNode' && targetNode.type === 'videoNode' && targetNode.data?.nodeState === 'new') {
+        if (
+          sourceNode.type === "imageNode" &&
+          targetNode.type === "videoNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
           await generateVideo(sourceNode, targetNode);
         }
       }
     },
-    [setEdges, nodes, disableAutoGeneration, generateScript, createSegments, generateImage, generateVideo],
+    [
+      setEdges,
+      nodes,
+      disableAutoGeneration,
+      generateScript,
+      createSegments,
+      generateImage,
+      generateVideo,
+    ],
   );
-  
-  
-  const handleRegeneration = useCallback(async (regenerationParams) => {
-    const { nodeType } = regenerationParams;
-    
-    if (nodeType === 'image') {
-      await regenerateImage(regenerationParams);
-    } else if (nodeType === 'video') {
-      await regenerateVideo(regenerationParams);
-    } else {
-      console.error('Unsupported node type for regeneration:', nodeType);
-    }
-  }, [regenerateImage, regenerateVideo]);
 
+  const handleRegeneration = useCallback(
+    async (regenerationParams) => {
+      const { nodeType } = regenerationParams;
 
-
-
+      if (nodeType === "image") {
+        await regenerateImage(regenerationParams);
+      } else if (nodeType === "video") {
+        await regenerateVideo(regenerationParams);
+      } else {
+        console.error("Unsupported node type for regeneration:", nodeType);
+      }
+    },
+    [regenerateImage, regenerateVideo],
+  );
 
   useEffect(() => {
     fetchAllProjectData();
   }, [fetchAllProjectData]);
-
-
 
   // Restore generation states after data loads
   useEffect(() => {
@@ -1182,26 +1278,32 @@ function FlowWidget() {
       concept: allProjectData.concepts?.length > 0,
       script: allProjectData.scripts?.length > 0,
       segment: allProjectData.segments?.length > 0,
-      image: allProjectData.images?.some(img => img?.success && img?.s3Key),
-      video: allProjectData.videos?.some(video => 
-        video?.success && 
-        Array.isArray(video.videoFiles) && 
-        video.videoFiles.length > 0 && 
-        video.videoFiles[0]?.s3Key
-      )
+      image: allProjectData.images?.some((img) => img?.success && img?.s3Key),
+      video: allProjectData.videos?.some(
+        (video) =>
+          video?.success &&
+          Array.isArray(video.videoFiles) &&
+          video.videoFiles.length > 0 &&
+          video.videoFiles[0]?.s3Key,
+      ),
     };
 
     // Check for user input in localStorage
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const project = JSON.parse(storedProject);
         const userNodeDataKey = `userNodeData-${project.id}`;
-        const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-        newCompletionStates.userInput = Object.keys(existingUserNodeData).length > 0;
+        const existingUserNodeData = JSON.parse(
+          localStorage.getItem(userNodeDataKey) || "{}",
+        );
+        newCompletionStates.userInput =
+          Object.keys(existingUserNodeData).length > 0;
       }
     } catch (e) {
-      console.error('Error checking user input data:', e);
+      console.error("Error checking user input data:", e);
     }
 
     setTaskCompletionStates(newCompletionStates);
@@ -1210,13 +1312,15 @@ function FlowWidget() {
   // Update project name on mount
   useEffect(() => {
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
       if (storedProject) {
         const project = JSON.parse(storedProject);
-        setProjectName(project.name || project.title || 'Untitled');
+        setProjectName(project.name || project.title || "Untitled");
       }
     } catch (error) {
-      console.error('Error parsing project from localStorage:', error);
+      console.error("Error parsing project from localStorage:", error);
     }
   }, []);
 
@@ -1224,36 +1328,43 @@ function FlowWidget() {
   useEffect(() => {
     const cleanup = () => {
       try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
+        const storedProject = localStorage.getItem(
+          "project-store-selectedProject",
+        );
         if (!storedProject) return;
-        
+
         const project = JSON.parse(storedProject);
         const projectId = project.id;
-        
-        ['concept', 'script', 'image', 'video'].forEach(type => {
+
+        ["concept", "script", "image", "video"].forEach((type) => {
           getGenerationStates(projectId, type);
         });
-        
+
         // Clean up old temporary data and videos
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (!key) continue;
-          
+
           try {
             if (key.startsWith(`temp-`) && key.includes(projectId)) {
-              const data = JSON.parse(localStorage.getItem(key) || '{}');
+              const data = JSON.parse(localStorage.getItem(key) || "{}");
               if (data.timestamp && Date.now() - data.timestamp > 3600000) {
                 localStorage.removeItem(key);
               }
             }
-            
+
             if (key.startsWith(`generated-videos-${projectId}`)) {
-              const videos = JSON.parse(localStorage.getItem(key) || '{}');
+              const videos = JSON.parse(localStorage.getItem(key) || "{}");
               const videoEntries = Object.entries(videos);
               if (videoEntries.length > 20) {
-                const sortedVideos = videoEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+                const sortedVideos = videoEntries.sort(
+                  (a, b) => b[1].timestamp - a[1].timestamp,
+                );
                 const videosToKeep = sortedVideos.slice(0, 20);
-                localStorage.setItem(key, JSON.stringify(Object.fromEntries(videosToKeep)));
+                localStorage.setItem(
+                  key,
+                  JSON.stringify(Object.fromEntries(videosToKeep)),
+                );
               }
             }
           } catch (error) {
@@ -1261,7 +1372,7 @@ function FlowWidget() {
           }
         }
       } catch (error) {
-        console.error('Error during cleanup:', error);
+        console.error("Error during cleanup:", error);
       }
     };
 
@@ -1277,15 +1388,15 @@ function FlowWidget() {
       window.dispatchEvent(new CustomEvent("sandbox:opened"));
       setTimeout(restoreGenerationStates, 100);
     };
-    
+
     const closeHandler = () => {
       setOpen(false);
       window.dispatchEvent(new CustomEvent("sandbox:closed"));
     };
-    
+
     window.addEventListener("flowWidget:open", openHandler);
     window.addEventListener("flowWidget:close", closeHandler);
-    
+
     return () => {
       window.removeEventListener("flowWidget:open", openHandler);
       window.removeEventListener("flowWidget:close", closeHandler);
@@ -1296,9 +1407,14 @@ function FlowWidget() {
   useEffect(() => {
     const handleAddVideoToTimeline = async (event) => {
       const { videoUrl, videoId, segmentId, nodeId } = event.detail;
-      
-      console.log('🎬 Adding video to timeline:', { videoUrl, videoId, segmentId, nodeId });
-      
+
+      console.log("🎬 Adding video to timeline:", {
+        videoUrl,
+        videoId,
+        segmentId,
+        nodeId,
+      });
+
       try {
         // Create a videos map with the single video for the timeline function
         const singleVideoMap = {};
@@ -1306,40 +1422,43 @@ function FlowWidget() {
           singleVideoMap[segmentId] = videoUrl;
         } else {
           // Fallback: use videoId or nodeId as key
-          const key = videoId || nodeId || 'video';
+          const key = videoId || nodeId || "video";
           singleVideoMap[key] = videoUrl;
         }
-        
+
         // Use the existing timeline function to add the single video
         const success = await timeline.addSingleVideoToTimeline(
-          segmentId || videoId || nodeId || 'video',
+          segmentId || videoId || nodeId || "video",
           singleVideoMap,
-          setError
+          setError,
         );
-        
+
         if (success) {
-          console.log('✅ Video successfully added to timeline!');
+          console.log("✅ Video successfully added to timeline!");
           // Optional: Show success notification or close sidebar
         } else {
-          console.error('❌ Failed to add video to timeline');
-          setError('Failed to add video to timeline');
+          console.error("❌ Failed to add video to timeline");
+          setError("Failed to add video to timeline");
         }
       } catch (error) {
-        console.error('❌ Error adding video to timeline:', error);
+        console.error("❌ Error adding video to timeline:", error);
         setError(`Error adding video to timeline: ${error.message}`);
       }
     };
 
-    window.addEventListener('addVideoToTimeline', handleAddVideoToTimeline);
-    
+    window.addEventListener("addVideoToTimeline", handleAddVideoToTimeline);
+
     return () => {
-      window.removeEventListener('addVideoToTimeline', handleAddVideoToTimeline);
+      window.removeEventListener(
+        "addVideoToTimeline",
+        handleAddVideoToTimeline,
+      );
     };
   }, [timeline, setError]);
 
   // Reflect open state and handle dropdown clicks
   const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
-  
+
   useEffect(() => {
     const host = document.querySelector("react-flow-widget");
     if (host) host.setAttribute("data-open", open ? "true" : "false");
@@ -1398,37 +1517,77 @@ function FlowWidget() {
                   <div className='absolute top-full left-0 mt-2 w-72 bg-[#191919] border-0 rounded-xl shadow-2xl backdrop-blur-md z-[1002] overflow-hidden'>
                     <div className='px-2'>
                       {[
-                        { 
+                        {
                           icon: (
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.2569 9.77251 19.9859C9.5799 19.7148 9.31074 19.5067 9 19.39C8.69838 19.2569 8.36381 19.2172 8.03941 19.276C7.71502 19.3348 7.41568 19.4895 7.18 19.72L7.12 19.78C6.93425 19.966 6.71368 20.1135 6.47088 20.2141C6.22808 20.3148 5.96783 20.3666 5.705 20.3666C5.44217 20.3666 5.18192 20.3148 4.93912 20.2141C4.69632 20.1135 4.47575 19.966 4.29 19.78C4.10405 19.5943 3.95653 19.3737 3.85588 19.1309C3.75523 18.8881 3.70343 18.6278 3.70343 18.365C3.70343 18.1022 3.75523 17.8419 3.85588 17.5991C3.95653 17.3563 4.10405 17.1357 4.29 16.95L4.35 16.89C4.58054 16.6543 4.73519 16.355 4.794 16.0306C4.85282 15.7062 4.81312 15.3716 4.68 15.07C4.55324 14.7742 4.34276 14.522 4.07447 14.3443C3.80618 14.1666 3.49179 14.0713 3.17 14.07H3C2.46957 14.07 1.96086 13.8593 1.58579 13.4842C1.21071 13.1091 1 12.6004 1 12.07C1 11.5396 1.21071 11.0309 1.58579 10.6558C1.96086 10.2807 2.46957 10.07 3 10.07H3.09C3.42099 10.0623 3.742 9.95512 4.01309 9.76251C4.28417 9.5699 4.49226 9.30074 4.61 9C4.74312 8.69838 4.78282 8.36381 4.724 8.03941C4.66519 7.71502 4.51054 7.41568 4.28 7.18L4.22 7.12C4.03405 6.93425 3.88653 6.71368 3.78588 6.47088C3.68523 6.22808 3.63343 5.96783 3.63343 5.705C3.63343 5.44217 3.68523 5.18192 3.78588 4.93912C3.88653 4.69632 4.03405 4.47575 4.22 4.29C4.40575 4.10405 4.62632 3.95653 4.86912 3.85588C5.11192 3.75523 5.37217 3.70343 5.635 3.70343C5.89783 3.70343 6.15808 3.75523 6.40088 3.85588C6.64368 3.95653 6.86425 4.10405 7.05 4.29L7.11 4.35C7.34568 4.58054 7.64502 4.73519 7.96941 4.794C8.29381 4.85282 8.62838 4.81312 8.93 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <svg
+                              className='w-4 h-4'
+                              viewBox='0 0 24 24'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.2569 9.77251 19.9859C9.5799 19.7148 9.31074 19.5067 9 19.39C8.69838 19.2569 8.36381 19.2172 8.03941 19.276C7.71502 19.3348 7.41568 19.4895 7.18 19.72L7.12 19.78C6.93425 19.966 6.71368 20.1135 6.47088 20.2141C6.22808 20.3148 5.96783 20.3666 5.705 20.3666C5.44217 20.3666 5.18192 20.3148 4.93912 20.2141C4.69632 20.1135 4.47575 19.966 4.29 19.78C4.10405 19.5943 3.95653 19.3737 3.85588 19.1309C3.75523 18.8881 3.70343 18.6278 3.70343 18.365C3.70343 18.1022 3.75523 17.8419 3.85588 17.5991C3.95653 17.3563 4.10405 17.1357 4.29 16.95L4.35 16.89C4.58054 16.6543 4.73519 16.355 4.794 16.0306C4.85282 15.7062 4.81312 15.3716 4.68 15.07C4.55324 14.7742 4.34276 14.522 4.07447 14.3443C3.80618 14.1666 3.49179 14.0713 3.17 14.07H3C2.46957 14.07 1.96086 13.8593 1.58579 13.4842C1.21071 13.1091 1 12.6004 1 12.07C1 11.5396 1.21071 11.0309 1.58579 10.6558C1.96086 10.2807 2.46957 10.07 3 10.07H3.09C3.42099 10.0623 3.742 9.95512 4.01309 9.76251C4.28417 9.5699 4.49226 9.30074 4.61 9C4.74312 8.69838 4.78282 8.36381 4.724 8.03941C4.66519 7.71502 4.51054 7.41568 4.28 7.18L4.22 7.12C4.03405 6.93425 3.88653 6.71368 3.78588 6.47088C3.68523 6.22808 3.63343 5.96783 3.63343 5.705C3.63343 5.44217 3.68523 5.18192 3.78588 4.93912C3.88653 4.69632 4.03405 4.47575 4.22 4.29C4.40575 4.10405 4.62632 3.95653 4.86912 3.85588C5.11192 3.75523 5.37217 3.70343 5.635 3.70343C5.89783 3.70343 6.15808 3.75523 6.40088 3.85588C6.64368 3.95653 6.86425 4.10405 7.05 4.29L7.11 4.35C7.34568 4.58054 7.64502 4.73519 7.96941 4.794C8.29381 4.85282 8.62838 4.81312 8.93 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
                             </svg>
-                          ), 
-                          text: "Settings", 
-                          active: true 
+                          ),
+                          text: "Settings",
+                          active: true,
                         },
-                        { 
+                        {
                           icon: (
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                              <path d="M9.09 9C9.3251 8.33167 9.78915 7.76811 10.4 7.40913C11.0108 7.05016 11.7289 6.91894 12.4272 7.03871C13.1255 7.15849 13.7588 7.52152 14.2151 8.06353C14.6713 8.60553 14.9211 9.29152 14.92 10C14.92 12 11.92 13 11.92 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M12 17H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <svg
+                              className='w-4 h-4'
+                              viewBox='0 0 24 24'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <circle
+                                cx='12'
+                                cy='12'
+                                r='10'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                              />
+                              <path
+                                d='M9.09 9C9.3251 8.33167 9.78915 7.76811 10.4 7.40913C11.0108 7.05016 11.7289 6.91894 12.4272 7.03871C13.1255 7.15849 13.7588 7.52152 14.2151 8.06353C14.6713 8.60553 14.9211 9.29152 14.92 10C14.92 12 11.92 13 11.92 13'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M12 17H12.01'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
                             </svg>
-                          ), 
-                          text: "Help & Resources" 
-                        }
+                          ),
+                          text: "Help & Resources",
+                        },
                       ].map((item, index) => (
                         <div
                           key={index}
                           onClick={() => setLogoDropdownOpen(false)}
                           className={`p-1.5 px-3 text-white text-xs cursor-pointer rounded-lg mb-1 flex items-center gap-3 transition-colors ${
-                            item.active 
-                              ? 'bg-white/5' 
-                              : 'hover:bg-white/10'
+                            item.active ? "bg-white/5" : "hover:bg-white/10"
                           }`}
                         >
-                          <span className="w-4 flex justify-center text-white">{item.icon}</span>
+                          <span className='w-4 flex justify-center text-white'>
+                            {item.icon}
+                          </span>
                           <span>{item.text}</span>
                         </div>
                       ))}
@@ -1478,10 +1637,10 @@ function FlowWidget() {
             <div className='fixed top-4 right-4 z-[1001] flex items-center gap-3'>
               {/* Credits Display */}
               {isAuthenticated && user && (
-                <div 
+                <div
                   className='flex items-center gap-1.5 bg-[#FFFFFF0D] border-0 rounded-lg px-2 py-1'
                   style={{
-                    backdropFilter: 'blur(10px)',
+                    backdropFilter: "blur(10px)",
                   }}
                 >
                   <svg
@@ -1514,21 +1673,21 @@ function FlowWidget() {
               )}
 
               {/* Debug: Project Data Display */}
-              {process.env.NODE_ENV === 'development' && (
+              {process.env.NODE_ENV === "development" && (
                 <div className='flex items-center gap-2'>
                   <button
                     onClick={() => {
-                      console.log('📋 All Project Data:', allProjectData);
-                      console.log('📊 Data Summary:', {
+                      console.log("📋 All Project Data:", allProjectData);
+                      console.log("📊 Data Summary:", {
                         concepts: allProjectData.concepts?.length || 0,
                         scripts: allProjectData.scripts?.length || 0,
                         segments: allProjectData.segments?.length || 0,
                         images: allProjectData.images?.length || 0,
-                        videos: allProjectData.videos?.length || 0
+                        videos: allProjectData.videos?.length || 0,
                       });
                     }}
                     className='h-8 px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 border-0 text-blue-300 text-xs font-medium rounded-lg transition-colors backdrop-blur-sm'
-                    title="Debug: Log Project Data"
+                    title='Debug: Log Project Data'
                   >
                     📊
                   </button>
@@ -1539,17 +1698,17 @@ function FlowWidget() {
               <UserProfileDropdown />
 
               {/* Chat Bot Icon - Click to open chat widget */}
-              <div 
+              <div
                 className='rounded-lg transition-colors backdrop-blur-sm items-center cursor-pointer hover:opacity-80'
                 onClick={() => {
                   // Open chat widget if available
-                  if (typeof window.openChat === 'function') {
+                  if (typeof window.openChat === "function") {
                     window.openChat();
                   } else {
-                    console.log('Chat widget not available');
+                    console.log("Chat widget not available");
                   }
                 }}
-                title="Open Chat Widget"
+                title='Open Chat Widget'
               >
                 <img
                   src={assets.ChatBotButton}
@@ -1570,7 +1729,7 @@ function FlowWidget() {
 
               {/* Task List */}
               <div className='fixed top-24 right-4 z-[1001]'>
-                <TaskList 
+                <TaskList
                   nodes={nodes}
                   collapsed={true}
                   taskCompletionStates={taskCompletionStates}
@@ -1615,27 +1774,27 @@ function FlowWidget() {
                     onConnect={onConnect}
                     defaultEdgeOptions={{
                       style: {
-                        stroke: '#E9E8EB33',
+                        stroke: "#E9E8EB33",
                         strokeWidth: 2,
-                        filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-                      }
+                        filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+                      },
                     }}
                     fitViewOptions={{ padding: 0.2, includeHiddenNodes: true }}
                     minZoom={0.1}
                     maxZoom={1.5}
                     onNodeClick={(event, node) => {
                       // Show sidebar for generated image and video nodes
-                      const shouldShowSidebar = (
-                        (node.type === "imageNode" || node.type === "videoNode") &&
-                        node.data?.nodeState === "existing"
-                      );
-                      
+                      const shouldShowSidebar =
+                        (node.type === "imageNode" ||
+                          node.type === "videoNode") &&
+                        node.data?.nodeState === "existing";
+
                       if (shouldShowSidebar) {
                         setSelectedNode(node);
                       } else {
                         setSelectedNode(null);
                       }
-                      
+
                       // Add chat node only when clicking on user nodes
                       if (node.type === "userNode") {
                         handleAddChatNode(node);
@@ -1692,7 +1851,10 @@ function FlowWidget() {
               )}
             </div>
           </div>
-          <FlowWidgetBottomToolbar onAddNode={handleAddNode} onRefreshLayout={handleTidyLayout} />
+          <FlowWidgetBottomToolbar
+            onAddNode={handleAddNode}
+            onRefreshLayout={handleTidyLayout}
+          />
         </div>
       </div>
 
@@ -1720,4 +1882,3 @@ function FlowWidget() {
 }
 
 export default FlowWidget;
-

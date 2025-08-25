@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useTimeline } from "../hooks/useTimeline";
 import ChatLoginButton from "./ChatLoginButton";
-import LoadingSpinner from "./LoadingSpinner";
 import { projectApi } from "../services/project";
 import {
   ReactFlow,
@@ -13,7 +12,8 @@ import {
   addEdge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-// Import new clean node components
+
+// Node components
 import NodeImage from "./FlowWidget/Node_Image";
 import NodeVideo from "./FlowWidget/Node_Video";
 import NodeSegment from "./FlowWidget/Node_Segment";
@@ -24,27 +24,25 @@ import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
 import UserNode from "./FlowWidget/UserNode";
 import TaskList from "./FlowWidget/TaskList";
-import { assets } from "../assets/assets";
 import FlowWidgetBottomToolbar from "./FlowWidget/FlowWidgetBottomToolbar";
 import UserProfileDropdown from "./UserProfileDropdown";
+
+// Assets and services
+import { assets } from "../assets/assets";
 import { webInfoApi } from "../services/web-info";
 import { conceptWriterApi } from "../services/concept-writer";
 import { segmentationApi } from "../services/segmentationapi";
-import { imageApi } from "../services/image";
-import { videoApi } from "../services/video-gen";
 import { chatApi } from "../services/chat";
 import { s3Api } from "../services/s3";
 
 function FlowWidget() {
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const timeline = useTimeline();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [temporaryVideos, setTemporaryVideos] = useState(new Map()); // Store temporary videos: key = `${segmentId}-${imageId}`, value = videoUrl
-  // ReactFlow instance for dynamic fitView control
+  const [temporaryVideos, setTemporaryVideos] = useState(new Map());
   const [rfInstance, setRfInstance] = useState(null);
 
   // Node chat state
@@ -55,104 +53,16 @@ function FlowWidget() {
   // Selected node state for sidebar
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // New project state management
-  const [userConcepts, setUserConcepts] = useState(new Map()); // Store user concept texts: nodeId -> text
-  const [generatingConcepts, setGeneratingConcepts] = useState(new Set()); // Track which concepts are generating
-  const [generatingScripts, setGeneratingScripts] = useState(new Set()); // Track which scripts are generating
-  const [generatingImages, setGeneratingImages] = useState(new Set()); // Track which images are generating
-  const [generatingVideos, setGeneratingVideos] = useState(new Set()); // Track which videos are generating
-  const [nodeConnections, setNodeConnections] = useState(new Map()); // Track node connections for generation
+  // Generation state tracking
+  const [userConcepts, setUserConcepts] = useState(new Map());
+  const [generatingConcepts, setGeneratingConcepts] = useState(new Set());
+  const [generatingScripts, setGeneratingScripts] = useState(new Set());
+  const [generatingImages, setGeneratingImages] = useState(new Set());
+  const [generatingVideos, setGeneratingVideos] = useState(new Set());
 
-  // Project structure mapping helper functions
-  const getProjectStructureKey = (projectId) => `project-structure-${projectId}`;
-  
-  const saveProjectStructure = (projectId, structure) => {
-    try {
-      const key = getProjectStructureKey(projectId);
-      const serializedStructure = {
-        userNodes: Object.fromEntries(structure.userNodes),
-        concepts: Object.fromEntries(structure.concepts),
-        scripts: Object.fromEntries(structure.scripts),
-        segments: Object.fromEntries(structure.segments),
-        images: Object.fromEntries(structure.images),
-        videos: Object.fromEntries(structure.videos),
-        lastUpdated: Date.now()
-      };
-      localStorage.setItem(key, JSON.stringify(serializedStructure));
-      console.log(`💾 Saved project structure for project ${projectId}:`, serializedStructure);
-    } catch (error) {
-      console.error('Error saving project structure:', error);
-    }
-  };
 
-  const loadProjectStructure = (projectId) => {
-    try {
-      const key = getProjectStructureKey(projectId);
-      const stored = localStorage.getItem(key);
-      if (!stored) {
-        console.log(`No project structure found for project ${projectId}`);
-        return {
-          userNodes: new Map(),
-          concepts: new Map(),
-          scripts: new Map(),
-          segments: new Map(),
-          images: new Map(),
-          videos: new Map()
-        };
-      }
-      
-      const parsed = JSON.parse(stored);
-      const structure = {
-        userNodes: new Map(Object.entries(parsed.userNodes || {})),
-        concepts: new Map(Object.entries(parsed.concepts || {})),
-        scripts: new Map(Object.entries(parsed.scripts || {})),
-        segments: new Map(Object.entries(parsed.segments || {})),
-        images: new Map(Object.entries(parsed.images || {})),
-        videos: new Map(Object.entries(parsed.videos || {}))
-      };
-      
-      console.log(`📁 Loaded project structure for project ${projectId}:`, structure);
-      return structure;
-    } catch (error) {
-      console.error('Error loading project structure:', error);
-      return {
-        userNodes: new Map(),
-        concepts: new Map(),
-        scripts: new Map(),
-        segments: new Map(),
-        images: new Map(),
-        videos: new Map()
-      };
-    }
-  };
 
-  const updateProjectStructure = (projectId, updates) => {
-    setProjectStructure(prevStructure => {
-      const newStructure = { ...prevStructure };
-      
-      // Apply updates to each map
-      Object.entries(updates).forEach(([mapName, mapUpdates]) => {
-        if (newStructure[mapName] && mapUpdates) {
-          Object.entries(mapUpdates).forEach(([id, data]) => {
-            if (data === null) {
-              // Remove entry
-              newStructure[mapName].delete(id);
-            } else {
-              // Add or update entry
-              newStructure[mapName].set(id, data);
-            }
-          });
-        }
-      });
-      
-      // Save to localStorage
-      saveProjectStructure(projectId, newStructure);
-      
-      return newStructure;
-    });
-  };
-
-  // Persistent generation states helper functions
+  // Generation state helper functions
   const getGenerationStateKey = (projectId, type) => `generation-states-${projectId}-${type}`;
   
   const saveGenerationState = (projectId, type, nodeId, data) => {
@@ -165,7 +75,6 @@ function FlowWidget() {
         status: data.status || 'generating'
       };
       localStorage.setItem(key, JSON.stringify(existingStates));
-      console.log(`💾 Saved ${type} generation state for ${nodeId}:`, data);
     } catch (error) {
       console.error(`Error saving ${type} generation state:`, error);
     }
@@ -177,7 +86,6 @@ function FlowWidget() {
       const existingStates = JSON.parse(localStorage.getItem(key) || '{}');
       delete existingStates[nodeId];
       localStorage.setItem(key, JSON.stringify(existingStates));
-      console.log(`🗑️ Removed ${type} generation state for ${nodeId}`);
     } catch (error) {
       console.error(`Error removing ${type} generation state:`, error);
     }
@@ -187,18 +95,17 @@ function FlowWidget() {
     try {
       const key = getGenerationStateKey(projectId, type);
       const states = JSON.parse(localStorage.getItem(key) || '{}');
-      // Clean up states older than 1 hour (3600000 ms) or completed/error states older than 10 minutes
       const now = Date.now();
       const cleanedStates = {};
+      
       Object.entries(states).forEach(([nodeId, data]) => {
         const isGenerating = data.status === 'generating';
-        const maxAge = isGenerating ? 3600000 : 600000; // 1 hour for generating, 10 minutes for completed/error
+        const maxAge = isGenerating ? 3600000 : 600000;
         if (now - data.timestamp < maxAge) {
           cleanedStates[nodeId] = data;
-        } else {
-          console.log(`🧹 Cleaning up old ${type} state for ${nodeId} (age: ${Math.round((now - data.timestamp) / 60000)}min)`);
         }
       });
+      
       localStorage.setItem(key, JSON.stringify(cleanedStates));
       return cleanedStates;
     } catch (error) {
@@ -217,1197 +124,161 @@ function FlowWidget() {
     video: false
   });
 
-  // New state for all fetched data
+  // Project data state
   const [allProjectData, setAllProjectData] = useState({
     concepts: [],
-    scripts: [], // segmentations
+    scripts: [],
     segments: [],
     images: [],
     videos: [],
   });
 
-  // Project name state
   const [projectName, setProjectName] = useState("Untitled");
 
-  // Project structure mapping state - tracks relationships between nodes by ID
-  const [projectStructure, setProjectStructure] = useState({
-    userNodes: new Map(), // userNodeId -> { projectId, text, conceptIds: [] }
-    concepts: new Map(),  // conceptId -> { projectId, userNodeId, scriptIds: [] }
-    scripts: new Map(),   // scriptId -> { projectId, conceptId, segmentIds: [] }
-    segments: new Map(),  // segmentId -> { projectId, scriptId, imageIds: [] }
-    images: new Map(),    // imageId -> { projectId, segmentId, videoIds: [] }
-    videos: new Map()     // videoId -> { projectId, imageId }
-  });
 
-  // Flag to disable auto-generation during brush tool operations
+
   const [disableAutoGeneration, setDisableAutoGeneration] = useState(false);
 
   // Restore generation states on component load
   const restoreGenerationStates = useCallback(async () => {
-    let selectedProject = null;
     try {
       const storedProject = localStorage.getItem('project-store-selectedProject');
-      selectedProject = storedProject ? JSON.parse(storedProject) : null;
-    } catch (e) {
-      console.error('Error parsing project data:', e);
-      return;
-    }
-
-    if (!selectedProject) {
-      console.log('No project selected, skipping generation state restoration');
-      return;
-    }
-
-    const projectId = selectedProject.id;
-    console.log('🔄 Restoring generation states for project:', projectId);
-
-    // Restore concept generation states
-    const conceptStates = getGenerationStates(projectId, 'concept');
-    Object.entries(conceptStates).forEach(([nodeId, state]) => {
-      console.log('🔄 Restoring concept generation state:', nodeId, state);
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
-      // Check if this is an error state or if the generation has been running too long (15+ minutes)
-      const isError = state.status === 'error';
-      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
-      
-      if (isError || isTimedOut) {
-        console.log(`❌ Restoring concept error/timeout state for ${nodeId}`);
-        // Don't add to generating set if it's an error or timeout
-        const errorConceptNode = {
-          id: nodeId,
-          type: 'conceptNode',
-          position: state.position || { x: 400, y: 400 },
-          data: {
-            id: nodeId,
-            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate concepts'),
-            nodeState: 'error',
-            title: state.title || 'Error',
-            originalPrompt: state.originalPrompt,
-            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
+      if (!selectedProject) return;
+
+      const projectId = selectedProject.id;
+      const stateTypes = ['concept', 'script', 'image', 'video'];
+      const setterMap = {
+        concept: setGeneratingConcepts,
+        script: setGeneratingScripts, 
+        image: setGeneratingImages,
+        video: setGeneratingVideos
+      };
+
+      stateTypes.forEach(type => {
+        const states = getGenerationStates(projectId, type);
+        Object.entries(states).forEach(([nodeId, state]) => {
+          const isError = state.status === 'error';
+          const isTimedOut = (Date.now() - state.timestamp) > 900000;
+          
+          if (isError || isTimedOut) {
+            const errorNode = {
+              id: nodeId,
+              type: `${type}Node`,
+              position: state.position || { x: 400, y: 400 },
+              data: {
+                id: nodeId,
+                content: isTimedOut ? 'Generation timed out' : (state.errorMessage || `Failed to generate ${type}`),
+                nodeState: 'error',
+                title: state.title || 'Error',
+                error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed'),
+                ...state
+              }
+            };
+            
+            setNodes(prevNodes => {
+              const existingIndex = prevNodes.findIndex(n => n.id === nodeId);
+              if (existingIndex >= 0 && prevNodes[existingIndex].data?.nodeState === 'existing') {
+                return prevNodes;
+              }
+              const updatedNodes = [...prevNodes];
+              updatedNodes[existingIndex >= 0 ? existingIndex : updatedNodes.length] = errorNode;
+              return existingIndex >= 0 ? updatedNodes : [...prevNodes, errorNode];
+            });
+            
+            setTimeout(() => removeGenerationState(projectId, type, nodeId), 5000);
+            return;
           }
-        };
-        
-        setNodes(prevNodes => {
-          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-          if (existingNodeIndex >= 0) {
-            const existingNode = prevNodes[existingNodeIndex];
-            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+          
+          setterMap[type](prev => new Set(prev.add(nodeId)));
+          
+          const loadingNode = {
+            id: nodeId,
+            type: `${type}Node`,
+            position: state.position || { x: 400, y: 400 },
+            data: {
+              id: nodeId,
+              content: state.loadingMessage || `Generating ${type}...`,
+              nodeState: 'loading',
+              title: state.title || `Loading ${type}`,
+              ...state
+            }
+          };
+          
+          setNodes(prevNodes => {
+            const existingIndex = prevNodes.findIndex(n => n.id === nodeId);
+            if (existingIndex >= 0 && prevNodes[existingIndex].data?.nodeState === 'existing') {
               return prevNodes;
             }
             const updatedNodes = [...prevNodes];
-            updatedNodes[existingNodeIndex] = errorConceptNode;
-            return updatedNodes;
-          } else {
-            return [...prevNodes, errorConceptNode];
+            updatedNodes[existingIndex >= 0 ? existingIndex : updatedNodes.length] = loadingNode;
+            return existingIndex >= 0 ? updatedNodes : [...prevNodes, loadingNode];
+          });
+
+          if (state.parentNodeId) {
+            const edge = {
+              id: `${state.parentNodeId}-to-${nodeId}`,
+              source: state.parentNodeId,
+              target: nodeId,
+              sourceHandle: 'output',
+              targetHandle: 'input',
+              style: {
+                stroke: '#E9E8EB33',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
+              }
+            };
+            
+            setEdges(prevEdges => {
+              const existingIndex = prevEdges.findIndex(e => e.id === edge.id);
+              return existingIndex < 0 ? [...prevEdges, edge] : prevEdges;
+            });
           }
         });
-        
-        // Clean up the error state after showing it
-        setTimeout(() => {
-          removeGenerationState(projectId, 'concept', nodeId);
-        }, 5000);
-        
-        return; // Skip the rest of the restoration logic for this node
-      }
-      
-      setGeneratingConcepts(prev => new Set(prev.add(nodeId)));
-      
-      // Create or update the loading concept node
-      const loadingConceptNode = {
-        id: nodeId,
-        type: 'conceptNode',
-        position: state.position || { x: 400, y: 400 },
-        data: {
-          id: nodeId,
-          content: state.loadingMessage || 'Generating concepts...',
-          nodeState: 'loading',
-          title: state.title || 'Loading Concepts',
-          originalPrompt: state.originalPrompt
-        }
-      };
-      
-      // Add timeout handler for long-running generations
-      setTimeout(() => {
-        const currentStates = getGenerationStates(projectId, 'concept');
-        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
-          console.log(`⏰ Timing out concept generation for ${nodeId}`);
-          // Update state to error
-          saveGenerationState(projectId, 'concept', nodeId, {
-            ...currentStates[nodeId],
-            status: 'error',
-            errorMessage: 'Generation timed out after 15 minutes'
-          });
-          
-          // Update the node to show error
-          setNodes(prevNodes => prevNodes.map(node => {
-            if (node.id === nodeId) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  content: 'Generation timed out',
-                  error: 'Generation timed out after 15 minutes',
-                  nodeState: 'error'
-                }
-              };
-            }
-            return node;
-          }));
-          
-          // Remove from generating set
-          setGeneratingConcepts(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(nodeId);
-            return newSet;
-          });
-        }
-      }, 900000); // 15 minutes
-
-      setNodes(prevNodes => {
-        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-        if (existingNodeIndex >= 0) {
-          // Only update if the existing node is not already completed
-          const existingNode = prevNodes[existingNodeIndex];
-          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-            return prevNodes; // Don't overwrite completed nodes
-          }
-          // Update existing node
-          const updatedNodes = [...prevNodes];
-          updatedNodes[existingNodeIndex] = loadingConceptNode;
-          return updatedNodes;
-        } else {
-          // Add new node
-          return [...prevNodes, loadingConceptNode];
-        }
       });
-
-      // Restore edge if parent exists
-      if (state.parentNodeId) {
-        const loadingEdge = {
-          id: `${state.parentNodeId}-to-${nodeId}`,
-          source: state.parentNodeId,
-          target: nodeId,
-          sourceHandle: 'output',
-          targetHandle: 'input',
-          style: {
-            stroke: '#E9E8EB33',
-            strokeWidth: 2,
-            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-          }
-        };
-        
-        setEdges(prevEdges => {
-          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
-          if (existingEdgeIndex < 0) {
-            return [...prevEdges, loadingEdge];
-          }
-          return prevEdges;
-        });
-      }
-    });
-
-    // Restore script generation states
-    const scriptStates = getGenerationStates(projectId, 'script');
-    Object.entries(scriptStates).forEach(([nodeId, state]) => {
-      console.log('🔄 Restoring script generation state:', nodeId, state);
-      
-      // Check if this is an error state or if the generation has been running too long
-      const isError = state.status === 'error';
-      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
-      
-      if (isError || isTimedOut) {
-        console.log(`❌ Restoring script error/timeout state for ${nodeId}`);
-        const errorScriptNode = {
-          id: nodeId,
-          type: 'scriptNode',
-          position: state.position || { x: 400, y: 500 },
-          data: {
-            id: nodeId,
-            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate script'),
-            nodeState: 'error',
-            title: state.title || 'Error',
-            conceptContent: state.conceptContent,
-            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
-          }
-        };
-        
-        setNodes(prevNodes => {
-          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-          if (existingNodeIndex >= 0) {
-            const existingNode = prevNodes[existingNodeIndex];
-            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-              return prevNodes;
-            }
-            const updatedNodes = [...prevNodes];
-            updatedNodes[existingNodeIndex] = errorScriptNode;
-            return updatedNodes;
-          } else {
-            return [...prevNodes, errorScriptNode];
-          }
-        });
-        
-        setTimeout(() => {
-          removeGenerationState(projectId, 'script', nodeId);
-        }, 5000);
-        
-        return;
-      }
-      
-      setGeneratingScripts(prev => new Set(prev.add(nodeId)));
-      
-      const loadingScriptNode = {
-        id: nodeId,
-        type: 'scriptNode',
-        position: state.position || { x: 400, y: 500 },
-        data: {
-          id: nodeId,
-          content: state.loadingMessage || 'Generating scripts...',
-          nodeState: 'loading',
-          title: state.title || 'Loading Script',
-          conceptContent: state.conceptContent
-        }
-      };
-      
-      // Add timeout handler
-      setTimeout(() => {
-        const currentStates = getGenerationStates(projectId, 'script');
-        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
-          console.log(`⏰ Timing out script generation for ${nodeId}`);
-          saveGenerationState(projectId, 'script', nodeId, {
-            ...currentStates[nodeId],
-            status: 'error',
-            errorMessage: 'Generation timed out after 15 minutes'
-          });
-          
-          setNodes(prevNodes => prevNodes.map(node => {
-            if (node.id === nodeId) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  content: 'Generation timed out',
-                  error: 'Generation timed out after 15 minutes',
-                  nodeState: 'error'
-                }
-              };
-            }
-            return node;
-          }));
-          
-          setGeneratingScripts(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(nodeId);
-            return newSet;
-          });
-        }
-      }, 900000); // 15 minutes
-
-      setNodes(prevNodes => {
-        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-        if (existingNodeIndex >= 0) {
-          // Only update if the existing node is not already completed
-          const existingNode = prevNodes[existingNodeIndex];
-          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-            return prevNodes; // Don't overwrite completed nodes
-          }
-          const updatedNodes = [...prevNodes];
-          updatedNodes[existingNodeIndex] = loadingScriptNode;
-          return updatedNodes;
-        } else {
-          return [...prevNodes, loadingScriptNode];
-        }
-      });
-
-      if (state.parentNodeId) {
-        const loadingEdge = {
-          id: `${state.parentNodeId}-to-${nodeId}`,
-          source: state.parentNodeId,
-          target: nodeId,
-          sourceHandle: 'output',
-          targetHandle: 'input',
-          style: {
-            stroke: '#E9E8EB33',
-            strokeWidth: 2,
-            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-          }
-        };
-        
-        setEdges(prevEdges => {
-          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
-          if (existingEdgeIndex < 0) {
-            return [...prevEdges, loadingEdge];
-          }
-          return prevEdges;
-        });
-      }
-    });
-
-    // Restore image generation states
-    const imageStates = getGenerationStates(projectId, 'image');
-    Object.entries(imageStates).forEach(([nodeId, state]) => {
-      console.log('🔄 Restoring image generation state:', nodeId, state);
-      
-      // Check if this is an error state or if the generation has been running too long
-      const isError = state.status === 'error';
-      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
-      
-      if (isError || isTimedOut) {
-        console.log(`❌ Restoring image error/timeout state for ${nodeId}`);
-        const errorImageNode = {
-          id: nodeId,
-          type: 'imageNode',
-          position: state.position || { x: 400, y: 600 },
-          data: {
-            id: nodeId,
-            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate image'),
-            nodeState: 'error',
-            title: state.title || 'Error',
-            visualPrompt: state.visualPrompt,
-            artStyle: state.artStyle,
-            segmentId: state.segmentId,
-            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
-          }
-        };
-        
-        setNodes(prevNodes => {
-          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-          if (existingNodeIndex >= 0) {
-            const existingNode = prevNodes[existingNodeIndex];
-            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-              return prevNodes;
-            }
-            const updatedNodes = [...prevNodes];
-            updatedNodes[existingNodeIndex] = errorImageNode;
-            return updatedNodes;
-          } else {
-            return [...prevNodes, errorImageNode];
-          }
-        });
-        
-        setTimeout(() => {
-          removeGenerationState(projectId, 'image', nodeId);
-        }, 5000);
-        
-        return;
-      }
-      
-      setGeneratingImages(prev => new Set(prev.add(nodeId)));
-      
-      const loadingImageNode = {
-        id: nodeId,
-        type: 'imageNode',
-        position: state.position || { x: 400, y: 600 },
-        data: {
-          id: nodeId,
-          content: state.loadingMessage || 'Generating image...',
-          nodeState: 'loading',
-          title: state.title || 'Loading Image',
-          visualPrompt: state.visualPrompt,
-          artStyle: state.artStyle,
-          segmentId: state.segmentId
-        }
-      };
-      
-      // Add timeout handler
-      setTimeout(() => {
-        const currentStates = getGenerationStates(projectId, 'image');
-        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
-          console.log(`⏰ Timing out image generation for ${nodeId}`);
-          saveGenerationState(projectId, 'image', nodeId, {
-            ...currentStates[nodeId],
-            status: 'error',
-            errorMessage: 'Generation timed out after 15 minutes'
-          });
-          
-          setNodes(prevNodes => prevNodes.map(node => {
-            if (node.id === nodeId) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  content: 'Generation timed out',
-                  error: 'Generation timed out after 15 minutes',
-                  nodeState: 'error'
-                }
-              };
-            }
-            return node;
-          }));
-          
-          setGeneratingImages(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(nodeId);
-            return newSet;
-          });
-        }
-      }, 900000); // 15 minutes
-
-      setNodes(prevNodes => {
-        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-        if (existingNodeIndex >= 0) {
-          // Only update if the existing node is not already completed
-          const existingNode = prevNodes[existingNodeIndex];
-          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-            return prevNodes; // Don't overwrite completed nodes
-          }
-          const updatedNodes = [...prevNodes];
-          updatedNodes[existingNodeIndex] = loadingImageNode;
-          return updatedNodes;
-        } else {
-          return [...prevNodes, loadingImageNode];
-        }
-      });
-
-      if (state.parentNodeId) {
-        const loadingEdge = {
-          id: `${state.parentNodeId}-to-${nodeId}`,
-          source: state.parentNodeId,
-          target: nodeId,
-          sourceHandle: 'output',
-          targetHandle: 'input',
-          style: {
-            stroke: '#E9E8EB33',
-            strokeWidth: 2,
-            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-          }
-        };
-        
-        setEdges(prevEdges => {
-          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
-          if (existingEdgeIndex < 0) {
-            return [...prevEdges, loadingEdge];
-          }
-          return prevEdges;
-        });
-      }
-    });
-
-    // Restore video generation states
-    const videoStates = getGenerationStates(projectId, 'video');
-    Object.entries(videoStates).forEach(([nodeId, state]) => {
-      console.log('🔄 Restoring video generation state:', nodeId, state);
-      
-      // Check if this is an error state or if the generation has been running too long
-      const isError = state.status === 'error';
-      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
-      
-      if (isError || isTimedOut) {
-        console.log(`❌ Restoring video error/timeout state for ${nodeId}`);
-        const errorVideoNode = {
-          id: nodeId,
-          type: 'videoNode',
-          position: state.position || { x: 400, y: 700 },
-          data: {
-            id: nodeId,
-            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate video'),
-            nodeState: 'error',
-            title: state.title || 'Error',
-            animationPrompt: state.animationPrompt,
-            artStyle: state.artStyle,
-            segmentId: state.segmentId,
-            imageId: state.imageId,
-            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
-          }
-        };
-        
-        setNodes(prevNodes => {
-          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-          if (existingNodeIndex >= 0) {
-            const existingNode = prevNodes[existingNodeIndex];
-            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-              return prevNodes;
-            }
-            const updatedNodes = [...prevNodes];
-            updatedNodes[existingNodeIndex] = errorVideoNode;
-            return updatedNodes;
-          } else {
-            return [...prevNodes, errorVideoNode];
-          }
-        });
-        
-        setTimeout(() => {
-          removeGenerationState(projectId, 'video', nodeId);
-        }, 5000);
-        
-        return;
-      }
-      
-      setGeneratingVideos(prev => new Set(prev.add(nodeId)));
-      
-      const loadingVideoNode = {
-        id: nodeId,
-        type: 'videoNode',
-        position: state.position || { x: 400, y: 700 },
-        data: {
-          id: nodeId,
-          content: state.loadingMessage || 'Generating video...',
-          nodeState: 'loading',
-          title: state.title || 'Loading Video',
-          animationPrompt: state.animationPrompt,
-          artStyle: state.artStyle,
-          segmentId: state.segmentId,
-          imageId: state.imageId
-        }
-      };
-      
-      // Add timeout handler
-      setTimeout(() => {
-        const currentStates = getGenerationStates(projectId, 'video');
-        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
-          console.log(`⏰ Timing out video generation for ${nodeId}`);
-          saveGenerationState(projectId, 'video', nodeId, {
-            ...currentStates[nodeId],
-            status: 'error',
-            errorMessage: 'Generation timed out after 15 minutes'
-          });
-          
-          setNodes(prevNodes => prevNodes.map(node => {
-            if (node.id === nodeId) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  content: 'Generation timed out',
-                  error: 'Generation timed out after 15 minutes',
-                  nodeState: 'error'
-                }
-              };
-            }
-            return node;
-          }));
-          
-          setGeneratingVideos(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(nodeId);
-            return newSet;
-          });
-        }
-      }, 900000); // 15 minutes
-
-      setNodes(prevNodes => {
-        const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
-        if (existingNodeIndex >= 0) {
-          // Only update if the existing node is not already completed
-          const existingNode = prevNodes[existingNodeIndex];
-          if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
-            console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
-            return prevNodes; // Don't overwrite completed nodes
-          }
-          const updatedNodes = [...prevNodes];
-          updatedNodes[existingNodeIndex] = loadingVideoNode;
-          return updatedNodes;
-        } else {
-          return [...prevNodes, loadingVideoNode];
-        }
-      });
-
-      if (state.parentNodeId) {
-        const loadingEdge = {
-          id: `${state.parentNodeId}-to-${nodeId}`,
-          source: state.parentNodeId,
-          target: nodeId,
-          sourceHandle: 'output',
-          targetHandle: 'input',
-          style: {
-            stroke: '#E9E8EB33',
-            strokeWidth: 2,
-            filter: 'drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))'
-          }
-        };
-        
-        setEdges(prevEdges => {
-          const existingEdgeIndex = prevEdges.findIndex(e => e.id === loadingEdge.id);
-          if (existingEdgeIndex < 0) {
-            return [...prevEdges, loadingEdge];
-          }
-          return prevEdges;
-        });
-      }
-    });
-
-    console.log('✅ Generation states restored successfully');
-    
-    // Show a brief notification to user that states were restored
-    const restoredCount = Object.keys(conceptStates).length + 
-                         Object.keys(scriptStates).length + 
-                         Object.keys(imageStates).length + 
-                         Object.keys(videoStates).length;
-    
-    if (restoredCount > 0) {
-      console.log(`🔄 Restored ${restoredCount} generating node(s)`);
+    } catch (error) {
+      console.error('Error restoring generation states:', error);
     }
   }, [setNodes, setEdges, setGeneratingConcepts, setGeneratingScripts, setGeneratingImages, setGeneratingVideos]);
 
-  // Function to create flow elements from project structure using real API data
-  const createFlowFromProjectStructure = useCallback((projectId, structure, apiData = null) => {
-    console.log('🏗️ Creating flow from project structure:', structure);
-    console.log('📊 Using API data:', apiData);
-    
-    const newNodes = [];
-    const newEdges = [];
-    
-    // Use provided API data or fall back to current allProjectData
-    const dataSource = apiData || allProjectData;
-    
-    // Get selected project for context
-    let selectedProject = null;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      selectedProject = storedProject ? JSON.parse(storedProject) : null;
-    } catch (e) {
-      console.error('Error parsing project data:', e);
-    }
-    
-    // Create lookup maps for real content by ID
-    const conceptsById = new Map();
-    const scriptsById = new Map();
-    const segmentsById = new Map();
-    const imagesById = new Map();
-    const videosById = new Map();
-    
-    // Populate lookup maps with real API data
-    if (dataSource.concepts) {
-      dataSource.concepts.forEach(concept => {
-        conceptsById.set(concept.id, concept);
-      });
-    }
-    
-    if (dataSource.scripts) {
-      dataSource.scripts.forEach(script => {
-        scriptsById.set(script.id, script);
-      });
-    }
-    
-    if (dataSource.segments) {
-      dataSource.segments.forEach(segment => {
-        const segmentId = segment.segmentId || segment.id;
-        segmentsById.set(segmentId, segment);
-      });
-    }
-    
-    if (dataSource.images) {
-      dataSource.images.forEach(image => {
-        if (image && image.success && image.s3Key && image.uuid) {
-          imagesById.set(image.id, {
-            ...image,
-            url: `https://ds0fghatf06yb.cloudfront.net/${image.s3Key}`
-          });
-        }
-      });
-    }
-    
-    if (dataSource.videos) {
-      dataSource.videos.forEach(video => {
-        if (video && video.success && video.uuid && Array.isArray(video.videoFiles) && video.videoFiles.length > 0) {
-          videosById.set(video.id, {
-            ...video,
-            url: `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`
-          });
-        }
-      });
-    }
-    
-    console.log('📚 Created lookup maps:', {
-      concepts: conceptsById.size,
-      scripts: scriptsById.size,
-      segments: segmentsById.size,
-      images: imagesById.size,
-      videos: videosById.size
-    });
-    
-    // Tree Layout configuration
-    const levelHeight = 450;
-    const nodeWidth = 420;
-    const startX = 400;
-    const startY = 80;
-    let currentLevel = 0;
-    
-    // 1. Create User Nodes (Level 0 - Root)
-    structure.userNodes.forEach((userData, userNodeId) => {
-      if (userData.projectId === projectId) {
-        newNodes.push({
-          id: userNodeId,
-          type: "userNode",
-          position: { x: startX, y: startY + (currentLevel * levelHeight) },
-          data: {
-            id: userNodeId,
-            userText: userData.text,
-            projectId: projectId,
-            nodeState: 'user'
-          }
-        });
-        
-        currentLevel = 1; // Move to concept level
-        
-        // 2. Create Concept Nodes (Level 1 - Children of User Node)
-        if (userData.conceptIds && userData.conceptIds.length > 0) {
-          const conceptCount = userData.conceptIds.length;
-          const totalWidth = (conceptCount - 1) * nodeWidth;
-          const conceptStartX = startX - (totalWidth / 2);
-          
-          userData.conceptIds.forEach((conceptId, index) => {
-            const conceptData = structure.concepts.get(conceptId);
-            const realConceptData = conceptsById.get(conceptId);
-            
-            console.log(`💡 Processing concept ${conceptId}:`, { conceptData, realConceptData });
-            
-            if (conceptData && conceptData.projectId === projectId) {
-              const conceptNodeId = `concept-${conceptId}`;
-              const conceptX = conceptStartX + (index * nodeWidth);
-              
-              // Use real API data if available, otherwise use placeholder
-              const nodeData = realConceptData ? {
-                ...realConceptData,
-                id: conceptId,
-                conceptId: conceptId,
-                nodeState: 'existing',
-                content: realConceptData.content || realConceptData.text || realConceptData.concept || realConceptData.description || realConceptData.prompt || `Generated concept content`,
-                title: realConceptData.title || realConceptData.name || `Concept ${index + 1}`
-              } : {
-                id: conceptId,
-                conceptId: conceptId,
-                nodeState: 'existing',
-                title: `Concept ${index + 1}`,
-                content: `Generated concept content (API data not loaded)`
-              };
-              
-              newNodes.push({
-                id: conceptNodeId,
-                type: "conceptNode",
-                position: { x: conceptX, y: startY + (currentLevel * levelHeight) },
-                data: nodeData
-              });
-              
-              // Connect to user node
-              newEdges.push({
-                id: `${userNodeId}-to-${conceptNodeId}`,
-                source: userNodeId,
-                target: conceptNodeId,
-                sourceHandle: "output",
-                targetHandle: "input",
-                style: {
-                  stroke: "#E9E8EB33",
-                  strokeWidth: 2,
-                  filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
-                },
-              });
-              
-              // 3. Create Script Nodes (Level 2 - Children of Concepts)
-              if (conceptData.scriptIds && conceptData.scriptIds.length > 0) {
-                currentLevel = 2;
-                const scriptCount = conceptData.scriptIds.length;
-                const scriptSpacing = 450;
-                const scriptTotalWidth = (scriptCount - 1) * scriptSpacing;
-                const scriptStartX = conceptX - (scriptTotalWidth / 2);
-                
-                console.log(`📜 Creating ${scriptCount} scripts for concept ${conceptId}:`, conceptData.scriptIds);
-                
-                conceptData.scriptIds.forEach((scriptId, scriptIndex) => {
-                  const scriptData = structure.scripts.get(scriptId);
-                  const realScriptData = scriptsById.get(scriptId);
-                  
-                  if (scriptData && scriptData.projectId === projectId) {
-                    const scriptNodeId = `script-${scriptId}`;
-                    const scriptX = scriptStartX + (scriptIndex * scriptSpacing);
-                    
-                    // Use real API data if available, otherwise use placeholder
-                    const nodeData = realScriptData ? {
-                      ...realScriptData,
-                      id: scriptId,
-                      scriptId: scriptId,
-                      nodeState: 'existing',
-                      title: realScriptData.title || `Script ${scriptIndex + 1}`,
-                      content: `${realScriptData.title || 'Script'} - ${realScriptData.segments?.length || 0} segments`,
-                      segments: realScriptData.segments || [],
-                      artStyle: realScriptData.artStyle || "cinematic photography with soft lighting",
-                      concept: realScriptData.concept || ""
-                    } : {
-                      id: scriptId,
-                      scriptId: scriptId,
-                      nodeState: 'existing',
-                      title: `Script ${scriptIndex + 1}`,
-                      content: `Generated script content (API data not loaded)`
-                    };
-                    
-                    newNodes.push({
-                      id: scriptNodeId,
-                      type: "scriptNode",
-                      position: { x: scriptX, y: startY + (currentLevel * levelHeight) },
-                      data: nodeData
-                    });
-                    
-                    // Connect to concept
-                    const edgeId = `${conceptNodeId}-to-${scriptNodeId}`;
-                    console.log(`🔗 Creating edge: ${edgeId} (${conceptNodeId} -> ${scriptNodeId})`);
-                    
-                    newEdges.push({
-                      id: edgeId,
-                      source: conceptNodeId,
-                      target: scriptNodeId,
-                      sourceHandle: "output",
-                      targetHandle: "input",
-                      style: {
-                        stroke: "#E9E8EB33",
-                        strokeWidth: 2,
-                        filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
-                      },
-                    });
-                    
-                    // 4. Create Segment Nodes (Level 3 - Children of Scripts)
-                    if (scriptData.segmentIds && scriptData.segmentIds.length > 0) {
-                      currentLevel = 3;
-                      const segmentCount = scriptData.segmentIds.length;
-                      const segmentSpacing = 480;
-                      const segmentTotalWidth = (segmentCount - 1) * segmentSpacing;
-                      const segmentStartX = scriptX - (segmentTotalWidth / 2);
-                      
-                      scriptData.segmentIds.forEach((segmentId, segmentIndex) => {
-                        const segmentData = structure.segments.get(segmentId);
-                        const realSegmentData = segmentsById.get(segmentId);
-                        
-                        if (segmentData && segmentData.projectId === projectId) {
-                          const segmentNodeId = `segment-${segmentId}`;
-                          const segmentX = segmentStartX + (segmentIndex * segmentSpacing);
-                          
-                          // Use real API data if available, otherwise use placeholder
-                          const nodeData = realSegmentData ? {
-                            ...realSegmentData,
-                            id: segmentId,
-                            segmentId: segmentId,
-                            nodeState: 'existing',
-                            title: `Segment ${segmentIndex + 1}`,
-                            visual: realSegmentData.visual || `Segment ${segmentIndex + 1} visual`,
-                            narration: realSegmentData.narration || `Segment ${segmentIndex + 1} narration`,
-                            animation: realSegmentData.animation || `Segment ${segmentIndex + 1} animation`
-                          } : {
-                            id: segmentId,
-                            segmentId: segmentId,
-                            nodeState: 'existing',
-                            title: `Segment ${segmentIndex + 1}`,
-                            visual: `Segment ${segmentIndex + 1} visual (API data not loaded)`,
-                            narration: `Segment ${segmentIndex + 1} narration (API data not loaded)`,
-                            animation: `Segment ${segmentIndex + 1} animation (API data not loaded)`
-                          };
-                          
-                          newNodes.push({
-                            id: segmentNodeId,
-                            type: "segmentNode",
-                            position: { x: segmentX, y: startY + (currentLevel * levelHeight) },
-                            data: nodeData
-                          });
-                          
-                          // Connect to script
-                          newEdges.push({
-                            id: `${scriptNodeId}-to-${segmentNodeId}`,
-                            source: scriptNodeId,
-                            target: segmentNodeId,
-                            sourceHandle: "output",
-                            targetHandle: "input",
-                            style: {
-                              stroke: "#E9E8EB33",
-                              strokeWidth: 2,
-                              filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
-                            },
-                          });
-                          
-                          // 5. Create Image Nodes (Level 4 - Children of Segments)
-                          if (segmentData.imageIds && segmentData.imageIds.length > 0) {
-                            currentLevel = 4;
-                            const imageCount = segmentData.imageIds.length;
-                            const imageSpacing = 320;
-                            const imageTotalWidth = (imageCount - 1) * imageSpacing;
-                            const imageStartX = segmentX - (imageTotalWidth / 2);
-                            
-                            segmentData.imageIds.forEach((imageId, imageIndex) => {
-                              const imageData = structure.images.get(imageId);
-                              const realImageData = imagesById.get(imageId);
-                              
-                              if (imageData && imageData.projectId === projectId) {
-                                const imageNodeId = `image-${imageId}`;
-                                const imageX = imageStartX + (imageIndex * imageSpacing);
-                                
-                                // Use real API data if available, otherwise use placeholder
-                                const nodeData = realImageData ? {
-                                  ...realImageData,
-                                  id: imageId,
-                                  imageId: imageId,
-                                  nodeState: 'existing',
-                                  title: `Image ${imageIndex + 1}`,
-                                  segmentId: segmentId,
-                                  imageUrl: realImageData.url,
-                                  s3Key: realImageData.s3Key,
-                                  visualPrompt: realImageData.visualPrompt,
-                                  artStyle: realImageData.artStyle,
-                                  segmentData: realSegmentData || {}
-                                } : {
-                                  id: imageId,
-                                  imageId: imageId,
-                                  nodeState: 'existing',
-                                  title: `Image ${imageIndex + 1} (API data not loaded)`,
-                                  segmentId: segmentId,
-                                  content: `Generated image (API data not loaded)`
-                                };
-                                
-                                newNodes.push({
-                                  id: imageNodeId,
-                                  type: "imageNode",
-                                  position: { x: imageX, y: startY + (currentLevel * levelHeight) },
-                                  data: nodeData
-                                });
-                                
-                                // Connect to segment
-                                newEdges.push({
-                                  id: `${segmentNodeId}-to-${imageNodeId}`,
-                                  source: segmentNodeId,
-                                  target: imageNodeId,
-                                  sourceHandle: "output",
-                                  targetHandle: "input",
-                                  style: {
-                                    stroke: "#E9E8EB33",
-                                    strokeWidth: 2,
-                                    filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
-                                  },
-                                });
-                                
-                                // 6. Create Video Nodes (Level 5 - Children of Images)
-                                if (imageData.videoIds && imageData.videoIds.length > 0) {
-                                  currentLevel = 5;
-                                  
-                                  imageData.videoIds.forEach((videoId, videoIndex) => {
-                                    const videoData = structure.videos.get(videoId);
-                                    const realVideoData = videosById.get(videoId);
-                                    
-                                    if (videoData && videoData.projectId === projectId) {
-                                      const videoNodeId = `video-${videoId}`;
-                                      
-                                      // Use real API data if available, otherwise use placeholder
-                                      const nodeData = realVideoData ? {
-                                        ...realVideoData,
-                                        id: videoId,
-                                        videoId: videoId,
-                                        nodeState: 'existing',
-                                        title: `Video ${videoIndex + 1}`,
-                                        imageId: imageId,
-                                        segmentId: segmentId,
-                                        videoUrl: realVideoData.url,
-                                        animationPrompt: realVideoData.animationPrompt || realSegmentData?.animation || 'Smooth cinematic movement',
-                                        artStyle: realVideoData.artStyle || 'cinematic photography with soft lighting',
-                                        segmentData: realSegmentData || {}
-                                      } : {
-                                        id: videoId,
-                                        videoId: videoId,
-                                        nodeState: 'existing',
-                                        title: `Video ${videoIndex + 1} (API data not loaded)`,
-                                        imageId: imageId,
-                                        segmentId: segmentId,
-                                        content: `Generated video (API data not loaded)`
-                                      };
-                                      
-                                      newNodes.push({
-                                        id: videoNodeId,
-                                        type: "videoNode",
-                                        position: { x: imageX, y: startY + (currentLevel * levelHeight) },
-                                        data: nodeData
-                                      });
-                                      
-                                      // Connect to image
-                                      newEdges.push({
-                                        id: `${imageNodeId}-to-${videoNodeId}`,
-                                        source: imageNodeId,
-                                        target: videoNodeId,
-                                        sourceHandle: "output",
-                                        targetHandle: "input",
-                                        style: {
-                                          stroke: "#E9E8EB33",
-                                          strokeWidth: 2,
-                                          filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
-                                        },
-                                      });
-                                    }
-                                  });
-                                }
-                              }
-                            });
-                          }
-                        }
-                      });
-                    }
-                  }
-                });
-              }
-            }
-          });
-        }
-      }
-    });
-    
-    console.log(`🏗️ Created ${newNodes.length} nodes and ${newEdges.length} edges from project structure`);
-    console.log('📊 Final nodes:', newNodes.map(n => ({ id: n.id, type: n.type })));
-    console.log('📊 Final edges:', newEdges.map(e => ({ id: e.id, source: e.source, target: e.target })));
-    
-    if (newNodes.length > 0) {
-      setNodes(newNodes);
-      setEdges(newEdges);
-    }
-  }, [setNodes, setEdges, allProjectData]);
-
-  // Helper function to refresh project data
-  const refreshProjectData = useCallback(async () => {
-    if (!isAuthenticated) {
-      console.log("User not authenticated, skipping API calls");
-      return;
-    }
-
-    // Get project ID and name from localStorage
-    let projectId;
-    let projectName = "Untitled";
-    try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
-        projectId = project.id;
-        projectName = project.name || project.title || "Untitled";
-        setProjectName(projectName);
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
-
-    if (!projectId) {
-      console.log("No project ID found in localStorage");
-      setError("No project selected. Please select a project first.");
-      return;
-    }
-
-    console.log(
-      "Fetching project concepts, segmentations and related images/videos for project ID:",
-      projectId,
-    );
-    try {
-      setLoading(true);
-
-      // Fetch project concepts, segmentations, images, and videos in parallel
-      const [conceptsData, segmentationsData, imagesData, videosData] = await Promise.all([
-        projectApi.getProjectConcepts(projectId),
-        projectApi.getProjectSegmentations(projectId),
-        projectApi.getProjectImages(projectId),
-        projectApi.getProjectVideos(projectId),
-      ]);
-
-      console.log("Project data fetched successfully:");
-      console.log("Concepts:", conceptsData);
-      console.log("Segmentations:", segmentationsData);
-      console.log("Images:", imagesData);
-      console.log("Videos:", videosData);
-
-      // Extract concepts
-      let concepts = [];
-      if (
-        conceptsData &&
-        conceptsData.success &&
-        conceptsData.data &&
-        Array.isArray(conceptsData.data)
-      ) {
-        concepts = conceptsData.data;
-      }
-
-      // Extract scripts (segmentations) and segments
-      let scripts = [];
-      let segments = [];
-      if (
-        segmentationsData &&
-        segmentationsData.success &&
-        segmentationsData.data &&
-        segmentationsData.data.length > 0
-      ) {
-        scripts = segmentationsData.data;
-        
-        // Extract segments from the first segmentation for backward compatibility
-        const firstSegmentation = segmentationsData.data[0];
-        if (
-          firstSegmentation.segments &&
-          Array.isArray(firstSegmentation.segments)
-        ) {
-          segments = firstSegmentation.segments;
-        }
-      }
-
-      setAllProjectData({
-        concepts: concepts,
-        scripts: scripts,
-        segments: segments,
-        images: imagesData?.data || [],
-        videos: videosData?.data || [],
-      });
-
-      // Keep the old projectData for backward compatibility
-      // setProjectData({ success: true, project: { segments: segments } }); // This line was removed
-    } catch (error) {
-      console.error("Failed to fetch project data:", error);
-      setError("Failed to fetch project data");
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  // Toggle attribute on the custom element so we can style it via CSS
-  useEffect(() => {
-    const hostEl = document.querySelector("react-flow-widget");
-    if (hostEl) {
-      hostEl.setAttribute("data-open", open ? "true" : "false");
-    }
-  }, [open]);
 
 
 
-  // Load data from API (no localStorage fallback)
+
+  // Load data from API
   const flowData = useMemo(() => {
-    console.log("🔄 flowData useMemo called, allProjectData:", allProjectData);
-
-    // 1. Process concepts
+    // Process concepts
     const concepts = allProjectData.concepts.map((concept) => ({
-      ...concept, // Keep all original fields
+      ...concept,
       id: concept.id,
-      conceptId: concept.id, // Ensure conceptId is available for mapping
+      conceptId: concept.id,
       content: concept.content || concept.text || concept.concept || concept.description || concept.prompt || "",
       title: concept.title || concept.name || `Concept ${concept.id}`,
     }));
-    console.log("💡 Processed concepts:", concepts);
-    console.log("💡 Raw concept data:", allProjectData.concepts);
 
-    // 2. Process scripts (segmentations)
+    // Process scripts (segmentations)
     const scripts = allProjectData.scripts.map((script) => ({
       ...script,
       id: script.id,
-      scriptId: script.id, // Ensure scriptId is available for mapping
+      scriptId: script.id,
       artStyle: script.artStyle || "cinematic photography with soft lighting",
       concept: script.concept || "",
       segments: script.segments || [],
       title: script.title || `Script ${script.id}`,
     }));
-    console.log("📜 Processed scripts:", scripts);
 
-    // 3. Get segments from segmentation API response (backward compatibility)
+    // Process segments
     const segments = allProjectData.segments.map((seg) => ({
       ...seg,
-      id: seg.segmentId || seg.id, // Use segmentId for mapping
-      segmentId: seg.segmentId || seg.id, // Ensure segmentId is available for mapping
+      id: seg.segmentId || seg.id,
+      segmentId: seg.segmentId || seg.id,
       visual: seg.visual || "",
       narration: seg.narration || "",
       animation: seg.animation || "",
     }));
-    console.log("📋 Processed segments:", segments);
 
-    // 2. Build images/videos lookup by segmentId and store image details
+    // Build images lookup by segmentId
     const images = {};
     const imageDetails = {};
     const allImagesBySegment = {};
@@ -1415,15 +286,12 @@ function FlowWidget() {
     if (Array.isArray(allProjectData.images)) {
       allProjectData.images.forEach((img) => {
         if (img && img.success && img.s3Key && img.uuid) {
-          // Extract segmentId from uuid (handles both 'seg-2' and 'seg-2-1234567890' formats)
           const segmentId = img.uuid.replace(/^seg-(\d+)(?:-\d+)?$/, "$1");
 
-          // Initialize arrays if they don't exist
           if (!allImagesBySegment[segmentId]) {
             allImagesBySegment[segmentId] = [];
           }
 
-          // Add this image to the segment's image list
           allImagesBySegment[segmentId].push({
             id: img.id,
             url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
@@ -1431,16 +299,14 @@ function FlowWidget() {
             artStyle: img.artStyle,
             s3Key: img.s3Key,
             uuid: img.uuid,
-            isPrimary: !img.uuid.includes("-"), // Consider images without timestamp as primary
+            isPrimary: !img.uuid.includes("-"),
           });
         }
       });
 
-      // For backward compatibility, keep the first image as the main one
       Object.keys(allImagesBySegment).forEach((segmentId) => {
         const segmentImages = allImagesBySegment[segmentId];
         if (segmentImages.length > 0) {
-          // Sort by primary first, then by creation time (uuid timestamp)
           segmentImages.sort((a, b) => {
             if (a.isPrimary && !b.isPrimary) return -1;
             if (!a.isPrimary && b.isPrimary) return 1;
@@ -1454,11 +320,12 @@ function FlowWidget() {
             visualPrompt: primaryImage.visualPrompt,
             artStyle: primaryImage.artStyle,
             s3Key: primaryImage.s3Key,
-            allImages: segmentImages, // Store all images for the segment
+            allImages: segmentImages,
           };
         }
       });
     }
+    // Build videos lookup
     const videos = {};
     const videoDetails = {};
     if (Array.isArray(allProjectData.videos)) {
@@ -1471,7 +338,6 @@ function FlowWidget() {
           video.videoFiles.length > 0 &&
           video.videoFiles[0].s3Key
         ) {
-          // Handle both old segment-based format (seg-1) and new image-specific format (seg-1-imageId)
           const videoKey = video.uuid.replace(/^seg-/, "");
           const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
           
@@ -1484,29 +350,22 @@ function FlowWidget() {
         }
       });
     }
-    console.log("🖼️ Images map:", images);
-    console.log("📝 Image details:", imageDetails);
-    console.log("🎬 Videos map:", videos);
-    console.log("🎬 Video keys:", Object.keys(videos));
 
-    // Add temporary videos to the videos map
+    // Add temporary and saved videos
     temporaryVideos.forEach((videoUrl, key) => {
       videos[key] = videoUrl;
     });
 
-    // Load saved videos from localStorage
     try {
-      let selectedProject = null;
       const storedProject = localStorage.getItem('project-store-selectedProject');
       if (storedProject) {
-        selectedProject = JSON.parse(storedProject);
+        const selectedProject = JSON.parse(storedProject);
         const videoStorageKey = `generated-videos-${selectedProject.id}`;
         const savedVideos = JSON.parse(localStorage.getItem(videoStorageKey) || '{}');
         
         Object.entries(savedVideos).forEach(([key, videoData]) => {
           if (videoData && videoData.videoUrl) {
             videos[key] = videoData.videoUrl;
-            // Also add to video details if not already present
             if (!videoDetails[key]) {
               videoDetails[key] = {
                 id: videoData.videoId,
@@ -1516,20 +375,15 @@ function FlowWidget() {
             }
           }
         });
-        
-        console.log(`🎬 Loaded ${Object.keys(savedVideos).length} saved videos from localStorage`);
       }
     } catch (error) {
       console.error('Error loading saved videos from localStorage:', error);
     }
-
-    console.log("🎬 Videos map (including temporary and saved):", videos);
     return { concepts, scripts, segments, images, videos, imageDetails, videoDetails };
   }, [allProjectData, temporaryVideos]);
 
   // Create nodes and edges from flow data
   const createFlowElements = useCallback(() => {
-    console.log("🎯 createFlowElements called with flowData:", flowData);
     const newNodes = [];
     const newEdges = [];
 
@@ -1583,19 +437,14 @@ function FlowWidget() {
       }
     }
 
-    // 1. Create Concept Nodes (Level 1 - Children of User Node)
+    // Create Concept Nodes
     if (flowData.concepts && flowData.concepts.length > 0) {
-      console.log("💡 Creating concept nodes:", flowData.concepts.length);
-      console.log("💡 Concept data for nodes:", flowData.concepts);
-      
       const conceptCount = flowData.concepts.length;
       const totalWidth = (conceptCount - 1) * nodeWidth;
-      const conceptStartX = startX - (totalWidth / 2); // Center concepts under user node
+      const conceptStartX = startX - (totalWidth / 2);
       
       flowData.concepts.forEach((concept, index) => {
         const conceptX = conceptStartX + (index * nodeWidth);
-        
-        console.log(`💡 Creating concept node ${index}:`, concept);
         
         newNodes.push({
           id: `concept-${concept.id}`,
@@ -1604,7 +453,6 @@ function FlowWidget() {
           data: concept,
         });
         
-        // Connect to user node if it exists
         if (userNodeId) {
           newEdges.push({
             id: `${userNodeId}-to-concept-${concept.id}`,
@@ -1621,19 +469,15 @@ function FlowWidget() {
         }
       });
       
-      currentLevel++; // Move to next level
-    } else {
-      console.log("💡 No concepts found, flowData.concepts:", flowData.concepts);
+      currentLevel++;
     }
 
-    // 2. Create Script Nodes (Level 2 - Children of Concepts based on project structure)
+    // Create Script Nodes
     if (flowData.scripts && flowData.scripts.length > 0) {
-      console.log("📜 Creating script nodes:", flowData.scripts.length);
-      
       const scriptCount = flowData.scripts.length;
-      const scriptSpacing = 450; // Increased spacing between scripts
+      const scriptSpacing = 450;
       const totalWidth = (scriptCount - 1) * scriptSpacing;
-      const scriptStartX = startX - (totalWidth / 2); // Center scripts
+      const scriptStartX = startX - (totalWidth / 2);
       
       flowData.scripts.forEach((script, index) => {
         const scriptX = scriptStartX + (index * scriptSpacing);
@@ -1645,48 +489,9 @@ function FlowWidget() {
           data: script,
         });
 
-        // Connect scripts to their parent concepts based on project structure
         if (flowData.concepts && flowData.concepts.length > 0) {
-          // Find the concept this script belongs to from project structure
-          let parentConceptId = null;
-          
-          console.log(`🔍 Looking for parent concept for script ${script.id}`);
-          
-          // Check project structure for proper mapping
-          try {
-            const storedProject = localStorage.getItem('project-store-selectedProject');
-            const currentProject = storedProject ? JSON.parse(storedProject) : null;
-            
-            if (currentProject) {
-              const structure = loadProjectStructure(currentProject.id);
-              console.log(`📊 Available scripts in structure:`, Array.from(structure.scripts.keys()));
-              
-              // Look for this script in the structure
-              const scriptData = structure.scripts.get(script.id);
-              if (scriptData && scriptData.conceptId) {
-                console.log(`✅ Found script ${script.id} mapped to concept ${scriptData.conceptId}`);
-                
-                // Find the concept node ID that matches this conceptId
-                const matchingConcept = flowData.concepts.find(concept => concept.id === scriptData.conceptId);
-                if (matchingConcept) {
-                  parentConceptId = matchingConcept.id;
-                  console.log(`✅ Matched concept ${parentConceptId} for script ${script.id}`);
-                } else {
-                  console.warn(`⚠️ Concept ${scriptData.conceptId} not found in flowData.concepts`);
-                }
-              } else {
-                console.warn(`⚠️ Script ${script.id} not found in project structure or missing conceptId`);
-              }
-            }
-          } catch (e) {
-            console.error('Error loading project structure for script mapping:', e);
-          }
-          
-          // Only use fallback if no mapping found and log the issue
-          if (!parentConceptId) {
-            parentConceptId = flowData.concepts[0].id;
-            console.warn(`⚠️ Using fallback: connecting script ${script.id} to first concept ${parentConceptId}`);
-          }
+          // Default to first concept for now (simplified without project structure)
+          const parentConceptId = flowData.concepts[0].id;
           
           newEdges.push({
             id: `concept-${parentConceptId}-to-script-${script.id}`,
@@ -1703,17 +508,15 @@ function FlowWidget() {
         }
       });
       
-      currentLevel++; // Move to next level
+      currentLevel++;
     }
 
-    // 3. Create Segment Nodes (Level 3 - Children of Scripts based on project structure)
+    // Create Segment Nodes
     if (flowData.segments && flowData.segments.length > 0) {
-      console.log("📊 Creating segment nodes:", flowData.segments.length);
-      
       const segmentCount = flowData.segments.length;
-      const segmentSpacing = 480; // Increased space between segments
+      const segmentSpacing = 480;
       const totalWidth = (segmentCount - 1) * segmentSpacing;
-      const segmentStartX = startX - (totalWidth / 2); // Center segments
+      const segmentStartX = startX - (totalWidth / 2);
       
       flowData.segments.forEach((segment, index) => {
         const segmentX = segmentStartX + (index * segmentSpacing);
@@ -1732,48 +535,9 @@ function FlowWidget() {
           },
         });
 
-        // Connect segments to their parent scripts based on project structure
         if (flowData.scripts && flowData.scripts.length > 0) {
-          // Find the script this segment belongs to from project structure
-          let parentScriptId = null;
-          
-          console.log(`🔍 Looking for parent script for segment ${segment.id}`);
-          
-          // Check project structure for proper mapping
-          try {
-            const storedProject = localStorage.getItem('project-store-selectedProject');
-            const currentProject = storedProject ? JSON.parse(storedProject) : null;
-            
-            if (currentProject) {
-              const structure = loadProjectStructure(currentProject.id);
-              console.log(`📊 Available segments in structure:`, Array.from(structure.segments.keys()));
-              
-              // Look for this segment in the structure
-              const segmentData = structure.segments.get(segment.id);
-              if (segmentData && segmentData.scriptId) {
-                console.log(`✅ Found segment ${segment.id} mapped to script ${segmentData.scriptId}`);
-                
-                // Find the script node ID that matches this scriptId
-                const matchingScript = flowData.scripts.find(script => script.id === segmentData.scriptId);
-                if (matchingScript) {
-                  parentScriptId = matchingScript.id;
-                  console.log(`✅ Matched script ${parentScriptId} for segment ${segment.id}`);
-                } else {
-                  console.warn(`⚠️ Script ${segmentData.scriptId} not found in flowData.scripts`);
-                }
-              } else {
-                console.warn(`⚠️ Segment ${segment.id} not found in project structure or missing scriptId`);
-              }
-            }
-          } catch (e) {
-            console.error('Error loading project structure for segment mapping:', e);
-          }
-          
-          // Only use fallback if no mapping found and log the issue
-          if (!parentScriptId) {
-            parentScriptId = flowData.scripts[0].id;
-            console.warn(`⚠️ Using fallback: connecting segment ${segment.id} to first script ${parentScriptId}`);
-          }
+          // Default to first script for now (simplified without project structure)
+          const parentScriptId = flowData.scripts[0].id;
           
           newEdges.push({
             id: `script-${parentScriptId}-to-segment-${segment.id}`,
@@ -1790,10 +554,10 @@ function FlowWidget() {
         }
       });
       
-      currentLevel++; // Move to next level
+      currentLevel++;
 
-      // 4. Create Image Nodes for segments that have images (Level 4)
-      let imageNodesBySegment = new Map(); // Group images by their parent segment
+      // Create Image Nodes for segments that have images
+      let imageNodesBySegment = new Map();
       flowData.segments.forEach((segment, segmentIndex) => {
         const imageDetail = flowData.imageDetails[segment.id];
         if (flowData.images[segment.id] && imageDetail?.allImages) {
@@ -1807,20 +571,18 @@ function FlowWidget() {
       });
       
       if (imageNodesBySegment.size > 0) {
-        // Calculate segment positions to center images under their parent segments
-        const segmentSpacing = 480; // Match segment spacing
+        const segmentSpacing = 480;
         
         imageNodesBySegment.forEach((segmentData, segmentId) => {
           const { segment, segmentIndex, images, imageDetail } = segmentData;
           
-          // Find the actual position of this segment's node
           const segmentNode = newNodes.find(n => n.id === `segment-${segment.id}`);
           const segmentX = segmentNode ? segmentNode.position.x : (startX + segmentIndex * segmentSpacing);
           
-          const imageSpacing = 320; // Spacing between images
+          const imageSpacing = 320;
           const imageCount = images.length;
           const imagesTotalWidth = (imageCount - 1) * imageSpacing;
-          const imageStartX = segmentX - (imagesTotalWidth / 2); // Center under parent segment
+          const imageStartX = segmentX - (imagesTotalWidth / 2);
           
           images.forEach((image, imageIndex) => {
             const imageX = imageStartX + (imageIndex * imageSpacing);
@@ -1848,7 +610,6 @@ function FlowWidget() {
               },
             });
             
-            // Connect image to its parent segment
             newEdges.push({
               id: `segment-${segment.id}-to-image-${segment.id}-${image.id}`,
               source: `segment-${segment.id}`,
@@ -1864,24 +625,22 @@ function FlowWidget() {
           });
         });
         
-        currentLevel++; // Move to next level for videos
+        currentLevel++;
       }
 
-      // 5. Create Video Nodes for images that have videos (Level 5 - Leaf nodes)
-      let videoNodesByImage = new Map(); // Group videos by their parent image
-      let usedSegmentVideos = new Set(); // Track which segment videos have been assigned
+      // Create Video Nodes for images that have videos
+      let videoNodesByImage = new Map();
+      let usedSegmentVideos = new Set();
       
       flowData.segments.forEach((segment, segmentIndex) => {
         const imageDetail = flowData.imageDetails[segment.id];
         if (flowData.images[segment.id] && imageDetail?.allImages) {
           imageDetail.allImages.forEach((image, imageIndex) => {
-            // First, check for image-specific video
             const imageVideoKey = `${segment.id}-${image.id}`;
             let videoUrl = flowData.videos[imageVideoKey];
             let videoId = flowData?.videoDetails?.[imageVideoKey]?.id;
             let videoKey = imageVideoKey;
             
-            // If no image-specific video, check for segment video (but only assign to first image to avoid duplicates)
             if (!videoUrl && !usedSegmentVideos.has(segment.id)) {
               const segmentVideoUrl = flowData.videos[segment.id];
               const segmentVideoId = flowData?.videoDetails?.[segment.id]?.id;
@@ -1889,20 +648,10 @@ function FlowWidget() {
               if (segmentVideoUrl) {
                 videoUrl = segmentVideoUrl;
                 videoId = segmentVideoId;
-                videoKey = `${segment.id}-${image.id}`; // Still use image-specific key for consistency
-                usedSegmentVideos.add(segment.id); // Mark this segment video as used
-                
-                console.log(`🎬 Assigning segment video ${segment.id} to first image ${image.id}`);
+                videoKey = `${segment.id}-${image.id}`;
+                usedSegmentVideos.add(segment.id);
               }
             }
-            
-            console.log(`🎬 Checking video for segment ${segment.id}, image ${image.id}:`, {
-              imageVideoKey,
-              hasImageVideo: !!flowData.videos[imageVideoKey],
-              hasSegmentVideo: !!flowData.videos[segment.id],
-              finalVideoUrl: videoUrl ? videoUrl.substring(0, 50) + '...' : 'none',
-              videoKey
-            });
             
             if (videoUrl) {
               videoNodesByImage.set(videoKey, {
@@ -1918,16 +667,13 @@ function FlowWidget() {
         }
       });
       
-      console.log(`🎬 Found ${videoNodesByImage.size} video nodes to create`);
-      
       if (videoNodesByImage.size > 0) {
         videoNodesByImage.forEach((videoData, key) => {
           const { segment, segmentIndex, image, imageIndex, videoUrl, videoId } = videoData;
           
-          // Find the actual position of the parent image node
           const imageNodeId = `image-${segment.id}-${image.id}`;
           const imageNode = newNodes.find(n => n.id === imageNodeId);
-          const videoX = imageNode ? imageNode.position.x : startX; // Center under parent image
+          const videoX = imageNode ? imageNode.position.x : startX;
           
           newNodes.push({
             id: `video-${segment.id}-${image.id}`,
@@ -1938,7 +684,7 @@ function FlowWidget() {
               imageId: image.id,
               videoUrl: videoUrl,
               videoId: videoId,
-              nodeState: 'existing', // Mark as existing/generated so sidebar can show
+              nodeState: 'existing',
               segmentData: {
                 id: segment.id,
                 animation: segment.animation,
@@ -1948,7 +694,6 @@ function FlowWidget() {
             },
           });
           
-          // Connect video to its parent image
           newEdges.push({
             id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
             source: `image-${segment.id}-${image.id}`,
@@ -1962,7 +707,6 @@ function FlowWidget() {
             },
           });
         });
-
       }
     }
 
@@ -1970,20 +714,14 @@ function FlowWidget() {
     setEdges(newEdges);
   }, [flowData, setNodes, setEdges]);
 
-  // Function to fetch project concepts, segmentations and related images/videos
+  // Fetch project data from API
   const fetchAllProjectData = useCallback(async () => {
-    if (!isAuthenticated) {
-      console.log("User not authenticated, skipping API calls");
-      return;
-    }
+    if (!isAuthenticated) return;
 
-    // Get project ID and name from localStorage
     let projectId;
     let projectName = "Untitled";
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
+      const storedProject = localStorage.getItem('project-store-selectedProject');
       if (storedProject) {
         const project = JSON.parse(storedProject);
         projectId = project.id;
@@ -1995,19 +733,11 @@ function FlowWidget() {
     }
 
     if (!projectId) {
-      console.log("No project ID found in localStorage");
       setError("No project selected. Please select a project first.");
       return;
     }
 
-    console.log(
-      "Fetching project concepts, segmentations and related images/videos for project ID:",
-      projectId,
-    );
     try {
-      setLoading(true);
-
-      // Fetch project concepts, segmentations, images, and videos in parallel
       const [conceptsData, segmentationsData, imagesData, videosData] = await Promise.all([
         projectApi.getProjectConcepts(projectId),
         projectApi.getProjectSegmentations(projectId),
@@ -2015,88 +745,50 @@ function FlowWidget() {
         projectApi.getProjectVideos(projectId),
       ]);
 
-      console.log("Project data fetched successfully:");
-      console.log("Concepts:", conceptsData);
-      console.log("Segmentations:", segmentationsData);
-      console.log("Images:", imagesData);
-      console.log("Videos:", videosData);
-
-      // Extract concepts
       let concepts = [];
-      if (
-        conceptsData &&
-        conceptsData.success &&
-        conceptsData.data &&
-        Array.isArray(conceptsData.data)
-      ) {
+      if (conceptsData?.success && Array.isArray(conceptsData.data)) {
         concepts = conceptsData.data;
       }
 
-      // Extract scripts (segmentations) and segments
       let scripts = [];
       let segments = [];
-      if (
-        segmentationsData &&
-        segmentationsData.success &&
-        segmentationsData.data &&
-        segmentationsData.data.length > 0
-      ) {
+      if (segmentationsData?.success && segmentationsData.data?.length > 0) {
         scripts = segmentationsData.data;
-        
-        // Extract segments from the first segmentation for backward compatibility
         const firstSegmentation = segmentationsData.data[0];
-        if (
-          firstSegmentation.segments &&
-          Array.isArray(firstSegmentation.segments)
-        ) {
+        if (Array.isArray(firstSegmentation.segments)) {
           segments = firstSegmentation.segments;
         }
       }
 
       setAllProjectData({
-        concepts: concepts,
-        scripts: scripts,
-        segments: segments,
+        concepts,
+        scripts,
+        segments,
         images: imagesData?.data || [],
         videos: videosData?.data || [],
       });
-
-      // Keep the old projectData for backward compatibility
-      // setProjectData({ success: true, project: { segments: segments } }); // This line was removed
     } catch (error) {
       console.error("Failed to fetch project data:", error);
       setError("Failed to fetch project data");
-    } finally {
-      setLoading(false);
     }
   }, [isAuthenticated]);
 
-  // Handle tidy/layout arrangement - just improve spacing and layout
+  // Handle tidy/layout arrangement
   const handleTidyLayout = useCallback(() => {
-    console.log("🎨 Tidy tool: Arranging layout for better spacing");
-    
-    if (!rfInstance) {
-      console.log("ReactFlow instance not available");
-      return;
-    }
+    if (!rfInstance) return;
     
     try {
-      // Get current nodes and arrange them with better spacing
-      const currentNodes = nodes.map((node, index) => {
-        // Create a more organized layout based on node types and levels
+      const levelHeight = 500;
+      const nodeSpacing = 450;
+      const startX = 400;
+      const startY = 100;
+      
+      const currentNodes = nodes.map((node) => {
         let newPosition = { ...node.position };
         
-        // Tree Layout configuration for better spacing
-        const levelHeight = 500; // More space between levels
-        const nodeSpacing = 450; // More space between nodes at same level
-        const startX = 400;
-        const startY = 100;
-        
-        // Determine node level and position based on type and connections
         if (node.type === 'userNode') {
           newPosition = { x: startX, y: startY };
         } else if (node.type === 'conceptNode') {
-          // Find all concept nodes and arrange them horizontally
           const conceptNodes = nodes.filter(n => n.type === 'conceptNode');
           const conceptIndex = conceptNodes.findIndex(n => n.id === node.id);
           const totalWidth = (conceptNodes.length - 1) * nodeSpacing;
@@ -2105,7 +797,6 @@ function FlowWidget() {
             y: startY + levelHeight 
           };
         } else if (node.type === 'scriptNode') {
-          // Find parent concept and arrange scripts under it
           const scriptNodes = nodes.filter(n => n.type === 'scriptNode');
           const scriptIndex = scriptNodes.findIndex(n => n.id === node.id);
           const totalWidth = (scriptNodes.length - 1) * nodeSpacing;
@@ -2114,7 +805,6 @@ function FlowWidget() {
             y: startY + (levelHeight * 2) 
           };
         } else if (node.type === 'segmentNode') {
-          // Arrange segments horizontally
           const segmentNodes = nodes.filter(n => n.type === 'segmentNode');
           const segmentIndex = segmentNodes.findIndex(n => n.id === node.id);
           const totalWidth = (segmentNodes.length - 1) * 480;
@@ -2123,7 +813,6 @@ function FlowWidget() {
             y: startY + (levelHeight * 3) 
           };
         } else if (node.type === 'imageNode') {
-          // Arrange images under their segments
           const imageNodes = nodes.filter(n => n.type === 'imageNode');
           const imageIndex = imageNodes.findIndex(n => n.id === node.id);
           const totalWidth = (imageNodes.length - 1) * 350;
@@ -2132,7 +821,6 @@ function FlowWidget() {
             y: startY + (levelHeight * 4) 
           };
         } else if (node.type === 'videoNode') {
-          // Arrange videos under their images
           const videoNodes = nodes.filter(n => n.type === 'videoNode');
           const videoIndex = videoNodes.findIndex(n => n.id === node.id);
           const totalWidth = (videoNodes.length - 1) * 350;
@@ -2142,26 +830,18 @@ function FlowWidget() {
           };
         }
         
-        return {
-          ...node,
-          position: newPosition
-        };
+        return { ...node, position: newPosition };
       });
       
-      // Update nodes with new positions
       setNodes(currentNodes);
       
-      // Fit view to show all nodes with padding
       setTimeout(() => {
         rfInstance.fitView({ 
           padding: 0.2, 
           includeHiddenNodes: true,
-          duration: 800 // Smooth animation
+          duration: 800
         });
       }, 100);
-      
-      console.log("🎨 Layout arranged successfully with improved spacing");
-      
     } catch (error) {
       console.error("Error arranging layout:", error);
     }
@@ -2183,7 +863,7 @@ function FlowWidget() {
 
   // Handle chat message for concept generation
   const handleChatMessage = useCallback(async (message, nodeId, nodeType, model) => {
-    console.log('Chat message received:', { message, nodeId, nodeType, model });
+    
     
     // Remove chat node after sending message
     setNodes((prevNodes) =>
@@ -2230,16 +910,7 @@ function FlowWidget() {
       };
       localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
 
-      // Update project structure mapping for user node
-      updateProjectStructure(selectedProject.id, {
-        userNodes: {
-          [nodeId]: {
-            projectId: selectedProject.id,
-            text: message,
-            conceptIds: [] // Will be populated when concepts are generated
-          }
-        }
-      });
+
       
       // Update state
       setUserConcepts(prev => new Map(prev.set(nodeId, message)));
@@ -2312,34 +983,28 @@ function FlowWidget() {
       try {
         setGeneratingConcepts(prev => new Set(prev.add(loadingConceptNodeId)));
         
-        console.log("Starting concept generation pipeline...");
+
         
         // First call web-info API (following ChatWidget pattern)
         const webInfoResult = await webInfoApi.processWebInfo(
           message,
           selectedProject.id,
         );
-        console.log("Web-info response:", webInfoResult);
-
-        // Then call concept-writer API
         const webInfoContent = webInfoResult.choices[0].message.content;
         const conceptsResponse = await conceptWriterApi.generateConcepts(
           message,
           webInfoContent,
           selectedProject.id,
         );
-        console.log("Concept-writer response:", conceptsResponse);
-        console.log("Number of concepts returned:", conceptsResponse?.concepts?.length || 0);
         
         if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
           // Remove persistent generation state and clean up localStorage
           removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
           
-          // Clean up any user node data that was used for this generation
+          // Mark user data as processed
           try {
             const userNodeDataKey = `userNodeData-${selectedProject.id}`;
             const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-            // Keep the user data but mark it as processed
             Object.keys(existingUserNodeData).forEach(key => {
               if (existingUserNodeData[key].text === message) {
                 existingUserNodeData[key].processed = true;
@@ -2347,7 +1012,6 @@ function FlowWidget() {
               }
             });
             localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
-            console.log('✅ Marked user input as processed in localStorage');
           } catch (error) {
             console.error('Error updating user node data:', error);
           }
@@ -2392,7 +1056,7 @@ function FlowWidget() {
             };
           });
           
-          console.log(`Creating ${conceptCount} concept nodes from backend response:`, conceptsResponse.concepts);
+
           
           // Create edges connecting user node to generated concepts
           const newEdges = conceptsResponse.concepts.map((_, index) => {
@@ -2415,40 +1079,9 @@ function FlowWidget() {
           setNodes(prevNodes => [...prevNodes, ...newConceptNodes]);
           setEdges(prevEdges => [...prevEdges, ...newEdges]);
           
-          // Update project structure mappings
-          const conceptMappings = {};
-          const userNodeUpdates = {};
+
           
-          conceptsResponse.concepts.forEach((concept, index) => {
-            const conceptId = concept.id || `concept-${index}-${timestamp}`;
-            
-            // Map each concept to the user node and project
-            conceptMappings[conceptId] = {
-              projectId: selectedProject.id,
-              userNodeId: nodeId,
-              scriptIds: [] // Will be populated when scripts are generated
-            };
-          });
-          
-          // Update user node to include concept IDs
-          userNodeUpdates[nodeId] = {
-            projectId: selectedProject.id,
-            text: message,
-            conceptIds: conceptIds
-          };
-          
-          // Apply all mappings to project structure
-          updateProjectStructure(selectedProject.id, {
-            concepts: conceptMappings,
-            userNodes: userNodeUpdates
-          });
-          
-          console.log(`📊 Updated project structure with ${conceptIds.length} concepts mapped to user node ${nodeId}`);
-          
-          // Mark concept generation as completed (preserve existing states)
           setTaskCompletionStates(prev => ({ ...prev, concept: true }));
-          
-          console.log(`Generated ${conceptsResponse.concepts.length} concept nodes`);
         } else {
           throw new Error('Invalid response format from concept generation API');
         }
@@ -2481,8 +1114,7 @@ function FlowWidget() {
           return node;
         }));
         
-        // Clean up error state after 5 seconds
-        setTimeout(() => {
+          setTimeout(() => {
           removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
         }, 5000);
       } finally {
@@ -2658,7 +1290,7 @@ function FlowWidget() {
     createFlowElements();
   }, [createFlowElements]);
   
-  // Load user concepts and project structure from localStorage on mount
+  // Load user concepts on mount
   useEffect(() => {
     const projectData = localStorage.getItem('project-store-selectedProject');
     if (projectData) {
@@ -2666,30 +1298,11 @@ function FlowWidget() {
         const project = JSON.parse(projectData);
         const projectId = project.id;
         
-        // Load user concepts (existing functionality)
         const userConceptsKey = `user-concepts-${projectId || 'default'}`;
         const existingUserConcepts = JSON.parse(localStorage.getItem(userConceptsKey) || '{}');
         setUserConcepts(new Map(Object.entries(existingUserConcepts)));
-        
-        // Load project structure mappings
-        if (projectId) {
-          const structure = loadProjectStructure(projectId);
-          setProjectStructure(structure);
-          console.log('🏗️ Project structure loaded on mount:', structure);
-          
-          // Create flow elements from stored project structure if it has data
-          const hasStoredStructure = structure.userNodes.size > 0 || 
-                                    structure.concepts.size > 0 || 
-                                    structure.scripts.size > 0;
-          
-          if (hasStoredStructure) {
-            console.log('📊 Found existing project structure, will create flow elements after API data loads...');
-            // Store the structure to use later after API data is loaded
-            window.pendingProjectStructure = { projectId, structure };
-          }
-        }
       } catch (e) {
-        console.error('Error loading user concepts and project structure:', e);
+        console.error('Error loading user concepts:', e);
       }
     }
   }, []);
@@ -2701,7 +1314,7 @@ function FlowWidget() {
       
       // Skip auto-generation if disabled (e.g., during brush tool operations)
       if (disableAutoGeneration) {
-        console.log("🚫 Auto-generation disabled, skipping connection logic");
+
         return;
       }
       
@@ -2915,42 +1528,7 @@ function FlowWidget() {
         setNodes(prevNodes => [...prevNodes, ...newScriptNodes]);
         setEdges(prevEdges => [...prevEdges, ...newEdges]);
         
-        // Update project structure mappings for scripts
-        const conceptId = conceptNode.data?.conceptId || conceptNode.data?.id;
-        if (conceptId) {
-          const scriptMappings = {};
-          const conceptUpdates = {};
-          
-          // Map both scripts to the concept
-          scriptMappings[script1Id] = {
-            projectId: selectedProject.id,
-            conceptId: conceptId,
-            segmentIds: [] // Will be populated when segments are created
-          };
-          
-          scriptMappings[script2Id] = {
-            projectId: selectedProject.id,
-            conceptId: conceptId,
-            segmentIds: [] // Will be populated when segments are created
-          };
-          
-          // Get existing concept data to preserve userNodeId and add script IDs
-          const existingConceptData = projectStructure.concepts.get(conceptId) || {};
-          conceptUpdates[conceptId] = {
-            projectId: selectedProject.id,
-            userNodeId: existingConceptData.userNodeId || conceptNode.data?.userNodeId || 'unknown',
-            scriptIds: [...(existingConceptData.scriptIds || []), script1Id, script2Id] // Add to existing scripts
-          };
-          
-          // Apply mappings to project structure
-          updateProjectStructure(selectedProject.id, {
-            scripts: scriptMappings,
-            concepts: conceptUpdates
-          });
-          
-          console.log(`📊 Updated project structure with scripts ${script1Id}, ${script2Id} mapped to concept ${conceptId}`);
-          console.log(`📊 Concept ${conceptId} now has scripts:`, conceptUpdates[conceptId].scriptIds);
-        }
+
         
         // Mark script generation as completed
         setTaskCompletionStates(prev => ({ ...prev, script: true }));
@@ -3067,45 +1645,7 @@ function FlowWidget() {
     setNodes(prevNodes => [...prevNodes, ...newSegmentNodes]);
     setEdges(prevEdges => [...prevEdges, ...newEdges]);
     
-    // Update project structure mappings for segments
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      if (storedProject) {
-        const selectedProject = JSON.parse(storedProject);
-        const scriptId = scriptNode.data?.scriptId || scriptNode.data?.id;
-        
-        if (scriptId) {
-          const segmentMappings = {};
-          const scriptUpdates = {};
-          
-          // Map each segment to the script
-          segmentIds.forEach((segmentId) => {
-            segmentMappings[segmentId] = {
-              projectId: selectedProject.id,
-              scriptId: scriptId,
-              imageIds: [] // Will be populated when images are generated
-            };
-          });
-          
-          // Update script to include segment IDs
-          scriptUpdates[scriptId] = {
-            projectId: selectedProject.id,
-            conceptId: scriptNode.data?.conceptId || 'unknown',
-            segmentIds: segmentIds
-          };
-          
-          // Apply mappings to project structure
-          updateProjectStructure(selectedProject.id, {
-            segments: segmentMappings,
-            scripts: scriptUpdates
-          });
-          
-          console.log(`📊 Updated project structure with ${segmentIds.length} segments mapped to script ${scriptId}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error updating project structure for segments:', error);
-    }
+
     
     // Mark segment creation as completed
     setTaskCompletionStates(prev => ({ ...prev, segment: true }));
@@ -3216,34 +1756,7 @@ function FlowWidget() {
           return node;
         }));
         
-        // Update project structure mappings for image
-        const segmentIdFromData = segmentNode.data?.segmentId || segmentNode.data?.id;
-        if (segmentIdFromData && imageResponse.id) {
-          const imageMappings = {};
-          const segmentUpdates = {};
-          
-          // Map image to the segment
-          imageMappings[imageResponse.id] = {
-            projectId: selectedProject.id,
-            segmentId: segmentIdFromData,
-            videoIds: [] // Will be populated when videos are generated
-          };
-          
-          // Update segment to include image ID
-          segmentUpdates[segmentIdFromData] = {
-            projectId: selectedProject.id,
-            scriptId: segmentNode.data?.scriptId || 'unknown',
-            imageIds: [imageResponse.id] // Add to existing imageIds or create new array
-          };
-          
-          // Apply mappings to project structure
-          updateProjectStructure(selectedProject.id, {
-            images: imageMappings,
-            segments: segmentUpdates
-          });
-          
-          console.log(`📊 Updated project structure with image ${imageResponse.id} mapped to segment ${segmentIdFromData}`);
-        }
+
         
         console.log(`Generated image for segment ${segmentId}`);
         
@@ -3885,33 +2398,7 @@ function FlowWidget() {
           return node;
         }));
         
-        // Update project structure mappings for video
-        const imageId = imageNode.data?.imageId;
-        if (imageId && videoResponse.id) {
-          const videoMappings = {};
-          const imageUpdates = {};
-          
-          // Map video to the image
-          videoMappings[videoResponse.id] = {
-            projectId: selectedProject.id,
-            imageId: imageId
-          };
-          
-          // Update image to include video ID
-          imageUpdates[imageId] = {
-            projectId: selectedProject.id,
-            segmentId: imageNode.data?.segmentId || 'unknown',
-            videoIds: [videoResponse.id] // Add to existing videoIds or create new array
-          };
-          
-          // Apply mappings to project structure
-          updateProjectStructure(selectedProject.id, {
-            videos: videoMappings,
-            images: imageUpdates
-          });
-          
-          console.log(`📊 Updated project structure with video ${videoResponse.id} mapped to image ${imageId}`);
-        }
+
         
         // Store temporary video for immediate display
         setTemporaryVideos(prev => {
@@ -4003,168 +2490,72 @@ function FlowWidget() {
     }
   }, [setNodes, setTemporaryVideos, setError]);
 
-  // Keep the graph within bounds when nodes/edges change
-  useEffect(() => {
-    if (rfInstance) {
-      requestAnimationFrame(() => {
-        try {
-          // Only fitView on initial load, not when nodes/edges change
-          // This prevents zoom reset when clicking elsewhere
-          if (nodes.length === 0 && edges.length === 0) {
-            rfInstance.fitView({ padding: 0.2, includeHiddenNodes: true });
-          }
-        } catch (e) {
-          // no-op
-        }
-      });
-    }
-  }, [rfInstance, nodes.length, edges.length]);
+
 
   useEffect(() => {
     fetchAllProjectData();
   }, [fetchAllProjectData]);
 
-  // Create flow from project structure after API data is loaded
-  useEffect(() => {
-    if (allProjectData && Object.keys(allProjectData).length > 0 && window.pendingProjectStructure) {
-      const { projectId, structure } = window.pendingProjectStructure;
-      console.log('📊 API data loaded, now creating flow from project structure with real content...');
-      
-      // Create flow elements with real API data
-      createFlowFromProjectStructure(projectId, structure, allProjectData);
-      
-      // Clean up the pending structure
-      delete window.pendingProjectStructure;
-    }
-  }, [allProjectData, createFlowFromProjectStructure]);
 
-  // Restore generation states only after initial data is loaded
+
+  // Restore generation states after data loads
   useEffect(() => {
     if (allProjectData && Object.keys(allProjectData).length > 0) {
-      // Restore generation states after a short delay to ensure nodes are created
-      const timeoutId = setTimeout(() => {
-        restoreGenerationStates();
-      }, 500);
-      
+      const timeoutId = setTimeout(restoreGenerationStates, 500);
       return () => clearTimeout(timeoutId);
     }
   }, [allProjectData, restoreGenerationStates]);
 
-  // Reset task completion states when project changes
-  useEffect(() => {
-    setTaskCompletionStates({
-      userInput: false,
-      concept: false,
-      script: false,
-      segment: false,
-      image: false,
-      video: false
-    });
-  }, [projectName]); // Reset when project name changes
-
-  // Update task completion states based on existing project data
+  // Update task completion states and project name based on project data
   useEffect(() => {
     if (!allProjectData) return;
 
-    console.log("🔍 Analyzing existing project data for task completion:", allProjectData);
-
     const newCompletionStates = {
       userInput: false,
-      concept: false,
-      script: false,
-      segment: false,
-      image: false,
-      video: false
+      concept: allProjectData.concepts?.length > 0,
+      script: allProjectData.scripts?.length > 0,
+      segment: allProjectData.segments?.length > 0,
+      image: allProjectData.images?.some(img => img?.success && img?.s3Key),
+      video: allProjectData.videos?.some(video => 
+        video?.success && 
+        Array.isArray(video.videoFiles) && 
+        video.videoFiles.length > 0 && 
+        video.videoFiles[0]?.s3Key
+      )
     };
 
-    // Check for existing user input (stored in localStorage)
+    // Check for user input in localStorage
     try {
       const storedProject = localStorage.getItem('project-store-selectedProject');
       if (storedProject) {
         const project = JSON.parse(storedProject);
         const userNodeDataKey = `userNodeData-${project.id}`;
         const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-        const hasUserInput = Object.keys(existingUserNodeData).length > 0;
-        
-        if (hasUserInput) {
-          newCompletionStates.userInput = true;
-        }
+        newCompletionStates.userInput = Object.keys(existingUserNodeData).length > 0;
       }
     } catch (e) {
       console.error('Error checking user input data:', e);
     }
 
-    // Check for existing concepts
-    if (allProjectData.concepts && allProjectData.concepts.length > 0) {
-      console.log("✅ Found existing concepts:", allProjectData.concepts.length);
-      newCompletionStates.concept = true;
-    }
-
-    // Check for existing scripts (segmentations)
-    if (allProjectData.scripts && allProjectData.scripts.length > 0) {
-      console.log("✅ Found existing scripts:", allProjectData.scripts.length);
-      newCompletionStates.script = true;
-    }
-
-    // Check for existing segments
-    if (allProjectData.segments && allProjectData.segments.length > 0) {
-      console.log("✅ Found existing segments:", allProjectData.segments.length);
-      newCompletionStates.segment = true;
-    }
-
-    // Check for existing images
-    if (allProjectData.images && allProjectData.images.length > 0) {
-      console.log("🖼️ Checking images:", allProjectData.images.length, "images found");
-      // Check if any images are successfully generated (have s3Key and success flag)
-      const hasValidImages = allProjectData.images.some(img => 
-        img && img.success && img.s3Key
-      );
-      console.log("🖼️ Valid images found:", hasValidImages);
-      if (hasValidImages) {
-        newCompletionStates.image = true;
-      }
-    }
-
-    // Check for existing videos
-    if (allProjectData.videos && allProjectData.videos.length > 0) {
-      console.log("🎬 Checking videos:", allProjectData.videos.length, "videos found");
-      // Check if any videos are successfully generated (have videoFiles with s3Key)
-      const hasValidVideos = allProjectData.videos.some(video => 
-        video && 
-        video.success && 
-        Array.isArray(video.videoFiles) && 
-        video.videoFiles.length > 0 && 
-        video.videoFiles[0].s3Key
-      );
-      console.log("🎬 Valid videos found:", hasValidVideos);
-      if (hasValidVideos) {
-        newCompletionStates.video = true;
-      }
-    }
-
-    console.log("🔄 Updating task completion states based on existing data:", newCompletionStates);
     setTaskCompletionStates(newCompletionStates);
-  }, [allProjectData]); // Update when project data changes
+  }, [allProjectData]);
 
-  // Update project name when component mounts or project changes
+  // Update project name on mount
   useEffect(() => {
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
+      const storedProject = localStorage.getItem('project-store-selectedProject');
       if (storedProject) {
         const project = JSON.parse(storedProject);
-        const projectName = project.name || project.title || "Untitled";
-        setProjectName(projectName);
+        setProjectName(project.name || project.title || 'Untitled');
       }
     } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
+      console.error('Error parsing project from localStorage:', error);
     }
   }, []);
 
-  // Cleanup old generation states and temporary data periodically
+  // Cleanup old localStorage data periodically
   useEffect(() => {
-    const cleanupOldStates = () => {
+    const cleanup = () => {
       try {
         const storedProject = localStorage.getItem('project-store-selectedProject');
         if (!storedProject) return;
@@ -4172,110 +2563,62 @@ function FlowWidget() {
         const project = JSON.parse(storedProject);
         const projectId = project.id;
         
-        // Clean up each type of generation state
         ['concept', 'script', 'image', 'video'].forEach(type => {
-          getGenerationStates(projectId, type); // This function already cleans up old states
+          getGenerationStates(projectId, type);
         });
         
-        // Clean up old temporary data
-        const keysToCheck = [];
+        // Clean up old temporary data and videos
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key) keysToCheck.push(key);
-        }
-        
-        keysToCheck.forEach(key => {
+          if (!key) continue;
+          
           try {
-            // Clean up old temporary generation data
             if (key.startsWith(`temp-`) && key.includes(projectId)) {
               const data = JSON.parse(localStorage.getItem(key) || '{}');
-              if (data.timestamp && Date.now() - data.timestamp > 3600000) { // 1 hour
+              if (data.timestamp && Date.now() - data.timestamp > 3600000) {
                 localStorage.removeItem(key);
-                console.log(`🧹 Cleaned up old temporary data: ${key}`);
               }
             }
             
-            // Clean up old user node data that's been processed
-            if (key.startsWith(`userNodeData-${projectId}`)) {
-              const userData = JSON.parse(localStorage.getItem(key) || '{}');
-              const cleanedUserData = {};
-              let hasChanges = false;
-              
-              Object.entries(userData).forEach(([nodeId, data]) => {
-                // Keep unprocessed data or recently processed data (within 1 hour)
-                if (!data.processed || (data.processedAt && Date.now() - data.processedAt < 3600000)) {
-                  cleanedUserData[nodeId] = data;
-                } else {
-                  hasChanges = true;
-                  console.log(`🧹 Cleaned up old processed user data for ${nodeId}`);
-                }
-              });
-              
-              if (hasChanges) {
-                if (Object.keys(cleanedUserData).length > 0) {
-                  localStorage.setItem(key, JSON.stringify(cleanedUserData));
-                } else {
-                  localStorage.removeItem(key);
-                }
-              }
-            }
-            
-            // Clean up old generated videos (keep only last 20 per project)
             if (key.startsWith(`generated-videos-${projectId}`)) {
               const videos = JSON.parse(localStorage.getItem(key) || '{}');
               const videoEntries = Object.entries(videos);
               if (videoEntries.length > 20) {
                 const sortedVideos = videoEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
                 const videosToKeep = sortedVideos.slice(0, 20);
-                const cleanedVideos = Object.fromEntries(videosToKeep);
-                localStorage.setItem(key, JSON.stringify(cleanedVideos));
-                console.log(`🧹 Cleaned up old generated videos, kept ${videosToKeep.length} most recent`);
+                localStorage.setItem(key, JSON.stringify(Object.fromEntries(videosToKeep)));
               }
             }
           } catch (error) {
             console.error(`Error cleaning up localStorage key ${key}:`, error);
           }
-        });
-        
-        console.log('🧹 Periodic cleanup of old generation states and temporary data completed');
+        }
       } catch (error) {
-        console.error('Error during periodic cleanup:', error);
+        console.error('Error during cleanup:', error);
       }
     };
 
-    // Clean up immediately on mount
-    cleanupOldStates();
-    
-    // Set up periodic cleanup every 5 minutes
-    const cleanupInterval = setInterval(cleanupOldStates, 5 * 60 * 1000);
-    
-    return () => {
-      clearInterval(cleanupInterval);
-    };
+    cleanup();
+    const interval = setInterval(cleanup, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // Listen for sandbox open/close events
   useEffect(() => {
     const openHandler = () => {
       setOpen(true);
-      // Dispatch sandbox opened event to hide timeline elements
       window.dispatchEvent(new CustomEvent("sandbox:opened"));
-      
-      // Restore generation states when sandbox is opened
-      console.log('🔄 Sandbox opened - restoring generation states...');
-      setTimeout(() => {
-        restoreGenerationStates();
-      }, 100); // Shorter delay since we're just switching tabs
+      setTimeout(restoreGenerationStates, 100);
     };
+    
     const closeHandler = () => {
       setOpen(false);
-      // Don't clear temporary videos on close since they might be persistent now
-      // setTemporaryVideos(new Map()); // Commented out to preserve videos
-      // Dispatch sandbox closed event to show timeline elements
       window.dispatchEvent(new CustomEvent("sandbox:closed"));
     };
+    
     window.addEventListener("flowWidget:open", openHandler);
     window.addEventListener("flowWidget:close", closeHandler);
+    
     return () => {
       window.removeEventListener("flowWidget:open", openHandler);
       window.removeEventListener("flowWidget:close", closeHandler);
@@ -4327,25 +2670,22 @@ function FlowWidget() {
     };
   }, [timeline, setError]);
 
-  // Reflect open state on host element attribute for CSS
+  // Reflect open state and handle dropdown clicks
+  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
+  
   useEffect(() => {
     const host = document.querySelector("react-flow-widget");
     if (host) host.setAttribute("data-open", open ? "true" : "false");
   }, [open]);
 
-  // Handle click outside to close dropdowns
-  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".relative")) {
         setLogoDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -4506,52 +2846,24 @@ function FlowWidget() {
                 </div>
               )}
 
-              {/* Debug: Project Structure Display */}
+              {/* Debug: Project Data Display */}
               {process.env.NODE_ENV === 'development' && (
                 <div className='flex items-center gap-2'>
                   <button
                     onClick={() => {
-                      console.log('🏗️ Current Project Structure:', projectStructure);
-                      console.log('📊 Structure Summary:', {
-                        userNodes: projectStructure.userNodes.size,
-                        concepts: projectStructure.concepts.size,
-                        scripts: projectStructure.scripts.size,
-                        segments: projectStructure.segments.size,
-                        images: projectStructure.images.size,
-                        videos: projectStructure.videos.size
-                      });
                       console.log('📋 All Project Data:', allProjectData);
+                      console.log('📊 Data Summary:', {
+                        concepts: allProjectData.concepts?.length || 0,
+                        scripts: allProjectData.scripts?.length || 0,
+                        segments: allProjectData.segments?.length || 0,
+                        images: allProjectData.images?.length || 0,
+                        videos: allProjectData.videos?.length || 0
+                      });
                     }}
                     className='h-8 px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 border-0 text-blue-300 text-xs font-medium rounded-lg transition-colors backdrop-blur-sm'
-                    title="Debug: Log Project Structure"
+                    title="Debug: Log Project Data"
                   >
                     📊
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const projectData = localStorage.getItem('project-store-selectedProject');
-                      if (projectData) {
-                        const project = JSON.parse(projectData);
-                        const key = getProjectStructureKey(project.id);
-                        localStorage.removeItem(key);
-                        console.log('🗑️ Cleared project structure for project:', project.id);
-                        
-                        // Reset the structure state
-                        setProjectStructure({
-                          userNodes: new Map(),
-                          concepts: new Map(),
-                          scripts: new Map(),
-                          segments: new Map(),
-                          images: new Map(),
-                          videos: new Map()
-                        });
-                      }
-                    }}
-                    className='h-8 px-2 py-1 bg-red-500/20 hover:bg-red-500/30 border-0 text-red-300 text-xs font-medium rounded-lg transition-colors backdrop-blur-sm'
-                    title="Debug: Clear Project Structure"
-                  >
-                    🗑️
                   </button>
                 </div>
               )}

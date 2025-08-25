@@ -73,7 +73,7 @@ function FlowWidget() {
       existingStates[nodeId] = {
         ...data,
         timestamp: Date.now(),
-        status: 'generating'
+        status: data.status || 'generating'
       };
       localStorage.setItem(key, JSON.stringify(existingStates));
       console.log(`💾 Saved ${type} generation state for ${nodeId}:`, data);
@@ -98,12 +98,16 @@ function FlowWidget() {
     try {
       const key = getGenerationStateKey(projectId, type);
       const states = JSON.parse(localStorage.getItem(key) || '{}');
-      // Clean up states older than 1 hour (3600000 ms)
+      // Clean up states older than 1 hour (3600000 ms) or completed/error states older than 10 minutes
       const now = Date.now();
       const cleanedStates = {};
       Object.entries(states).forEach(([nodeId, data]) => {
-        if (now - data.timestamp < 3600000) { // 1 hour
+        const isGenerating = data.status === 'generating';
+        const maxAge = isGenerating ? 3600000 : 600000; // 1 hour for generating, 10 minutes for completed/error
+        if (now - data.timestamp < maxAge) {
           cleanedStates[nodeId] = data;
+        } else {
+          console.log(`🧹 Cleaning up old ${type} state for ${nodeId} (age: ${Math.round((now - data.timestamp) / 60000)}min)`);
         }
       });
       localStorage.setItem(key, JSON.stringify(cleanedStates));
@@ -162,6 +166,52 @@ function FlowWidget() {
     const conceptStates = getGenerationStates(projectId, 'concept');
     Object.entries(conceptStates).forEach(([nodeId, state]) => {
       console.log('🔄 Restoring concept generation state:', nodeId, state);
+      
+      // Check if this is an error state or if the generation has been running too long (15+ minutes)
+      const isError = state.status === 'error';
+      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
+      
+      if (isError || isTimedOut) {
+        console.log(`❌ Restoring concept error/timeout state for ${nodeId}`);
+        // Don't add to generating set if it's an error or timeout
+        const errorConceptNode = {
+          id: nodeId,
+          type: 'conceptNode',
+          position: state.position || { x: 400, y: 400 },
+          data: {
+            id: nodeId,
+            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate concepts'),
+            nodeState: 'error',
+            title: state.title || 'Error',
+            originalPrompt: state.originalPrompt,
+            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
+          }
+        };
+        
+        setNodes(prevNodes => {
+          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+          if (existingNodeIndex >= 0) {
+            const existingNode = prevNodes[existingNodeIndex];
+            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+              return prevNodes;
+            }
+            const updatedNodes = [...prevNodes];
+            updatedNodes[existingNodeIndex] = errorConceptNode;
+            return updatedNodes;
+          } else {
+            return [...prevNodes, errorConceptNode];
+          }
+        });
+        
+        // Clean up the error state after showing it
+        setTimeout(() => {
+          removeGenerationState(projectId, 'concept', nodeId);
+        }, 5000);
+        
+        return; // Skip the rest of the restoration logic for this node
+      }
+      
       setGeneratingConcepts(prev => new Set(prev.add(nodeId)));
       
       // Create or update the loading concept node
@@ -177,6 +227,43 @@ function FlowWidget() {
           originalPrompt: state.originalPrompt
         }
       };
+      
+      // Add timeout handler for long-running generations
+      setTimeout(() => {
+        const currentStates = getGenerationStates(projectId, 'concept');
+        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
+          console.log(`⏰ Timing out concept generation for ${nodeId}`);
+          // Update state to error
+          saveGenerationState(projectId, 'concept', nodeId, {
+            ...currentStates[nodeId],
+            status: 'error',
+            errorMessage: 'Generation timed out after 15 minutes'
+          });
+          
+          // Update the node to show error
+          setNodes(prevNodes => prevNodes.map(node => {
+            if (node.id === nodeId) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  content: 'Generation timed out',
+                  error: 'Generation timed out after 15 minutes',
+                  nodeState: 'error'
+                }
+              };
+            }
+            return node;
+          }));
+          
+          // Remove from generating set
+          setGeneratingConcepts(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(nodeId);
+            return newSet;
+          });
+        }
+      }, 900000); // 15 minutes
 
       setNodes(prevNodes => {
         const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
@@ -226,6 +313,50 @@ function FlowWidget() {
     const scriptStates = getGenerationStates(projectId, 'script');
     Object.entries(scriptStates).forEach(([nodeId, state]) => {
       console.log('🔄 Restoring script generation state:', nodeId, state);
+      
+      // Check if this is an error state or if the generation has been running too long
+      const isError = state.status === 'error';
+      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
+      
+      if (isError || isTimedOut) {
+        console.log(`❌ Restoring script error/timeout state for ${nodeId}`);
+        const errorScriptNode = {
+          id: nodeId,
+          type: 'scriptNode',
+          position: state.position || { x: 400, y: 500 },
+          data: {
+            id: nodeId,
+            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate script'),
+            nodeState: 'error',
+            title: state.title || 'Error',
+            conceptContent: state.conceptContent,
+            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
+          }
+        };
+        
+        setNodes(prevNodes => {
+          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+          if (existingNodeIndex >= 0) {
+            const existingNode = prevNodes[existingNodeIndex];
+            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+              return prevNodes;
+            }
+            const updatedNodes = [...prevNodes];
+            updatedNodes[existingNodeIndex] = errorScriptNode;
+            return updatedNodes;
+          } else {
+            return [...prevNodes, errorScriptNode];
+          }
+        });
+        
+        setTimeout(() => {
+          removeGenerationState(projectId, 'script', nodeId);
+        }, 5000);
+        
+        return;
+      }
+      
       setGeneratingScripts(prev => new Set(prev.add(nodeId)));
       
       const loadingScriptNode = {
@@ -240,6 +371,40 @@ function FlowWidget() {
           conceptContent: state.conceptContent
         }
       };
+      
+      // Add timeout handler
+      setTimeout(() => {
+        const currentStates = getGenerationStates(projectId, 'script');
+        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
+          console.log(`⏰ Timing out script generation for ${nodeId}`);
+          saveGenerationState(projectId, 'script', nodeId, {
+            ...currentStates[nodeId],
+            status: 'error',
+            errorMessage: 'Generation timed out after 15 minutes'
+          });
+          
+          setNodes(prevNodes => prevNodes.map(node => {
+            if (node.id === nodeId) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  content: 'Generation timed out',
+                  error: 'Generation timed out after 15 minutes',
+                  nodeState: 'error'
+                }
+              };
+            }
+            return node;
+          }));
+          
+          setGeneratingScripts(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(nodeId);
+            return newSet;
+          });
+        }
+      }, 900000); // 15 minutes
 
       setNodes(prevNodes => {
         const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
@@ -286,6 +451,52 @@ function FlowWidget() {
     const imageStates = getGenerationStates(projectId, 'image');
     Object.entries(imageStates).forEach(([nodeId, state]) => {
       console.log('🔄 Restoring image generation state:', nodeId, state);
+      
+      // Check if this is an error state or if the generation has been running too long
+      const isError = state.status === 'error';
+      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
+      
+      if (isError || isTimedOut) {
+        console.log(`❌ Restoring image error/timeout state for ${nodeId}`);
+        const errorImageNode = {
+          id: nodeId,
+          type: 'imageNode',
+          position: state.position || { x: 400, y: 600 },
+          data: {
+            id: nodeId,
+            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate image'),
+            nodeState: 'error',
+            title: state.title || 'Error',
+            visualPrompt: state.visualPrompt,
+            artStyle: state.artStyle,
+            segmentId: state.segmentId,
+            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
+          }
+        };
+        
+        setNodes(prevNodes => {
+          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+          if (existingNodeIndex >= 0) {
+            const existingNode = prevNodes[existingNodeIndex];
+            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+              return prevNodes;
+            }
+            const updatedNodes = [...prevNodes];
+            updatedNodes[existingNodeIndex] = errorImageNode;
+            return updatedNodes;
+          } else {
+            return [...prevNodes, errorImageNode];
+          }
+        });
+        
+        setTimeout(() => {
+          removeGenerationState(projectId, 'image', nodeId);
+        }, 5000);
+        
+        return;
+      }
+      
       setGeneratingImages(prev => new Set(prev.add(nodeId)));
       
       const loadingImageNode = {
@@ -302,6 +513,40 @@ function FlowWidget() {
           segmentId: state.segmentId
         }
       };
+      
+      // Add timeout handler
+      setTimeout(() => {
+        const currentStates = getGenerationStates(projectId, 'image');
+        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
+          console.log(`⏰ Timing out image generation for ${nodeId}`);
+          saveGenerationState(projectId, 'image', nodeId, {
+            ...currentStates[nodeId],
+            status: 'error',
+            errorMessage: 'Generation timed out after 15 minutes'
+          });
+          
+          setNodes(prevNodes => prevNodes.map(node => {
+            if (node.id === nodeId) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  content: 'Generation timed out',
+                  error: 'Generation timed out after 15 minutes',
+                  nodeState: 'error'
+                }
+              };
+            }
+            return node;
+          }));
+          
+          setGeneratingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(nodeId);
+            return newSet;
+          });
+        }
+      }, 900000); // 15 minutes
 
       setNodes(prevNodes => {
         const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
@@ -348,6 +593,53 @@ function FlowWidget() {
     const videoStates = getGenerationStates(projectId, 'video');
     Object.entries(videoStates).forEach(([nodeId, state]) => {
       console.log('🔄 Restoring video generation state:', nodeId, state);
+      
+      // Check if this is an error state or if the generation has been running too long
+      const isError = state.status === 'error';
+      const isTimedOut = (Date.now() - state.timestamp) > 900000; // 15 minutes
+      
+      if (isError || isTimedOut) {
+        console.log(`❌ Restoring video error/timeout state for ${nodeId}`);
+        const errorVideoNode = {
+          id: nodeId,
+          type: 'videoNode',
+          position: state.position || { x: 400, y: 700 },
+          data: {
+            id: nodeId,
+            content: isTimedOut ? 'Generation timed out' : (state.errorMessage || 'Failed to generate video'),
+            nodeState: 'error',
+            title: state.title || 'Error',
+            animationPrompt: state.animationPrompt,
+            artStyle: state.artStyle,
+            segmentId: state.segmentId,
+            imageId: state.imageId,
+            error: isTimedOut ? 'Generation timed out after 15 minutes' : (state.errorMessage || 'Generation failed')
+          }
+        };
+        
+        setNodes(prevNodes => {
+          const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
+          if (existingNodeIndex >= 0) {
+            const existingNode = prevNodes[existingNodeIndex];
+            if (existingNode.data?.nodeState === 'existing' || existingNode.data?.nodeState === 'completed') {
+              console.log(`🔄 Skipping restoration of ${nodeId} - already completed`);
+              return prevNodes;
+            }
+            const updatedNodes = [...prevNodes];
+            updatedNodes[existingNodeIndex] = errorVideoNode;
+            return updatedNodes;
+          } else {
+            return [...prevNodes, errorVideoNode];
+          }
+        });
+        
+        setTimeout(() => {
+          removeGenerationState(projectId, 'video', nodeId);
+        }, 5000);
+        
+        return;
+      }
+      
       setGeneratingVideos(prev => new Set(prev.add(nodeId)));
       
       const loadingVideoNode = {
@@ -365,6 +657,40 @@ function FlowWidget() {
           imageId: state.imageId
         }
       };
+      
+      // Add timeout handler
+      setTimeout(() => {
+        const currentStates = getGenerationStates(projectId, 'video');
+        if (currentStates[nodeId] && currentStates[nodeId].status === 'generating') {
+          console.log(`⏰ Timing out video generation for ${nodeId}`);
+          saveGenerationState(projectId, 'video', nodeId, {
+            ...currentStates[nodeId],
+            status: 'error',
+            errorMessage: 'Generation timed out after 15 minutes'
+          });
+          
+          setNodes(prevNodes => prevNodes.map(node => {
+            if (node.id === nodeId) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  content: 'Generation timed out',
+                  error: 'Generation timed out after 15 minutes',
+                  nodeState: 'error'
+                }
+              };
+            }
+            return node;
+          }));
+          
+          setGeneratingVideos(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(nodeId);
+            return newSet;
+          });
+        }
+      }, 900000); // 15 minutes
 
       setNodes(prevNodes => {
         const existingNodeIndex = prevNodes.findIndex(n => n.id === nodeId);
@@ -1406,8 +1732,25 @@ function FlowWidget() {
         console.log("Number of concepts returned:", conceptsResponse?.concepts?.length || 0);
         
         if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
-          // Remove persistent generation state
+          // Remove persistent generation state and clean up localStorage
           removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
+          
+          // Clean up any user node data that was used for this generation
+          try {
+            const userNodeDataKey = `userNodeData-${selectedProject.id}`;
+            const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
+            // Keep the user data but mark it as processed
+            Object.keys(existingUserNodeData).forEach(key => {
+              if (existingUserNodeData[key].text === message) {
+                existingUserNodeData[key].processed = true;
+                existingUserNodeData[key].processedAt = Date.now();
+              }
+            });
+            localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
+            console.log('✅ Marked user input as processed in localStorage');
+          } catch (error) {
+            console.error('Error updating user node data:', error);
+          }
           
           // Remove the loading concept node and its edge
           setNodes(prevNodes => prevNodes.filter(node => node.id !== loadingConceptNodeId));
@@ -1416,7 +1759,9 @@ function FlowWidget() {
           // Create concept nodes from backend response
           const userNodePosition = nodes.find(n => n.id === nodeId)?.position || { x: 0, y: 0 };
           const conceptCount = conceptsResponse.concepts.length;
-          const startX = userNodePosition.x - (conceptCount - 1) * 175; // Center the concepts
+          const conceptSpacing = 350; // Space between concepts
+          const totalWidth = (conceptCount - 1) * conceptSpacing;
+          const startX = userNodePosition.x - (totalWidth / 2); // Center the concepts under user node
           const timestamp = Date.now(); // Use single timestamp for consistency
           
           const newConceptNodes = conceptsResponse.concepts.map((concept, index) => {
@@ -1425,7 +1770,7 @@ function FlowWidget() {
               id: conceptNodeId,
               type: 'conceptNode',
               position: {
-                x: startX + index * 350,
+                x: startX + index * conceptSpacing,
                 y: userNodePosition.y + 300
               },
                         data: {
@@ -1470,8 +1815,16 @@ function FlowWidget() {
         }
       } catch (error) {
         console.error('Error generating concepts:', error);
-        // Remove persistent generation state on error
-        removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
+        // Save error state instead of removing it immediately
+        saveGenerationState(selectedProject.id, 'concept', loadingConceptNodeId, {
+          loadingMessage: 'Failed to generate concepts',
+          title: 'Error',
+          position: { x: userNodePosition.x, y: userNodePosition.y + 300 },
+          parentNodeId: nodeId,
+          originalPrompt: message,
+          status: 'error',
+          errorMessage: error.message || 'Failed to generate concepts'
+        });
         
         // Show error in the loading concept node
         setNodes(prevNodes => prevNodes.map(node => {
@@ -1488,6 +1841,11 @@ function FlowWidget() {
           }
           return node;
         }));
+        
+        // Clean up error state after 5 seconds
+        setTimeout(() => {
+          removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
+        }, 5000);
       } finally {
         setGeneratingConcepts(prev => {
           const newSet = new Set(prev);
@@ -1802,8 +2160,17 @@ function FlowWidget() {
       if (scriptResponse1 && scriptResponse1.segments && Array.isArray(scriptResponse1.segments) &&
           scriptResponse2 && scriptResponse2.segments && Array.isArray(scriptResponse2.segments)) {
         
-        // Remove persistent generation state
+        // Remove persistent generation state and clean up
         removeGenerationState(selectedProject.id, 'script', scriptNode.id);
+        
+        // Clean up any temporary script generation data
+        try {
+          const tempScriptKey = `temp-script-${selectedProject.id}-${scriptNode.id}`;
+          localStorage.removeItem(tempScriptKey);
+          console.log('✅ Cleaned up temporary script data from localStorage');
+        } catch (error) {
+          console.error('Error cleaning up temporary script data:', error);
+        }
         
         // Remove the placeholder script node
         setNodes(prevNodes => prevNodes.filter(node => node.id !== scriptNode.id));
@@ -1893,8 +2260,16 @@ function FlowWidget() {
       }
     } catch (error) {
       console.error('Error generating script:', error);
-      // Remove persistent generation state on error
-      removeGenerationState(selectedProject.id, 'script', scriptNode.id);
+      // Save error state instead of removing it immediately
+      saveGenerationState(selectedProject.id, 'script', scriptNode.id, {
+        loadingMessage: 'Failed to generate script',
+        title: 'Error',
+        position: scriptNode.position,
+        parentNodeId: conceptNode.id,
+        conceptContent: conceptNode.data?.content || conceptNode.data?.userText || '',
+        status: 'error',
+        errorMessage: error.message || 'Failed to generate script'
+      });
       
       // Show error in script node
       setNodes(prevNodes => prevNodes.map(node => {
@@ -1911,6 +2286,11 @@ function FlowWidget() {
         }
         return node;
       }));
+      
+      // Clean up error state after 5 seconds
+      setTimeout(() => {
+        removeGenerationState(selectedProject.id, 'script', scriptNode.id);
+      }, 5000);
     } finally {
       setGeneratingScripts(prev => {
         const newSet = new Set(prev);
@@ -2052,8 +2432,17 @@ function FlowWidget() {
       console.log("Image generation response:", imageResponse);
       
       if (imageResponse && imageResponse.s3_key) {
-        // Remove persistent generation state
+        // Remove persistent generation state and clean up
         removeGenerationState(selectedProject.id, 'image', imageNode.id);
+        
+        // Clean up any temporary image generation data
+        try {
+          const tempImageKey = `temp-image-${selectedProject.id}-${imageNode.id}`;
+          localStorage.removeItem(tempImageKey);
+          console.log('✅ Cleaned up temporary image data from localStorage');
+        } catch (error) {
+          console.error('Error cleaning up temporary image data:', error);
+        }
         
         // Download image URL (following ChatWidget pattern)
         const imageUrl = await s3Api.downloadImage(imageResponse.s3_key);
@@ -2088,8 +2477,18 @@ function FlowWidget() {
       }
     } catch (error) {
       console.error('Error generating image:', error);
-      // Remove persistent generation state on error
-      removeGenerationState(selectedProject.id, 'image', imageNode.id);
+      // Save error state instead of removing it immediately
+      saveGenerationState(selectedProject.id, 'image', imageNode.id, {
+        loadingMessage: 'Failed to generate image',
+        title: 'Error',
+        position: imageNode.position,
+        parentNodeId: segmentNode.id,
+        visualPrompt: visualPrompt,
+        artStyle: artStyle,
+        segmentId: segmentId,
+        status: 'error',
+        errorMessage: error.message || 'Failed to generate image'
+      });
       
       // Show error in image node
       setNodes(prevNodes => prevNodes.map(node => {
@@ -2106,6 +2505,11 @@ function FlowWidget() {
         }
         return node;
       }));
+      
+      // Clean up error state after 5 seconds
+      setTimeout(() => {
+        removeGenerationState(selectedProject.id, 'image', imageNode.id);
+      }, 5000);
     } finally {
       setGeneratingImages(prev => {
         const newSet = new Set(prev);
@@ -2256,6 +2660,21 @@ function FlowWidget() {
     } catch (error) {
       console.error('Error regenerating image:', error);
       
+      // Save error state for the regenerated image node
+      if (selectedProject) {
+        saveGenerationState(selectedProject.id, 'image', regeneratedImageNodeId, {
+          loadingMessage: 'Failed to regenerate image',
+          title: 'Error',
+          position: newPosition,
+          parentNodeId: parentEdge?.source,
+          visualPrompt: prompt,
+          artStyle: artStyle,
+          segmentId: segmentId,
+          status: 'error',
+          errorMessage: error.message || 'Failed to regenerate image'
+        });
+      }
+      
       // Show error in the loading node if it exists
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.data?.nodeState === 'loading' && node.data?.title === 'Regenerating Image') {
@@ -2271,6 +2690,13 @@ function FlowWidget() {
         }
         return node;
       }));
+      
+      // Clean up error state after 5 seconds
+      if (selectedProject) {
+        setTimeout(() => {
+          removeGenerationState(selectedProject.id, 'image', regeneratedImageNodeId);
+        }, 5000);
+      }
     } finally {
       // Clean up generating state
       setGeneratingImages(prev => {
@@ -2489,6 +2915,22 @@ function FlowWidget() {
     } catch (error) {
       console.error('Error regenerating video:', error);
       
+      // Save error state for the regenerated video node
+      if (selectedProject) {
+        saveGenerationState(selectedProject.id, 'video', regeneratedVideoNodeId, {
+          loadingMessage: 'Failed to regenerate video',
+          title: 'Error',
+          position: newPosition,
+          parentNodeId: parentEdge?.source,
+          animationPrompt: prompt,
+          artStyle: artStyle,
+          segmentId: segmentId,
+          imageId: imageId,
+          status: 'error',
+          errorMessage: error.message || 'Failed to regenerate video'
+        });
+      }
+      
       // Show error in the loading node if it exists
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.data?.nodeState === 'loading' && node.data?.title === 'Regenerating Video') {
@@ -2504,6 +2946,13 @@ function FlowWidget() {
         }
         return node;
       }));
+      
+      // Clean up error state after 5 seconds
+      if (selectedProject) {
+        setTimeout(() => {
+          removeGenerationState(selectedProject.id, 'video', regeneratedVideoNodeId);
+        }, 5000);
+      }
     } finally {
       // Clean up generating state
       setGeneratingVideos(prev => {
@@ -2624,8 +3073,17 @@ function FlowWidget() {
       console.log("Video generation response:", videoResponse);
       
       if (videoResponse && videoResponse.s3_key) {
-        // Remove persistent generation state
+        // Remove persistent generation state and clean up
         removeGenerationState(selectedProject.id, 'video', videoNode.id);
+        
+        // Clean up any temporary video generation data
+        try {
+          const tempVideoKey = `temp-video-${selectedProject.id}-${videoNode.id}`;
+          localStorage.removeItem(tempVideoKey);
+          console.log('✅ Cleaned up temporary video data from localStorage');
+        } catch (error) {
+          console.error('Error cleaning up temporary video data:', error);
+        }
         
         // Download video URL (following ChatWidget pattern)
         const videoUrl = await s3Api.downloadVideo(videoResponse.s3_key);
@@ -2697,8 +3155,19 @@ function FlowWidget() {
       }
     } catch (error) {
       console.error('Error generating video:', error);
-      // Remove persistent generation state on error
-      removeGenerationState(selectedProject.id, 'video', videoNode.id);
+      // Save error state instead of removing it immediately
+      saveGenerationState(selectedProject.id, 'video', videoNode.id, {
+        loadingMessage: 'Failed to generate video',
+        title: 'Error',
+        position: videoNode.position,
+        parentNodeId: imageNode.id,
+        animationPrompt: animationPrompt,
+        artStyle: artStyle,
+        segmentId: segmentId,
+        imageId: imageNode.data?.imageId,
+        status: 'error',
+        errorMessage: error.message || 'Failed to generate video'
+      });
       
       // Show error in video node
       setNodes(prevNodes => prevNodes.map(node => {
@@ -2715,6 +3184,11 @@ function FlowWidget() {
         }
         return node;
       }));
+      
+      // Clean up error state after 5 seconds
+      setTimeout(() => {
+        removeGenerationState(selectedProject.id, 'video', videoNode.id);
+      }, 5000);
     } finally {
       setGeneratingVideos(prev => {
         const newSet = new Set(prev);
@@ -2869,7 +3343,7 @@ function FlowWidget() {
     }
   }, []);
 
-  // Cleanup old generation states periodically
+  // Cleanup old generation states and temporary data periodically
   useEffect(() => {
     const cleanupOldStates = () => {
       try {
@@ -2884,7 +3358,67 @@ function FlowWidget() {
           getGenerationStates(projectId, type); // This function already cleans up old states
         });
         
-        console.log('🧹 Periodic cleanup of old generation states completed');
+        // Clean up old temporary data
+        const keysToCheck = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) keysToCheck.push(key);
+        }
+        
+        keysToCheck.forEach(key => {
+          try {
+            // Clean up old temporary generation data
+            if (key.startsWith(`temp-`) && key.includes(projectId)) {
+              const data = JSON.parse(localStorage.getItem(key) || '{}');
+              if (data.timestamp && Date.now() - data.timestamp > 3600000) { // 1 hour
+                localStorage.removeItem(key);
+                console.log(`🧹 Cleaned up old temporary data: ${key}`);
+              }
+            }
+            
+            // Clean up old user node data that's been processed
+            if (key.startsWith(`userNodeData-${projectId}`)) {
+              const userData = JSON.parse(localStorage.getItem(key) || '{}');
+              const cleanedUserData = {};
+              let hasChanges = false;
+              
+              Object.entries(userData).forEach(([nodeId, data]) => {
+                // Keep unprocessed data or recently processed data (within 1 hour)
+                if (!data.processed || (data.processedAt && Date.now() - data.processedAt < 3600000)) {
+                  cleanedUserData[nodeId] = data;
+                } else {
+                  hasChanges = true;
+                  console.log(`🧹 Cleaned up old processed user data for ${nodeId}`);
+                }
+              });
+              
+              if (hasChanges) {
+                if (Object.keys(cleanedUserData).length > 0) {
+                  localStorage.setItem(key, JSON.stringify(cleanedUserData));
+                } else {
+                  localStorage.removeItem(key);
+                }
+              }
+            }
+            
+            // Clean up old generated videos (keep only last 20 per project)
+            if (key.startsWith(`generated-videos-${projectId}`)) {
+              const videos = JSON.parse(localStorage.getItem(key) || '{}');
+              const videoEntries = Object.entries(videos);
+              if (videoEntries.length > 20) {
+                const sortedVideos = videoEntries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+                const videosToKeep = sortedVideos.slice(0, 20);
+                const cleanedVideos = Object.fromEntries(videosToKeep);
+                localStorage.setItem(key, JSON.stringify(cleanedVideos));
+                console.log(`🧹 Cleaned up old generated videos, kept ${videosToKeep.length} most recent`);
+              }
+            }
+          } catch (error) {
+            console.error(`Error cleaning up localStorage key ${key}:`, error);
+          }
+        });
+        
+        console.log('🧹 Periodic cleanup of old generation states and temporary data completed');
       } catch (error) {
         console.error('Error during periodic cleanup:', error);
       }

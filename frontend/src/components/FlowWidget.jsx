@@ -61,6 +61,16 @@ function FlowWidget() {
   const [generatingVideos, setGeneratingVideos] = useState(new Set()); // Track which videos are generating
   const [nodeConnections, setNodeConnections] = useState(new Map()); // Track node connections for generation
 
+  // Task completion tracking
+  const [taskCompletionStates, setTaskCompletionStates] = useState({
+    userInput: false,
+    concept: false,
+    script: false,
+    segment: false,
+    image: false,
+    video: false
+  });
+
   // New state for all fetched data
   const [allProjectData, setAllProjectData] = useState({
     concepts: [],
@@ -318,10 +328,10 @@ function FlowWidget() {
     const newEdges = [];
 
     // Tree Layout configuration
-    const levelHeight = 350; // Vertical space between tree levels
-    const nodeWidth = 320; // Width allocated per node including spacing
+    const levelHeight = 450; // Increased vertical space between tree levels
+    const nodeWidth = 420; // Increased width allocated per node including spacing
     const startX = 400; // Center starting position
-    const startY = 50; // Top starting position
+    const startY = 80; // Increased top starting position
 
     // Tree level tracking
     let currentLevel = 0;
@@ -415,7 +425,7 @@ function FlowWidget() {
       console.log("📜 Creating script nodes:", flowData.scripts.length);
       
       const scriptCount = flowData.scripts.length;
-      const scriptSpacing = 350; // Spacing between scripts
+      const scriptSpacing = 450; // Increased spacing between scripts
       const totalWidth = (scriptCount - 1) * scriptSpacing;
       
       // Center scripts under the FIRST concept node
@@ -466,7 +476,7 @@ function FlowWidget() {
       console.log("📊 Creating segment nodes:", flowData.segments.length);
       
       const segmentCount = flowData.segments.length;
-      const segmentSpacing = 380; // More space between segments
+      const segmentSpacing = 480; // Increased space between segments
       const totalWidth = (segmentCount - 1) * segmentSpacing;
       
       // Center segments under the FIRST script node
@@ -474,7 +484,7 @@ function FlowWidget() {
       if (flowData.scripts && flowData.scripts.length > 0) {
         // Find the X position of the first script node
         const scriptCount = flowData.scripts.length;
-        const scriptSpacing = 350;
+        const scriptSpacing = 450;
         const scriptTotalWidth = (scriptCount - 1) * scriptSpacing;
         
         // Get first concept position
@@ -545,14 +555,14 @@ function FlowWidget() {
       if (imageNodesBySegment.size > 0) {
         // Calculate segment positions first to center images under each segment
         const segmentCount = flowData.segments.length;
-        const segmentSpacing = 380; // Match updated segment spacing
+        const segmentSpacing = 480; // Match updated segment spacing
         const segmentTotalWidth = (segmentCount - 1) * segmentSpacing;
         
         // Get parent script position
         let scriptParentX = startX;
         if (flowData.scripts && flowData.scripts.length > 0) {
           const scriptCount = flowData.scripts.length;
-          const scriptSpacing = 350;
+          const scriptSpacing = 450;
           const scriptTotalWidth = (scriptCount - 1) * scriptSpacing;
           
           let conceptParentX = startX;
@@ -570,7 +580,7 @@ function FlowWidget() {
           const { segment, segmentIndex, images, imageDetail } = segmentData;
           const segmentX = segmentStartX + (segmentIndex * segmentSpacing);
           
-          const imageSpacing = 220; // Proper spacing between images
+          const imageSpacing = 320; // Increased spacing between images
           const imageCount = images.length;
           const imagesTotalWidth = (imageCount - 1) * imageSpacing;
           const imageStartX = segmentX - (imagesTotalWidth / 2); // Center under parent segment
@@ -649,14 +659,14 @@ function FlowWidget() {
           
           // Calculate the X position of the parent image to center video under it
           const segmentCount = flowData.segments.length;
-          const segmentSpacing = 380; // Match updated segment spacing
+          const segmentSpacing = 480; // Match updated segment spacing
           const segmentTotalWidth = (segmentCount - 1) * segmentSpacing;
           
           // Get parent script position
           let scriptParentX = startX;
           if (flowData.scripts && flowData.scripts.length > 0) {
             const scriptCount = flowData.scripts.length;
-            const scriptSpacing = 350;
+            const scriptSpacing = 450;
             const scriptTotalWidth = (scriptCount - 1) * scriptSpacing;
             
             let conceptParentX = startX;
@@ -674,7 +684,7 @@ function FlowWidget() {
           // Calculate image position under its segment
           const imageDetail = flowData.imageDetails[segment.id];
           const imageCount = imageDetail?.allImages?.length || 1;
-          const imageSpacing = 220;
+          const imageSpacing = 320;
           const imagesTotalWidth = (imageCount - 1) * imageSpacing;
           const imageStartX = segmentX - (imagesTotalWidth / 2);
           const imageX = imageStartX + (imageIndex * imageSpacing);
@@ -913,6 +923,9 @@ function FlowWidget() {
       // Update state
       setUserConcepts(prev => new Map(prev.set(nodeId, message)));
       
+      // Mark user input as completed
+      setTaskCompletionStates(prev => ({ ...prev, userInput: true }));
+      
       // Update the user node to show user text immediately
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === nodeId) {
@@ -1040,6 +1053,9 @@ function FlowWidget() {
           // Add new nodes and edges
           setNodes(prevNodes => [...prevNodes, ...newConceptNodes]);
           setEdges(prevEdges => [...prevEdges, ...newEdges]);
+          
+          // Mark concept generation as completed (preserve existing states)
+          setTaskCompletionStates(prev => ({ ...prev, concept: true }));
           
           console.log(`Generated ${conceptsResponse.concepts.length} concept nodes`);
         } else {
@@ -1381,7 +1397,7 @@ function FlowWidget() {
           id: script1NodeId,
           type: 'scriptNode',
           position: {
-            x: scriptNode.position.x - 150,
+            x: scriptNode.position.x - 200,
             y: scriptNode.position.y
           },
           data: {
@@ -1401,7 +1417,7 @@ function FlowWidget() {
           id: script2NodeId,
           type: 'scriptNode',
           position: {
-            x: scriptNode.position.x + 150,
+            x: scriptNode.position.x + 200,
             y: scriptNode.position.y
           },
           data: {
@@ -1445,6 +1461,9 @@ function FlowWidget() {
         // Add new nodes and edges
         setNodes(prevNodes => [...prevNodes, ...newScriptNodes]);
         setEdges(prevEdges => [...prevEdges, ...newEdges]);
+        
+        // Mark script generation as completed
+        setTaskCompletionStates(prev => ({ ...prev, script: true }));
         
         console.log(`Generated 2 different script nodes from concept`);
       } else {
@@ -1499,8 +1518,8 @@ function FlowWidget() {
         id: segmentNodeId,
         type: 'segmentNode',
         position: {
-          x: scriptNode.position.x + (index - 2) * 320,
-          y: scriptNode.position.y + 300
+          x: scriptNode.position.x + (index - 2) * 420,
+          y: scriptNode.position.y + 400
         },
         data: {
           ...segment,
@@ -1534,6 +1553,9 @@ function FlowWidget() {
     // Add new nodes and edges
     setNodes(prevNodes => [...prevNodes, ...newSegmentNodes]);
     setEdges(prevEdges => [...prevEdges, ...newEdges]);
+    
+    // Mark segment creation as completed
+    setTaskCompletionStates(prev => ({ ...prev, segment: true }));
   }, [setNodes, setEdges]);
   
   // Handle image generation from segment
@@ -1619,6 +1641,9 @@ function FlowWidget() {
         }));
         
         console.log(`Generated image for segment ${segmentId}`);
+        
+        // Mark image generation as completed
+        setTaskCompletionStates(prev => ({ ...prev, image: true }));
         
         // Refresh project data to update the flow
         await refreshProjectData();
@@ -1764,6 +1789,9 @@ function FlowWidget() {
         
         console.log(`Generated video for segment ${segmentId}`);
         
+        // Mark video generation as completed
+        setTaskCompletionStates(prev => ({ ...prev, video: true }));
+        
         // Refresh project data to update the flow
         await refreshProjectData();
       } else {
@@ -1815,6 +1843,102 @@ function FlowWidget() {
   useEffect(() => {
     fetchAllProjectData();
   }, [fetchAllProjectData]);
+
+  // Reset task completion states when project changes
+  useEffect(() => {
+    setTaskCompletionStates({
+      userInput: false,
+      concept: false,
+      script: false,
+      segment: false,
+      image: false,
+      video: false
+    });
+  }, [projectName]); // Reset when project name changes
+
+  // Update task completion states based on existing project data
+  useEffect(() => {
+    if (!allProjectData) return;
+
+    console.log("🔍 Analyzing existing project data for task completion:", allProjectData);
+
+    const newCompletionStates = {
+      userInput: false,
+      concept: false,
+      script: false,
+      segment: false,
+      image: false,
+      video: false
+    };
+
+    // Check for existing user input (stored in localStorage)
+    try {
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      if (storedProject) {
+        const project = JSON.parse(storedProject);
+        const userNodeDataKey = `userNodeData-${project.id}`;
+        const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
+        const hasUserInput = Object.keys(existingUserNodeData).length > 0;
+        
+        if (hasUserInput) {
+          newCompletionStates.userInput = true;
+        }
+      }
+    } catch (e) {
+      console.error('Error checking user input data:', e);
+    }
+
+    // Check for existing concepts
+    if (allProjectData.concepts && allProjectData.concepts.length > 0) {
+      console.log("✅ Found existing concepts:", allProjectData.concepts.length);
+      newCompletionStates.concept = true;
+    }
+
+    // Check for existing scripts (segmentations)
+    if (allProjectData.scripts && allProjectData.scripts.length > 0) {
+      console.log("✅ Found existing scripts:", allProjectData.scripts.length);
+      newCompletionStates.script = true;
+    }
+
+    // Check for existing segments
+    if (allProjectData.segments && allProjectData.segments.length > 0) {
+      console.log("✅ Found existing segments:", allProjectData.segments.length);
+      newCompletionStates.segment = true;
+    }
+
+    // Check for existing images
+    if (allProjectData.images && allProjectData.images.length > 0) {
+      console.log("🖼️ Checking images:", allProjectData.images.length, "images found");
+      // Check if any images are successfully generated (have s3Key and success flag)
+      const hasValidImages = allProjectData.images.some(img => 
+        img && img.success && img.s3Key
+      );
+      console.log("🖼️ Valid images found:", hasValidImages);
+      if (hasValidImages) {
+        newCompletionStates.image = true;
+      }
+    }
+
+    // Check for existing videos
+    if (allProjectData.videos && allProjectData.videos.length > 0) {
+      console.log("🎬 Checking videos:", allProjectData.videos.length, "videos found");
+      // Check if any videos are successfully generated (have videoFiles with s3Key)
+      const hasValidVideos = allProjectData.videos.some(video => 
+        video && 
+        video.success && 
+        Array.isArray(video.videoFiles) && 
+        video.videoFiles.length > 0 && 
+        video.videoFiles[0].s3Key
+      );
+      console.log("🎬 Valid videos found:", hasValidVideos);
+      if (hasValidVideos) {
+        newCompletionStates.video = true;
+      }
+    }
+
+    console.log("🔄 Updating task completion states based on existing data:", newCompletionStates);
+    setTaskCompletionStates(newCompletionStates);
+  }, [allProjectData]); // Update when project data changes
 
   // Update project name when component mounts or project changes
   useEffect(() => {
@@ -2034,6 +2158,7 @@ function FlowWidget() {
                 <TaskList 
                   nodes={nodes}
                   collapsed={true}
+                  taskCompletionStates={taskCompletionStates}
                 />
               </div>
             </div>

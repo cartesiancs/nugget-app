@@ -9,7 +9,8 @@ import { assets } from "../../assets/assets";
 export default function TaskList({
   nodes,
   collapsed = false,
-  onToggleCollapse
+  onToggleCollapse,
+  taskCompletionStates = {}
 }) {
   const [collapseSteps, setCollapseSteps] = useState(collapsed);
 
@@ -23,63 +24,20 @@ export default function TaskList({
     { id: 5, name: "Video", description: "Generate videos", icon: Video },
   ];
 
-  // Simple step counting based on node types present
+  // Use completion states from parent component instead of node counting
   const stepStatus = useMemo(() => {
     const status = {
-      0: "pending", // User Input
-      1: "pending", // Concept
-      2: "pending", // Script
-      3: "pending", // Segment
-      4: "pending", // Image
-      5: "pending", // Video
+      0: taskCompletionStates.userInput ? "done" : "pending", // User Input
+      1: taskCompletionStates.concept ? "done" : "pending",   // Concept
+      2: taskCompletionStates.script ? "done" : "pending",    // Script
+      3: taskCompletionStates.segment ? "done" : "pending",   // Segment
+      4: taskCompletionStates.image ? "done" : "pending",     // Image
+      5: taskCompletionStates.video ? "done" : "pending",     // Video
     };
 
-    if (!nodes || nodes.length === 0) {
-      return status;
-    }
-
-    // Count steps based on node types present (simpler approach)
-    let completedSteps = 0;
-
-    // Step 1: User nodes exist
-    if (nodes.some(node => node.type === "userNode")) {
-      status[0] = "done";
-      completedSteps = Math.max(completedSteps, 1);
-    }
-
-    // Step 2: Concept nodes exist
-    if (nodes.some(node => node.type === "conceptNode")) {
-      status[1] = "done";
-      completedSteps = Math.max(completedSteps, 2);
-    }
-
-    // Step 3: Script nodes exist
-    if (nodes.some(node => node.type === "scriptNode")) {
-      status[2] = "done";
-      completedSteps = Math.max(completedSteps, 3);
-    }
-
-    // Step 4: Segment nodes exist
-    if (nodes.some(node => node.type === "segmentNode")) {
-      status[3] = "done";
-      completedSteps = Math.max(completedSteps, 4);
-    }
-
-    // Step 5: Image nodes exist
-    if (nodes.some(node => node.type === "imageNode")) {
-      status[4] = "done";
-      completedSteps = Math.max(completedSteps, 5);
-    }
-
-    // Step 6: Video nodes exist
-    if (nodes.some(node => node.type === "videoNode")) {
-      status[5] = "done";
-      completedSteps = Math.max(completedSteps, 6);
-    }
-
-    console.log("📊 TaskList: Completed steps:", completedSteps, "Status:", status);
+    console.log("📊 TaskList: Task completion states:", taskCompletionStates, "Status:", status);
     return status;
-  }, [nodes]);
+  }, [taskCompletionStates]);
 
   // Calculate current step (highest incomplete step)
   const currentStep = useMemo(() => {

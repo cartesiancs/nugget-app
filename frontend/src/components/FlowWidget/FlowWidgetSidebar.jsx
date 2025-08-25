@@ -94,6 +94,43 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
     console.log("Exporting node");
   };
 
+  const handleAddToTimeline = () => {
+    // Add the selected video to timeline
+    if (!selectedNode) {
+      console.error("No node selected");
+      return;
+    }
+    
+    if (selectedNode.type !== "videoNode") {
+      console.error("Selected node is not a video node");
+      return;
+    }
+    
+    if (!selectedNode.data?.videoUrl) {
+      console.error("No video URL found for the selected node. Node data:", selectedNode.data);
+      return;
+    }
+
+    console.log("🎬 Adding video to timeline:", {
+      videoUrl: selectedNode.data.videoUrl,
+      videoId: selectedNode.data.videoId,
+      segmentId: selectedNode.data.segmentId,
+      nodeId: selectedNode.id
+    });
+    
+    // Dispatch custom event to add video to timeline
+    window.dispatchEvent(new CustomEvent("addVideoToTimeline", {
+      detail: {
+        videoUrl: selectedNode.data.videoUrl,
+        videoId: selectedNode.data.videoId,
+        segmentId: selectedNode.data.segmentId,
+        nodeId: selectedNode.id
+      }
+    }));
+    
+    console.log("✅ Add to timeline event dispatched successfully!");
+  };
+
 
 
   return (
@@ -546,32 +583,35 @@ function FlowWidgetSidebar({ selectedNode, onClose }) {
           </button>
         </div>
 
-        {/* Export Section */}
-        <div className='flex items-center justify-between pt-2'>
-          <span className='text-white font-medium text-sm'>Export</span>
-          <button
-            onClick={handleExport}
-            className='text-white hover:text-gray-300 p-2 rounded-lg transition-colors hover:opacity-80'
-            style={{
-              background: "rgba(17, 18, 21, 0.2)",
-              border: "1px solid rgba(233, 232, 235, 0.1)",
-            }}
-          >
-            <svg
-              className='w-5 h-5'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
+        {/* Conditional Export/Add to Timeline Section */}
+        {selectedNode.type === "videoNode" && (
+          <div className='flex items-center justify-between pt-2'>
+            <span className='text-white font-medium text-sm'>Add to Timeline</span>
+            <button
+              onClick={handleAddToTimeline}
+              className='text-white hover:text-gray-300 p-2 rounded-lg transition-colors hover:opacity-80'
+              style={{
+                background: "rgba(17, 18, 21, 0.2)",
+                border: "1px solid rgba(233, 232, 235, 0.1)",
+              }}
             >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 4v16m8-8H4'
-              />
-            </svg>
-          </button>
-        </div>
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M12 4v16m8-8H4'
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+        {/* For image nodes, don't show any export section */}
       </div>
     </div>
   );

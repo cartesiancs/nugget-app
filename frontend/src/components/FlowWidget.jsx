@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useTimeline } from "../hooks/useTimeline";
 import ChatLoginButton from "./ChatLoginButton";
 import LoadingSpinner from "./LoadingSpinner";
 import { projectApi } from "../services/project";
@@ -36,6 +37,7 @@ import { s3Api } from "../services/s3";
 
 function FlowWidget() {
   const { isAuthenticated, logout, user } = useAuth();
+  const timeline = useTimeline();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -2418,6 +2420,51 @@ function FlowWidget() {
       window.removeEventListener("flowWidget:close", closeHandler);
     };
   }, [restoreGenerationStates]);
+
+  // Listen for addVideoToTimeline events from the sidebar
+  useEffect(() => {
+    const handleAddVideoToTimeline = async (event) => {
+      const { videoUrl, videoId, segmentId, nodeId } = event.detail;
+      
+      console.log('🎬 Adding video to timeline:', { videoUrl, videoId, segmentId, nodeId });
+      
+      try {
+        // Create a videos map with the single video for the timeline function
+        const singleVideoMap = {};
+        if (segmentId) {
+          singleVideoMap[segmentId] = videoUrl;
+        } else {
+          // Fallback: use videoId or nodeId as key
+          const key = videoId || nodeId || 'video';
+          singleVideoMap[key] = videoUrl;
+        }
+        
+        // Use the existing timeline function to add the single video
+        const success = await timeline.addSingleVideoToTimeline(
+          segmentId || videoId || nodeId || 'video',
+          singleVideoMap,
+          setError
+        );
+        
+        if (success) {
+          console.log('✅ Video successfully added to timeline!');
+          // Optional: Show success notification or close sidebar
+        } else {
+          console.error('❌ Failed to add video to timeline');
+          setError('Failed to add video to timeline');
+        }
+      } catch (error) {
+        console.error('❌ Error adding video to timeline:', error);
+        setError(`Error adding video to timeline: ${error.message}`);
+      }
+    };
+
+    window.addEventListener('addVideoToTimeline', handleAddVideoToTimeline);
+    
+    return () => {
+      window.removeEventListener('addVideoToTimeline', handleAddVideoToTimeline);
+    };
+  }, [timeline, setError]);
 
   // Reflect open state on host element attribute for CSS
   useEffect(() => {

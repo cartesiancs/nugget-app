@@ -3116,7 +3116,44 @@ function FlowWidget() {
 
             {/* Right Section: User + Chat Bot + Blue Button */}
             <div className='fixed top-4 right-4 z-[1001] flex items-center gap-3'>
-                            {/* User Profile Dropdown */}
+              {/* Credits Display */}
+              {isAuthenticated && user && (
+                <div 
+                  className='flex items-center gap-1.5 bg-[#FFFFFF0D] border-0 rounded-lg px-2 py-1'
+                  style={{
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <svg
+                    width='16'
+                    height='16'
+                    viewBox='0 0 16 16'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='text-gray-400'
+                  >
+                    <path
+                      d='M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z'
+                      stroke='currentColor'
+                      strokeWidth='1.2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                    <path
+                      d='M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z'
+                      stroke='currentColor'
+                      strokeWidth='1.2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                  <span className='text-gray-200 text-xs font-medium'>
+                    {user.credits || "2000"}
+                  </span>
+                </div>
+              )}
+
+              {/* User Profile Dropdown */}
               <UserProfileDropdown />
 
               {/* Chat Bot Icon - Click to open chat widget */}

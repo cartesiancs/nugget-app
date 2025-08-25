@@ -3,6 +3,29 @@ import { getAuthHeaders } from "./api";
 
 // Available models for generation
 export const AVAILABLE_MODELS = {
+  TEXT: {
+    "gemini-2.0-flash-exp": {
+      name: "Gemini 2.0 Flash",
+      description: "Fast and efficient text generation",
+      provider: "Google",
+      contextLength: "1M tokens",
+      speed: "Fast",
+    },
+    "gemini-flash": {
+      name: "Gemini Flash",
+      description: "Balanced performance and speed",
+      provider: "Google",
+      contextLength: "1M tokens", 
+      speed: "Fast",
+    },
+    "gemini-pro": {
+      name: "Gemini Pro",
+      description: "High-quality text generation",
+      provider: "Google",
+      contextLength: "2M tokens",
+      speed: "Moderate",
+    },
+  },
   IMAGE: {
     "recraft-v3": {
       name: "Recraft AI v3",

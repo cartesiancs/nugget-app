@@ -30,7 +30,21 @@ const storeImpl = (set, get) => ({
 
   setProjects: (projects) => set({ projects }),
   setSelectedProject: (project) => {
+    console.log('🏪 Store: Setting selected project:', project?.name);
     set({ selectedProject: project });
+    
+    // Update localStorage
+    if (project) {
+      localStorage.setItem("project-store-selectedProject", JSON.stringify(project));
+    } else {
+      localStorage.removeItem("project-store-selectedProject");
+    }
+    
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('projectChanged', { 
+      detail: { project } 
+    }));
+    
     if (project?.id) {
       get().fetchProjectEssentials(project.id);
     }

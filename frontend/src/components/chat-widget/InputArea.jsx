@@ -10,7 +10,7 @@ export default function InputArea({
   setPrompt,
   loading,
   currentStep,
-  handleStepClick,
+
   chatFlow, // Add chatFlow to determine available models
 }) {
   const [selectedModel, setSelectedModel] = useState("GPT-4o mini");
@@ -154,16 +154,29 @@ export default function InputArea({
       if (modelValue === "recraft-v3" || modelValue === "imagen") {
         chatFlow.setSelectedImageModel(modelValue);
       } else if (modelValue === "gen4-turbo") {
-        chatFlow.setSelectedVideoModel("gen4-turbo");
+        chatFlow.setSelectedVideoModel("gen4_turbo");
       } else if (modelValue === "kling-v2.1-master") {
-        chatFlow.setSelectedVideoModel(modelValue);
+        chatFlow.setSelectedVideoModel("kling-v2.1-master");
       } else if (modelValue === "gemini-pro") {
-        chatFlow.setSelectedScriptModel("pro");
-        console.log("User selected Gemini Pro, set script model to 'pro'");
+        chatFlow.setSelectedScriptModel("gemini-pro");
+        console.log("User selected Gemini Pro, set script model to 'gemini-pro'");
       } else if (modelValue === "gemini-flash") {
-        chatFlow.setSelectedScriptModel("flash");
-        console.log("User selected Gemini Flash, set script model to 'flash'");
+        chatFlow.setSelectedScriptModel("gemini-flash");
+        console.log("User selected Gemini Flash, set script model to 'gemini-flash'");
+      } else if (modelValue === "gpt-2.5") {
+        chatFlow.setSelectedScriptModel("gemini-2.0-flash-exp");
+        console.log("User selected Gemini 2.5 Flash, set script model to 'gemini-2.0-flash-exp'");
       }
+      
+      console.log("Model selection updated:", {
+        inputAreaModel: modelValue,
+        currentStep: currentStep,
+        chatFlowModels: {
+          script: chatFlow?.selectedScriptModel,
+          image: chatFlow?.selectedImageModel,
+          video: chatFlow?.selectedVideoModel
+        }
+      });
     }
   };
 
@@ -176,51 +189,8 @@ export default function InputArea({
       // Clear input immediately using state management
       setPrompt("");
 
-      // Pass the selected model to the appropriate step
-      // Store the model in chatFlow for use by generation functions
+      // Check if we should use streaming agent flow
       if (chatFlow) {
-        // Map model values to the correct format for each step
-        if (selectedModel === "recraft-v3" || selectedModel === "imagen") {
-          chatFlow.setSelectedImageModel(selectedModel);
-        } else if (selectedModel === "gen4-turbo") {
-          chatFlow.setSelectedVideoModel("gen4-turbo");
-        } else if (selectedModel === "kling-v2.1-master") {
-          chatFlow.setSelectedVideoModel(selectedModel);
-        }
-
-        // Determine which step to execute based on current state
-        let stepToExecute = 0;
-
-        // If we have concepts but no selected concept, we're at step 0 (concept generation)
-        if (!chatFlow?.concepts) {
-          stepToExecute = 0;
-        }
-        // If we have selected concept but no scripts, we're at step 2 (script generation)
-        else if (chatFlow?.selectedConcept && !chatFlow?.selectedScript) {
-          stepToExecute = 2;
-        }
-        // If we have selected script but no images, we're at step 4 (image generation)
-        else if (
-          chatFlow?.selectedScript &&
-          Object.keys(chatFlow?.generatedImages || {}).length === 0
-        ) {
-          stepToExecute = 4;
-        }
-        // If we have images but no videos, we're at step 5 (video generation)
-        else if (
-          Object.keys(chatFlow?.generatedImages || {}).length > 0 &&
-          Object.keys(chatFlow?.generatedVideos || {}).length === 0
-        ) {
-          stepToExecute = 5;
-        }
-
-        // Store the script generation model for segmentation API - use what user actually selected
-        if (selectedModel === "gemini-pro") {
-          chatFlow.setSelectedScriptModel("pro");
-        } else if (selectedModel === "gemini-flash") {
-          chatFlow.setSelectedScriptModel("flash");
-        }
-
         // Store the current user message for immediate display with unique counter
         const newMessageId = chatFlow.messageCounter + 1;
         chatFlow.setMessageCounter(newMessageId);
@@ -233,11 +203,13 @@ export default function InputArea({
             id: `user-message-${newMessageId}`,
             content: currentPrompt,
             timestamp: Date.now(),
-            step: stepToExecute,
+            type: 'user',
           },
         ]);
 
-        handleStepClick(stepToExecute);
+        // Start streaming agent flow
+        console.log('InputArea sending prompt to agent:', currentPrompt);
+        chatFlow.startAgentStream(currentPrompt);
       }
     }
   };
@@ -338,7 +310,7 @@ export default function InputArea({
                     minWidth: "140px",
                     maxWidth: "100%",
                   }}
-                  disabled={loading}
+                  disabled={false}
                 >
                   <span className='truncate'>
                     <span className='hidden sm:inline'>
@@ -464,59 +436,58 @@ export default function InputArea({
               </div>
 
               {/* Action Icons */}
-              <div className='flex items-center gap-0 flex-shrink-0'>
-                {/* Icon 1 - Palette/Color - Hidden on mobile */}
-                <div className='hidden sm:block'>
-                  <svg
-                    width='28'
-                    height='28'
-                    viewBox='0 0 28 28'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='w-6 h-6 sm:w-7 sm:h-7'
-                  >
-                    <g clipPath='url(#clip0_640_49397)'>
-                      <path
-                        d='M7.65648 13.6665C7.84184 10.1861 10.8411 7.49015 14.3215 7.67552C17.7773 7.85957 20.4922 10.5502 20.3466 13.6063C20.2438 15.5369 18.5749 17.0365 16.6442 16.9336C16.0209 16.9004 15.1379 16.6585 14.6132 17.1301C14.2084 17.494 14.1354 18.1786 14.5086 18.5923C15.0541 19.2782 14.5668 20.3806 13.6475 20.3316C10.1671 20.1462 7.47111 17.1469 7.65648 13.6665Z'
-                        stroke='#7E7E80'
-                        strokeWidth='1.5'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
+              <div className='flex items-center gap-0'>
+
+
+                {/* Icon 1 - Palette/Color */}
+                <svg
+                  width='28'
+                  height='28'
+                  viewBox='0 0 28 28'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <g clipPath='url(#clip0_640_49397)'>
+                    <path
+                      d='M7.65648 13.6665C7.84184 10.1861 10.8411 7.49015 14.3215 7.67552C17.7773 7.85957 20.4922 10.5502 20.3466 13.6063C20.2438 15.5369 18.5749 17.0365 16.6442 16.9336C16.0209 16.9004 15.1379 16.6585 14.6132 17.1301C14.2084 17.494 14.1354 18.1786 14.5086 18.5923C15.0541 19.2782 14.5668 20.3806 13.6475 20.3316C10.1671 20.1462 7.47111 17.1469 7.65648 13.6665Z'
+                      stroke='#7E7E80'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                    <path
+                      d='M10.3188 13.3332C10.3188 12.965 10.6173 12.6665 10.9855 12.6665C11.3537 12.6665 11.6522 12.965 11.6522 13.3332C11.6522 13.7014 11.3537 13.9998 10.9855 13.9998C10.6173 13.9998 10.3188 13.7014 10.3188 13.3332Z'
+                      stroke='#7E7E80'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                    <path
+                      d='M13.499 10.8416C13.499 10.4734 13.7975 10.175 14.1657 10.175C14.5339 10.175 14.8324 10.4734 14.8324 10.8416C14.8324 11.2098 14.5339 11.5083 14.1657 11.5083C13.7975 11.5083 13.499 11.2098 13.499 10.8416Z'
+                      stroke='#7E7E80'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                    <path
+                      d='M16.4821 13.3332C16.4821 12.965 16.7806 12.6665 17.1488 12.6665C17.517 12.6665 17.8154 12.965 17.8154 13.3332C17.8154 13.7014 17.517 13.9998 17.1488 13.9998C16.7806 13.9998 16.4821 13.7014 16.4821 13.3332Z'
+                      stroke='#7E7E80'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id='clip0_640_49397'>
+                      <rect
+                        width='16'
+                        height='16'
+                        fill='white'
+                        transform='translate(6 6)'
                       />
-                      <path
-                        d='M10.3188 13.3332C10.3188 12.965 10.6173 12.6665 10.9855 12.6665C11.3537 12.6665 11.6522 12.965 11.6522 13.3332C11.6522 13.7014 11.3537 13.9998 10.9855 13.9998C10.6173 13.9998 10.3188 13.7014 10.3188 13.3332Z'
-                        stroke='#7E7E80'
-                        strokeWidth='1.5'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                      />
-                      <path
-                        d='M13.499 10.8416C13.499 10.4734 13.7975 10.175 14.1657 10.175C14.5339 10.175 14.8324 10.4734 14.8324 10.8416C14.8324 11.2098 14.5339 11.5083 14.1657 11.5083C13.7975 11.5083 13.499 11.2098 13.499 10.8416Z'
-                        stroke='#7E7E80'
-                        strokeWidth='1.5'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                      />
-                      <path
-                        d='M16.4821 13.3332C16.4821 12.965 16.7806 12.6665 17.1488 12.6665C17.517 12.6665 17.8154 12.965 17.8154 13.3332C17.8154 13.7014 17.517 13.9998 17.1488 13.9998C16.7806 13.9998 16.4821 13.7014 16.4821 13.3332Z'
-                        stroke='#7E7E80'
-                        strokeWidth='1.5'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                      />
-                    </g>
-                    <defs>
-                      <clipPath id='clip0_640_49397'>
-                        <rect
-                          width='16'
-                          height='16'
-                          fill='white'
-                          transform='translate(6 6)'
-                        />
-                      </clipPath>
-                    </defs>
-                  </svg>
-                </div>
+                    </clipPath>
+                  </defs>
+                </svg>
 
                 {/* Icon 2 - Settings/Options - Hidden on mobile */}
                 <div className='hidden sm:block'>

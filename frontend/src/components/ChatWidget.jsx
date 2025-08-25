@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useChatFlow } from "../hooks/useChatFlow";
 import { useTimeline } from "../hooks/useTimeline";
@@ -84,10 +84,96 @@ function ChatWidgetSidebar({ open, setOpen }) {
     },
   ];
 
+  // Force re-render state for videos
+  const [videoUpdateTrigger, setVideoUpdateTrigger] = useState(0);
+
+  // Listen for custom video update events
+  useEffect(() => {
+    const handleVideosUpdated = (event) => {
+      console.log('🔔 Received videosUpdated event:', event.detail);
+      setVideoUpdateTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener('videosUpdated', handleVideosUpdated);
+    return () => window.removeEventListener('videosUpdated', handleVideosUpdated);
+  }, []);
+
+  // Listen for chat interface prompt events
+  useEffect(() => {
+    const handleOpenChatWithPrompt = (event) => {
+      console.log('🎯 ChatWidget received openChatWithPrompt event:', event.detail);
+      const { project, prompt, autoStart } = event.detail;
+      
+      if (project && chatFlow) {
+        // Set the project if not already selected
+        if (!chatFlow.selectedProject || chatFlow.selectedProject.id !== project.id) {
+          console.log('🔄 Setting selected project to:', project);
+          chatFlow.setSelectedProject(project);
+        }
+        
+        // If we have a prompt and should auto-start, set the prompt and trigger the flow
+        if (autoStart && prompt && prompt.trim()) {
+          console.log('🚀 Auto-starting chat flow with prompt:', prompt);
+          setPrompt(prompt.trim());
+          
+          // Start the agent stream with the prompt
+          setTimeout(() => {
+            if (chatFlow.startAgentStream) {
+              console.log('▶️ Starting agent stream...');
+              chatFlow.startAgentStream(prompt.trim());
+            }
+          }, 100); // Small delay to ensure everything is set up
+        }
+        
+        // Open the chat sidebar if it's not already open
+        if (!open) {
+          console.log('📂 Opening chat sidebar');
+          setOpen(true);
+        }
+      }
+    };
+
+    const handleProjectSelected = (event) => {
+      console.log('🔔 ChatWidget received projectSelected event:', event.detail);
+      const { project, startChat } = event.detail;
+      
+      if (project && chatFlow) {
+        // Set the project
+        if (!chatFlow.selectedProject || chatFlow.selectedProject.id !== project.id) {
+          console.log('🔄 Setting selected project to:', project);
+          chatFlow.setSelectedProject(project);
+        }
+        
+        // Open chat if requested
+        if (startChat && !open) {
+          console.log('📂 Opening chat sidebar for project');
+          setOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener('openChatWithPrompt', handleOpenChatWithPrompt);
+    window.addEventListener('projectSelected', handleProjectSelected);
+    
+    return () => {
+      window.removeEventListener('openChatWithPrompt', handleOpenChatWithPrompt);
+      window.removeEventListener('projectSelected', handleProjectSelected);
+    };
+  }, [chatFlow, open, setOpen]);
+
   // Combined videos map for display
   const combinedVideosMap = useMemo(
-    () => ({ ...chatFlow.generatedVideos, ...chatFlow.storedVideosMap }),
-    [chatFlow.generatedVideos, chatFlow.storedVideosMap],
+    () => {
+      const combined = { ...chatFlow.generatedVideos, ...chatFlow.storedVideosMap };
+      console.log('🔄 Combined videos map updated:', {
+        generatedVideos: chatFlow.generatedVideos,
+        storedVideosMap: chatFlow.storedVideosMap,
+        combined,
+        trigger: videoUpdateTrigger
+      });
+      return combined;
+    },
+    [chatFlow.generatedVideos, chatFlow.storedVideosMap, videoUpdateTrigger],
   );
 
   // Helper functions
@@ -410,16 +496,13 @@ function ChatWidgetSidebar({ open, setOpen }) {
               {/* Chat Messages */}
               <ChatMessages
                 chatFlow={chatFlow}
-                timeline={timeline}
                 onImageClick={handleImageClick}
                 onVideoClick={handleVideoClick}
                 onAddSingleVideo={addSingleVideoToTimeline}
                 sendVideosToTimeline={sendVideosToTimeline}
                 combinedVideosMap={combinedVideosMap}
-                autoProgression={false}
                 currentPrompt={prompt}
                 setPrompt={setPrompt}
-                onSendMessage={handleStepClick}
               />
 
               {/* Input area */}
@@ -492,11 +575,12 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 {/* Model Selection */}
                 <ModelSelection
                   currentStep={chatFlow.currentStep}
+                  selectedScriptModel={chatFlow.selectedScriptModel}
+                  setSelectedScriptModel={chatFlow.setSelectedScriptModel}
                   selectedImageModel={chatFlow.selectedImageModel}
                   setSelectedImageModel={chatFlow.setSelectedImageModel}
                   selectedVideoModel={chatFlow.selectedVideoModel}
                   setSelectedVideoModel={chatFlow.setSelectedVideoModel}
-                  loading={chatFlow.loading}
                 />
 
                 {/* Generation Progress */}

@@ -117,8 +117,18 @@ export const getAudioCreditCost = (model, duration = 1, isEdit = false) => {
   return baseCost * duration;
 };
 
-export const formatCreditDeduction = (serviceName, credits) => {
-  return `${credits} credit${
-    credits !== 1 ? "s" : ""
-  } deducted for ${serviceName}`;
+export const formatCreditDeduction = (serviceName, credits, additionalInfo = null) => {
+  const creditText = `${credits} credit${credits !== 1 ? "s" : ""}`;
+  let message = `${creditText} deducted for ${serviceName}`;
+  
+  if (additionalInfo) {
+    message += ` (${additionalInfo})`;
+  }
+  
+  return message;
+};
+
+export const formatCreditBalance = (currentBalance, deductedCredits) => {
+  const newBalance = Math.max(0, currentBalance - deductedCredits);
+  return `Balance: ${newBalance.toFixed(1)} credits (was ${currentBalance.toFixed(1)})`;
 };

@@ -65,6 +65,8 @@ const ModelSelector = ({
                 <div className="text-sm font-medium">{modelInfo.name}</div>
                 <div className="text-xs text-gray-400">{modelInfo.description}</div>
                 <div className="text-xs text-gray-500 mt-1">
+                  {genType === 'TEXT' && modelInfo.contextLength && `Context: ${modelInfo.contextLength}`}
+                  {genType === 'TEXT' && modelInfo.speed && ` • Speed: ${modelInfo.speed}`}
                   {genType === 'IMAGE' && modelInfo.imageSize && `Size: ${modelInfo.imageSize}`}
                   {genType === 'VIDEO' && modelInfo.duration && `Duration: ${modelInfo.duration}`}
                   {genType === 'VIDEO' && modelInfo.resolution && ` • Resolution: ${modelInfo.resolution}`}

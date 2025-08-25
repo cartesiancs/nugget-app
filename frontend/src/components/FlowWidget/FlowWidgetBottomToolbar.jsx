@@ -175,21 +175,20 @@ function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
             alt='Styles Tool'
           />
 
-          {/* Brush/Edit Tool - Now functions as Refresh Layout (Click only, not selectable) */}
+          {/* Brush/Tidy Tool - Arranges layout for better spacing */}
           <img
             src={assets.BrushIcon}
             onClick={() => {
               // Don't select the tool, just execute the action
-              // Instead of full refresh, just refresh project data without losing generated nodes
+              // Arrange layout with better spacing between nodes
               if (onRefreshLayout) {
-                console.log("🎨 Brush tool clicked - refreshing project data only");
-                // This should call refreshProjectData instead of createFlowElements
+                console.log("🎨 Tidy tool clicked - arranging layout for better spacing");
                 onRefreshLayout();
               }
             }}
             className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-            title='Refresh Layout - Update with latest project data'
-            alt='Refresh Layout Tool'
+            title='Tidy Layout - Arrange nodes with better spacing'
+            alt='Tidy Layout Tool'
           />
 
           {/* Comment/Chat Tool - Coming Soon */}

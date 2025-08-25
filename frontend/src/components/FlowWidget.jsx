@@ -365,22 +365,42 @@ function FlowWidget() {
 
     if (Array.isArray(allProjectData.images)) {
       allProjectData.images.forEach((img) => {
-        if (img && img.success && img.s3Key && img.uuid) {
-          const segmentId = img.uuid.replace(/^seg-(\d+)(?:-\d+)?$/, "$1");
-
-          if (!allImagesBySegment[segmentId]) {
-            allImagesBySegment[segmentId] = [];
+        if (img && img.success && img.s3Key && img.visualPrompt) {
+          // Find matching segment by comparing segment.visual with image.visualPrompt
+          let matchingSegmentId = null;
+          
+          // Look for exact match between segment.visual and image.visualPrompt
+          const matchingSegment = allProjectData.segments.find((segment) => 
+            segment.visual && segment.visual.trim() === img.visualPrompt.trim()
+          );
+          
+          if (matchingSegment) {
+            matchingSegmentId = matchingSegment.segmentId || matchingSegment.id;
+            console.warn(`✅ Found segment by visual/visualPrompt match: ${matchingSegmentId} for image ${img.id}`);
+            console.warn(`📝 Matched text: "${img.visualPrompt}"`);
+          } else {
+            // No fallback - only use visual/visualPrompt matching
+            console.warn(`❌ No visual/visualPrompt match found for image ${img.id}`);
+            console.warn(`📝 Image visualPrompt: "${img.visualPrompt}"`);
+            console.warn(`📋 Available segment visuals: [${allProjectData.segments.map(s => `"${s.visual}"`).join(', ')}]`);
+            matchingSegmentId = null; // Don't map this image to any segment
           }
 
-          allImagesBySegment[segmentId].push({
-            id: img.id,
-            url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
-            visualPrompt: img.visualPrompt,
-            artStyle: img.artStyle,
-            s3Key: img.s3Key,
-            uuid: img.uuid,
-            isPrimary: !img.uuid.includes("-"),
-          });
+          if (matchingSegmentId) {
+            if (!allImagesBySegment[matchingSegmentId]) {
+              allImagesBySegment[matchingSegmentId] = [];
+            }
+
+            allImagesBySegment[matchingSegmentId].push({
+              id: img.id,
+              url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
+              visualPrompt: img.visualPrompt,
+              artStyle: img.artStyle,
+              s3Key: img.s3Key,
+              uuid: img.uuid,
+              isPrimary: !img.uuid.includes("-"),
+            });
+          }
         }
       });
 
@@ -659,14 +679,25 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Create Segment Nodes
-    if (flowData.segments && flowData.segments.length > 0) {
-      const segmentCount = flowData.segments.length;
+    // Filter segments to only include those with images or videos
+    const segmentsWithImages = flowData.segments && flowData.segments.length > 0 
+      ? flowData.segments.filter((segment) => 
+          flowData.images[segment.id] || flowData.videos[segment.id]
+        )
+      : [];
+    
+    console.log("📊 DEBUG: Total segments:", flowData.segments?.length || 0);
+    console.log("📊 DEBUG: Segments with images/videos:", segmentsWithImages.length);
+    console.log("📊 DEBUG: Filtered segments:", segmentsWithImages.map(s => ({ id: s.id, hasImage: !!flowData.images[s.id], hasVideo: !!flowData.videos[s.id] })));
+
+    // Create Segment Nodes - only for segments that have images or are manually added
+    if (segmentsWithImages.length > 0) {
+      const segmentCount = segmentsWithImages.length;
       const segmentSpacing = 480;
       const totalWidth = (segmentCount - 1) * segmentSpacing;
       const segmentStartX = startX - totalWidth / 2;
 
-      flowData.segments.forEach((segment, index) => {
+      segmentsWithImages.forEach((segment, index) => {
         const segmentX = segmentStartX + index * segmentSpacing;
 
         newNodes.push({
@@ -684,25 +715,21 @@ function FlowWidget() {
         });
 
         if (flowData.scripts && flowData.scripts.length > 0) {
-          // Find the script that contains this segment
+          // Map segment to script using ONLY first 8 characters of ID matching
           let parentScriptId = null;
           
-          // Look for the script that contains this segment in its segments array
-          const matchingScript = flowData.scripts.find((script) => 
-            script.segments && Array.isArray(script.segments) &&
-            script.segments.some((seg) => 
-              seg.segmentId === segment.id || 
-              seg.id === segment.id ||
-              seg.segmentId === segment.segmentId
-            )
+          const segmentIdPrefix = segment.id.substring(0, 8);
+          const scriptByIdMatch = flowData.scripts.find((script) => 
+            script.id.substring(0, 8) === segmentIdPrefix
           );
           
-          if (matchingScript) {
-            parentScriptId = matchingScript.id;
+          if (scriptByIdMatch) {
+            parentScriptId = scriptByIdMatch.id;
+            console.log(`✅ Found script by ID prefix matching: ${parentScriptId} for segment ${segment.id} (prefix: ${segmentIdPrefix})`);
           } else {
-            // If no matching script found, default to first script as fallback
+            // If no match found, default to first script as fallback
             parentScriptId = flowData.scripts[0].id;
-            console.warn(`No matching script found for segment ${segment.id}, using first script as fallback`);
+            console.warn(`❌ No ID prefix match found for segment ${segment.id} (prefix: ${segmentIdPrefix}), using first script as fallback: ${parentScriptId}`);
           }
 
           newEdges.push({
@@ -721,165 +748,73 @@ function FlowWidget() {
       });
 
       currentLevel++;
+    }
 
-      // Create Image Nodes for segments that have images
-      let imageNodesBySegment = new Map();
-      flowData.segments.forEach((segment, segmentIndex) => {
-        const imageDetail = flowData.imageDetails[segment.id];
-        if (flowData.images[segment.id] && imageDetail?.allImages) {
-          imageNodesBySegment.set(segment.id, {
-            segment: segment,
-            segmentIndex: segmentIndex,
-            images: imageDetail.allImages,
-            imageDetail: imageDetail,
-          });
-        }
-      });
-
-      if (imageNodesBySegment.size > 0) {
-        const segmentSpacing = 480;
-
-        imageNodesBySegment.forEach((segmentData, segmentId) => {
-          const { segment, segmentIndex, images, imageDetail } = segmentData;
-
-          const segmentNode = newNodes.find(
-            (n) => n.id === `segment-${segment.id}`,
-          );
-          const segmentX = segmentNode
-            ? segmentNode.position.x
-            : startX + segmentIndex * segmentSpacing;
-
-          const imageSpacing = 320;
-          const imageCount = images.length;
-          const imagesTotalWidth = (imageCount - 1) * imageSpacing;
-          const imageStartX = segmentX - imagesTotalWidth / 2;
-
-          images.forEach((image, imageIndex) => {
-            const imageX = imageStartX + imageIndex * imageSpacing;
-
-            newNodes.push({
-              id: `image-${segment.id}-${image.id}`,
-              type: "imageNode",
-              position: { x: imageX, y: startY + currentLevel * levelHeight },
-              data: {
-                segmentId: segment.id,
-                imageUrl: image.url,
-                imageId: image.id,
-                isPrimary: image.isPrimary,
-                allImages: imageDetail.allImages,
-                s3Key: image.s3Key,
-                nodeState: "existing",
-                visualPrompt: image.visualPrompt,
-                artStyle:
-                  image.artStyle || "cinematic photography with soft lighting",
-                segmentData: {
-                  id: segment.id,
-                  visual: segment.visual,
-                  animation: segment.animation,
-                  artStyle:
-                    image.artStyle ||
-                    "cinematic photography with soft lighting",
-                },
-              },
-            });
-
-            newEdges.push({
-              id: `segment-${segment.id}-to-image-${segment.id}-${image.id}`,
-              source: `segment-${segment.id}`,
-              target: `image-${segment.id}-${image.id}`,
-              sourceHandle: "output",
-              targetHandle: "input",
-              style: {
-                stroke: "#E9E8EB33",
-                strokeWidth: 2,
-                filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
-              },
-            });
-          });
+    // Create Image Nodes for segments that have images (use filtered segments)
+    let imageNodesBySegment = new Map();
+    segmentsWithImages.forEach((segment, segmentIndex) => {
+      const imageDetail = flowData.imageDetails[segment.id];
+      if (flowData.images[segment.id] && imageDetail?.allImages) {
+        imageNodesBySegment.set(segment.id, {
+          segment: segment,
+          segmentIndex: segmentIndex,
+          images: imageDetail.allImages,
+          imageDetail: imageDetail,
         });
-
-        currentLevel++;
       }
+    });
 
-      // Create Video Nodes for images that have videos
-      let videoNodesByImage = new Map();
-      let usedSegmentVideos = new Set();
+    if (imageNodesBySegment.size > 0) {
+      const segmentSpacing = 480;
 
-      flowData.segments.forEach((segment, segmentIndex) => {
-        const imageDetail = flowData.imageDetails[segment.id];
-        if (flowData.images[segment.id] && imageDetail?.allImages) {
-          imageDetail.allImages.forEach((image, imageIndex) => {
-            const imageVideoKey = `${segment.id}-${image.id}`;
-            let videoUrl = flowData.videos[imageVideoKey];
-            let videoId = flowData?.videoDetails?.[imageVideoKey]?.id;
-            let videoKey = imageVideoKey;
+      imageNodesBySegment.forEach((segmentData, segmentId) => {
+        const { segment, segmentIndex, images, imageDetail } = segmentData;
 
-            if (!videoUrl && !usedSegmentVideos.has(segment.id)) {
-              const segmentVideoUrl = flowData.videos[segment.id];
-              const segmentVideoId = flowData?.videoDetails?.[segment.id]?.id;
+        const segmentNode = newNodes.find(
+          (n) => n.id === `segment-${segment.id}`,
+        );
+        const segmentX = segmentNode
+          ? segmentNode.position.x
+          : startX + segmentIndex * segmentSpacing;
 
-              if (segmentVideoUrl) {
-                videoUrl = segmentVideoUrl;
-                videoId = segmentVideoId;
-                videoKey = `${segment.id}-${image.id}`;
-                usedSegmentVideos.add(segment.id);
-              }
-            }
+        const imageSpacing = 320;
+        const imageCount = images.length;
+        const imagesTotalWidth = (imageCount - 1) * imageSpacing;
+        const imageStartX = segmentX - imagesTotalWidth / 2;
 
-            if (videoUrl) {
-              videoNodesByImage.set(videoKey, {
-                segment: segment,
-                segmentIndex: segmentIndex,
-                image: image,
-                imageIndex: imageIndex,
-                videoUrl: videoUrl,
-                videoId: videoId,
-              });
-            }
-          });
-        }
-      });
-
-      if (videoNodesByImage.size > 0) {
-        videoNodesByImage.forEach((videoData, key) => {
-          const {
-            segment,
-            segmentIndex,
-            image,
-            imageIndex,
-            videoUrl,
-            videoId,
-          } = videoData;
-
-          const imageNodeId = `image-${segment.id}-${image.id}`;
-          const imageNode = newNodes.find((n) => n.id === imageNodeId);
-          const videoX = imageNode ? imageNode.position.x : startX;
+        images.forEach((image, imageIndex) => {
+          const imageX = imageStartX + imageIndex * imageSpacing;
 
           newNodes.push({
-            id: `video-${segment.id}-${image.id}`,
-            type: "videoNode",
-            position: { x: videoX, y: startY + currentLevel * levelHeight },
+            id: `image-${segment.id}-${image.id}`,
+            type: "imageNode",
+            position: { x: imageX, y: startY + currentLevel * levelHeight },
             data: {
               segmentId: segment.id,
+              imageUrl: image.url,
               imageId: image.id,
-              videoUrl: videoUrl,
-              videoId: videoId,
+              isPrimary: image.isPrimary,
+              allImages: imageDetail.allImages,
+              s3Key: image.s3Key,
               nodeState: "existing",
+              visualPrompt: image.visualPrompt,
+              artStyle:
+                image.artStyle || "cinematic photography with soft lighting",
               segmentData: {
                 id: segment.id,
+                visual: segment.visual,
                 animation: segment.animation,
                 artStyle:
-                  flowData?.videoDetails?.[segment.id]?.artStyle ||
+                  image.artStyle ||
                   "cinematic photography with soft lighting",
-                imageS3Key: image.s3Key,
               },
             },
           });
 
           newEdges.push({
-            id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
-            source: `image-${segment.id}-${image.id}`,
-            target: `video-${segment.id}-${image.id}`,
+            id: `segment-${segment.id}-to-image-${segment.id}-${image.id}`,
+            source: `segment-${segment.id}`,
+            target: `image-${segment.id}-${image.id}`,
             sourceHandle: "output",
             targetHandle: "input",
             style: {
@@ -889,7 +824,99 @@ function FlowWidget() {
             },
           });
         });
+      });
+
+      currentLevel++;
+    }
+
+    // Create Video Nodes for images that have videos (use filtered segments)
+    let videoNodesByImage = new Map();
+    let usedSegmentVideos = new Set();
+
+    segmentsWithImages.forEach((segment, segmentIndex) => {
+      const imageDetail = flowData.imageDetails[segment.id];
+      if (flowData.images[segment.id] && imageDetail?.allImages) {
+        imageDetail.allImages.forEach((image, imageIndex) => {
+          const imageVideoKey = `${segment.id}-${image.id}`;
+          let videoUrl = flowData.videos[imageVideoKey];
+          let videoId = flowData?.videoDetails?.[imageVideoKey]?.id;
+          let videoKey = imageVideoKey;
+
+          if (!videoUrl && !usedSegmentVideos.has(segment.id)) {
+            const segmentVideoUrl = flowData.videos[segment.id];
+            const segmentVideoId = flowData?.videoDetails?.[segment.id]?.id;
+
+            if (segmentVideoUrl) {
+              videoUrl = segmentVideoUrl;
+              videoId = segmentVideoId;
+              videoKey = `${segment.id}-${image.id}`;
+              usedSegmentVideos.add(segment.id);
+            }
+          }
+
+          if (videoUrl) {
+            videoNodesByImage.set(videoKey, {
+              segment: segment,
+              segmentIndex: segmentIndex,
+              image: image,
+              imageIndex: imageIndex,
+              videoUrl: videoUrl,
+              videoId: videoId,
+            });
+          }
+        });
       }
+    });
+
+    if (videoNodesByImage.size > 0) {
+      videoNodesByImage.forEach((videoData, key) => {
+        const {
+          segment,
+          segmentIndex,
+          image,
+          imageIndex,
+          videoUrl,
+          videoId,
+        } = videoData;
+
+        const imageNodeId = `image-${segment.id}-${image.id}`;
+        const imageNode = newNodes.find((n) => n.id === imageNodeId);
+        const videoX = imageNode ? imageNode.position.x : startX;
+
+        newNodes.push({
+          id: `video-${segment.id}-${image.id}`,
+          type: "videoNode",
+          position: { x: videoX, y: startY + currentLevel * levelHeight },
+          data: {
+            segmentId: segment.id,
+            imageId: image.id,
+            videoUrl: videoUrl,
+            videoId: videoId,
+            nodeState: "existing",
+            segmentData: {
+              id: segment.id,
+              animation: segment.animation,
+              artStyle:
+                flowData?.videoDetails?.[segment.id]?.artStyle ||
+                "cinematic photography with soft lighting",
+              imageS3Key: image.s3Key,
+            },
+          },
+        });
+
+        newEdges.push({
+          id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
+          source: `image-${segment.id}-${image.id}`,
+          target: `video-${segment.id}-${image.id}`,
+          sourceHandle: "output",
+          targetHandle: "input",
+          style: {
+            stroke: "#E9E8EB33",
+            strokeWidth: 2,
+            filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+          },
+        });
+      });
     }
 
     setNodes(newNodes);
@@ -939,10 +966,27 @@ function FlowWidget() {
       let segments = [];
       if (segmentationsData?.success && segmentationsData.data?.length > 0) {
         scripts = segmentationsData.data;
-        const firstSegmentation = segmentationsData.data[0];
-        if (Array.isArray(firstSegmentation.segments)) {
-          segments = firstSegmentation.segments;
-        }
+        
+        // Collect segments from ALL scripts, not just the first one
+        segments = [];
+        segmentationsData.data.forEach((script, scriptIndex) => {
+          if (script.segments && Array.isArray(script.segments)) {
+            script.segments.forEach((segment) => {
+              segments.push({
+                ...segment,
+                // Ensure we have the segment ID
+                id: segment.segmentId || segment.id,
+                segmentId: segment.segmentId || segment.id,
+                // Add reference to parent script for debugging
+                parentScriptId: script.id,
+                parentScriptIndex: scriptIndex
+              });
+            });
+            console.log(`📊 Loaded ${script.segments.length} segments from script ${scriptIndex + 1} (ID: ${script.id})`);
+          }
+        });
+        
+        console.log(`🎯 Total segments loaded from ${scripts.length} scripts: ${segments.length}`);
       }
 
       setAllProjectData({

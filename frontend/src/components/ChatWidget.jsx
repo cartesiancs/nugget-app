@@ -98,6 +98,69 @@ function ChatWidgetSidebar({ open, setOpen }) {
     return () => window.removeEventListener('videosUpdated', handleVideosUpdated);
   }, []);
 
+  // Listen for chat interface prompt events
+  useEffect(() => {
+    const handleOpenChatWithPrompt = (event) => {
+      console.log('🎯 ChatWidget received openChatWithPrompt event:', event.detail);
+      const { project, prompt, autoStart } = event.detail;
+      
+      if (project && chatFlow) {
+        // Set the project if not already selected
+        if (!chatFlow.selectedProject || chatFlow.selectedProject.id !== project.id) {
+          console.log('🔄 Setting selected project to:', project);
+          chatFlow.setSelectedProject(project);
+        }
+        
+        // If we have a prompt and should auto-start, set the prompt and trigger the flow
+        if (autoStart && prompt && prompt.trim()) {
+          console.log('🚀 Auto-starting chat flow with prompt:', prompt);
+          setPrompt(prompt.trim());
+          
+          // Start the agent stream with the prompt
+          setTimeout(() => {
+            if (chatFlow.startAgentStream) {
+              console.log('▶️ Starting agent stream...');
+              chatFlow.startAgentStream(prompt.trim());
+            }
+          }, 100); // Small delay to ensure everything is set up
+        }
+        
+        // Open the chat sidebar if it's not already open
+        if (!open) {
+          console.log('📂 Opening chat sidebar');
+          setOpen(true);
+        }
+      }
+    };
+
+    const handleProjectSelected = (event) => {
+      console.log('🔔 ChatWidget received projectSelected event:', event.detail);
+      const { project, startChat } = event.detail;
+      
+      if (project && chatFlow) {
+        // Set the project
+        if (!chatFlow.selectedProject || chatFlow.selectedProject.id !== project.id) {
+          console.log('🔄 Setting selected project to:', project);
+          chatFlow.setSelectedProject(project);
+        }
+        
+        // Open chat if requested
+        if (startChat && !open) {
+          console.log('📂 Opening chat sidebar for project');
+          setOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener('openChatWithPrompt', handleOpenChatWithPrompt);
+    window.addEventListener('projectSelected', handleProjectSelected);
+    
+    return () => {
+      window.removeEventListener('openChatWithPrompt', handleOpenChatWithPrompt);
+      window.removeEventListener('projectSelected', handleProjectSelected);
+    };
+  }, [chatFlow, open, setOpen]);
+
   // Combined videos map for display
   const combinedVideosMap = useMemo(
     () => {

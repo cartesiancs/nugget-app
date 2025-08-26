@@ -203,6 +203,27 @@ export const useScriptGeneration = ({
         console.error('Error parsing project data:', e);
       }
       
+      // Determine error type and message
+      const getErrorDetails = (error) => {
+        const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+        
+        if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('NetworkError')) {
+          return { message: 'Network Error', description: 'Please check your internet connection and try again.' };
+        }
+        if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error') || errorMessage.includes('server')) {
+          return { message: 'Internal Server Error', description: 'Server is temporarily unavailable. Please try again.' };
+        }
+        if (errorMessage.includes('401') || errorMessage.includes('403') || errorMessage.includes('Unauthorized')) {
+          return { message: 'Authentication Error', description: 'Please log in again to continue.' };
+        }
+        if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('Too Many Requests')) {
+          return { message: 'Rate Limit Exceeded', description: 'Too many requests. Please wait a moment and try again.' };
+        }
+        return { message: 'Generation Failed', description: 'Failed to generate script. Please try again.' };
+      };
+      
+      const errorDetails = getErrorDetails(error);
+      
       if (selectedProject) {
         // Save error state instead of removing it immediately
         saveGenerationState(selectedProject.id, 'script', scriptNode.id, {
@@ -212,32 +233,42 @@ export const useScriptGeneration = ({
           parentNodeId: conceptNode.id,
           conceptContent: conceptNode.data?.content || conceptNode.data?.userText || '',
           status: 'error',
-          errorMessage: error.message || 'Failed to generate script'
+          errorMessage: errorDetails.message,
+          originalData: {
+            conceptNode: conceptNode,
+            scriptNode: scriptNode
+          }
         });
       }
       
-      // Show error in script node
+      // Show error in script node with enhanced error display
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === scriptNode.id) {
           return {
             ...node,
             data: {
               ...node.data,
-              content: 'Failed to generate script',
-              error: error.message || 'Failed to generate script',
-              nodeState: 'error'
+              content: errorDetails.message,
+              error: errorDetails.message,
+              errorDescription: errorDetails.description,
+              nodeState: 'error',
+              canRetry: true,
+              originalData: {
+                conceptNode: conceptNode,
+                scriptNode: scriptNode
+              }
             }
           };
         }
         return node;
       }));
       
-      // Clean up error state after 5 seconds
-      if (selectedProject) {
-        setTimeout(() => {
-          removeGenerationState(selectedProject.id, 'script', scriptNode.id);
-        }, 5000);
-      }
+      // Don't auto-remove error states - let user manually retry or dismiss
+      // if (selectedProject) {
+      //   setTimeout(() => {
+      //     removeGenerationState(selectedProject.id, 'script', scriptNode.id);
+      //   }, 5000);
+      // }
     } finally {
       setGeneratingScripts(prev => {
         const newSet = new Set(prev);

@@ -230,6 +230,28 @@ export const useConceptGeneration = ({
       }
     } catch (error) {
       console.error('Error generating concepts:', error);
+      
+      // Determine error type and message
+      const getErrorDetails = (error) => {
+        const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+        
+        if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('NetworkError')) {
+          return { message: 'Network Error', description: 'Please check your internet connection and try again.' };
+        }
+        if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error') || errorMessage.includes('server')) {
+          return { message: 'Internal Server Error', description: 'Server is temporarily unavailable. Please try again.' };
+        }
+        if (errorMessage.includes('401') || errorMessage.includes('403') || errorMessage.includes('Unauthorized')) {
+          return { message: 'Authentication Error', description: 'Please log in again to continue.' };
+        }
+        if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('Too Many Requests')) {
+          return { message: 'Rate Limit Exceeded', description: 'Too many requests. Please wait a moment and try again.' };
+        }
+        return { message: 'Generation Failed', description: 'Failed to generate concepts. Please try again.' };
+      };
+      
+      const errorDetails = getErrorDetails(error);
+      
       // Save error state instead of removing it immediately
       saveGenerationState(selectedProject.id, 'concept', loadingConceptNodeId, {
         loadingMessage: 'Failed to generate concepts',
@@ -238,28 +260,39 @@ export const useConceptGeneration = ({
         parentNodeId: nodeId,
         originalPrompt: message,
         status: 'error',
-        errorMessage: error.message || 'Failed to generate concepts'
+        errorMessage: errorDetails.message,
+        originalData: {
+          message: message,
+          parentNodeId: nodeId
+        }
       });
       
-      // Show error in the loading concept node
+      // Show error in the loading concept node with enhanced error display
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === loadingConceptNodeId) {
           return {
             ...node,
             data: {
               ...node.data,
-              content: 'Failed to generate concepts',
-              error: error.message || 'Failed to generate concepts',
-              nodeState: 'error'
+              content: errorDetails.message,
+              error: errorDetails.message,
+              errorDescription: errorDetails.description,
+              nodeState: 'error',
+              canRetry: true,
+              originalData: {
+                message: message,
+                parentNodeId: nodeId
+              }
             }
           };
         }
         return node;
       }));
       
-      setTimeout(() => {
-        removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
-      }, 5000);
+      // Don't auto-remove error states - let user manually retry or dismiss
+      // setTimeout(() => {
+      //   removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
+      // }, 5000);
     } finally {
       setGeneratingConcepts(prev => {
         const newSet = new Set(prev);

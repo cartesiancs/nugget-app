@@ -6,6 +6,7 @@ import { useScriptGeneration } from "../hooks/useScriptGeneration";
 import { useSegmentCreation } from "../hooks/useSegmentCreation";
 import { useImageGeneration } from "../hooks/useImageGeneration";
 import { useVideoGeneration } from "../hooks/useVideoGeneration";
+import { useErrorHandling } from "../hooks/useErrorHandling";
 import ChatLoginButton from "./ChatLoginButton";
 import { projectApi } from "../services/project";
 import {
@@ -183,6 +184,19 @@ function FlowWidget() {
     removeGenerationState,
     edges,
     nodes,
+  });
+
+  // Initialize error handling hook
+  const { retryGeneration } = useErrorHandling({
+    setNodes,
+    setEdges,
+    saveGenerationState,
+    removeGenerationState,
+    generateConcepts,
+    generateScript,
+    generateImage,
+    generateVideo,
+    nodes
   });
 
   // Restore generation states on component load
@@ -1252,19 +1266,19 @@ function FlowWidget() {
     [setNodes, setEdges],
   );
 
-  // Update nodeTypes to include all new clean node components
+  // Update nodeTypes to include all new clean node components with retry functionality
   const nodeTypes = useMemo(
     () => ({
-      // New clean nodes
-      imageNode: NodeImage,
-      videoNode: NodeVideo,
-      scriptNode: NodeScript,
+      // New clean nodes with error handling
+      imageNode: (props) => <NodeImage {...props} onRetry={retryGeneration} />,
+      videoNode: (props) => <NodeVideo {...props} onRetry={retryGeneration} />,
+      scriptNode: (props) => <NodeScript {...props} onRetry={retryGeneration} />,
       segmentNode: NodeSegment,
-      conceptNode: NodeConcept,
+      conceptNode: (props) => <NodeConcept {...props} onRetry={retryGeneration} />,
       chatNode: ChatNode,
       userNode: UserNode,
     }),
-    [],
+    [retryGeneration],
   );
 
   // Initialize flow when data changes

@@ -149,6 +149,27 @@ export const useImageGeneration = ({
       const artStyle = segmentNode.data?.artStyle || 'cinematic photography with soft lighting';
       const segmentId = segmentNode.data?.id || Date.now();
       
+      // Determine error type and message
+      const getErrorDetails = (error) => {
+        const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+        
+        if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('NetworkError')) {
+          return { message: 'Network Error', description: 'Please check your internet connection and try again.' };
+        }
+        if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error') || errorMessage.includes('server')) {
+          return { message: 'Internal Server Error', description: 'Server is temporarily unavailable. Please try again.' };
+        }
+        if (errorMessage.includes('401') || errorMessage.includes('403') || errorMessage.includes('Unauthorized')) {
+          return { message: 'Authentication Error', description: 'Please log in again to continue.' };
+        }
+        if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('Too Many Requests')) {
+          return { message: 'Rate Limit Exceeded', description: 'Too many requests. Please wait a moment and try again.' };
+        }
+        return { message: 'Generation Failed', description: 'Failed to generate image. Please try again.' };
+      };
+      
+      const errorDetails = getErrorDetails(error);
+      
       if (selectedProject) {
         // Save error state instead of removing it immediately
         saveGenerationState(selectedProject.id, 'image', imageNode.id, {
@@ -160,32 +181,42 @@ export const useImageGeneration = ({
           artStyle: artStyle,
           segmentId: segmentId,
           status: 'error',
-          errorMessage: error.message || 'Failed to generate image'
+          errorMessage: errorDetails.message,
+          originalData: {
+            segmentNode: segmentNode,
+            imageNode: imageNode
+          }
         });
       }
       
-      // Show error in image node
+      // Show error in image node with enhanced error display
       setNodes(prevNodes => prevNodes.map(node => {
         if (node.id === imageNode.id) {
           return {
             ...node,
             data: {
               ...node.data,
-              content: 'Failed to generate image',
-              error: error.message || 'Failed to generate image',
-              nodeState: 'error'
+              content: errorDetails.message,
+              error: errorDetails.message,
+              errorDescription: errorDetails.description,
+              nodeState: 'error',
+              canRetry: true,
+              originalData: {
+                segmentNode: segmentNode,
+                imageNode: imageNode
+              }
             }
           };
         }
         return node;
       }));
       
-      // Clean up error state after 5 seconds
-      if (selectedProject) {
-        setTimeout(() => {
-          removeGenerationState(selectedProject.id, 'image', imageNode.id);
-        }, 5000);
-      }
+      // Don't auto-remove error states - let user manually retry or dismiss
+      // if (selectedProject) {
+      //   setTimeout(() => {
+      //     removeGenerationState(selectedProject.id, 'image', imageNode.id);
+      //   }, 5000);
+      // }
     } finally {
       setGeneratingImages(prev => {
         const newSet = new Set(prev);

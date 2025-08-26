@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Handle } from "@xyflow/react";
-import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 
-function NodeScript({ data, isConnectable, selected }) {
+function NodeScript({ data, isConnectable, selected, onRetry }) {
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.segments || data.artStyle || data.concept || (data.content && data.content !== 'New script content...'));
@@ -28,12 +28,12 @@ function NodeScript({ data, isConnectable, selected }) {
 
       <div
         className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
-          selected ? (hasData ? "ring-2 ring-blue-500" : "ring-2 ring-gray-600") : ""
+          selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-blue-500" : "ring-2 ring-gray-600") : ""
         } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
         style={{
-          background: "#1a1a1a",
-          border: hasData ? "1px solid #444" : "1px solid #333",
-          boxShadow: selected && hasData ? "0 0 20px rgba(59, 130, 246, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
+          background: hasError ? "#2d1b1b" : "#1a1a1a",
+          border: hasError ? "1px solid #dc2626" : hasData ? "1px solid #444" : "1px solid #333",
+          boxShadow: selected && hasError ? "0 0 20px rgba(220, 38, 38, 0.3)" : selected && hasData ? "0 0 20px rgba(59, 130, 246, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
         }}
       >
         {/* Input Handle - Top side */}
@@ -69,20 +69,33 @@ function NodeScript({ data, isConnectable, selected }) {
             </div>
           </>
         ) : hasError ? (
-          // Error state - styled same as existing state
+          // Error state with red styling and retry button
           <>
             <div className='flex items-center mb-4'>
               <div className='flex items-center space-x-2'>
-                <FileText size={20} className='text-blue-400' />
-                <span className='text-white font-medium text-sm'>
+                <AlertCircle size={20} className='text-red-400' />
+                <span className='text-red-200 font-medium text-sm'>
                   Script
                 </span>
               </div>
             </div>
             <div className='space-y-3'>
-              <div className='text-gray-300 text-sm leading-relaxed'>
-                {data.error || 'Failed to generate script'}
+              <div className='text-red-300 text-sm font-medium'>
+                {data.error || 'Internal Server Error'}
               </div>
+              <div className='text-red-400/70 text-xs leading-relaxed'>
+                {data.errorDescription || 'Failed to generate script. Please try again.'}
+              </div>
+              {data.canRetry !== false && (
+                <button
+                  onClick={() => onRetry && onRetry(data.id, 'scriptNode')}
+                  className='mt-3 w-full bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2'
+                  disabled={data.nodeState === 'loading'}
+                >
+                  <RefreshCw size={14} className={data.nodeState === 'loading' ? 'animate-spin' : ''} />
+                  <span>Try Again</span>
+                </button>
+              )}
             </div>
           </>
         ) : hasData ? (

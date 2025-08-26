@@ -1,9 +1,9 @@
 
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Image, Camera, Images, Frame, Loader2, AlertCircle } from "lucide-react";
+import { Image, Camera, Images, Frame, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 
-function NodeImage({ data, isConnectable, selected }) {
+function NodeImage({ data, isConnectable, selected, onRetry }) {
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.imageUrl || data.url);
@@ -22,12 +22,12 @@ function NodeImage({ data, isConnectable, selected }) {
 
       <div
         className={`rounded-2xl p-3 w-[280px] h-[280px] relative transition-all duration-300 ${
-          selected ? (hasData ? "ring-2 ring-orange-500" : "ring-2 ring-gray-600") : ""
+          selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-orange-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
-          background: "#1a1a1a",
-          border: hasData ? "1px solid #444" : "1px solid #333",
-          boxShadow: selected && hasData ? "0 0 20px rgba(249, 115, 22, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
+          background: hasError ? "#2d1b1b" : "#1a1a1a",
+          border: hasError ? "1px solid #dc2626" : hasData ? "1px solid #444" : "1px solid #333",
+          boxShadow: selected && hasError ? "0 0 20px rgba(220, 38, 38, 0.3)" : selected && hasData ? "0 0 20px rgba(249, 115, 22, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
         }}
       >
         {/* Input Handle - Top side */}
@@ -56,12 +56,27 @@ function NodeImage({ data, isConnectable, selected }) {
             </div>
           </>
         ) : hasError ? (
-          // Error state - styled same as existing state
+          // Error state with red styling and retry button
           <>
-            <div className='w-full h-full flex items-center justify-center'>
-              <div className='text-center'>
-                <AlertCircle size={24} className='text-gray-500 mx-auto mb-2' />
-                <span className='text-gray-500 text-xs'>Failed to generate</span>
+            <div className='w-full h-full flex flex-col items-center justify-center p-4'>
+              <div className='text-center space-y-3'>
+                <AlertCircle size={32} className='text-red-400 mx-auto' />
+                <div className='text-red-300 text-sm font-medium'>
+                  {data.error || 'Internal Server Error'}
+                </div>
+                <div className='text-red-400/70 text-xs leading-relaxed'>
+                  {data.errorDescription || 'Failed to generate image. Please try again.'}
+                </div>
+                {data.canRetry !== false && (
+                  <button
+                    onClick={() => onRetry && onRetry(data.id, 'imageNode')}
+                    className='w-full bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2'
+                    disabled={data.nodeState === 'loading'}
+                  >
+                    <RefreshCw size={14} className={data.nodeState === 'loading' ? 'animate-spin' : ''} />
+                    <span>Try Again</span>
+                  </button>
+                )}
               </div>
             </div>
           </>

@@ -27,6 +27,7 @@ import { ipcApp } from "./ipc/ipcApp.js";
 import { ipcTimeline } from "./ipc/ipcTimeline.js";
 import { ipcDialog } from "./ipc/ipcDialog.js";
 import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
+import { ipcPayment } from "./ipc/ipcPayment.js";
 import { downloadFfmpeg, validateFFmpeg } from "./validate.js";
 import { ipcStream } from "./ipc/ipcStream.js";
 import { ipcDesktopCapturer } from "./ipc/ipcDesktopCapturer.js";
@@ -97,6 +98,10 @@ ipcMain.on("SELECT_DIR", ipcDialog.openDirectory);
 ipcMain.on("OPEN_PATH", shellLib.openPath);
 ipcMain.on("OPEN_URL", shellLib.openUrl);
 ipcMain.on("RENDER", renderMain.start);
+
+// Payment IPC handlers
+ipcMain.handle("payment:openStripe", ipcPayment.openStripePayment);
+ipcMain.handle("payment:close", ipcPayment.closePaymentWindow);
 
 ipcMain.handle("ffmpeg:combineFrame", renderMain.combineFrame);
 ipcMain.handle(
@@ -182,9 +187,13 @@ if (process.defaultApp) {
     app.setAsDefaultProtocolClient("usualsapp", process.execPath, [
       path.resolve(process.argv[1]),
     ]);
+    app.setAsDefaultProtocolClient("usuals", process.execPath, [
+      path.resolve(process.argv[1]),
+    ]);
   }
 } else {
-      app.setAsDefaultProtocolClient("usualsapp");
+    app.setAsDefaultProtocolClient("usualsapp");
+    app.setAsDefaultProtocolClient("usuals");
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -201,7 +210,12 @@ if (!gotTheLock) {
 
     if (process.platform == "win32") {
       deeplinkingUrl = commandLine.slice(1)[1];
-      mainWindow.webContents.send("LOGIN_SUCCESS", deeplinkingUrl);
+      // Check if it's a payment URL
+      if (deeplinkingUrl && (deeplinkingUrl.includes('payment-success') || deeplinkingUrl.includes('payment-cancel'))) {
+        mainWindow.webContents.send("stripe-payment-result", deeplinkingUrl);
+      } else {
+        mainWindow.webContents.send("LOGIN_SUCCESS", deeplinkingUrl);
+      }
     }
   });
 
@@ -218,7 +232,12 @@ if (!gotTheLock) {
   });
 
   app.on("open-url", function (event, data) {
-    mainWindow.webContents.send("LOGIN_SUCCESS", data);
+    // Check if it's a payment URL
+    if (data && (data.includes('payment-success') || data.includes('payment-cancel'))) {
+      mainWindow.webContents.send("stripe-payment-result", data);
+    } else {
+      mainWindow.webContents.send("LOGIN_SUCCESS", data);
+    }
   });
 }
 

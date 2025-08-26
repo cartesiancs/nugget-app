@@ -3,11 +3,13 @@ import { useAuth } from '../hooks/useAuth';
 import { projectApi } from '../services/project';
 import { creditApi } from '../services/credit';
 import ChatLoginButton from './ChatLoginButton';
+import CreditPurchase from './CreditPurchase';
 
 const FinalWorkingInterface = () => {
   console.log('🔧 FinalWorkingInterface rendering...');
   
   const { user, isAuthenticated } = useAuth();
+  const [PaymentSuccessComponent, setPaymentSuccessComponent] = useState(null);
   
   // Local state instead of useProjectStore
   const [recentProjects, setRecentProjects] = useState([]);
@@ -17,6 +19,8 @@ const FinalWorkingInterface = () => {
   const [chatInput, setChatInput] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   
   console.log('🔧 Auth state:', { isAuthenticated, user: user?.email });
 
@@ -151,6 +155,20 @@ const FinalWorkingInterface = () => {
       loadUserData();
     }
   }, [isAuthenticated, user?.id, loadUserData]);
+
+  // Check for payment success and load component dynamically
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+      setShowPaymentSuccess(true);
+      // Dynamically import PaymentSuccess component
+      import('./PaymentSuccess').then(module => {
+        setPaymentSuccessComponent(() => module.default);
+      });
+    }
+  }, []);
 
   const handleCreateProject = async (description = '') => {
     if (!description.trim()) return;
@@ -329,7 +347,21 @@ const FinalWorkingInterface = () => {
           </div>
           <p className="text-gray-400 text-sm">Available credits</p>
           <button 
-            onClick={() => alert('Add credits functionality coming soon!')}
+            onClick={() => {
+              const token = localStorage.getItem('authToken');
+              console.log("🔘 User object:", user);
+              console.log("🔘 User ID:", user?.id);
+              console.log("🔘 Token exists:", !!token);
+              
+              if (user?.id && token) {
+                const purchaseUrl = `https://register.usuals.ai/purchase/${user.id}/${token}`;
+                console.log("🔘 Final purchase URL:", purchaseUrl);
+                window.open(purchaseUrl, '_blank');
+              } else {
+                console.error("Missing user ID or auth token", { userId: user?.id, hasToken: !!token });
+                alert("Please log in first to purchase credits");
+              }
+            }}
             className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
           >
             Add Credits
@@ -570,7 +602,31 @@ const FinalWorkingInterface = () => {
         </div>
       </div>
 
+      {/* Credit Purchase Modal */}
+      {showCreditPurchase && (
+        <CreditPurchase
+          onClose={() => setShowCreditPurchase(false)}
+          onSuccess={() => {
+            // Reload user data to get updated credit balance
+            loadUserData();
+            setShowCreditPurchase(false);
+          }}
+        />
+      )}
 
+      {/* Payment Success Modal */}
+      {showPaymentSuccess && PaymentSuccessComponent && (
+        <PaymentSuccessComponent
+          onClose={() => {
+            setShowPaymentSuccess(false);
+            setPaymentSuccessComponent(null);
+            // Clean up URL
+            window.history.replaceState({}, '', window.location.pathname);
+            // Reload user data to get updated credit balance
+            loadUserData();
+          }}
+        />
+      )}
     </div>
   );
 };

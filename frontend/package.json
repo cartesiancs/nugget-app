@@ -15,6 +15,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^7.9.0",
     "@xyflow/react": "^12.8.2",
     "lucide-react": "^0.540.0",
     "react": "^19.1.0",

@@ -1,7 +1,7 @@
 @import "../var";
 
-$timeline-cursor-width: 1.6px;
-$timeline-cursor-color: #cbd1d79d;
+$timeline-cursor-width: 3px;
+$timeline-cursor-color: #ffffff;
 
 .timeline-ruler {
   position: relative;
@@ -18,16 +18,19 @@ $timeline-cursor-color: #cbd1d79d;
 }
 
 element-timeline-ruler {
-  z-index: 200 !important;
+  z-index: 400 !important;
+  height: 35px !important;
+  display: block !important;
+  margin-top: 62px !important;
 }
 
 element-timeline-cursor {
   position: absolute;
-  z-index: 90;
+  z-index: 450;
   width: $timeline-cursor-width;
-  height: 100%;
+  height: calc(100% - 62px);
   background-color: $timeline-cursor-color;
-  z-index: 6000;
+  top: 62px;
 }
 
 element-timeline-cursor::after {
@@ -42,8 +45,18 @@ element-timeline-cursor::after {
   height: 17px;
 }
 
+element-timeline-left-option {
+  position: absolute;
+  z-index: 350;
+  left: 0;
+  top: 0;
+}
+
 element-timeline-ruler > canvas {
   background-color: $background-color;
+  display: block !important;
+  position: relative !important;
+  z-index: 500 !important;
 }
 
 element-timeline-end {

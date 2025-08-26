@@ -50,6 +50,9 @@ export class Control extends LitElement {
   @property()
   nowActivePanel = this.controlPanel.nowActive;
 
+  @property()
+  isPanelCollapsed: boolean = true;
+
   createRenderRoot() {
     useTimelineStore.subscribe((state) => {
       this.timeline = state.timeline;
@@ -71,36 +74,23 @@ export class Control extends LitElement {
   }
 
   _handleMouseMove(e) {
-    const elementControlComponent = document.querySelector("element-control");
-
-    if (this.isAbleResize) {
-      const windowWidth = window.innerWidth - this.resize.chatSidebar;
-      const nowX = e.clientX;
-      const resizeX = (nowX / windowWidth) * 100;
-
-      if (this.targetResize == "panel" && resizeX <= 20) {
-        this.uiState.updateHorizontal(20, this.targetResize);
-        elementControlComponent.resizeEvent();
-        return false;
-      }
-
-      this.uiState.updateHorizontal(resizeX, this.targetResize);
-      elementControlComponent.resizeEvent();
-    }
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleMouseUp() {
-    this.isAbleResize = false;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleClickResizePanel() {
-    this.targetResize = "panel";
-    this.isAbleResize = true;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleClickResizePreview() {
-    this.targetResize = "preview";
-    this.isAbleResize = true;
+    // Resizing disabled – no operation
+    return;
   }
 
   _handleComplateAutoCaption(e) {
@@ -119,173 +109,63 @@ export class Control extends LitElement {
     this.timelineState.setCursorType(type);
   }
 
+  _togglePanelDrawer() {
+    console.log('Drawer toggle clicked. Current state:', this.isPanelCollapsed);
+    this.isPanelCollapsed = !this.isPanelCollapsed;
+    console.log('Drawer new state:', this.isPanelCollapsed);
+    this.requestUpdate(); // Force re-render to ensure UI updates
+  }
+
   render() {
     return html`
-      <div
-        id="split_col_1"
-        class="bg-darker h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
-        style="width: ${this.resize.horizontal.panel}%;"
-      >
-        <div
-          class="split-col-bar"
-          @mousedown=${this._handleClickResizePanel}
-        ></div>
-
-        <div
-          class=" h-100 w-100 overflow-y-hidden overflow-x-hidden position-absolute "
-        >
-          <div class="d-flex align-items-start h-100">
-            <div
-              id="sidebar"
-              class="nav sidebar-nav flex-column nav-pills bg-dark h-100 pt-1"
-              style="width: 2.5rem;"
-              role="tablist"
-              aria-orientation="vertical"
-            >
-              <button
-                class="btn-nav active"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-home"
-                type="button"
-                role="tab"
-                aria-selected="true"
-              >
-                <span class="material-symbols-outlined"> settings</span>
-              </button>
-
-              <button
-                class="btn-nav"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-draft"
-                type="button"
-                role="tab"
-                aria-selected="false"
-              >
-                <span class="material-symbols-outlined"> draft</span>
-              </button>
-
-              <button
-                class="btn-nav"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-text"
-                type="button"
-                role="tab"
-                aria-selected="false"
-              >
-                <span class="material-symbols-outlined"> text_fields</span>
-              </button>
-
-              <button
-                class="btn-nav"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-filter"
-                type="button"
-                role="tab"
-                aria-selected="false"
-              >
-                <span class="material-symbols-outlined"> library_books</span>
-              </button>
-
-              <button
-                class="btn-nav"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-util"
-                type="button"
-                role="tab"
-                aria-selected="false"
-              >
-                <span class="material-symbols-outlined"> page_info</span>
-              </button>
-
-              <button
-                class="btn-nav"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-option"
-                type="button"
-                role="tab"
-                aria-selected="false"
-              >
-                <span class="material-symbols-outlined"> extension</span>
-              </button>
-
-              <button
-                class="btn-nav"
-                data-bs-toggle="pill"
-                data-bs-target="#nav-output"
-                type="button"
-                role="tab"
-                aria-selected="false"
-              >
-                <span class="material-symbols-outlined"> output</span>
-              </button>
-            </div>
-            <div
-              class="tab-content overflow-y-scroll overflow-x-hidden  p-2 h-100"
-              style="width: calc(100% - 2.5rem);"
-            >
-              <div
-                class="tab-pane fade show active"
-                id="nav-home"
-                role="tabpanel"
-              >
-                <control-ui-setting />
-              </div>
-
-              <div class="tab-pane fade" id="nav-draft" role="tabpanel">
-                <asset-browser></asset-browser>
-              </div>
-
-              <div class="tab-pane fade" id="nav-text" role="tabpanel">
-                <control-ui-text />
-              </div>
-
-              <div class="tab-pane fade" id="nav-option" role="tabpanel">
-                <control-ui-extension />
-              </div>
-
-              <div class="tab-pane fade" id="nav-util" role="tabpanel">
-                <control-ui-util />
-              </div>
-
-              <div class="tab-pane fade" id="nav-filter" role="tabpanel">
-                <control-ui-filter />
-              </div>
-
-              <div class="tab-pane fade" id="nav-output" role="tabpanel">
-                <control-ui-render />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PREVIEW -->
+      <style>
+        /* Default centered position */
+        .video-container {
+          transform: translateX(-50%) !important;
+        }
+        
+        /* Move left when panel is open */
+        body.panel-open .video-container {
+          transform: translateX(-75%) !important;
+        }
+        
+        /* Ensure smooth transition */
+        .video-container {
+          transition: transform 0.3s ease !important;
+        }
+      </style>
+      
+      <!-- PREVIEW CENTERED -->
       <div
         id="split_col_2"
         class="h-100 overflow-y-hidden overflow-x-hidden position-relative p-0"
-        style="width: ${this.resize.horizontal.preview}%;"
+        style="width: 100%;"
       >
         <div
-          class="split-col-bar"
-          @mousedown=${this._handleClickResizePreview}
-        ></div>
-
-        <preview-top-bar></preview-top-bar>
-
-        <div
-          style="height: calc(100% - 2rem);"
-          class="position-relative d-flex align-items-center justify-content-center ${this
-            .nowActivePanel == ""
-            ? ""
-            : "d-none"}"
+          style="
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 100%;
+            max-width: 1200px;
+            width: 100%;
+            z-index: 1;
+            transition: transform 0.3s ease;
+          "
+          class="d-flex flex-column align-items-center justify-content-flex-start video-container"
         >
-          <div id="videobox">
-            <div class="d-flex justify-content-center">
-              <div id="video" class="video">
-                <preview-canvas></preview-canvas>
-                <element-control></element-control>
-                <drag-alignment-guide></drag-alignment-guide>
-              </div>
+          <!-- Controls above video -->
+          <div style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 20px 0 10px 0;">
+            <preview-top-bar></preview-top-bar>
+          </div>
+          
+          <!-- Video box centered -->
+          <div id="videobox" class="d-flex justify-content-center align-items-center w-100 flex-grow-1" style="padding: 0 20px 20px 20px;">
+            <div id="video" class="video" style="background-color: #000000; border-radius: 20px; border: none; width: 600px; aspect-ratio: 16/9; max-width: 70%; margin: 0 auto; position: relative;">
+              <preview-canvas></preview-canvas>
+              <element-control></element-control>
+              <drag-alignment-guide></drag-alignment-guide>
             </div>
           </div>
         </div>
@@ -334,27 +214,6 @@ export class Control extends LitElement {
             @changeCursorType=${this._handleChangeCursorType}
           ></automatic-caption>
         </div>
-      </div>
-
-      <!-- OPTION-->
-      <div
-        id="split_col_3"
-        class="bg-darker h-100 overflow-y-scroll overflow-x-hidden position-relative option-window p-2"
-        style="width: ${this.resize.horizontal.option}%;"
-      >
-        <input
-          type="hidden"
-          id="optionTargetElement"
-          value="aaaa-aaaa-aaaa-aaaa"
-        />
-
-        <option-group>
-          <option-text></option-text>
-          <option-image></option-image>
-          <option-video></option-video>
-          <option-audio></option-audio>
-          <option-shape></option-shape>
-        </option-group>
       </div>
     `;
   }

@@ -5,7 +5,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <title>Nugget</title>
+        <title>Usuals.ai</title>
 
 
         <link rel="preconnect" href="https://fonts.googleapis.com"> 
@@ -17,6 +17,7 @@
 
         <link rel="stylesheet" href="dist/style.css">
     </head>
+    <body>
         <app-root></app-root>
 
         <script src="/socket.io/socket.io.js"></script>
@@ -28,8 +29,85 @@
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
 
         <script src="dist/index.js"></script>
+        <!-- Polyfill Node process for browser -->
+        <script>window.process = { env: { NODE_ENV: 'production' } };</script>
+        <!-- ChatWidget styles -->
+        <link rel="stylesheet" href="dist/widget/frontend.css" />
+        <!-- React ChatWidget bundle -->
+        <script src="dist/widget/chat-widget.umd.js"></script>
+        <!-- React FlowWidget bundle -->
+        <script src="dist/widget/flow-widget.umd.js"></script>
+        <!-- React UserProfileDropdown bundle -->
+        <script src="dist/widget/user-profile-dropdown.umd.js"></script>
+        <!-- React ChatInterface bundle (overlay interface) -->
+        <script src="dist/widget/chat-interface.umd.js"></script>
 
+        <!-- ChatInterface overlay (shows first, full screen) -->
+        <react-chat-interface id="chat-interface-overlay" class="fixed inset-0 w-full h-full z-[9999] bg-gray-900"></react-chat-interface>
 
+        <!-- Switch back to ChatInterface button (hidden initially) -->
+        <button id="show-chat-interface-btn" onclick="showChatInterface()" class="hidden fixed top-5 right-5 z-[9998] bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 px-5 py-3 rounded-lg font-semibold cursor-pointer shadow-lg shadow-blue-500/30 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/40">
+          🤖 AI Chat Interface
+        </button>
+
+        <!-- Place widget elements (bottom-right fixed) - Main Electron UI -->
+        <react-chat-widget></react-chat-widget>
+        <react-flow-widget></react-flow-widget>
+        <react-user-profile-dropdown></react-user-profile-dropdown>
+
+        <script>
+          // Global functions to toggle between UIs
+          function showChatInterface() {
+            const overlay = document.getElementById('chat-interface-overlay');
+            const button = document.getElementById('show-chat-interface-btn');
+            if (overlay) {
+              overlay.classList.remove('hidden');
+              overlay.classList.add('fixed', 'inset-0', 'w-full', 'h-full', 'z-[9999]', 'bg-gray-900');
+            }
+            if (button) {
+              button.classList.add('hidden');
+            }
+          }
+
+          function hideChatInterface() {
+            const overlay = document.getElementById('chat-interface-overlay');
+            const button = document.getElementById('show-chat-interface-btn');
+            if (overlay) {
+              overlay.classList.add('hidden');
+            }
+            if (button) {
+              button.classList.remove('hidden');
+            }
+          }
+
+          // Show the switch button when ChatInterface is hidden
+          window.addEventListener('load', function() {
+            // Listen for when ChatInterface closes itself
+            const observer = new MutationObserver(function(mutations) {
+              mutations.forEach(function(mutation) {
+                const overlay = document.getElementById('chat-interface-overlay');
+                const button = document.getElementById('show-chat-interface-btn');
+                if (overlay && overlay.classList.contains('hidden')) {
+                  if (button) button.classList.remove('hidden');
+                } else if (overlay && !overlay.classList.contains('hidden')) {
+                  if (button) button.classList.add('hidden');
+                }
+              });
+            });
+            
+            const overlay = document.getElementById('chat-interface-overlay');
+            if (overlay) {
+              observer.observe(overlay, { 
+                attributes: true, 
+                attributeFilter: ['class'] 
+              });
+            }
+          });
+
+          // Expose functions globally for React components
+          window.showChatInterface = showChatInterface;
+          window.hideChatInterface = hideChatInterface;
+        </script>
     </body>
 </html>
 

@@ -4,11 +4,17 @@ import { renderMain } from "./lib/render.js";
 import { window } from "./lib/window.js";
 import { updater } from "./lib/autoUpdater.js";
 
+// Node core modules that need to be available before runtime statements
+import path from "path";
+
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 import config from "./config.json";
 
 import ffmpeg from "fluent-ffmpeg";
 
-import path from "path";
 import isDev from "electron-is-dev";
 import log from "electron-log";
 
@@ -21,6 +27,7 @@ import { ipcApp } from "./ipc/ipcApp.js";
 import { ipcTimeline } from "./ipc/ipcTimeline.js";
 import { ipcDialog } from "./ipc/ipcDialog.js";
 import { ipcFilesystem } from "./ipc/ipcFilesystem.js";
+import { ipcPayment } from "./ipc/ipcPayment.js";
 import { downloadFfmpeg, validateFFmpeg } from "./validate.js";
 import { ipcStream } from "./ipc/ipcStream.js";
 import { ipcDesktopCapturer } from "./ipc/ipcDesktopCapturer.js";
@@ -34,6 +41,7 @@ import { ipcSelfhosted } from "./ipc/ipcSelfhosted.js";
 import { httpFFmpegRenderV2 } from "./server/controllers/render.js";
 import { ipcAi } from "./ipc/ipcAi.js";
 import { ipcYtdlp } from "./ipc/ipcYtdlp.js";
+import { ipcAuth } from "./ipc/ipcAuth.js";
 
 let resourcesPath = "";
 export let mainWindow;
@@ -91,6 +99,10 @@ ipcMain.on("OPEN_PATH", shellLib.openPath);
 ipcMain.on("OPEN_URL", shellLib.openUrl);
 ipcMain.on("RENDER", renderMain.start);
 
+// Payment IPC handlers
+ipcMain.handle("payment:openStripe", ipcPayment.openStripePayment);
+ipcMain.handle("payment:close", ipcPayment.closePaymentWindow);
+
 ipcMain.handle("ffmpeg:combineFrame", renderMain.combineFrame);
 ipcMain.handle(
   "ffmpeg:extractAudioFromVideo",
@@ -147,6 +159,11 @@ ipcMain.handle("ai:setKey", ipcAi.setKey);
 ipcMain.handle("ai:getKey", ipcAi.getKey);
 ipcMain.handle("ai:runMcpServer", ipcAi.runMcpServer);
 
+ipcMain.handle("auth:initiateLogin", ipcAuth.initiateLogin);
+ipcMain.handle("auth:checkStatus", ipcAuth.checkAuthStatus);
+ipcMain.handle("auth:logout", ipcAuth.logout);
+ipcMain.handle("auth:getToken", ipcAuth.getToken);
+
 ipcMain.handle("ytdlp:downloadVideo", ipcYtdlp.downloadVideo);
 
 ipcMain.on("render:v2:start", ipcRenderV2.start);
@@ -167,12 +184,16 @@ ipcMain.on("render:offscreen:finishStream", httpFFmpegRenderV2.finishStream);
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient("nuggetapp", process.execPath, [
+    app.setAsDefaultProtocolClient("usualsapp", process.execPath, [
+      path.resolve(process.argv[1]),
+    ]);
+    app.setAsDefaultProtocolClient("usuals", process.execPath, [
       path.resolve(process.argv[1]),
     ]);
   }
 } else {
-  app.setAsDefaultProtocolClient("nuggetapp");
+    app.setAsDefaultProtocolClient("usualsapp");
+    app.setAsDefaultProtocolClient("usuals");
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -189,7 +210,12 @@ if (!gotTheLock) {
 
     if (process.platform == "win32") {
       deeplinkingUrl = commandLine.slice(1)[1];
-      mainWindow.webContents.send("LOGIN_SUCCESS", deeplinkingUrl);
+      // Check if it's a payment URL
+      if (deeplinkingUrl && (deeplinkingUrl.includes('payment-success') || deeplinkingUrl.includes('payment-cancel'))) {
+        mainWindow.webContents.send("stripe-payment-result", deeplinkingUrl);
+      } else {
+        mainWindow.webContents.send("LOGIN_SUCCESS", deeplinkingUrl);
+      }
     }
   });
 
@@ -206,7 +232,12 @@ if (!gotTheLock) {
   });
 
   app.on("open-url", function (event, data) {
-    mainWindow.webContents.send("LOGIN_SUCCESS", data);
+    // Check if it's a payment URL
+    if (data && (data.includes('payment-success') || data.includes('payment-cancel'))) {
+      mainWindow.webContents.send("stripe-payment-result", data);
+    } else {
+      mainWindow.webContents.send("LOGIN_SUCCESS", data);
+    }
   });
 }
 

@@ -26,7 +26,7 @@ export class ControlSetting extends LitElement {
     });
 
     window.electronAPI.req.app.getAppInfo().then((result) => {
-      this.appVersion = `Nugget v${result.data.version}`;
+              this.appVersion = `Usuals.ai v${result.data.version}`;
     });
 
     return this;
@@ -154,7 +154,7 @@ export class ControlSetting extends LitElement {
         >
       </div>
 
-      <label class="form-label text-light">Background</label>
+      <!-- <label class="form-label text-light">Background</label>
       <div class="input-group mb-3">
         <input
           id="backgroundColor"
@@ -212,7 +212,7 @@ export class ControlSetting extends LitElement {
         @click=${() => this._handleClickResolution(1080, 1920)}
       >
         1080x1920 (mobile)
-      </button>
+      </button> -->
 
       <button
         class="btn btn-sm btn-default text-light mt-1"

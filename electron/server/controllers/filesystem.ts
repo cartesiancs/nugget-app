@@ -6,24 +6,32 @@ import path from "path";
 
 export const httpFilesystem = {
   getDirectory: async function (req: Request, res: Response) {
-    const dir = req.query.dir;
-    const result = new Promise((resolve, reject) => {
-      fs.readdir(dir, async (err, files) => {
-        let lists = {};
+    const dir = req.query.dir as string | undefined;
 
-        const promises = files.map(async (file) => {
-          const stat = await fsp.lstat(`${dir}/${file}`);
-          const isDirectory = stat.isDirectory();
+    if (!dir) {
+      res.status(400).send("dir query parameter is required.");
+      return;
+    }
 
-          lists[String(file)] = {
-            isDirectory: isDirectory,
-            title: file,
-          };
-        });
+    fs.readdir(dir, async (err, files) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Failed to read directory");
+        return;
+      }
 
-        await Promise.all(promises);
-        res.status(200).send(lists);
+      let lists: Record<string, { isDirectory: boolean; title: string }> = {};
+
+      const promises = files.map(async (file) => {
+        const stat = await fsp.lstat(path.join(dir, file));
+        lists[file] = {
+          isDirectory: stat.isDirectory(),
+          title: file,
+        };
       });
+
+      await Promise.all(promises);
+      res.status(200).send(lists);
     });
   },
   getFile: async function (req: Request, res: Response) {
@@ -44,7 +52,8 @@ export const httpFilesystem = {
         (err) => {
           if (err) {
             console.error("Error sending file:", err);
-            res.status(err.status || 500).send(err.message);
+            const anyErr = err as any;
+            res.status(anyErr?.status || 500).send(anyErr?.message || "Error");
           }
         },
       );
@@ -66,10 +75,14 @@ export const httpFilesystem = {
     return status;
   },
 
-  removeDirectory: async (event, path) => {
-    fs.rmSync(path, { recursive: true, force: true });
-
-    return status;
+  removeDirectory: async (event, dirPath) => {
+    try {
+      fs.rmSync(dirPath, { recursive: true, force: true });
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   },
 
   writeFile: async (event, filename, data, options) => {

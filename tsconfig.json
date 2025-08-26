@@ -15,5 +15,5 @@
     "removeComments": false,
     "noImplicitAny": false
   },
-  "exclude": ["./node_modules", "packages", "main"]
+  "exclude": ["./node_modules", "packages", "main", "frontend"]
 }

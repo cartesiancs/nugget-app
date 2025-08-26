@@ -95,7 +95,7 @@ export class AiInput extends LitElement {
         )
         .then((result) => {
           if (result.status == 1) {
-            this.uiState.setChatSidebar(250);
+
 
             this.chatLLMState.addList(result.text.content);
 
@@ -163,9 +163,9 @@ export class AiInput extends LitElement {
     this.timelineState.setCursorType("lockKeyboard");
   }
 
-  panelOpen() {
-    this.uiState.setChatSidebar(250);
-  }
+      panelOpen() {
+      // Chat sidebar removed
+    }
 
   render() {
     return html`

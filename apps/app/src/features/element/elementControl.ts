@@ -9,6 +9,7 @@ import {
 } from "../../states/renderOptionStore";
 import { decompressFrames, parseGIF } from "gifuct-js";
 import { getLocationEnv } from "../../functions/getLocationEnv";
+import { loadedAssetStore } from "../asset/loadedAssetStore";
 
 @customElement("element-control")
 export class ElementControl extends LitElement {
@@ -216,27 +217,33 @@ export class ElementControl extends LitElement {
         let elementLeft =
           Number(this.timeline[elementId].location?.x) / this.previewRatio;
 
+        if (!targetElement || typeof (targetElement as any).resizeStyle !== "function") {
+          continue;
+        }
+
         if (this.timeline[elementId].filetype != "text") {
-          targetElement.resizeStyle({
+          (targetElement as any).resizeStyle({
             x: elementLeft,
             y: elementTop,
             w: elementWidth,
             h: elementHeight,
           });
-        } else if (this.timeline[elementId].filetype == "text") {
-          let elementTextSize =
+        } else {
+          const elementTextSize =
             Number(this.timeline[elementId].fontsize) / this.previewRatio;
 
-          targetElement.resizeStyle({
+          (targetElement as any).resizeStyle({
             x: elementLeft,
             y: elementTop,
             w: elementWidth,
             h: elementHeight,
           });
 
-          targetElement.resizeFont({
-            px: elementTextSize,
-          });
+          if (typeof (targetElement as any).resizeFont === "function") {
+            (targetElement as any).resizeFont({
+              px: elementTextSize,
+            });
+          }
         }
       }
     }
@@ -428,7 +435,9 @@ export class ElementControl extends LitElement {
         this.timeline[elementId] = {
           priority: this.getNowPriority(),
           blob: blob,
-          startTime: 0,
+          // Make this clip start right after the last timeline element so
+          // that videos are arranged sequentially on a single track.
+          startTime: this._getTimelineEnd(),
           duration: duration,
           opacity: 100,
           location: { x: 0, y: 0 },
@@ -442,6 +451,7 @@ export class ElementControl extends LitElement {
           filetype: "video",
           codec: { video: "default", audio: "default" },
           speed: 1,
+          track: 0, // Initialize track property for row placement
           filter: {
             enable: false,
             list: [],
@@ -529,7 +539,8 @@ export class ElementControl extends LitElement {
         this.timeline[elementId] = {
           priority: this.getNowPriority(),
           blob: blob,
-          startTime: 0,
+          // Sequential placement – append to the timeline end.
+          startTime: this._getTimelineEnd(),
           duration: duration,
           opacity: 100,
           location: { x: 0, y: 0 },
@@ -543,6 +554,7 @@ export class ElementControl extends LitElement {
           filetype: "video",
           codec: { video: "default", audio: "default" },
           speed: 1,
+          track: 0, // Initialize track property for row placement
           filter: {
             enable: false,
             list: [],
@@ -773,6 +785,7 @@ export class ElementControl extends LitElement {
         localpath: path,
         filetype: "audio",
         speed: 1,
+        track: 0, // Initialize track property for row placement
         timelineOptions: {
           color: "rgb(133, 179, 59)",
         },
@@ -800,6 +813,7 @@ export class ElementControl extends LitElement {
       localpath: path,
       filetype: "audio",
       speed: 1,
+      track: 0, // Initialize track property for row placement
       timelineOptions: {
         color: "rgb(133, 179, 59)",
       },
@@ -872,61 +886,6 @@ export class ElementControl extends LitElement {
   //   }
   // }
 
-  // showVideo(elementId) {
-  //   const element: any = document.getElementById(`element-${elementId}`);
-  //   if (element == null) {
-  //     this.insertAdjacentHTML(
-  //       "beforeend",
-  //       `<element-control-asset elementId="${elementId}" elementFiletype="video"></element-control-asset>`,
-  //     );
-
-  //     let video = element.querySelector("video");
-  //     video.muted = true;
-
-  //     let secondsOfRelativeTime =
-  //       ((this.timeline[elementId].startTime as number) - this.progressTime) /
-  //       1000;
-
-  //     video.currentTime = secondsOfRelativeTime;
-  //   } else {
-  //     const videoElement: any = document.getElementById(`element-${elementId}`);
-
-  //     let video = videoElement.querySelector("video");
-  //     let secondsOfRelativeTime =
-  //       -((this.timeline[elementId].startTime as number) - this.progressTime) /
-  //       1000;
-
-  //     if (
-  //       !!(
-  //         video.currentTime > 0 &&
-  //         !video.paused &&
-  //         !video.ended &&
-  //         video.readyState > 2
-  //       )
-  //     ) {
-  //       if (this.isPaused) {
-  //         console.log("paused");
-  //       }
-  //     } else {
-  //       if (this.isPaused) {
-  //         video.pause();
-  //         this.isPlay[elementId] = false;
-  //       } else {
-  //         if (!this.isPlay[elementId]) {
-  //           video.currentTime = secondsOfRelativeTime;
-  //           video.muted = true;
-  //           video.play();
-  //         }
-  //         this.isPlay[elementId] = true;
-  //       }
-  //     }
-
-  //     document
-  //       .querySelector(`#element-${elementId}`)
-  //       .classList.remove("d-none");
-  //   }
-  // }
-
   showAudio(elementId) {
     const element: any = document.getElementById(`element-${elementId}`);
 
@@ -969,6 +928,72 @@ export class ElementControl extends LitElement {
       document
         .querySelector(`#element-${elementId}`)
         .classList.remove("d-none");
+    }
+  }
+
+  // --- Added back minimal showVideo to prevent undefined errors when inserting videos from extension ---
+  showVideo(elementId) {
+    // If the asset isn't on the preview yet, create it. Otherwise just un-hide it.
+    if (document.getElementById(`element-${elementId}`) == null) {
+      this.insertAdjacentHTML(
+        "beforeend",
+        `<element-control-asset element-id="${elementId}" element-filetype="video"></element-control-asset>`,
+      );
+
+      // Ensure the newly created video element starts at the correct timestamp
+      const videoWrapper = document.getElementById(`element-${elementId}`);
+      if (videoWrapper) {
+        (videoWrapper as HTMLElement).classList.remove("d-none");
+        (videoWrapper as HTMLElement).style.display = "";
+        // Fill the preview canvas by default so the clip is actually visible.
+        (videoWrapper as HTMLElement).style.left = "0px";
+        (videoWrapper as HTMLElement).style.top = "0px";
+        (videoWrapper as HTMLElement).style.width = "100%";
+        (videoWrapper as HTMLElement).style.height = "100%";
+      }
+      const video = videoWrapper?.querySelector("video");
+      if (video) {
+        const secondsOfRelativeTime =
+          (this.timeline[elementId].startTime - this.progressTime) / 1000;
+        video.currentTime = Math.max(0, secondsOfRelativeTime);
+        video.muted = true;
+      }
+    } else {
+      const el = document.querySelector(`#element-${elementId}`);
+      if (el) {
+        el.classList.remove("d-none");
+        // In case the element was hidden via inline style, reset it so it's rendered.
+        (el as HTMLElement).style.display = "";
+      }
+    }
+  }
+
+  // --- Lightweight implementation to ensure images appear (used by extension injections) ---
+  showImage(elementId) {
+    if (document.getElementById(`element-${elementId}`) == null) {
+      this.insertAdjacentHTML(
+        "beforeend",
+        `<element-control-asset element-id="${elementId}" element-filetype="image"></element-control-asset>`,
+      );
+      const wrapper = document.getElementById(`element-${elementId}`);
+      if (wrapper) {
+        (wrapper as HTMLElement).classList.remove("d-none");
+        (wrapper as HTMLElement).style.display = "";
+        (wrapper as HTMLElement).style.left = "0px";
+        (wrapper as HTMLElement).style.top = "0px";
+        (wrapper as HTMLElement).style.width = "100%";
+        (wrapper as HTMLElement).style.height = "100%";
+      }
+    } else {
+      const el = document.querySelector(`#element-${elementId}`);
+      if (el) {
+        el.classList.remove("d-none");
+        (el as HTMLElement).style.display = "";
+        (el as HTMLElement).style.left = "0px";
+        (el as HTMLElement).style.top = "0px";
+        (el as HTMLElement).style.width = "100%";
+        (el as HTMLElement).style.height = "100%";
+      }
     }
   }
 
@@ -1062,7 +1087,7 @@ export class ElementControl extends LitElement {
   //       targetAnimationPanel.updateItem();
   //       targetElementBar.animationPanelMove(originalLeft);
   //     }
-  //   }
+  // }
   // }
 
   getTimeFromProgress() {
@@ -1180,6 +1205,25 @@ export class ElementControl extends LitElement {
     }
   }
 
+  /**
+   * Return maximum end-time (ms) of all elements on the timeline so we can
+   * stop the play-head automatically once the project finishes.
+   */
+  _getTimelineEnd(): number {
+    let max = 0;
+    for (const id in this.timeline) {
+      if (!Object.prototype.hasOwnProperty.call(this.timeline, id)) continue;
+      const el: any = this.timeline[id];
+
+      if (el.filetype === "video" || el.filetype === "audio") {
+        max = Math.max(max, el.startTime + (el.trim?.endTime ?? 0));
+      } else {
+        max = Math.max(max, el.startTime + (el.duration ?? 0));
+      }
+    }
+    return max;
+  }
+
   step() {
     const elapsed = Date.now() - this.startTime;
 
@@ -1191,11 +1235,17 @@ export class ElementControl extends LitElement {
 
     this.progress = nowTimelineProgress;
     this.progressTime = elapsed;
-    this.timelineState.setCursor(elapsed);
 
-    if ((this.innerWidth as number) + this.offsetWidth >= this.offsetWidth) {
+    // Prevent play-head from moving beyond the last element in the timeline
+    const timelineEnd = this._getTimelineEnd();
+    if (elapsed >= timelineEnd) {
+      // Clamp cursor at exact end and stop playback
+      this.timelineState.setCursor(timelineEnd);
       this.stop();
+      return;
     }
+
+    this.timelineState.setCursor(elapsed);
 
     this.appearAllElementInTime();
 
@@ -1203,6 +1253,7 @@ export class ElementControl extends LitElement {
   }
 
   play() {
+    console.log("[Control] PLAY pressed, cursor", this.progressTime);
     const previewCanvas = document.querySelector("preview-canvas");
     previewCanvas.startPlay();
 
@@ -1212,6 +1263,7 @@ export class ElementControl extends LitElement {
   }
 
   stop() {
+    console.log("[Control] STOP");
     cancelAnimationFrame(this.scroller);
 
     const previewCanvas = document.querySelector("preview-canvas");
@@ -1223,6 +1275,17 @@ export class ElementControl extends LitElement {
         this.isPlay[elementId] = false;
       }
     }
+
+    // Seek dynamic videos to the exact stop position and redraw preview
+    (async () => {
+      try {
+        await loadedAssetStore.getState().seek(this.timeline, this.progressTime);
+        const preview = document.querySelector("preview-canvas") as any;
+        preview?.drawCanvas?.(preview.canvas);
+      } catch (e) {
+        console.warn("[Control] seek after stop failed", e);
+      }
+    })();
 
     this.pauseAllDynamicElements();
   }

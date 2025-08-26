@@ -95,6 +95,18 @@ const request = {
     getKey: () => ipcRenderer.invoke("ai:getKey"),
     runMcpServer: () => ipcRenderer.invoke("ai:runMcpServer"),
   },
+  auth: {
+    initiateLogin: () => ipcRenderer.invoke("auth:initiateLogin"),
+    checkStatus: () => ipcRenderer.invoke("auth:checkStatus"),
+    logout: () => ipcRenderer.invoke("auth:logout"),
+    getToken: () => ipcRenderer.invoke("auth:getToken"),
+  },
+  payment: {
+    openStripe: (paymentUrl) => ipcRenderer.invoke("payment:openStripe", paymentUrl),
+    close: () => ipcRenderer.invoke("payment:close"),
+    onResult: (callback) => ipcRenderer.on("stripe-payment-result", callback),
+    removeResultListener: () => ipcRenderer.removeAllListeners("stripe-payment-result"),
+  },
   stream: {
     saveBufferToVideo: (arrayBuffer) =>
       ipcRenderer.invoke("stream:saveBufferToVideo", arrayBuffer),
@@ -119,6 +131,12 @@ const request = {
   },
   selfhosted: {
     run: () => ipcRenderer.invoke("selfhosted:run"),
+  },
+  // Expose timeline helpers so any renderer (React widget) can invoke even if custom bridge is missing
+  timeline: {
+    addByUrl: (list) => ipcRenderer.invoke("extension:timeline:addByUrl", list),
+    addByUrlWithDir: (list) => ipcRenderer.invoke("extension:timeline:addByUrlWithDir", list),
+    addFromDir: (dirPath) => ipcRenderer.invoke("extension:timeline:addFromDir", dirPath),
   },
 };
 
@@ -175,4 +193,32 @@ if (process.contextIsolated) {
   } catch (error) {
     console.error(error);
   }
+}
+
+// Add extension bridge so frontend (ChatWidget) can use window.api.ext.timeline.addByUrl
+const extension = {
+  timeline: {
+    get: () => ipcRenderer.invoke("extension:timeline:get"),
+    add: (timelineElement) =>
+      ipcRenderer.invoke("extension:timeline:add", timelineElement),
+    addByUrl: (list) =>
+      ipcRenderer.invoke("extension:timeline:addByUrl", list),
+    addByUrlWithDir: (list) =>
+      ipcRenderer.invoke("extension:timeline:addByUrlWithDir", list),
+    addFromDir: (dirPath) => ipcRenderer.invoke("extension:timeline:addFromDir", dirPath),
+  },
+};
+
+try {
+  if (process.contextIsolated) {
+    contextBridge.exposeInMainWorld("api", {
+      ext: extension,
+    });
+  } else {
+    // When contextIsolation is disabled, we can assign directly.
+    // This covers dev environments where the flag is off.
+    (window as any).api = { ext: extension };
+  }
+} catch (error) {
+  console.error("Failed to expose api in preload", error);
 }

@@ -39,7 +39,10 @@ export interface ITimelineStore {
 
 export const useTimelineStore = createStore<ITimelineStore>((set) => ({
   timeline: {},
-  range: 0.9,
+  // Default working range – raise from ~10 s to ~50 s so the red limit
+  // starts farther out and users can import longer clips without adjusting
+  // the zoom immediately.
+  range: 5,
   scroll: 0,
   cursor: 0,
   canvasWidth: 500,

@@ -14,6 +14,7 @@ const NodeChat = ({ nodeId, nodeType, isOpen, onClose, onSendMessage }) => {
     return chatApi.getDefaultModel(genType) || "recraft-v3";
   });
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -86,6 +87,54 @@ const NodeChat = ({ nodeId, nodeType, isOpen, onClose, onSendMessage }) => {
   };
 
   const handleKeyDown = (e) => {
+    // Handle keyboard shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          // Select all text
+          e.preventDefault();
+          if (textareaRef.current) {
+            textareaRef.current.select();
+            textareaRef.current.setSelectionRange(0, textareaRef.current.value.length);
+          }
+          break;
+        case 'x':
+          // Cut text
+          e.preventDefault();
+          if (textareaRef.current && textareaRef.current.selectionStart !== textareaRef.current.selectionEnd) {
+            const start = textareaRef.current.selectionStart;
+            const end = textareaRef.current.selectionEnd;
+            const selectedText = inputMessage.substring(start, end);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(selectedText).then(() => {
+              // Remove selected text
+              const newMessage = inputMessage.substring(0, start) + inputMessage.substring(end);
+              setInputMessage(newMessage);
+              
+              // Set cursor position
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.setSelectionRange(start, start);
+                }
+              }, 0);
+            }).catch(err => {
+              console.error('Failed to copy text: ', err);
+              // Fallback: just remove the text
+              const newMessage = inputMessage.substring(0, start) + inputMessage.substring(end);
+              setInputMessage(newMessage);
+            });
+          }
+          break;
+        case 'v':
+          // Paste text - let default behavior handle this
+          break;
+        default:
+          break;
+      }
+    }
+    
+    // Handle Enter key for sending message
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -171,6 +220,7 @@ const NodeChat = ({ nodeId, nodeType, isOpen, onClose, onSendMessage }) => {
         <div className="p-4 border-t border-gray-700">
           <div className="flex space-x-2">
             <textarea
+              ref={textareaRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}

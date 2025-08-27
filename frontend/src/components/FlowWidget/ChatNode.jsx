@@ -47,6 +47,61 @@ function ChatNode({ data, isConnectable }) {
     setMessage(e.target.value);
   };
 
+  const handleKeyDown = (e) => {
+    // Handle keyboard shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          // Select all text
+          e.preventDefault();
+          if (textareaRef.current) {
+            textareaRef.current.select();
+            textareaRef.current.setSelectionRange(0, textareaRef.current.value.length);
+          }
+          break;
+        case 'x':
+          // Cut text
+          e.preventDefault();
+          if (textareaRef.current && textareaRef.current.selectionStart !== textareaRef.current.selectionEnd) {
+            const start = textareaRef.current.selectionStart;
+            const end = textareaRef.current.selectionEnd;
+            const selectedText = message.substring(start, end);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(selectedText).then(() => {
+              // Remove selected text
+              const newMessage = message.substring(0, start) + message.substring(end);
+              setMessage(newMessage);
+              
+              // Set cursor position
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.setSelectionRange(start, start);
+                }
+              }, 0);
+            }).catch(err => {
+              console.error('Failed to copy text: ', err);
+              // Fallback: just remove the text
+              const newMessage = message.substring(0, start) + message.substring(end);
+              setMessage(newMessage);
+            });
+          }
+          break;
+        case 'v':
+          // Paste text - let default behavior handle this
+          break;
+        default:
+          break;
+      }
+    }
+    
+    // Handle Enter key for form submission
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
     <div
       className="rounded-2xl shadow-2xl w-80 p-4"
@@ -81,6 +136,7 @@ function ChatNode({ data, isConnectable }) {
               ref={textareaRef}
               value={message}
               onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
               placeholder={getDefaultMessage()}
               className="w-full text-sm p-0 border-0 focus:outline-none resize-none bg-transparent placeholder-gray-500 text-gray-300 leading-relaxed overflow-hidden"
               style={{

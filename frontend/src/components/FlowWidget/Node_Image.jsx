@@ -46,9 +46,9 @@ function NodeImage({ data, isConnectable, selected, onRetry }) {
         />
 
         {isLoading ? (
-          // Loading state - styled same as existing state
+          // Loading state - centered content
           <>
-            <div className='w-full h-full flex items-center justify-center'>
+            <div className='w-full h-full flex items-center justify-center min-h-[240px]'>
               <div className='text-center'>
                 <Camera size={24} className='text-gray-500 mx-auto mb-2' />
                 <span className='text-gray-500 text-xs'>Generating image...</span>

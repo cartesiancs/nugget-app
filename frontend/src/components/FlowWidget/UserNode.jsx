@@ -126,8 +126,8 @@ function UserNode({ data, isConnectable, selected }) {
           </>
         ) : (
           <>
-            {/* Empty state */}
-            <div className='flex flex-col items-center justify-center h-full text-center space-y-4'>
+            {/* Empty state - centered content */}
+            <div className='flex flex-col items-center justify-center h-full min-h-[240px] text-center space-y-4'>
               <User size={32} className='text-gray-500' />
               <div className='space-y-2'>
                 <div className='text-gray-400 text-sm font-medium'>Start with your concept</div>

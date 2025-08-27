@@ -85,11 +85,12 @@ function NodeVideo({ data, isConnectable, selected, onRetry }) {
           // Existing/Generated data view - all look the same
           <>
             {/* Full Video Display */}
-            <div className='relative h-full w-full'>
+            <div className='absolute inset-3 rounded-lg overflow-hidden'>
               <video 
                 src={data.videoUrl || data.url}
                 controls
                 className='w-full h-full object-cover rounded-lg'
+                style={{ minHeight: '240px' }}
               >
                 Your browser does not support the video tag.
               </video>

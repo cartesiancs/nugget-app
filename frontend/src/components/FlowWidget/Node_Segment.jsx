@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Handle } from "@xyflow/react";
-import { Layers, Clock, Target, Zap, Play, Hash } from "lucide-react";
+import { Layers, Clock, Target, Zap, Play, Hash, Plus, Minus } from "lucide-react";
 
-function NodeSegment({ data, isConnectable, selected }) {
+function NodeSegment({ data, isConnectable, selected, onToggleTextNode, nodes, id, xPos, yPos, positionAbsoluteX, positionAbsoluteY }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Check if text node exists for this segment node
+  useEffect(() => {
+    const textNodeExists = nodes && nodes.some(node => 
+      node.type === "textNode" && node.data?.parentNodeId === id
+    );
+    setIsExpanded(textNodeExists);
+  }, [nodes, id]);
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.visual || data.narration || data.animation);
@@ -20,7 +29,7 @@ function NodeSegment({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-3 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasData ? "ring-2 ring-green-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
@@ -55,8 +64,8 @@ function NodeSegment({ data, isConnectable, selected }) {
                 </span>
               </div>
             </div>
-            <div className='space-y-2 mb-3'>
-              <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
+            <div className='space-y-2 mb-2'>
+              <div className='text-gray-300 text-xs leading-relaxed'>
                 Generating segment...
               </div>
             </div>
@@ -72,8 +81,8 @@ function NodeSegment({ data, isConnectable, selected }) {
                 </span>
               </div>
             </div>
-            <div className='space-y-2 mb-3'>
-              <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
+            <div className='space-y-2 mb-2'>
+              <div className='text-red-300 text-xs leading-relaxed'>
                 {data.error || 'Failed to generate segment'}
               </div>
             </div>
@@ -86,25 +95,22 @@ function NodeSegment({ data, isConnectable, selected }) {
               <div className='flex items-center space-x-2'>
                 <Play size={20} className='text-green-400' />
                 <span className='text-white font-medium text-sm'>
-                  {data.title || `Segment ${data.id}`}
+                  Segemnt 
                 </span>
               </div>
             </div>
 
             {/* Segment Content - Only show narration */}
-            <div className='space-y-2 mb-3'>
+            <div className='space-y-2 mb-2'>
               {data.narration && (
-                <div>
-                  <div className='text-xs text-gray-400 mb-1'>Narration:</div>
-                  <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
-                    {data.narration}
-                  </div>
+                <div className='text-gray-300 text-xs leading-relaxed overflow-hidden'>
+                  {data.narration.length > 100 ? data.narration.substring(0, 250) + '...' : data.narration}
                 </div>
               )}
               
               {!data.narration && (
                 <div className='text-gray-400 text-xs italic'>
-                  No narration available for this segment
+                  No narration available
                 </div>
               )}
             </div>
@@ -118,25 +124,20 @@ function NodeSegment({ data, isConnectable, selected }) {
             </div>
 
             {/* Options List */}
-            <div className='space-y-2'>
+            <div className='space-y-1.5'>
               <div className='flex items-center space-x-2 text-gray-300'>
-                <Play size={16} className='text-gray-400' />
+                <Play size={14} className='text-gray-400' />
                 <span className='text-xs'>Scene Creation</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
-                <Layers size={16} className='text-gray-400' />
+                <Layers size={14} className='text-gray-400' />
                 <span className='text-xs'>Visual Elements</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
-                <Clock size={16} className='text-gray-400' />
+                <Clock size={14} className='text-gray-400' />
                 <span className='text-xs'>Timing Control</span>
-              </div>
-
-              <div className='flex items-center space-x-2 text-gray-300'>
-                <Target size={16} className='text-gray-400' />
-                <span className='text-xs'>Story Focus</span>
               </div>
             </div>
           </>
@@ -156,6 +157,37 @@ function NodeSegment({ data, isConnectable, selected }) {
           }}
           isConnectable={isConnectable}
         />
+
+        {/* Plus/Minus Button - Bottom Right */}
+        {hasData && (
+          <button
+            className='absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center  z-10  border-0'
+            onClick={(e) => {
+              e.stopPropagation();
+              const newExpandedState = !isExpanded;
+              setIsExpanded(newExpandedState);
+              
+              // Get the full segment content - only narration
+              let fullContent = '';
+              if (data.narration) {
+                fullContent = data.narration;
+              } else {
+                fullContent = 'No narration available';
+              }
+              
+              if (onToggleTextNode) {
+                const currentPosition = {
+                  xPos: positionAbsoluteX || xPos || 400,
+                  yPos: positionAbsoluteY || yPos || 200
+                };
+                onToggleTextNode(id, 'segmentNode', newExpandedState, fullContent, currentPosition);
+              }
+            }}
+            title={isExpanded ? "Hide full text" : "Show full text"}
+          >
+            {isExpanded ? "-" : "+"}
+          </button>
+        )}
       </div>
     </div>
   );

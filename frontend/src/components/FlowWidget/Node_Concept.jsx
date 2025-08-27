@@ -1,13 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Handle } from "@xyflow/react";
-import { Lightbulb, Sparkles, Zap, Target, RefreshCw, AlertCircle } from "lucide-react";
+import { Lightbulb, Sparkles, Zap, Target, RefreshCw, AlertCircle, Plus, Minus } from "lucide-react";
 
-function NodeConcept({ data, isConnectable, selected, onRetry }) {
+function NodeConcept({ data, isConnectable, selected, onRetry, onToggleTextNode, nodes, id, xPos, yPos, positionAbsoluteX, positionAbsoluteY }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Check if text node exists for this concept node
+  useEffect(() => {
+    const textNodeExists = nodes && nodes.some(node => 
+      node.type === "textNode" && node.data?.parentNodeId === id
+    );
+    setIsExpanded(textNodeExists);
+  }, [nodes, id]);
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.content || data.text || data.concept || data.description || data.prompt || data.userText);
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
+  
+  // Debug removed for production
   
   // Get concept content
   const conceptContent = data.content || data.userText || data.text || data.concept || data.description || data.prompt || "No concept content available";
@@ -25,7 +36,7 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-3 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-purple-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
@@ -61,8 +72,8 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
                 </span>
               </div>
             </div>
-            <div className='space-y-3'>
-              <div className='text-gray-300 text-sm leading-relaxed'>
+            <div className='space-y-2'>
+              <div className='text-gray-300 text-xs leading-relaxed'>
                 Generating concepts...
               </div>
             </div>
@@ -78,8 +89,8 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
                 </span>
               </div>
             </div>
-            <div className='space-y-3'>
-              <div className='text-red-300 text-sm font-medium'>
+            <div className='space-y-2'>
+              <div className='text-red-300 text-xs font-medium'>
                 {data.error || 'Internal Server Error'}
               </div>
               <div className='text-red-400/70 text-xs leading-relaxed'>
@@ -111,9 +122,9 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Concept Content */}
-            <div className='space-y-3'>
-              <div className='text-gray-300 text-sm leading-relaxed'>
-                {conceptContent}
+            <div className='space-y-2'>
+              <div className='text-gray-300 text-xs leading-relaxed overflow-hidden'>
+                {conceptContent.length > 120 ? conceptContent.substring(0, 350) + '...' : conceptContent}
               </div>
             </div>
           </>
@@ -126,25 +137,20 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Options List */}
-            <div className='space-y-2'>
+            <div className='space-y-1.5'>
               <div className='flex items-center space-x-2 text-gray-300'>
-                <Lightbulb size={16} className='text-gray-400' />
-                <span className='text-xs'>Brainstorming Ideas</span>
+                <Lightbulb size={14} className='text-gray-400' />
+                <span className='text-xs'>Brainstorming</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
-                <Sparkles size={16} className='text-gray-400' />
-                <span className='text-xs'>Creative Concepts</span>
+                <Sparkles size={14} className='text-gray-400' />
+                <span className='text-xs'>Creative Ideas</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
-                <Zap size={16} className='text-gray-400' />
-                <span className='text-xs'>Innovation Sparks</span>
-              </div>
-
-              <div className='flex items-center space-x-2 text-gray-300'>
-                <Target size={16} className='text-gray-400' />
-                <span className='text-xs'>Strategic Vision</span>
+                <Zap size={14} className='text-gray-400' />
+                <span className='text-xs'>Innovation</span>
               </div>
             </div>
           </>
@@ -164,6 +170,32 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
           }}
           isConnectable={isConnectable}
         />
+
+        {/* Plus/Minus Button - Bottom Right */}
+        {hasData && (
+          <button
+            className='absolute bottom-2 border-0 right-2 w-8 h-8 flex items-center justify-center z-10 '
+            onClick={(e) => {
+              e.stopPropagation();
+              // Button clicked - toggle text node
+              
+              const newExpandedState = !isExpanded;
+              setIsExpanded(newExpandedState);
+              
+              if (onToggleTextNode) {
+                // Pass the node ID, type, expanded state, content, and position directly
+                const currentPosition = {
+                  xPos: positionAbsoluteX || xPos || 400,
+                  yPos: positionAbsoluteY || yPos || 200
+                };
+                onToggleTextNode(id, 'conceptNode', newExpandedState, conceptContent, currentPosition);
+              }
+            }}
+            title={isExpanded ? "Hide full text" : "Show full text"}
+          >
+            {isExpanded ? "-" : "+"}
+          </button>
+        )}
       </div>
     </div>
   );

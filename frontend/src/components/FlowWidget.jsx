@@ -26,6 +26,7 @@ import NodeSegment from "./FlowWidget/Node_Segment";
 import NodeConcept from "./FlowWidget/Node_Concept";
 import NodeScript from "./FlowWidget/Node_Script";
 import NodeChat from "./FlowWidget/NodeChat";
+import TextNode from "./FlowWidget/TextNode";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
 import UserNode from "./FlowWidget/UserNode";
@@ -52,11 +53,18 @@ function FlowWidget() {
     nodesRef.current = nodes;
   }, [nodes]);
 
-  // Auto-remove chat nodes when their parent user nodes are deleted
+  // Auto-remove chat nodes and text nodes when their parent nodes are deleted
   useEffect(() => {
     const userNodeIds = new Set(
       nodes
         .filter(node => node.type === "userNode" && node.data?.nodeState === "new")
+        .map(node => node.id)
+    );
+
+    // Get all existing node IDs (excluding chat and text nodes)
+    const existingNodeIds = new Set(
+      nodes
+        .filter(node => node.type !== "chatNode" && node.type !== "textNode")
         .map(node => node.id)
     );
 
@@ -67,17 +75,26 @@ function FlowWidget() {
       !userNodeIds.has(node.data.parentNodeId)
     );
 
-    if (orphanedChatNodes.length > 0) {
-      // Remove orphaned chat nodes and their edges
+    // Find text nodes that have parent nodes that no longer exist
+    const orphanedTextNodes = nodes.filter(node => 
+      node.type === "textNode" && 
+      node.data?.parentNodeId && 
+      !existingNodeIds.has(node.data.parentNodeId)
+    );
+
+    const orphanedNodes = [...orphanedChatNodes, ...orphanedTextNodes];
+
+    if (orphanedNodes.length > 0) {
+      // Remove orphaned nodes and their edges
       setNodes(prevNodes => 
         prevNodes.filter(node => 
-          !orphanedChatNodes.some(orphan => orphan.id === node.id)
+          !orphanedNodes.some(orphan => orphan.id === node.id)
         )
       );
 
       setEdges(prevEdges => 
         prevEdges.filter(edge => 
-          !orphanedChatNodes.some(orphan => 
+          !orphanedNodes.some(orphan => 
             edge.target === orphan.id || edge.source === orphan.id
           )
         )
@@ -185,13 +202,7 @@ function FlowWidget() {
     setTaskCompletionStates,
     saveGenerationState,
     removeGenerationState,
-    nodes,
-    onComplete: () => {
-      // Trigger tidy layout when concepts are generated
-      setTimeout(() => {
-        handleTidyLayout();
-      }, 300);
-    }
+    nodes
   });
 
   const { generateScript } = useScriptGeneration({
@@ -622,10 +633,10 @@ function FlowWidget() {
     };
 
     // Tree Layout configuration
-    const levelHeight = 450; // Increased vertical space between tree levels
-    const nodeWidth = 420; // Increased width allocated per node including spacing
+    const levelHeight = 400; // Vertical space between tree levels
+    const nodeWidth = 380; // Width allocated per node including spacing
     const startX = 400; // Center starting position
-    const startY = 80; // Increased top starting position
+    const startY = 80; // Top starting position
 
     // Tree level tracking
     let currentLevel = 0;
@@ -711,7 +722,7 @@ function FlowWidget() {
     // Create Script Nodes
     if (flowData.scripts && flowData.scripts.length > 0) {
       const scriptCount = flowData.scripts.length;
-      const scriptSpacing = 450;
+      const scriptSpacing = 400;
       const totalWidth = (scriptCount - 1) * scriptSpacing;
       const scriptStartX = startX - totalWidth / 2;
 
@@ -821,7 +832,7 @@ function FlowWidget() {
     // Create Segment Nodes - for all segments from scripts with images
     if (segmentsToDisplay.length > 0) {
       const segmentCount = segmentsToDisplay.length;
-      const segmentSpacing = 480;
+      const segmentSpacing = 400;
       const totalWidth = (segmentCount - 1) * segmentSpacing;
       const segmentStartX = startX - totalWidth / 2;
 
@@ -886,7 +897,7 @@ function FlowWidget() {
     });
 
     if (imageNodesBySegment.size > 0) {
-      const segmentSpacing = 480;
+      const segmentSpacing = 400;
 
       imageNodesBySegment.forEach((segmentData, segmentId) => {
         const { segment, segmentIndex, images, imageDetail } = segmentData;
@@ -1127,8 +1138,8 @@ function FlowWidget() {
 
     try {
       // Use the same layout configuration as createFlowElements
-      const levelHeight = 450; // Same as createFlowElements
-      const nodeWidth = 420; // Same as createFlowElements  
+      const levelHeight = 400; // Same as createFlowElements
+      const nodeWidth = 380; // Same as createFlowElements  
       const startX = 400; // Same as createFlowElements
       const startY = 80; // Same as createFlowElements
 
@@ -1166,7 +1177,7 @@ function FlowWidget() {
       const scriptNodes = nodes.filter((n) => n.type === "scriptNode");
       if (scriptNodes.length > 0) {
         const scriptCount = scriptNodes.length;
-        const scriptSpacing = 450; // Same as createFlowElements
+        const scriptSpacing = 400; // Same as createFlowElements
         const totalWidth = (scriptCount - 1) * scriptSpacing;
         const scriptStartX = startX - totalWidth / 2;
 
@@ -1184,7 +1195,7 @@ function FlowWidget() {
       const segmentNodes = nodes.filter((n) => n.type === "segmentNode");
       if (segmentNodes.length > 0) {
         const segmentCount = segmentNodes.length;
-        const segmentSpacing = 480; // Same as createFlowElements
+        const segmentSpacing = 400; // Same as createFlowElements
         const totalWidth = (segmentCount - 1) * segmentSpacing;
         const segmentStartX = startX - totalWidth / 2;
 
@@ -1329,21 +1340,11 @@ function FlowWidget() {
       );
 
       if (nodeType === "userNode") {
-        // Trigger tidy layout immediately when generation starts
-        setTimeout(() => {
-          handleTidyLayout();
-        }, 100);
-
         // Use the concept generation hook
         await generateConcepts(message, nodeId);
-
-        // Trigger tidy layout again after concepts are generated
-        setTimeout(() => {
-          handleTidyLayout();
-        }, 500);
       }
     },
-    [nodes, setNodes, setEdges, setError, handleTidyLayout, generateConcepts],
+    [nodes, setNodes, setEdges, setError, generateConcepts],
   );
 
   // Handle adding new nodes
@@ -1474,6 +1475,53 @@ function FlowWidget() {
     [setNodes, handleChatClick, rfInstance, handleChatMessage, setEdges], // Add all dependencies
   );
 
+  // Handle text node toggle for concept, script, and segment nodes
+  const handleToggleTextNode = useCallback(
+    (parentNodeId, parentNodeType, isExpanded, fullText, position) => {
+      // Handle text node creation/removal
+      
+      const textNodeId = `text-${parentNodeId}`;
+      
+      if (isExpanded) {
+        // Use the position passed from the node component
+        const parentPosition = position || { xPos: 400, yPos: 200 }; // fallback
+        
+        // Create text node positioned to the left of the parent node
+        const textNode = {
+          id: textNodeId,
+          type: "textNode",
+          position: {
+            x: parentPosition.xPos - 450, 
+            y: parentPosition.yPos,
+          },
+          data: {
+            parentNodeId: parentNodeId,
+            parentNodeType: parentNodeType,
+            fullText: fullText,
+            onClose: () => {
+              // Remove the text node when close button is clicked and reset parent node state
+              setNodes((prevNodes) => 
+                prevNodes.filter((node) => node.id !== textNodeId)
+              );
+              
+              // Reset the expanded state in the parent node
+              // This will be handled by the component's internal state
+            },
+          },
+        };
+        
+        // Add text node to the flow
+        setNodes((prevNodes) => [...prevNodes, textNode]);
+      } else {
+        // Remove text node
+        setNodes((prevNodes) => 
+          prevNodes.filter((node) => node.id !== textNodeId)
+        );
+      }
+    },
+    [setNodes],
+  );
+
   // Handle adding chat node when clicking on other nodes
   const handleAddChatNode = useCallback(
     (clickedNode) => {
@@ -1529,16 +1577,16 @@ function FlowWidget() {
   );
 
   // Update nodeTypes to include all new clean node components with retry functionality
-  // PERFORMANCE FIX: Memoize node components to prevent re-renders
   const nodeTypes = useMemo(() => {
     // Memoized components with stable references
     const MemoizedImageNode = React.memo((props) => <NodeImage {...props} onRetry={retryGeneration} />);
     const MemoizedVideoNode = React.memo((props) => <NodeVideo {...props} onRetry={retryGeneration} />);
-    const MemoizedScriptNode = React.memo((props) => <NodeScript {...props} onRetry={retryGeneration} />);
-    const MemoizedConceptNode = React.memo((props) => <NodeConcept {...props} onRetry={retryGeneration} />);
-    const MemoizedSegmentNode = React.memo(NodeSegment);
+    const MemoizedScriptNode = React.memo((props) => <NodeScript {...props} onRetry={retryGeneration} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
+    const MemoizedConceptNode = React.memo((props) => <NodeConcept {...props} onRetry={retryGeneration} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
+    const MemoizedSegmentNode = React.memo((props) => <NodeSegment {...props} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
     const MemoizedChatNode = React.memo(ChatNode);
     const MemoizedUserNode = React.memo(UserNode);
+    const MemoizedTextNode = React.memo(TextNode);
     
     return {
       imageNode: MemoizedImageNode,
@@ -1548,8 +1596,9 @@ function FlowWidget() {
       conceptNode: MemoizedConceptNode,
       chatNode: MemoizedChatNode,
       userNode: MemoizedUserNode,
+      textNode: MemoizedTextNode,
     };
-  }, [retryGeneration]);
+  }, [retryGeneration, handleToggleTextNode, nodes]);
 
   // Initialize flow when data changes - but NOT when nodes are just moved
   useEffect(() => {
@@ -2178,9 +2227,9 @@ function FlowWidget() {
                     }}
                     onPaneClick={() => {
                       setSelectedNode(null);
-                      // Remove all chat nodes when deselecting
+                      // Remove all chat nodes and text nodes when deselecting
                       setNodes((prevNodes) =>
-                        prevNodes.filter((node) => node.type !== "chatNode"),
+                        prevNodes.filter((node) => node.type !== "chatNode" && node.type !== "textNode"),
                       );
                       setEdges((prevEdges) =>
                         prevEdges.filter(

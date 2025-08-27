@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Handle } from "@xyflow/react";
-import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, RefreshCw, Plus, Minus } from "lucide-react";
 
-function NodeScript({ data, isConnectable, selected, onRetry }) {
+function NodeScript({ data, isConnectable, selected, onRetry, onToggleTextNode, nodes, id, xPos, yPos, positionAbsoluteX, positionAbsoluteY }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Check if text node exists for this script node
+  useEffect(() => {
+    const textNodeExists = nodes && nodes.some(node => 
+      node.type === "textNode" && node.data?.parentNodeId === id
+    );
+    setIsExpanded(textNodeExists);
+  }, [nodes, id]);
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.segments || data.artStyle || data.concept || (data.content && data.content !== 'New script content...'));
@@ -20,7 +29,7 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-3 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-blue-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{
@@ -56,8 +65,8 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
                 </span>
               </div>
             </div>
-            <div className='space-y-3'>
-              <div className='text-gray-300 text-sm leading-relaxed'>
+            <div className='space-y-2'>
+              <div className='text-gray-300 text-xs leading-relaxed'>
                 Generating script...
               </div>
             </div>
@@ -73,8 +82,8 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
                 </span>
               </div>
             </div>
-            <div className='space-y-3'>
-              <div className='text-red-300 text-sm font-medium'>
+            <div className='space-y-2'>
+              <div className='text-red-300 text-xs font-medium'>
                 {data.error || 'Internal Server Error'}
               </div>
               <div className='text-red-400/70 text-xs leading-relaxed'>
@@ -106,27 +115,23 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Script Content */}
-            <div className='space-y-3'>
+            <div className='space-y-2'>
               {data.content && data.content !== 'New script content...' && (
-                <div className='text-gray-300 text-sm leading-relaxed'>
-                  {data.content}
+                <div className='text-gray-300 text-xs leading-relaxed overflow-hidden'>
+                  {data.content.length > 100 ? data.content.substring(0, 300) + '...' : data.content}
                 </div>
               )}
 
               {data.segments && Array.isArray(data.segments) && data.segments.length > 0 && (
                 <div>
-                  <div className='text-xs text-gray-400 mb-1'>All Segment Narrations:</div>
-                  <div className='text-gray-300 text-xs rounded p-2 leading-relaxed whitespace-pre-line' style={{ backgroundColor: "#1a1a1a" }}>
-                    {(() => {
-                      const allNarrations = data.segments
-                        .map((segment, index) => segment.narration ? `${index + 1}. ${segment.narration}` : '')
-                        .filter(narration => narration.length > 0)
-                        .join('\n\n');
-                      
-                      if (!allNarrations) return 'No narrations available';
-                      
-                      return allNarrations;
-                    })()}
+                  <div className='text-xs text-gray-400 mb-1'>Segments: {data.segments.length}</div>
+                  <div className='text-gray-300 text-xs leading-relaxed overflow-hidden'>
+                    {data.segments[0]?.narration ? 
+                      (data.segments[0].narration.length > 80 ? 
+                        data.segments[0].narration.substring(0, 280) + '...' : 
+                        data.segments[0].narration
+                      ) : 'No narration available'
+                    }
                   </div>
                 </div>
               )}
@@ -141,25 +146,20 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Options List */}
-            <div className='space-y-2'>
+            <div className='space-y-1.5'>
               <div className='flex items-center space-x-2 text-gray-300'>
-                <FileText size={16} className='text-gray-400' />
+                <FileText size={14} className='text-gray-400' />
                 <span className='text-xs'>Script Writing</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
-                <PenTool size={16} className='text-gray-400' />
+                <PenTool size={14} className='text-gray-400' />
                 <span className='text-xs'>Story Development</span>
               </div>
 
               <div className='flex items-center space-x-2 text-gray-300'>
-                <BookOpen size={16} className='text-gray-400' />
+                <BookOpen size={14} className='text-gray-400' />
                 <span className='text-xs'>Content Planning</span>
-              </div>
-
-              <div className='flex items-center space-x-2 text-gray-300'>
-                <Type size={16} className='text-gray-400' />
-                <span className='text-xs'>Narrative Structure</span>
               </div>
             </div>
           </>
@@ -179,6 +179,39 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
           }}
           isConnectable={isConnectable}
         />
+
+        {/* Plus/Minus Button - Bottom Right */}
+        {hasData && (
+          <button
+            className='absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center z-10 border-0'
+            onClick={(e) => {
+              e.stopPropagation();
+              const newExpandedState = !isExpanded;
+              setIsExpanded(newExpandedState);
+              
+              // Get the full script content - only narration
+              let fullContent = '';
+              if (data.content && data.content !== 'New script content...') {
+                fullContent = data.content;
+              } else if (data.segments && Array.isArray(data.segments) && data.segments.length > 0) {
+                fullContent = data.segments.map((segment, index) => 
+                  `Segment ${index + 1}:\n${segment.narration || 'No narration'}`
+                ).join('\n\n---\n\n');
+              }
+              
+              if (onToggleTextNode) {
+                const currentPosition = {
+                  xPos: positionAbsoluteX || xPos || 400,
+                  yPos: positionAbsoluteY || yPos || 200
+                };
+                onToggleTextNode(id, 'scriptNode', newExpandedState, fullContent, currentPosition);
+              }
+            }}
+            title={isExpanded ? "Hide full text" : "Show full text"}
+          >
+            {isExpanded ? "-" : "+"}
+          </button>
+        )}
       </div>
     </div>
   );

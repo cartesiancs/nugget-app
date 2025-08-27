@@ -13,7 +13,6 @@ import { conceptWriterApi } from '../services/concept-writer';
  * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
  * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
  * @param {Array} params.nodes - Current nodes array
- * @param {Function} params.onComplete - Callback function called when concept generation is complete
  */
 export const useConceptGeneration = ({
   setNodes,
@@ -23,8 +22,7 @@ export const useConceptGeneration = ({
   setTaskCompletionStates,
   saveGenerationState,
   removeGenerationState,
-  nodes,
-  onComplete
+  nodes
 }) => {
   const generateConcepts = useCallback(async (message, nodeId) => {
     // Get selected project from localStorage
@@ -92,8 +90,8 @@ export const useConceptGeneration = ({
       id: loadingConceptNodeId,
       type: 'conceptNode',
       position: {
-        x: userNodePosition.x,
-        y: userNodePosition.y + 300
+        x: userNodePosition.x-170,
+        y: userNodePosition.y + 400
       },
       data: {
         id: loadingConceptNodeId,
@@ -192,7 +190,7 @@ export const useConceptGeneration = ({
             type: 'conceptNode',
             position: {
               x: startX + index * conceptSpacing,
-              y: userNodePosition.y + 300
+              y: userNodePosition.y + 450
             },
             data: {
               ...concept,
@@ -227,11 +225,6 @@ export const useConceptGeneration = ({
         setEdges(prevEdges => [...prevEdges, ...newEdges]);
         
         setTaskCompletionStates(prev => ({ ...prev, concept: true }));
-        
-        // Call completion callback if provided
-        if (onComplete && typeof onComplete === 'function') {
-          onComplete();
-        }
       } else {
         throw new Error('Invalid response format from concept generation API');
       }
@@ -307,7 +300,7 @@ export const useConceptGeneration = ({
         return newSet;
       });
     }
-  }, [setNodes, setEdges, setGeneratingConcepts, setUserConcepts, setTaskCompletionStates, saveGenerationState, removeGenerationState, nodes, onComplete]);
+  }, [setNodes, setEdges, setGeneratingConcepts, setUserConcepts, setTaskCompletionStates, saveGenerationState, removeGenerationState, nodes]);
 
   return {
     generateConcepts

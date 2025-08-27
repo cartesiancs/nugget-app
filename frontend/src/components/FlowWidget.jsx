@@ -2028,12 +2028,7 @@ function FlowWidget() {
             <div className='fixed top-4 right-4 z-[1001] flex items-center gap-3'>
               {/* Credits Display */}
               {isAuthenticated && user && (
-                <div
-                  className='flex items-center gap-1.5 bg-[#FFFFFF0D] border-0 rounded-lg px-2 py-1'
-                  style={{
-                    backdropFilter: "blur(10px)",
-                  }}
-                >
+                <div className='h-10 flex items-center gap-1.5 bg-[#32353E66]/40 border-0 rounded-lg px-4 py-2 backdrop-blur-sm'>
                   <svg
                     width='16'
                     height='16'
@@ -2057,7 +2052,7 @@ function FlowWidget() {
                       strokeLinejoin='round'
                     />
                   </svg>
-                  <span className='text-gray-200 text-xs font-medium'>
+                  <span className='text-gray-200 text-sm font-medium'>
                     {user.credits || "2000"}
                   </span>
                 </div>
@@ -2069,7 +2064,7 @@ function FlowWidget() {
                   <button
                     onClick={() => {
                     }}
-                    className='h-8 px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 border-0 text-blue-300 text-xs font-medium rounded-lg transition-colors backdrop-blur-sm'
+                    className='h-10 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border-0 text-blue-300 text-sm font-medium rounded-lg transition-colors backdrop-blur-sm'
                     title='Debug: Log Project Data'
                   >
                     📊
@@ -2082,7 +2077,7 @@ function FlowWidget() {
 
               {/* Chat Bot Icon - Click to open chat widget */}
               <div
-                className='rounded-lg transition-colors backdrop-blur-sm items-center cursor-pointer hover:opacity-80'
+                className='h-10 flex items-center justify-center bg-[#32353E66]/40 hover:bg-[#32353E66] rounded-lg transition-colors backdrop-blur-sm cursor-pointer px-2'
                 onClick={() => {
                   // Open chat widget if available
                   if (typeof window.openChat === "function") {
@@ -2094,7 +2089,7 @@ function FlowWidget() {
                 <img
                   src={assets.ChatBotButton}
                   alt='Chat Bot Icon'
-                  className='w-18 h-18'
+                  className='w-6 h-6'
                 />
               </div>
 

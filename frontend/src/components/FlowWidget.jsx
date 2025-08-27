@@ -693,25 +693,23 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Filter segments to only include those with images or videos
-    const segmentsWithImages = flowData.segments && flowData.segments.length > 0 
-      ? flowData.segments.filter((segment) => 
-          flowData.images[segment.id] || flowData.videos[segment.id]
-        )
+    // Show ALL segments, not just those with images or videos
+    const allSegments = flowData.segments && flowData.segments.length > 0 
+      ? flowData.segments
       : [];
     
     console.log("📊 DEBUG: Total segments:", flowData.segments?.length || 0);
-    console.log("📊 DEBUG: Segments with images/videos:", segmentsWithImages.length);
-    console.log("📊 DEBUG: Filtered segments:", segmentsWithImages.map(s => ({ id: s.id, hasImage: !!flowData.images[s.id], hasVideo: !!flowData.videos[s.id] })));
+    console.log("📊 DEBUG: All segments being displayed:", allSegments.length);
+    console.log("📊 DEBUG: Segments status:", allSegments.map(s => ({ id: s.id, hasImage: !!flowData.images[s.id], hasVideo: !!flowData.videos[s.id] })));
 
-    // Create Segment Nodes - only for segments that have images or are manually added
-    if (segmentsWithImages.length > 0) {
-      const segmentCount = segmentsWithImages.length;
+    // Create Segment Nodes - for all segments
+    if (allSegments.length > 0) {
+      const segmentCount = allSegments.length;
       const segmentSpacing = 480;
       const totalWidth = (segmentCount - 1) * segmentSpacing;
       const segmentStartX = startX - totalWidth / 2;
 
-      segmentsWithImages.forEach((segment, index) => {
+      allSegments.forEach((segment, index) => {
         const segmentX = segmentStartX + index * segmentSpacing;
 
         newNodes.push({
@@ -764,9 +762,9 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Create Image Nodes for segments that have images (use filtered segments)
+    // Create Image Nodes for segments that have images (use all segments)
     let imageNodesBySegment = new Map();
-    segmentsWithImages.forEach((segment, segmentIndex) => {
+    allSegments.forEach((segment, segmentIndex) => {
       const imageDetail = flowData.imageDetails[segment.id];
       if (flowData.images[segment.id] && imageDetail?.allImages) {
         imageNodesBySegment.set(segment.id, {
@@ -843,11 +841,11 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Create Video Nodes for images that have videos (use filtered segments)
+    // Create Video Nodes for images that have videos (use all segments)
     let videoNodesByImage = new Map();
     let usedSegmentVideos = new Set();
 
-    segmentsWithImages.forEach((segment, segmentIndex) => {
+    allSegments.forEach((segment, segmentIndex) => {
       const imageDetail = flowData.imageDetails[segment.id];
       if (flowData.images[segment.id] && imageDetail?.allImages) {
         imageDetail.allImages.forEach((image, imageIndex) => {

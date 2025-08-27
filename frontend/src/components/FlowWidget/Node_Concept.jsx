@@ -16,10 +16,10 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
   const conceptContent = data.content || data.userText || data.text || data.concept || data.description || data.prompt || "No concept content available";
   
   // Check if there's overflow content
-  const hasOverflowContent = conceptContent.length > 120;
+  const hasOverflowContent = hasData && conceptContent && conceptContent.length > 120;
   
-  // Debug log to see what data we're getting
-  console.log("NodeConcept data:", data, "hasData:", hasData, "nodeState:", nodeState);
+  // Debug log to see what data we're getting (removed for production)
+  // console.log("NodeConcept data:", data, "hasData:", hasData, "nodeState:", nodeState);
   
   return (
     <div className='relative'>
@@ -33,11 +33,12 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
       <div
         className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
           selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-purple-500" : "ring-2 ring-gray-600") : ""
-        } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
+        } ${isExpanded ? 'h-auto min-h-[280px] max-h-none' : 'h-[280px] max-h-[280px]'}`}
         style={{
           background: hasError ? "#2d1b1b" : "#1a1a1a",
           border: hasError ? "1px solid #dc2626" : hasData ? "1px solid #444" : "1px solid #333",
           boxShadow: selected && hasError ? "0 0 20px rgba(220, 38, 38, 0.3)" : selected && hasData ? "0 0 20px rgba(139, 92, 246, 0.3)" : "0 4px 12px rgba(0, 0, 0, 0.5)",
+          transition: "all 0.3s ease-in-out",
         }}
       >
         {/* Input Handle - Top side */}
@@ -116,18 +117,22 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Concept Content */}
-            <div className='space-y-3'>
-              <div className='text-gray-300 text-sm leading-relaxed'>
+            <div className={`space-y-3 ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}`}>
+              <div className={`text-gray-300 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-6'}`}>
                 {isExpanded ? conceptContent : `${conceptContent.substring(0, 120)}${conceptContent.length > 120 ? '...' : ''}`}
               </div>
             </div>
 
             {/* Expand/Collapse Button */}
             {hasOverflowContent && (
-              <div className='absolute bottom-2 right-2'>
+              <div className='absolute bottom-2 right-2 z-10'>
                 <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className='text-gray-400 hover:text-white transition-colors p-1 rounded'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                  }}
+                  className='text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm'
+                  title={isExpanded ? 'Collapse' : 'Expand'}
                 >
                   {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>

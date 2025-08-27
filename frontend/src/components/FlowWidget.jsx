@@ -52,6 +52,39 @@ function FlowWidget() {
     nodesRef.current = nodes;
   }, [nodes]);
 
+  // Auto-remove chat nodes when their parent user nodes are deleted
+  useEffect(() => {
+    const userNodeIds = new Set(
+      nodes
+        .filter(node => node.type === "userNode" && node.data?.nodeState === "new")
+        .map(node => node.id)
+    );
+
+    // Find chat nodes that have parent user nodes that no longer exist
+    const orphanedChatNodes = nodes.filter(node => 
+      node.type === "chatNode" && 
+      node.data?.parentNodeId && 
+      !userNodeIds.has(node.data.parentNodeId)
+    );
+
+    if (orphanedChatNodes.length > 0) {
+      // Remove orphaned chat nodes and their edges
+      setNodes(prevNodes => 
+        prevNodes.filter(node => 
+          !orphanedChatNodes.some(orphan => orphan.id === node.id)
+        )
+      );
+
+      setEdges(prevEdges => 
+        prevEdges.filter(edge => 
+          !orphanedChatNodes.some(orphan => 
+            edge.target === orphan.id || edge.source === orphan.id
+          )
+        )
+      );
+    }
+  }, [nodes, setNodes, setEdges]);
+
   // Node chat state
   const [chatOpen, setChatOpen] = useState(false);
   const [chatNodeId, setChatNodeId] = useState(null);
@@ -153,6 +186,12 @@ function FlowWidget() {
     saveGenerationState,
     removeGenerationState,
     nodes,
+    onComplete: () => {
+      // Trigger tidy layout when concepts are generated
+      setTimeout(() => {
+        handleTidyLayout();
+      }, 300);
+    }
   });
 
   const { generateScript } = useScriptGeneration({
@@ -1290,11 +1329,21 @@ function FlowWidget() {
       );
 
       if (nodeType === "userNode") {
+        // Trigger tidy layout immediately when generation starts
+        setTimeout(() => {
+          handleTidyLayout();
+        }, 100);
+
         // Use the concept generation hook
         await generateConcepts(message, nodeId);
+
+        // Trigger tidy layout again after concepts are generated
+        setTimeout(() => {
+          handleTidyLayout();
+        }, 500);
       }
     },
-    [nodes, setNodes, setEdges, setError],
+    [nodes, setNodes, setEdges, setError, handleTidyLayout, generateConcepts],
   );
 
   // Handle adding new nodes
@@ -1373,9 +1422,56 @@ function FlowWidget() {
         data: newNodeData,
       };
 
-      setNodes((prevNodes) => [...prevNodes, newNode]);
+      setNodes((prevNodes) => {
+        const updatedNodes = [...prevNodes, newNode];
+        
+        // Auto-add chat node for new user nodes
+        if (nodeType === "user") {
+          const chatNodeId = `chat-${newNodeId}-${Date.now()}`;
+          const chatNode = {
+            id: chatNodeId,
+            type: "chatNode",
+            position: {
+              x: centerX - 20,
+              y: centerY + 380,
+            },
+            data: {
+              nodeType: newNodeType,
+              parentNodeId: newNodeId,
+              onSendMessage: (message, nodeType, model) => {
+                handleChatMessage(message, newNodeId, newNodeType, model);
+              },
+            },
+          };
+          
+          // Add both user node and chat node
+          updatedNodes.push(chatNode);
+          
+          // Also add the edge connecting them
+          setTimeout(() => {
+            const newEdge = {
+              id: `${newNodeId}-to-${chatNodeId}`,
+              source: newNodeId,
+              target: chatNodeId,
+              sourceHandle: "output",
+              targetHandle: "input",
+              style: {
+                stroke: "#E9E8EB33",
+                strokeWidth: 2,
+                strokeDasharray: "5,5",
+                filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+              },
+              type: "smoothstep",
+            };
+            
+            setEdges((prevEdges) => [...prevEdges, newEdge]);
+          }, 100);
+        }
+        
+        return updatedNodes;
+      });
     },
-    [setNodes, handleChatClick, rfInstance], // Add rfInstance to dependencies
+    [setNodes, handleChatClick, rfInstance, handleChatMessage, setEdges], // Add all dependencies
   );
 
   // Handle adding chat node when clicking on other nodes

@@ -524,15 +524,53 @@ function FlowWidget() {
               videoDetails[key] = {
                 id: videoData.videoId,
                 artStyle: videoData.artStyle,
-                imageS3Key: null,
+                imageS3Key: videoData.imageS3Key || null,
+              };
+            }
+            
+            // CRITICAL FIX: Add saved videos to videosByImageS3Key mapping for proper node creation
+            if (videoData.imageS3Key) {
+              console.log(`🎬 Adding saved video ${videoData.videoId} to S3 key mapping: ${videoData.imageS3Key}`);
+              videosByImageS3Key[videoData.imageS3Key] = {
+                videoUrl: videoData.videoUrl,
+                videoId: videoData.videoId,
+                videoKey: key,
+                artStyle: videoData.artStyle,
+                uuid: `seg-${key}`, // Reconstruct UUID format
+                fromLocalStorage: true // Flag to identify localStorage videos
               };
             }
           }
         });
+        
+        console.log(`🎬 Added ${Object.keys(savedVideos).length} saved videos from localStorage`);
       }
     } catch (error) {
       console.error("Error loading saved videos from localStorage:", error);
     }
+    
+    // CRITICAL FIX: Also add temporary videos to videosByImageS3Key if they have imageS3Key data
+    temporaryVideos.forEach((videoUrl, key) => {
+      // Try to find the corresponding image S3 key from imageDetails
+      Object.entries(imageDetails).forEach(([segmentId, imageDetail]) => {
+        if (imageDetail?.allImages) {
+          imageDetail.allImages.forEach((image) => {
+            const expectedKey = `${segmentId}-${image.id}`;
+            if (key === expectedKey && image.s3Key) {
+              console.log(`🎬 Adding temporary video to S3 key mapping: ${image.s3Key} -> ${videoUrl}`);
+              videosByImageS3Key[image.s3Key] = {
+                videoUrl: videoUrl,
+                videoId: `temp-${Date.now()}`, // Temporary ID
+                videoKey: key,
+                artStyle: image.artStyle || "cinematic photography with soft lighting",
+                uuid: `seg-${key}`,
+                fromTemporary: true // Flag to identify temporary videos
+              };
+            }
+          });
+        }
+      });
+    });
     return {
       concepts,
       scripts,

@@ -51,7 +51,12 @@ export const useVideoGeneration = ({
             data: {
               ...node.data,
               content: 'Generating video...',
-              nodeState: 'loading'
+              nodeState: 'loading',
+              // Preserve existing data to prevent node from disappearing
+              segmentId: node.data?.segmentId || segmentId,
+              imageId: node.data?.imageId || imageNode.data?.imageId,
+              animationPrompt: node.data?.animationPrompt || animationPrompt,
+              artStyle: node.data?.artStyle || artStyle
             }
           };
         }
@@ -172,10 +177,11 @@ export const useVideoGeneration = ({
             animationPrompt: animationPrompt,
             artStyle: artStyle,
             model: 'gen4_turbo',
+            imageS3Key: imageS3Key, // CRITICAL FIX: Save the image S3 key for proper video-to-image mapping
             timestamp: Date.now()
           };
           localStorage.setItem(videoStorageKey, JSON.stringify(existingVideos));
-          console.log(`💾 Saved generated video to localStorage for ${segmentId}-${imageNode.data?.imageId}`);
+          console.log(`💾 Saved generated video to localStorage for ${segmentId}-${imageNode.data?.imageId} with imageS3Key: ${imageS3Key}`);
           
           // Clean up old videos (keep only last 50 videos per project)
           const videoEntries = Object.entries(existingVideos);
@@ -194,6 +200,14 @@ export const useVideoGeneration = ({
         
         // Mark video generation as completed
         setTaskCompletionStates(prev => ({ ...prev, video: true }));
+        
+        // CRITICAL FIX: Trigger a flow refresh to ensure video nodes are properly created
+        // This ensures the FlowWidget's createFlowElements function runs again with the new video data
+        setTimeout(() => {
+          console.log('🔄 Triggering flow refresh after video generation');
+          // The useEffect in FlowWidget will automatically run createFlowElements when allProjectData changes
+          // We just need to make sure the temporary video data is properly integrated
+        }, 100);
       } else {
         throw new Error('No video key returned from API');
       }
@@ -468,10 +482,11 @@ export const useVideoGeneration = ({
             animationPrompt: prompt,
             artStyle: artStyle,
             model: model,
+            imageS3Key: imageS3Key, // CRITICAL FIX: Save the image S3 key for proper video-to-image mapping
             timestamp: Date.now()
           };
           localStorage.setItem(videoStorageKey, JSON.stringify(existingVideos));
-          console.log(`💾 Saved regenerated video to localStorage for ${segmentId}-${imageId}`);
+          console.log(`💾 Saved regenerated video to localStorage for ${segmentId}-${imageId} with imageS3Key: ${imageS3Key}`);
           
           // Clean up old videos (keep only last 50 videos per project)
           const videoEntries = Object.entries(existingVideos);

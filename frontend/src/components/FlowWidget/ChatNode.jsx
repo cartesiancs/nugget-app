@@ -113,10 +113,8 @@ function ChatNode({ data, isConnectable }) {
                 minWidth: "110px",
               }}
             >
-              <option value="GPT-4o mini">GPT-4o mini</option>
-              <option value="GPT-4o">GPT-4o</option>
-              <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
-              <option value="Gemini Pro">Gemini Pro</option>
+              <option value="Concept Writer">Concept Writer</option>
+              
             </select>
 
             {/* Action Icons */}

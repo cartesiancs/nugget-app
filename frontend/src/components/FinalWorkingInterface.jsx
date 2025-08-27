@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { projectApi } from "../services/project";
 import { creditApi } from "../services/credit";
 import ChatLoginButton from "./ChatLoginButton";
 import CreditPurchase from "./CreditPurchase";
+import InterfaceSidebar from "./InterfaceSidebar";
 import { assets } from "../assets/assets";
 
 const FinalWorkingInterface = () => {
@@ -22,8 +23,12 @@ const FinalWorkingInterface = () => {
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [activeSection, setActiveSection] = useState("recents");
 
   console.log("🔧 Auth state:", { isAuthenticated, user: user?.email });
+  useEffect(() => {
+    setActiveSection(showAllProjects ? "all-projects" : "recents");
+  }, [showAllProjects]);
 
   // Load user data with direct API calls
   const loadUserData = useCallback(async () => {
@@ -367,83 +372,43 @@ const FinalWorkingInterface = () => {
           <img src={assets.SandBoxLogo} alt='Usuals.ai' className='w-8 h-8' />
           <h1 className='text-white text-2xl font-bold'>Usuals.ai</h1>
         </div>
-        <button
+        <div
           onClick={() => handleCreateProject("Quick project creation")}
           disabled={isCreatingProject}
-          className='bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors'
+          className='bg-[#F9D312] hover:bg-yellow-400 disabled:bg-gray-600 text-black px-4 py-2 rounded-lg font-medium transition-colors'
         >
           {isCreatingProject ? "Creating..." : "+ New Project"}
-        </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
       <div className='flex-1 flex relative'>
-        {/* Floating Left Sidebar - Fixed height */}
-        <div className='absolute left-4 top-4 bottom-4 w-80 bg-[#18191C80] border border-gray-700 rounded-xl p-6 shadow-2xl z-20 overflow-y-auto flex flex-col'>
-          {/* Credits - Real data */}
-          <div className='bg-gray-700 rounded-lg p-4 mb-6 flex-shrink-0'>
-            <h3 className='text-white font-medium mb-2'>Credits</h3>
-            <div className='text-2xl font-bold text-blue-400 mb-1'>
-              {loading ? "..." : creditBalance}
-            </div>
-            <p className='text-gray-400 text-sm'>Available credits</p>
-            <button
-              onClick={() => {
-                const token = localStorage.getItem("authToken");
-                console.log("🔘 User object:", user);
-                console.log("🔘 User ID:", user?.id);
-                console.log("🔘 Token exists:", !!token);
+        <InterfaceSidebar
+          user={user}
+          creditBalance={creditBalance}
+          loading={loading}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          onToggleAllProjects={(show) => setShowAllProjects(show)}
+          onPurchaseCredits={() => {
+            const token = localStorage.getItem("authToken");
+            console.log("🔘 User object:", user);
+            console.log("🔘 User ID:", user?.id);
+            console.log("🔘 Token exists:", !!token);
 
-                if (user?.id && token) {
-                  const purchaseUrl = `https://register.usuals.ai/purchase/${user.id}/${token}`;
-                  console.log("🔘 Final purchase URL:", purchaseUrl);
-                  window.open(purchaseUrl, "_blank");
-                } else {
-                  console.error("Missing user ID or auth token", {
-                    userId: user?.id,
-                    hasToken: !!token,
-                  });
-                  alert("Please log in first to purchase credits");
-                }
-              }}
-              className='w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition-colors'
-            >
-              Add Credits
-            </button>
-          </div>
-
-          {/* All Projects Toggle */}
-          <div className='mb-6 flex-shrink-0'>
-            <button
-              onClick={() => setShowAllProjects(!showAllProjects)}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                showAllProjects
-                  ? "bg-blue-700 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
-            >
-              <svg
-                className='w-5 h-5'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
-                />
-              </svg>
-              {showAllProjects
-                ? "Hide All Projects"
-                : `All Projects (${allProjects.length})`}
-            </button>
-          </div>
-
-          {/* Spacer to push everything to the top */}
-          <div className='flex-1'></div>
-        </div>
+            if (user?.id && token) {
+              const purchaseUrl = `https://register.usuals.ai/purchase/${user.id}/${token}`;
+              console.log("🔘 Final purchase URL:", purchaseUrl);
+              window.open(purchaseUrl, "_blank");
+            } else {
+              console.error("Missing user ID or auth token", {
+                userId: user?.id,
+                hasToken: !!token,
+              });
+              alert("Please log in first to purchase credits");
+            }
+          }}
+        />
 
         {/* Main Content Area */}
         <div className='flex-1 flex flex-col ml-96 mr-4 min-h-0'>
@@ -479,7 +444,7 @@ const FinalWorkingInterface = () => {
           </div>
 
           {/* All Projects Section */}
-          <div className='flex-1 flex flex-col px-6 pb-6 min-h-0'>
+          <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
             <h2 className='text-white font-medium mb-4 flex-shrink-0'>
               {showAllProjects
                 ? `All Projects (${allProjects.length})`
@@ -493,14 +458,14 @@ const FinalWorkingInterface = () => {
                 showAllProjects ? { maxHeight: "calc(100vh - 200px)" } : {}
               }
             >
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 '>
                 {loading ? (
                   Array.from({ length: showAllProjects ? 12 : 6 }, (_, i) => (
                     <div
                       key={i}
-                      className='bg-gray-800 rounded-lg border border-gray-700 overflow-hidden animate-pulse'
+                      className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-0 overflow-hidden animate-pulse'
                     >
-                      <div className='w-full h-48 bg-gray-700'></div>
+                      <div className='w-full h-52 bg-gray-700'></div>
                       <div className='p-4'>
                         <div className='h-5 bg-gray-700 rounded mb-3'></div>
                         <div className='h-4 bg-gray-700 rounded w-2/3'></div>
@@ -519,10 +484,10 @@ const FinalWorkingInterface = () => {
                         console.log("Opening project:", project);
                         navigateToEditorWithChat(project, "");
                       }}
-                      className='bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-blue-500 transition-colors cursor-pointer'
+                      className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-hidden hover:border-white/20 transition-colors cursor-pointer'
                     >
                       {/* Project Media - Bigger */}
-                      <div className='w-full h-48 bg-gray-700 flex items-center justify-center overflow-hidden relative group'>
+                      <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>
                         {project.thumbnail ? (
                           <>
                             <img
@@ -540,7 +505,7 @@ const FinalWorkingInterface = () => {
                               project.allImages.length > 1 && (
                                 <div className='absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity'>
                                   <div className='absolute bottom-2 left-2 flex items-center gap-1'>
-                                    <div className='bg-blue-600 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1'>
+                                    <div className='bg-[#18191C] px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1'>
                                       <svg
                                         className='w-3 h-3'
                                         fill='none'
@@ -576,9 +541,9 @@ const FinalWorkingInterface = () => {
                             </div>
                           </>
                         ) : (
-                          <div className='w-full h-full flex flex-col items-center justify-center'>
+                          <div className='w-full h-full  flex flex-col items-center justify-center'>
                             <svg
-                              className='w-16 h-16 text-gray-400 mb-2'
+                              className='w-16 h-16 text-white mb-2'
                               fill='none'
                               stroke='currentColor'
                               viewBox='0 0 24 24'
@@ -590,27 +555,60 @@ const FinalWorkingInterface = () => {
                                 d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
                               />
                             </svg>
-                            <span className='text-sm text-gray-500'>
-                              No media
-                            </span>
+                            <span className='text-sm text-white'>No media</span>
                           </div>
                         )}
                       </div>
 
                       {/* Project Info - Bigger */}
-                      <div className='p-4'>
+                      <div className='p-2 relative'>
+                        {/* 3-dot menu */}
+                        <div className='absolute top-1 right-1 p-1 hover:bg-white/10 rounded-full transition-colors'>
+                          <svg
+                            width='21'
+                            height='21'
+                            viewBox='0 0 21 21'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M5.54472 10.5988C5.54472 11.0591 5.17162 11.4322 4.71139 11.4322C4.25115 11.4322 3.87805 11.0591 3.87805 10.5988C3.87805 10.1386 4.25115 9.7655 4.71139 9.7655C5.17162 9.7655 5.54472 10.1386 5.54472 10.5988Z'
+                              stroke='white'
+                              stroke-opacity='0.5'
+                              stroke-width='1.5'
+                              stroke-linecap='round'
+                              stroke-linejoin='round'
+                            />
+                            <path
+                              d='M11.3781 10.5988C11.3781 11.0591 11.005 11.4322 10.5447 11.4322C10.0845 11.4322 9.71138 11.0591 9.71138 10.5988C9.71138 10.1386 10.0845 9.7655 10.5447 9.7655C11.005 9.7655 11.3781 10.1386 11.3781 10.5988Z'
+                              stroke='white'
+                              stroke-opacity='0.5'
+                              stroke-width='1.5'
+                              stroke-linecap='round'
+                              stroke-linejoin='round'
+                            />
+                            <path
+                              d='M17.2114 10.5988C17.2114 11.0591 16.8383 11.4322 16.3781 11.4322C15.9178 11.4322 15.5447 11.0591 15.5447 10.5988C15.5447 10.1386 15.9178 9.7655 16.3781 9.7655C16.8383 9.7655 17.2114 10.1386 17.2114 10.5988Z'
+                              stroke='white'
+                              stroke-opacity='0.5'
+                              stroke-width='1.5'
+                              stroke-linecap='round'
+                              stroke-linejoin='round'
+                            />
+                          </svg>
+                        </div>
                         <h3
-                          className='text-white font-medium text-lg truncate mb-2'
+                          className='text-white font-medium text-base truncate mb-1 pr-8'
                           title={project.name}
                         >
                           {project.name}
                         </h3>
-                        <p className='text-gray-400 text-sm mb-2'>
-                          {formatTimeAgo(project.updatedAt)}
+                        <p className='text-gray-400 text-xs mb-1'>
+                          Edited {formatTimeAgo(project.updatedAt)}
                         </p>
                         {project.description && (
                           <p
-                            className='text-gray-500 text-sm truncate mb-3'
+                            className='text-gray-500 text-xs truncate mb-2'
                             title={project.description}
                           >
                             {project.description}
@@ -622,7 +620,7 @@ const FinalWorkingInterface = () => {
                               project.hasMedia ? "bg-green-400" : "bg-gray-500"
                             }`}
                           ></div>
-                          <span className='text-sm text-gray-400'>
+                          <span className='text-xs text-gray-400'>
                             {project.hasMedia ? "Has content" : "No content"}
                           </span>
                         </div>

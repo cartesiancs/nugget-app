@@ -365,12 +365,18 @@ function FlowWidget() {
     // Process segments
     const segments = allProjectData.segments.map((seg) => ({
       ...seg,
-      id: seg.segmentId || seg.id,
-      segmentId: seg.segmentId || seg.id,
+      id: seg.id, // Keep the original ID from API response
+      segmentId: seg.segmentId || seg.id, // Keep segmentId for backward compatibility
       visual: seg.visual || "",
       narration: seg.narration || "",
       animation: seg.animation || "",
     }));
+    
+    console.log(`📋 Processed segments:`, segments.map(s => ({
+      id: s.id,
+      segmentId: s.segmentId,
+      visual: s.visual?.substring(0, 50) + '...'
+    })));
 
     // Build images lookup by segmentId
     const images = {};
@@ -381,31 +387,24 @@ function FlowWidget() {
       allProjectData.images.forEach((img) => {
         if (img && img.success && img.s3Key && img.visualPrompt) {
           // Find matching segment by comparing segment.visual with image.visualPrompt
-          let matchingSegmentId = null;
+          let matchingSegment = null;
           
           // Look for exact match between segment.visual and image.visualPrompt
-          const matchingSegment = allProjectData.segments.find((segment) => 
+          matchingSegment = allProjectData.segments.find((segment) => 
             segment.visual && segment.visual.trim() === img.visualPrompt.trim()
           );
           
           if (matchingSegment) {
-            matchingSegmentId = matchingSegment.segmentId || matchingSegment.id;
-            console.warn(`✅ Found segment by visual/visualPrompt match: ${matchingSegmentId} for image ${img.id}`);
+            // Use the actual segment ID from the project data response
+            const segmentId = matchingSegment.id;
+            console.warn(`✅ Found segment by visual/visualPrompt match: ${segmentId} for image ${img.id}`);
             console.warn(`📝 Matched text: "${img.visualPrompt}"`);
-          } else {
-            // No fallback - only use visual/visualPrompt matching
-            console.warn(`❌ No visual/visualPrompt match found for image ${img.id}`);
-            console.warn(`📝 Image visualPrompt: "${img.visualPrompt}"`);
-            console.warn(`📋 Available segment visuals: [${allProjectData.segments.map(s => `"${s.visual}"`).join(', ')}]`);
-            matchingSegmentId = null; // Don't map this image to any segment
-          }
-
-          if (matchingSegmentId) {
-            if (!allImagesBySegment[matchingSegmentId]) {
-              allImagesBySegment[matchingSegmentId] = [];
+            
+            if (!allImagesBySegment[segmentId]) {
+              allImagesBySegment[segmentId] = [];
             }
 
-            allImagesBySegment[matchingSegmentId].push({
+            allImagesBySegment[segmentId].push({
               id: img.id,
               url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
               visualPrompt: img.visualPrompt,
@@ -414,6 +413,11 @@ function FlowWidget() {
               uuid: img.uuid,
               isPrimary: !img.uuid.includes("-"),
             });
+          } else {
+            // No fallback - only use visual/visualPrompt matching
+            console.warn(`❌ No visual/visualPrompt match found for image ${img.id}`);
+            console.warn(`📝 Image visualPrompt: "${img.visualPrompt}"`);
+            console.warn(`📋 Available segment visuals: [${allProjectData.segments.map(s => `"${s.visual}"`).join(', ')}]`);
           }
         }
       });
@@ -436,7 +440,20 @@ function FlowWidget() {
             s3Key: primaryImage.s3Key,
             allImages: segmentImages,
           };
+          
+          console.log(`🖼️ Built image lookup for segment ${segmentId}:`, {
+            segmentId: segmentId,
+            primaryImageUrl: primaryImage.url,
+            totalImages: segmentImages.length,
+            imageKeys: Object.keys(images)
+          });
         }
+      });
+      
+      console.log(`📊 Final images lookup object:`, {
+        totalImageKeys: Object.keys(images),
+        imageKeys: Object.keys(images),
+        totalImageDetailKeys: Object.keys(imageDetails)
       });
     }
     // Build videos lookup
@@ -767,11 +784,25 @@ function FlowWidget() {
     allSegments.forEach((segment, segmentIndex) => {
       const imageDetail = flowData.imageDetails[segment.id];
       if (flowData.images[segment.id] && imageDetail?.allImages) {
+        console.log(`✅ Found images for segment ${segment.id}:`, {
+          segmentId: segment.id,
+          imageCount: imageDetail.allImages.length,
+          hasImages: !!flowData.images[segment.id],
+          imageDetail: !!imageDetail
+        });
         imageNodesBySegment.set(segment.id, {
           segment: segment,
           segmentIndex: segmentIndex,
           images: imageDetail.allImages,
           imageDetail: imageDetail,
+        });
+      } else {
+        console.log(`❌ No images found for segment ${segment.id}:`, {
+          segmentId: segment.id,
+          hasImages: !!flowData.images[segment.id],
+          imageDetail: !!imageDetail,
+          availableImageKeys: Object.keys(flowData.images || {}),
+          availableImageDetailKeys: Object.keys(flowData.imageDetails || {})
         });
       }
     });
@@ -986,9 +1017,9 @@ function FlowWidget() {
             script.segments.forEach((segment) => {
               segments.push({
                 ...segment,
-                // Ensure we have the segment ID
-                id: segment.segmentId || segment.id,
-                segmentId: segment.segmentId || segment.id,
+                // Use the actual segment ID from the API response
+                id: segment.id, // Use the original segment.id from API
+                segmentId: segment.segmentId || segment.id, // Keep segmentId for backward compatibility
                 // Add reference to parent script for debugging
                 parentScriptId: script.id,
                 parentScriptIndex: scriptIndex

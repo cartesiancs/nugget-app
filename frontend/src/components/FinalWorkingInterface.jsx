@@ -36,7 +36,7 @@ const FinalWorkingInterface = () => {
       // Load credits and projects in parallel
       const [creditsResponse, projectsResponse] = await Promise.all([
         creditApi.getBalance(user.id),
-        projectApi.getProjects({ page: 1, limit: 50 }), // Get more projects for "All Projects"
+        projectApi.getProjects({ page: 1, limit: 50 }),
       ]);
 
       console.log("🔧 Credits response:", creditsResponse);
@@ -52,9 +52,6 @@ const FinalWorkingInterface = () => {
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
         );
-
-        // Set recent projects (first 6)
-        setRecentProjects(sortedProjects.slice(0, 6));
 
         // Load images and videos for all projects
         const projectsWithMedia = await Promise.all(
@@ -175,7 +172,9 @@ const FinalWorkingInterface = () => {
           }),
         );
 
+        // Set both allProjects and recentProjects from the processed projectsWithMedia
         setAllProjects(projectsWithMedia);
+        setRecentProjects(projectsWithMedia.slice(0, 6)); // FIXED: Use projectsWithMedia instead of sortedProjects
       }
 
       console.log("🔧 User data loaded successfully");
@@ -363,7 +362,7 @@ const FinalWorkingInterface = () => {
   return (
     <div className='w-full h-screen bg-black flex flex-col'>
       {/* Full Width Header */}
-      <div className='w-full bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center z-10'>
+      <div className='w-full bg-black p-4 flex justify-between items-center z-10'>
         <div className='flex items-center gap-3'>
           <img src={assets.SandBoxLogo} alt='Usuals.ai' className='w-8 h-8' />
           <h1 className='text-white text-2xl font-bold'>Usuals.ai</h1>
@@ -379,10 +378,10 @@ const FinalWorkingInterface = () => {
 
       {/* Main Content Area */}
       <div className='flex-1 flex relative'>
-        {/* Floating Left Sidebar */}
-        <div className='absolute left-4 top-4 w-80 bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-2xl z-20 max-h-[calc(100vh-8rem)] overflow-y-auto'>
+        {/* Floating Left Sidebar - Fixed height */}
+        <div className='absolute left-4 top-4 bottom-4 w-80 bg-[#18191C80] border border-gray-700 rounded-xl p-6 shadow-2xl z-20 overflow-y-auto flex flex-col'>
           {/* Credits - Real data */}
-          <div className='bg-gray-700 rounded-lg p-4 mb-6'>
+          <div className='bg-gray-700 rounded-lg p-4 mb-6 flex-shrink-0'>
             <h3 className='text-white font-medium mb-2'>Credits</h3>
             <div className='text-2xl font-bold text-blue-400 mb-1'>
               {loading ? "..." : creditBalance}
@@ -414,7 +413,7 @@ const FinalWorkingInterface = () => {
           </div>
 
           {/* All Projects Toggle */}
-          <div className='mb-6'>
+          <div className='mb-6 flex-shrink-0'>
             <button
               onClick={() => setShowAllProjects(!showAllProjects)}
               className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
@@ -441,13 +440,16 @@ const FinalWorkingInterface = () => {
                 : `All Projects (${allProjects.length})`}
             </button>
           </div>
+
+          {/* Spacer to push everything to the top */}
+          <div className='flex-1'></div>
         </div>
 
         {/* Main Content Area */}
-        <div className='flex-1 flex flex-col ml-96 mr-4'>
-          {/* Chat Box */}
-          <div className='p-6'>
-            <div className='bg-gray-800 rounded-lg border border-gray-700 p-4'>
+        <div className='flex-1 flex flex-col ml-96 mr-4 min-h-0'>
+          {/* Chat Box - Fixed height */}
+          <div className='flex-shrink-0 p-6'>
+            <div className='bg-[#18191C80] rounded-lg border border-gray-700 p-4'>
               <h2 className='text-white font-medium mb-4'>
                 What would you like to create today?
               </h2>
@@ -477,82 +479,106 @@ const FinalWorkingInterface = () => {
           </div>
 
           {/* All Projects Section */}
-          <div className='flex-1 p-6 pt-0 overflow-y-auto'>
-            <h2 className='text-white font-medium mb-4'>
+          <div className='flex-1 flex flex-col px-6 pb-6 min-h-0'>
+            <h2 className='text-white font-medium mb-4 flex-shrink-0'>
               {showAllProjects
                 ? `All Projects (${allProjects.length})`
                 : `Recent Projects (${Math.min(recentProjects.length, 6)})`}
             </h2>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-              {loading ? (
-                Array.from({ length: showAllProjects ? 12 : 6 }, (_, i) => (
-                  <div
-                    key={i}
-                    className='bg-gray-800 rounded-lg border border-gray-700 overflow-hidden animate-pulse'
-                  >
-                    <div className='w-full h-32 bg-gray-700'></div>
-                    <div className='p-3'>
-                      <div className='h-4 bg-gray-700 rounded mb-2'></div>
-                      <div className='h-3 bg-gray-700 rounded w-2/3'></div>
+            {/* Projects Container with conditional scrolling */}
+            <div
+              className={showAllProjects ? "flex-1 overflow-y-auto" : "flex-1"}
+              style={
+                showAllProjects ? { maxHeight: "calc(100vh - 200px)" } : {}
+              }
+            >
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2'>
+                {loading ? (
+                  Array.from({ length: showAllProjects ? 12 : 6 }, (_, i) => (
+                    <div
+                      key={i}
+                      className='bg-gray-800 rounded-lg border border-gray-700 overflow-hidden animate-pulse'
+                    >
+                      <div className='w-full h-48 bg-gray-700'></div>
+                      <div className='p-4'>
+                        <div className='h-5 bg-gray-700 rounded mb-3'></div>
+                        <div className='h-4 bg-gray-700 rounded w-2/3'></div>
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (showAllProjects ? allProjects : recentProjects.slice(0, 6))
-                  .length > 0 ? (
-                (showAllProjects
-                  ? allProjects
-                  : recentProjects.slice(0, 6)
-                ).map((project) => (
-                  <div
-                    key={project.id}
-                    onClick={() => {
-                      console.log("Opening project:", project);
-                      navigateToEditorWithChat(project, "");
-                    }}
-                    className='bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-blue-500 transition-colors cursor-pointer'
-                  >
-                    {/* Project Media */}
-                    <div className='w-full h-32 bg-gray-700 flex items-center justify-center overflow-hidden relative group'>
-                      {project.thumbnail ? (
-                        <>
-                          <img
-                            src={project.thumbnail}
-                            alt={project.name}
-                            className='w-full h-full object-cover transition-transform group-hover:scale-105'
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                              e.target.nextSibling.style.display = "flex";
-                            }}
-                          />
+                  ))
+                ) : (showAllProjects ? allProjects : recentProjects.slice(0, 6))
+                    .length > 0 ? (
+                  (showAllProjects
+                    ? allProjects
+                    : recentProjects.slice(0, 6)
+                  ).map((project) => (
+                    <div
+                      key={project.id}
+                      onClick={() => {
+                        console.log("Opening project:", project);
+                        navigateToEditorWithChat(project, "");
+                      }}
+                      className='bg-gray-800 rounded-lg border border-gray-700 overflow-hidden hover:border-blue-500 transition-colors cursor-pointer'
+                    >
+                      {/* Project Media - Bigger */}
+                      <div className='w-full h-48 bg-gray-700 flex items-center justify-center overflow-hidden relative group'>
+                        {project.thumbnail ? (
+                          <>
+                            <img
+                              src={project.thumbnail}
+                              alt={project.name}
+                              className='w-full h-full object-cover transition-transform group-hover:scale-105'
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.nextSibling.style.display = "flex";
+                              }}
+                            />
 
-                          {/* Image overlay for multiple images */}
-                          {project.mediaType === "image" &&
-                            project.allImages.length > 1 && (
-                              <div className='absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity'>
-                                <div className='absolute bottom-2 left-2 flex items-center gap-1'>
-                                  <div className='bg-blue-600 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1'>
-                                    <svg
-                                      className='w-3 h-3'
-                                      fill='none'
-                                      stroke='currentColor'
-                                      viewBox='0 0 24 24'
-                                    >
-                                      <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        strokeWidth={2}
-                                        d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
-                                      />
-                                    </svg>
-                                    +{project.allImages.length - 1}
+                            {/* Image overlay for multiple images */}
+                            {project.mediaType === "image" &&
+                              project.allImages.length > 1 && (
+                                <div className='absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity'>
+                                  <div className='absolute bottom-2 left-2 flex items-center gap-1'>
+                                    <div className='bg-blue-600 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1'>
+                                      <svg
+                                        className='w-3 h-3'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        viewBox='0 0 24 24'
+                                      >
+                                        <path
+                                          strokeLinecap='round'
+                                          strokeLinejoin='round'
+                                          strokeWidth={2}
+                                          d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+                                        />
+                                      </svg>
+                                      +{project.allImages.length - 1}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
-                          <div className='w-full h-full hidden items-center justify-center'>
+                              )}
+                            <div className='w-full h-full hidden items-center justify-center'>
+                              <svg
+                                className='w-16 h-16 text-gray-400'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={1}
+                                  d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
+                                />
+                              </svg>
+                            </div>
+                          </>
+                        ) : (
+                          <div className='w-full h-full flex flex-col items-center justify-center'>
                             <svg
-                              className='w-12 h-12 text-gray-400'
+                              className='w-16 h-16 text-gray-400 mb-2'
                               fill='none'
                               stroke='currentColor'
                               viewBox='0 0 24 24'
@@ -564,96 +590,80 @@ const FinalWorkingInterface = () => {
                                 d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
                               />
                             </svg>
+                            <span className='text-sm text-gray-500'>
+                              No media
+                            </span>
                           </div>
-                        </>
-                      ) : (
-                        <div className='w-full h-full flex flex-col items-center justify-center'>
-                          <svg
-                            className='w-12 h-12 text-gray-400 mb-2'
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
+                        )}
+                      </div>
+
+                      {/* Project Info - Bigger */}
+                      <div className='p-4'>
+                        <h3
+                          className='text-white font-medium text-lg truncate mb-2'
+                          title={project.name}
+                        >
+                          {project.name}
+                        </h3>
+                        <p className='text-gray-400 text-sm mb-2'>
+                          {formatTimeAgo(project.updatedAt)}
+                        </p>
+                        {project.description && (
+                          <p
+                            className='text-gray-500 text-sm truncate mb-3'
+                            title={project.description}
                           >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={1}
-                              d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
-                            />
-                          </svg>
-                          <span className='text-xs text-gray-500'>
-                            No media
+                            {project.description}
+                          </p>
+                        )}
+                        <div className='flex items-center gap-2'>
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              project.hasMedia ? "bg-green-400" : "bg-gray-500"
+                            }`}
+                          ></div>
+                          <span className='text-sm text-gray-400'>
+                            {project.hasMedia ? "Has content" : "No content"}
                           </span>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Project Info */}
-                    <div className='p-3'>
-                      <h3
-                        className='text-white font-medium text-sm truncate mb-1'
-                        title={project.name}
-                      >
-                        {project.name}
-                      </h3>
-                      <p className='text-gray-400 text-xs mb-2'>
-                        {formatTimeAgo(project.updatedAt)}
-                      </p>
-                      {project.description && (
-                        <p
-                          className='text-gray-500 text-xs truncate'
-                          title={project.description}
-                        >
-                          {project.description}
-                        </p>
-                      )}
-                      <div className='flex items-center gap-2 mt-2'>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            project.hasMedia ? "bg-green-400" : "bg-gray-500"
-                          }`}
-                        ></div>
-                        <span className='text-xs text-gray-400'>
-                          {project.hasMedia ? "Has content" : "No content"}
-                        </span>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className='col-span-full text-center py-12'>
+                    <svg
+                      className='w-20 h-20 text-gray-600 mx-auto mb-6'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={1}
+                        d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
+                      />
+                    </svg>
+                    <h3 className='text-gray-400 text-xl font-medium mb-3'>
+                      No projects yet
+                    </h3>
+                    <p className='text-gray-500 mb-6'>
+                      Start creating amazing videos with AI
+                    </p>
+                    <button
+                      onClick={() => {
+                        const input = document.querySelector(
+                          'input[placeholder="Describe your video idea..."]',
+                        );
+                        input?.focus();
+                      }}
+                      className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors'
+                    >
+                      Create Your First Project
+                    </button>
                   </div>
-                ))
-              ) : (
-                <div className='col-span-full text-center py-12'>
-                  <svg
-                    className='w-16 h-16 text-gray-600 mx-auto mb-4'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={1}
-                      d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
-                    />
-                  </svg>
-                  <h3 className='text-gray-400 text-lg font-medium mb-2'>
-                    No projects yet
-                  </h3>
-                  <p className='text-gray-500 mb-4'>
-                    Start creating amazing videos with AI
-                  </p>
-                  <button
-                    onClick={() => {
-                      const input = document.querySelector(
-                        'input[placeholder="Describe your video idea..."]',
-                      );
-                      input?.focus();
-                    }}
-                    className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors'
-                  >
-                    Create Your First Project
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

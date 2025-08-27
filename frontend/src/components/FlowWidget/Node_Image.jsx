@@ -9,7 +9,7 @@ function NodeImage({ data, isConnectable, selected, onRetry }) {
   const hasData = data && (data.imageUrl || data.url);
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
-  const isNew = nodeState === 'new';
+  
   
   return (
     <div className='relative'>

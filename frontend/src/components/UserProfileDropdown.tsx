@@ -29,9 +29,6 @@ const UserProfileDropdown: React.FC = () => {
       </div>
     );
   }
-
-  console.log('UserProfileDropdown: Authenticated, showing dropdown for user:', user);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {

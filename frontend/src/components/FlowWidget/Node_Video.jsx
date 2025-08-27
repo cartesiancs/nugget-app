@@ -8,20 +8,9 @@ function NodeVideo({ data, isConnectable, selected, onRetry }) {
   const hasData = data && (data.videoUrl || data.url);
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
-  const isNew = nodeState === 'new';
-  const isExisting = nodeState === 'existing';
+
   
-  // Enhanced logging for debugging
-  console.log('🎬 NodeVideo render:', {
-    nodeState,
-    hasData,
-    isLoading,
-    hasError,
-    isNew,
-    isExisting,
-    videoUrl: data?.videoUrl,
-    dataKeys: data ? Object.keys(data) : []
-  });
+  
   
   return (
     <div className='relative'>

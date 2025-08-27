@@ -78,7 +78,7 @@ function UserNode({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] h-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? "ring-2 ring-purple-500" : ""
         }`}
         style={{

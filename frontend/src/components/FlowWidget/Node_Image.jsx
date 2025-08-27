@@ -21,7 +21,7 @@ function NodeImage({ data, isConnectable, selected, onRetry }) {
       </div>
 
       <div
-        className={`rounded-2xl p-3 w-[280px] h-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-3 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-orange-500" : "ring-2 ring-gray-600") : ""
         }`}
         style={{

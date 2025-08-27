@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Handle } from "@xyflow/react";
-import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { FileText, PenTool, BookOpen, Type, Palette, Hash, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 
 function NodeScript({ data, isConnectable, selected, onRetry }) {
   // Check node state and data
@@ -9,15 +9,6 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
   const isNew = nodeState === 'new';
-  
-  // Expandable state
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Check if there's overflow content (for segment narrations display)
-  const hasOverflowContent = hasData && (
-    (data.content && data.content !== 'New script content...' && data.content.length > 120) || 
-    (data.segments && Array.isArray(data.segments) && data.segments.some(segment => segment.narration && segment.narration.length > 0))
-  );
   
   return (
     <div className='relative'>
@@ -29,9 +20,9 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-blue-500" : "ring-2 ring-gray-600") : ""
-        } ${isExpanded ? 'h-auto min-h-[280px] max-h-none' : 'h-[280px] max-h-[280px]'}`}
+        }`}
         style={{
           background: hasError ? "#2d1b1b" : "#1a1a1a",
           border: hasError ? "1px solid #dc2626" : hasData ? "1px solid #444" : "1px solid #333",
@@ -115,17 +106,17 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Script Content */}
-            <div className={`space-y-3 ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}`}>
+            <div className='space-y-3'>
               {data.content && data.content !== 'New script content...' && (
-                <div className={`text-gray-300 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-3'}`}>
-                  {isExpanded ? data.content : `${data.content.substring(0, 120)}${data.content.length > 120 ? '...' : ''}`}
+                <div className='text-gray-300 text-sm leading-relaxed'>
+                  {data.content}
                 </div>
               )}
 
               {data.segments && Array.isArray(data.segments) && data.segments.length > 0 && (
                 <div>
                   <div className='text-xs text-gray-400 mb-1'>All Segment Narrations:</div>
-                  <div className={`text-gray-300 text-xs rounded p-2 leading-relaxed whitespace-pre-line ${isExpanded ? 'max-h-none' : 'max-h-24 overflow-hidden'}`} style={{ backgroundColor: "#1a1a1a" }}>
+                  <div className='text-gray-300 text-xs rounded p-2 leading-relaxed whitespace-pre-line' style={{ backgroundColor: "#1a1a1a" }}>
                     {(() => {
                       const allNarrations = data.segments
                         .map((segment, index) => segment.narration ? `${index + 1}. ${segment.narration}` : '')
@@ -134,28 +125,12 @@ function NodeScript({ data, isConnectable, selected, onRetry }) {
                       
                       if (!allNarrations) return 'No narrations available';
                       
-                      return isExpanded ? allNarrations : `${allNarrations.substring(0, 120)}${allNarrations.length > 120 ? '...' : ''}`;
+                      return allNarrations;
                     })()}
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Expand/Collapse Button */}
-            {hasOverflowContent && (
-              <div className='absolute bottom-2 right-2 z-10'>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsExpanded(!isExpanded);
-                  }}
-                  className='text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm'
-                  title={isExpanded ? 'Collapse' : 'Expand'}
-                >
-                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-              </div>
-            )}
           </>
         ) : (
           // New/empty state view

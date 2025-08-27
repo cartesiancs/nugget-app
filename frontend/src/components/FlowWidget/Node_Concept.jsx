@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Handle } from "@xyflow/react";
-import { Lightbulb, Sparkles, Zap, Target, ChevronDown, ChevronUp, RefreshCw, AlertCircle } from "lucide-react";
+import { Lightbulb, Sparkles, Zap, Target, RefreshCw, AlertCircle } from "lucide-react";
 
 function NodeConcept({ data, isConnectable, selected, onRetry }) {
   // Check node state and data
@@ -9,14 +9,8 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
   
-  // Expandable state
-  const [isExpanded, setIsExpanded] = useState(false);
-  
   // Get concept content
   const conceptContent = data.content || data.userText || data.text || data.concept || data.description || data.prompt || "No concept content available";
-  
-  // Check if there's overflow content
-  const hasOverflowContent = hasData && conceptContent && conceptContent.length > 120;
   
   // Debug log to see what data we're getting (removed for production)
   // console.log("NodeConcept data:", data, "hasData:", hasData, "nodeState:", nodeState);
@@ -31,9 +25,9 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasError ? "ring-2 ring-red-500" : hasData ? "ring-2 ring-purple-500" : "ring-2 ring-gray-600") : ""
-        } ${isExpanded ? 'h-auto min-h-[280px] max-h-none' : 'h-[280px] max-h-[280px]'}`}
+        }`}
         style={{
           background: hasError ? "#2d1b1b" : "#1a1a1a",
           border: hasError ? "1px solid #dc2626" : hasData ? "1px solid #444" : "1px solid #333",
@@ -117,27 +111,11 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
             </div>
 
             {/* Concept Content */}
-            <div className={`space-y-3 ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}`}>
-              <div className={`text-gray-300 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-6'}`}>
-                {isExpanded ? conceptContent : `${conceptContent.substring(0, 120)}${conceptContent.length > 120 ? '...' : ''}`}
+            <div className='space-y-3'>
+              <div className='text-gray-300 text-sm leading-relaxed'>
+                {conceptContent}
               </div>
             </div>
-
-            {/* Expand/Collapse Button */}
-            {hasOverflowContent && (
-              <div className='absolute bottom-2 right-2 z-10'>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsExpanded(!isExpanded);
-                  }}
-                  className='text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm'
-                  title={isExpanded ? 'Collapse' : 'Expand'}
-                >
-                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-              </div>
-            )}
           </>
         ) : (
           // New/empty state view
@@ -192,3 +170,4 @@ function NodeConcept({ data, isConnectable, selected, onRetry }) {
 }
 
 export default NodeConcept;
+

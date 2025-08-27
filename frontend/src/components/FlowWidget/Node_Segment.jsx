@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Handle } from "@xyflow/react";
-import { Layers, Clock, Target, Zap, Play, Hash, ChevronDown, ChevronUp } from "lucide-react";
+import { Layers, Clock, Target, Zap, Play, Hash } from "lucide-react";
 
 function NodeSegment({ data, isConnectable, selected }) {
   // Check node state and data
@@ -9,12 +9,6 @@ function NodeSegment({ data, isConnectable, selected }) {
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
   const isNew = nodeState === 'new';
-  
-  // Expandable state
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Check if there's overflow content - only for narration now
-  const hasOverflowContent = data.narration && data.narration.length > 200;
   
   return (
     <div className='relative'>
@@ -26,9 +20,9 @@ function NodeSegment({ data, isConnectable, selected }) {
       </div>
 
       <div
-        className={`rounded-2xl p-4 w-[280px] relative transition-all duration-300 ${
+        className={`rounded-2xl p-4 w-[280px] min-h-[280px] relative transition-all duration-300 ${
           selected ? (hasData ? "ring-2 ring-green-500" : "ring-2 ring-gray-600") : ""
-        } ${isExpanded ? 'h-auto' : 'h-[280px]'}`}
+        }`}
         style={{
           background: "#1a1a1a",
           border: hasData ? "1px solid #444" : "1px solid #333",
@@ -103,7 +97,7 @@ function NodeSegment({ data, isConnectable, selected }) {
                 <div>
                   <div className='text-xs text-gray-400 mb-1'>Narration:</div>
                   <div className='text-gray-300 text-xs rounded p-2 leading-relaxed' style={{ backgroundColor: "#1a1a1a" }}>
-                    {isExpanded ? data.narration : `${data.narration.substring(0, 200)}${data.narration.length > 200 ? '...' : ''}`}
+                    {data.narration}
                   </div>
                 </div>
               )}
@@ -114,18 +108,6 @@ function NodeSegment({ data, isConnectable, selected }) {
                 </div>
               )}
             </div>
-
-            {/* Expand/Collapse Button */}
-            {hasOverflowContent && (
-              <div className='absolute bottom-2 right-2'>
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className='text-gray-400 hover:text-white transition-colors p-1 rounded'
-                >
-                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-              </div>
-            )}
           </>
         ) : (
           // New/empty state view

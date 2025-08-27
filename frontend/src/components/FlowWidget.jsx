@@ -526,6 +526,8 @@ function FlowWidget() {
   }, [allProjectData, temporaryVideos]);
 
   // Create nodes and edges from flow data
+  // Note: All segments from scripts that have at least one image generated will be displayed
+  // Segments are correctly mapped to their parent scripts using the parentScriptId field
   const createFlowElements = useCallback(() => {
     const newNodes = [];
     const newEdges = [];
@@ -710,23 +712,49 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Show ALL segments, not just those with images or videos
-    const allSegments = flowData.segments && flowData.segments.length > 0 
-      ? flowData.segments
-      : [];
+    // Show ALL segments from scripts that have at least one segment with an image generated
+    let segmentsToDisplay = [];
+    if (flowData.segments && flowData.segments.length > 0) {
+      // Group segments by their parent script using the parentScriptId field
+      const segmentsByScript = {};
+      
+      flowData.segments.forEach(segment => {
+        const parentScriptId = segment.parentScriptId;
+        if (!segmentsByScript[parentScriptId]) {
+          segmentsByScript[parentScriptId] = [];
+        }
+        segmentsByScript[parentScriptId].push(segment);
+      });
+      
+      // Find scripts that have at least one segment with an image
+      const scriptsWithImages = new Set();
+      flowData.segments.forEach(segment => {
+        if (flowData.images[segment.id]) {
+          scriptsWithImages.add(segment.parentScriptId);
+        }
+      });
+      
+      // Include ALL segments from scripts that have images
+      Object.entries(segmentsByScript).forEach(([scriptId, segments]) => {
+        if (scriptsWithImages.has(scriptId)) {
+          segmentsToDisplay.push(...segments);
+        }
+      });
+    }
     
-    console.log("📊 DEBUG: Total segments:", flowData.segments?.length || 0);
-    console.log("📊 DEBUG: All segments being displayed:", allSegments.length);
-    console.log("📊 DEBUG: Segments status:", allSegments.map(s => ({ id: s.id, hasImage: !!flowData.images[s.id], hasVideo: !!flowData.videos[s.id] })));
+    console.log("📊 DEBUG: Total segments from API:", flowData.segments?.length || 0);
+    console.log("📊 DEBUG: Scripts with images:", Array.from(new Set(flowData.segments?.map(s => s.parentScriptId).filter(Boolean) || [])));
+    console.log("📊 DEBUG: Segments to display (from scripts with images):", segmentsToDisplay.length);
+    console.log("📊 DEBUG: Segments status:", segmentsToDisplay.map(s => ({ id: s.id, parentScriptId: s.parentScriptId, hasImage: !!flowData.images[s.id], hasVideo: !!flowData.videos[s.id] })));
 
-    // Create Segment Nodes - for all segments
-    if (allSegments.length > 0) {
-      const segmentCount = allSegments.length;
+    // Create Segment Nodes - for all segments from scripts with images
+    if (segmentsToDisplay.length > 0) {
+      const segmentCount = segmentsToDisplay.length;
       const segmentSpacing = 480;
       const totalWidth = (segmentCount - 1) * segmentSpacing;
       const segmentStartX = startX - totalWidth / 2;
 
-      allSegments.forEach((segment, index) => {
+      segmentsToDisplay.forEach((segment, index) => {
         const segmentX = segmentStartX + index * segmentSpacing;
 
         newNodes.push({
@@ -739,26 +767,19 @@ function FlowWidget() {
               ? "completed"
               : flowData.images[segment.id]
               ? "generating"
-              : "pending",
+              : "pending", // Now we show all segments, so some might be pending
           },
         });
 
-        if (flowData.scripts && flowData.scripts.length > 0) {
-          // Map segment to script using ONLY first 8 characters of ID matching
-          let parentScriptId = null;
+        if (flowData.scripts && flowData.segments.length > 0) {
+          // Use the parentScriptId field that's already available in the segment data
+          const parentScriptId = segment.parentScriptId;
           
-          const segmentIdPrefix = segment.id.substring(0, 8);
-          const scriptByIdMatch = flowData.scripts.find((script) => 
-            script.id.substring(0, 8) === segmentIdPrefix
-          );
-          
-          if (scriptByIdMatch) {
-            parentScriptId = scriptByIdMatch.id;
-            console.log(`✅ Found script by ID prefix matching: ${parentScriptId} for segment ${segment.id} (prefix: ${segmentIdPrefix})`);
+          if (parentScriptId) {
+            console.log(`✅ Using parentScriptId from segment data: ${parentScriptId} for segment ${segment.id}`);
           } else {
-            // If no match found, default to first script as fallback
-            parentScriptId = flowData.scripts[0].id;
-            console.warn(`❌ No ID prefix match found for segment ${segment.id} (prefix: ${segmentIdPrefix}), using first script as fallback: ${parentScriptId}`);
+            console.warn(`❌ No parentScriptId found for segment ${segment.id}, this should not happen`);
+            return; // Skip this segment if no parent script ID
           }
 
           newEdges.push({
@@ -773,15 +794,23 @@ function FlowWidget() {
               filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
             },
           });
+          
+          console.log(`🔗 Created edge: script-${parentScriptId} → segment-${segment.id}`);
         }
       });
 
       currentLevel++;
+      
+      // Log the final script-to-segment mapping
+      console.log("🎯 FINAL SCRIPT-TO-SEGMENT MAPPING:");
+      segmentsToDisplay.forEach(segment => {
+        console.log(`  Script ${segment.parentScriptId} → Segment ${segment.id}`);
+      });
     }
 
-    // Create Image Nodes for segments that have images (use all segments)
+    // Create Image Nodes for segments that have images (use all segments from scripts with images)
     let imageNodesBySegment = new Map();
-    allSegments.forEach((segment, segmentIndex) => {
+    segmentsToDisplay.forEach((segment, segmentIndex) => {
       const imageDetail = flowData.imageDetails[segment.id];
       if (flowData.images[segment.id] && imageDetail?.allImages) {
         console.log(`✅ Found images for segment ${segment.id}:`, {
@@ -872,11 +901,11 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Create Video Nodes for images that have videos (use all segments)
+    // Create Video Nodes for images that have videos (use all segments from scripts with images)
     let videoNodesByImage = new Map();
     let usedSegmentVideos = new Set();
 
-    allSegments.forEach((segment, segmentIndex) => {
+    segmentsToDisplay.forEach((segment, segmentIndex) => {
       const imageDetail = flowData.imageDetails[segment.id];
       if (flowData.images[segment.id] && imageDetail?.allImages) {
         imageDetail.allImages.forEach((image, imageIndex) => {
@@ -1250,8 +1279,8 @@ function FlowWidget() {
         id: chatNodeId,
         type: "chatNode",
         position: {
-          x: clickedNode.position.x - 40,
-          y: clickedNode.position.y + 350,
+          x: clickedNode.position.x - 20,
+          y: clickedNode.position.y + 380,
         },
         data: {
           nodeType: clickedNode.type,
@@ -1432,7 +1461,7 @@ function FlowWidget() {
       userInput: false,
       concept: allProjectData.concepts?.length > 0,
       script: allProjectData.scripts?.length > 0,
-      segment: allProjectData.segments?.length > 0,
+      segment: allProjectData.images?.some((img) => img?.success && img?.s3Key), // Complete when any segment has images
       image: allProjectData.images?.some((img) => img?.success && img?.s3Key),
       video: allProjectData.videos?.some(
         (video) =>

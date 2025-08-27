@@ -456,9 +456,11 @@ function FlowWidget() {
         totalImageDetailKeys: Object.keys(imageDetails)
       });
     }
-    // Build videos lookup
+    // Build videos lookup - match videos to images by S3 key
     const videos = {};
     const videoDetails = {};
+    const videosByImageS3Key = {}; // New: Map videos by their source image S3 key
+    
     if (Array.isArray(allProjectData.videos)) {
       allProjectData.videos.forEach((video) => {
         if (
@@ -478,7 +480,24 @@ function FlowWidget() {
             artStyle: video.artStyle,
             imageS3Key: video.imageS3Key || null,
           };
+
+          // NEW: If video has imageS3Key, create mapping by image S3 key for precise matching
+          if (video.imageS3Key) {
+            console.log(`🎬 Video ${video.id} linked to image S3 key: ${video.imageS3Key}`);
+            videosByImageS3Key[video.imageS3Key] = {
+              videoUrl: videoUrl,
+              videoId: video.id,
+              videoKey: videoKey,
+              artStyle: video.artStyle,
+              uuid: video.uuid
+            };
+          }
         }
+      });
+      
+      console.log(`🎬 Built videos by imageS3Key lookup:`, {
+        totalVideosByS3Key: Object.keys(videosByImageS3Key).length,
+        s3Keys: Object.keys(videosByImageS3Key)
       });
     }
 
@@ -522,6 +541,7 @@ function FlowWidget() {
       videos,
       imageDetails,
       videoDetails,
+      videosByImageS3Key, // NEW: Add the S3 key mapping for precise video-to-image matching
     };
   }, [allProjectData, temporaryVideos]);
 
@@ -901,7 +921,7 @@ function FlowWidget() {
       currentLevel++;
     }
 
-    // Create Video Nodes for images that have videos (use all segments from scripts with images)
+    // Create Video Nodes for images that have videos - using S3 key matching for precise attachment
     let videoNodesByImage = new Map();
     let usedSegmentVideos = new Set();
 
@@ -909,23 +929,22 @@ function FlowWidget() {
       const imageDetail = flowData.imageDetails[segment.id];
       if (flowData.images[segment.id] && imageDetail?.allImages) {
         imageDetail.allImages.forEach((image, imageIndex) => {
-          const imageVideoKey = `${segment.id}-${image.id}`;
-          let videoUrl = flowData.videos[imageVideoKey];
-          let videoId = flowData?.videoDetails?.[imageVideoKey]?.id;
-          let videoKey = imageVideoKey;
+          let videoUrl = null;
+          let videoId = null;
+          let videoKey = null;
+          let matchedByS3Key = false;
 
-          if (!videoUrl && !usedSegmentVideos.has(segment.id)) {
-            const segmentVideoUrl = flowData.videos[segment.id];
-            const segmentVideoId = flowData?.videoDetails?.[segment.id]?.id;
-
-            if (segmentVideoUrl) {
-              videoUrl = segmentVideoUrl;
-              videoId = segmentVideoId;
-              videoKey = `${segment.id}-${image.id}`;
-              usedSegmentVideos.add(segment.id);
-            }
+          // PRIORITY 1: Try to match video by image S3 key (most precise)
+          if (image.s3Key && flowData.videosByImageS3Key && flowData.videosByImageS3Key[image.s3Key]) {
+            const videoData = flowData.videosByImageS3Key[image.s3Key];
+            videoUrl = videoData.videoUrl;
+            videoId = videoData.videoId;
+            videoKey = `${segment.id}-${image.id}`;
+            matchedByS3Key = true;
+            console.log(`✅ Video matched to image by S3 key: ${image.s3Key} -> Video ${videoData.videoId}`);
           }
-
+          
+          // ONLY use S3 key matching - no fallback logic
           if (videoUrl) {
             videoNodesByImage.set(videoKey, {
               segment: segment,
@@ -934,6 +953,23 @@ function FlowWidget() {
               imageIndex: imageIndex,
               videoUrl: videoUrl,
               videoId: videoId,
+              matchedByS3Key: matchedByS3Key, // Track how the match was made
+            });
+            
+            console.log(`🎬 Video node will be created:`, {
+              videoKey: videoKey,
+              segmentId: segment.id,
+              imageId: image.id,
+              imageS3Key: image.s3Key,
+              matchMethod: 'S3Key',
+              videoId: videoId
+            });
+          } else {
+            console.log(`❌ No video found for image:`, {
+              segmentId: segment.id,
+              imageId: image.id,
+              imageS3Key: image.s3Key,
+              availableVideoS3Keys: Object.keys(flowData.videosByImageS3Key || {})
             });
           }
         });
@@ -949,6 +985,7 @@ function FlowWidget() {
           imageIndex,
           videoUrl,
           videoId,
+          matchedByS3Key,
         } = videoData;
 
         const imageNodeId = `image-${segment.id}-${image.id}`;
@@ -965,6 +1002,7 @@ function FlowWidget() {
             videoUrl: videoUrl,
             videoId: videoId,
             nodeState: "existing",
+            matchedByS3Key: matchedByS3Key, // NEW: Track how video was matched to image
             segmentData: {
               id: segment.id,
               animation: segment.animation,
@@ -988,6 +1026,8 @@ function FlowWidget() {
             filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
           },
         });
+        
+        console.log(`🔗 Created video node: ${videoData.videoId} -> Image ${image.id} (S3 Key Match)`);
       });
     }
 
@@ -1074,68 +1114,174 @@ function FlowWidget() {
     }
   }, [isAuthenticated]);
 
-  // Handle tidy/layout arrangement
+  // Handle tidy/layout arrangement - recreate the proper project structure
   const handleTidyLayout = useCallback(() => {
     if (!rfInstance) return;
 
     try {
-      const levelHeight = 500;
-      const nodeSpacing = 450;
-      const startX = 400;
-      const startY = 100;
+      // Use the same layout configuration as createFlowElements
+      const levelHeight = 450; // Same as createFlowElements
+      const nodeWidth = 420; // Same as createFlowElements  
+      const startX = 400; // Same as createFlowElements
+      const startY = 80; // Same as createFlowElements
 
-      const currentNodes = nodes.map((node) => {
-        let newPosition = { ...node.position };
+      let currentLevel = 0;
+      const updatedNodes = [];
 
-        if (node.type === "userNode") {
-          newPosition = { x: startX, y: startY };
-        } else if (node.type === "conceptNode") {
-          const conceptNodes = nodes.filter((n) => n.type === "conceptNode");
-          const conceptIndex = conceptNodes.findIndex((n) => n.id === node.id);
-          const totalWidth = (conceptNodes.length - 1) * nodeSpacing;
-          newPosition = {
-            x: startX - totalWidth / 2 + conceptIndex * nodeSpacing,
-            y: startY + levelHeight,
-          };
-        } else if (node.type === "scriptNode") {
-          const scriptNodes = nodes.filter((n) => n.type === "scriptNode");
-          const scriptIndex = scriptNodes.findIndex((n) => n.id === node.id);
-          const totalWidth = (scriptNodes.length - 1) * nodeSpacing;
-          newPosition = {
-            x: startX - totalWidth / 2 + scriptIndex * nodeSpacing,
-            y: startY + levelHeight * 2,
-          };
-        } else if (node.type === "segmentNode") {
-          const segmentNodes = nodes.filter((n) => n.type === "segmentNode");
-          const segmentIndex = segmentNodes.findIndex((n) => n.id === node.id);
-          const totalWidth = (segmentNodes.length - 1) * 480;
-          newPosition = {
-            x: startX - totalWidth / 2 + segmentIndex * 480,
-            y: startY + levelHeight * 3,
-          };
-        } else if (node.type === "imageNode") {
-          const imageNodes = nodes.filter((n) => n.type === "imageNode");
-          const imageIndex = imageNodes.findIndex((n) => n.id === node.id);
-          const totalWidth = (imageNodes.length - 1) * 350;
-          newPosition = {
-            x: startX - totalWidth / 2 + imageIndex * 350,
-            y: startY + levelHeight * 4,
-          };
-        } else if (node.type === "videoNode") {
-          const videoNodes = nodes.filter((n) => n.type === "videoNode");
-          const videoIndex = videoNodes.findIndex((n) => n.id === node.id);
-          const totalWidth = (videoNodes.length - 1) * 350;
-          newPosition = {
-            x: startX - totalWidth / 2 + videoIndex * 350,
-            y: startY + levelHeight * 5,
-          };
-        }
+      // Step 1: Position User Nodes (ROOT level)
+      const userNodes = nodes.filter((n) => n.type === "userNode");
+      userNodes.forEach((node) => {
+        updatedNodes.push({
+          ...node,
+          position: { x: startX, y: startY + currentLevel * levelHeight }
+        });
+      });
+      if (userNodes.length > 0) currentLevel++;
 
-        return { ...node, position: newPosition };
+      // Step 2: Position Concept Nodes
+      const conceptNodes = nodes.filter((n) => n.type === "conceptNode");
+      if (conceptNodes.length > 0) {
+        const conceptCount = conceptNodes.length;
+        const totalWidth = (conceptCount - 1) * nodeWidth;
+        const conceptStartX = startX - totalWidth / 2;
+
+        conceptNodes.forEach((node, index) => {
+          const conceptX = conceptStartX + index * nodeWidth;
+          updatedNodes.push({
+            ...node,
+            position: { x: conceptX, y: startY + currentLevel * levelHeight }
+          });
+        });
+        currentLevel++;
+      }
+
+      // Step 3: Position Script Nodes
+      const scriptNodes = nodes.filter((n) => n.type === "scriptNode");
+      if (scriptNodes.length > 0) {
+        const scriptCount = scriptNodes.length;
+        const scriptSpacing = 450; // Same as createFlowElements
+        const totalWidth = (scriptCount - 1) * scriptSpacing;
+        const scriptStartX = startX - totalWidth / 2;
+
+        scriptNodes.forEach((node, index) => {
+          const scriptX = scriptStartX + index * scriptSpacing;
+          updatedNodes.push({
+            ...node,
+            position: { x: scriptX, y: startY + currentLevel * levelHeight }
+          });
+        });
+        currentLevel++;
+      }
+
+      // Step 4: Position Segment Nodes
+      const segmentNodes = nodes.filter((n) => n.type === "segmentNode");
+      if (segmentNodes.length > 0) {
+        const segmentCount = segmentNodes.length;
+        const segmentSpacing = 480; // Same as createFlowElements
+        const totalWidth = (segmentCount - 1) * segmentSpacing;
+        const segmentStartX = startX - totalWidth / 2;
+
+        segmentNodes.forEach((node, index) => {
+          const segmentX = segmentStartX + index * segmentSpacing;
+          updatedNodes.push({
+            ...node,
+            position: { x: segmentX, y: startY + currentLevel * levelHeight }
+          });
+        });
+        currentLevel++;
+      }
+
+      // Step 5: Position Image Nodes - group by segment and align under their parent segments
+      const imageNodes = nodes.filter((n) => n.type === "imageNode");
+      if (imageNodes.length > 0) {
+        // Group images by segment
+        const imagesBySegment = new Map();
+        imageNodes.forEach((imageNode) => {
+          const segmentId = imageNode.data?.segmentId;
+          if (segmentId) {
+            if (!imagesBySegment.has(segmentId)) {
+              imagesBySegment.set(segmentId, []);
+            }
+            imagesBySegment.get(segmentId).push(imageNode);
+          }
+        });
+
+        // Position images under their parent segments
+        imagesBySegment.forEach((images, segmentId) => {
+          // Find the parent segment node
+          const parentSegmentNode = updatedNodes.find((n) => 
+            n.type === "segmentNode" && 
+            (n.id === `segment-${segmentId}` || n.data?.id === segmentId)
+          );
+          
+          if (parentSegmentNode) {
+            const segmentX = parentSegmentNode.position.x;
+            const imageSpacing = 320; // Same as createFlowElements
+            const imageCount = images.length;
+            const imagesTotalWidth = (imageCount - 1) * imageSpacing;
+            const imageStartX = segmentX - imagesTotalWidth / 2;
+
+            images.forEach((imageNode, imageIndex) => {
+              const imageX = imageStartX + imageIndex * imageSpacing;
+              updatedNodes.push({
+                ...imageNode,
+                position: { x: imageX, y: startY + currentLevel * levelHeight }
+              });
+            });
+          } else {
+            // Fallback: position images in a row if no parent segment found
+            images.forEach((imageNode, imageIndex) => {
+              updatedNodes.push({
+                ...imageNode,
+                position: { x: startX + imageIndex * 350, y: startY + currentLevel * levelHeight }
+              });
+            });
+          }
+        });
+        currentLevel++;
+      }
+
+      // Step 6: Position Video Nodes - align under their parent images
+      const videoNodes = nodes.filter((n) => n.type === "videoNode");
+      if (videoNodes.length > 0) {
+        videoNodes.forEach((videoNode) => {
+          const segmentId = videoNode.data?.segmentId;
+          const imageId = videoNode.data?.imageId;
+          
+          // Find the parent image node
+          const parentImageNode = updatedNodes.find((n) => 
+            n.type === "imageNode" && 
+            (n.data?.segmentId === segmentId || n.data?.imageId === imageId)
+          );
+          
+          if (parentImageNode) {
+            // Position video directly under its parent image
+            updatedNodes.push({
+              ...videoNode,
+              position: { x: parentImageNode.position.x, y: startY + currentLevel * levelHeight }
+            });
+          } else {
+            // Fallback: position in sequence if no parent image found
+            const videoIndex = videoNodes.findIndex((n) => n.id === videoNode.id);
+            updatedNodes.push({
+              ...videoNode,
+              position: { x: startX + videoIndex * 350, y: startY + currentLevel * levelHeight }
+            });
+          }
+        });
+      }
+
+      // Handle any other node types that might exist
+      const otherNodes = nodes.filter((n) => 
+        !['userNode', 'conceptNode', 'scriptNode', 'segmentNode', 'imageNode', 'videoNode'].includes(n.type)
+      );
+      otherNodes.forEach((node) => {
+        updatedNodes.push(node); // Keep original position for unknown node types
       });
 
-      setNodes(currentNodes);
+      setNodes(updatedNodes);
 
+      // Fit view with animation
       setTimeout(() => {
         rfInstance.fitView({
           padding: 0.2,
@@ -1143,6 +1289,8 @@ function FlowWidget() {
           duration: 800,
         });
       }, 100);
+
+      console.log("🎨 Tidy layout applied - recreated proper project structure");
     } catch (error) {
       console.error("Error arranging layout:", error);
     }

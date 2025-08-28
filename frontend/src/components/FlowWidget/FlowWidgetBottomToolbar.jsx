@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { assets } from "../../assets/assets";
+import Styles from "./Styles";
 
-function FlowWidgetBottomToolbar({ onAddNode }) {
+function FlowWidgetBottomToolbar({ onAddNode, onRefreshLayout }) {
   const [addMenuExpanded, setAddMenuExpanded] = useState(false);
   const [selectedTool, setSelectedTool] = useState("cursor"); // Track selected tool
+  const [stylesOpen, setStylesOpen] = useState(false); // Track styles panel visibility
 
   const handleToolSelect = (toolName) => {
     setSelectedTool(toolName);
@@ -11,6 +13,15 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
 
   return (
     <>
+      {/* Styles Panel - appears above main toolbar */}
+      <Styles 
+        isOpen={stylesOpen} 
+        onClose={() => {
+          setStylesOpen(false);
+          setSelectedTool("cursor"); // Reset tool selection when closing
+        }} 
+      />
+
       {/* Add Menu Toolbar - appears above main toolbar */}
       {addMenuExpanded && (
         <div className='fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[1002] animate-in fade-in slide-in-from-bottom-2 duration-200'>
@@ -18,6 +29,40 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
             className='flex items-center gap-2 rounded-2xl px-3 py-2 shadow-2xl'
             style={{ background: "#18191CB2", backdropFilter: "blur(20px)" }}
           >
+            {/* Add Concept (User Node) */}
+            <img
+              src={assets.ConceptIcon}
+              onClick={() => {
+                onAddNode("user");
+                setAddMenuExpanded(false);
+              }}
+              className='h-8 w-8 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Concept'
+              alt='Add Concept'
+            />
+
+            {/* Add Script */}
+            <img
+              src={assets.TextIcon}
+              onClick={() => {
+                onAddNode("script");
+                setAddMenuExpanded(false);
+              }}
+              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Script'
+              alt='Add Script'
+            />
+            {/* Add Segment */}
+            <img
+              src={assets.SegmentIcon}
+              onClick={() => {
+                onAddNode("segment");
+                setAddMenuExpanded(false);
+              }}
+              className='h-8 w-8 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+              title='Add Segment'
+              alt='Add Segment'
+            />
             {/* Add Image */}
             <img
               src={assets.ImageIcon}
@@ -29,7 +74,6 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
               title='Add Image'
               alt='Add Image'
             />
-
             {/* Add Video */}
             <img
               src={assets.VideoIcon}
@@ -40,39 +84,6 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
               className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
               title='Add Video'
               alt='Add Video'
-            />
-
-            {/* Add Text */}
-            <img
-              src={assets.TextIcon}
-              onClick={() => {
-                onAddNode("text");
-                setAddMenuExpanded(false);
-              }}
-              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Add Text'
-              alt='Add Text'
-            />
-
-            {/* Import Button */}
-            <img
-              src={assets.ImportIcon}
-              onClick={() => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = ".json,.txt,.md";
-                input.onchange = (e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    console.log("Importing file:", file.name);
-                  }
-                };
-                input.click();
-                setAddMenuExpanded(false);
-              }}
-              className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
-              title='Import'
-              alt='Import'
             />
           </div>
         </div>
@@ -110,17 +121,12 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
             alt='Hand Tool'
           />
 
-          {/* Assets/Grid Tool */}
+          {/* Assets/Grid Tool - Coming Soon */}
           <img
             src={assets.AssettIcon}
-            onClick={() => handleToolSelect("assets")}
-            className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "assets"
-                ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                : "hover:bg-gray-700/50 hover:shadow-md"
-            }`}
-            title='Assets'
-            alt='Assets Tool'
+            className='h-10 w-10 rounded-xl cursor-not-allowed transition-all duration-200 p-1 opacity-50 hover:opacity-70'
+            title='Coming Soon'
+            alt='Assets Tool - Coming Soon'
           />
 
           {/* Separator */}
@@ -129,7 +135,14 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
           {/* Add/Plus Tool */}
           <img
             src={assets.AddIcon}
-            onClick={() => setAddMenuExpanded(!addMenuExpanded)}
+            onClick={() => {
+              setAddMenuExpanded(!addMenuExpanded);
+              // Close styles panel if it's open
+              if (stylesOpen) {
+                setStylesOpen(false);
+                setSelectedTool("cursor");
+              }
+            }}
             className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
               addMenuExpanded
                 ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20 "
@@ -142,43 +155,48 @@ function FlowWidgetBottomToolbar({ onAddNode }) {
           {/* Separator */}
           <div className='h-6 w-px bg-gray-600/50 mx-1'></div>
 
-          {/* Palette/Color Tool */}
+          {/* Styles Tool (formerly Palette/Color Tool) */}
           <img
             src={assets.PaletteIcon}
-            onClick={() => handleToolSelect("palette")}
+            onClick={() => {
+              handleToolSelect("palette");
+              setStylesOpen(!stylesOpen);
+              // Close add menu if it's open
+              if (addMenuExpanded) {
+                setAddMenuExpanded(false);
+              }
+            }}
             className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "palette"
+              selectedTool === "palette" || stylesOpen
                 ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
                 : "hover:bg-gray-700/50 hover:shadow-md"
             }`}
-            title='Color Palette'
-            alt='Palette Tool'
+            title='Styles'
+            alt='Styles Tool'
           />
 
-          {/* Brush/Edit Tool */}
+          {/* Brush/Tidy Tool - Arranges layout for better spacing */}
           <img
             src={assets.BrushIcon}
-            onClick={() => handleToolSelect("brush")}
-            className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "brush"
-                ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                : "hover:bg-gray-700/50 hover:shadow-md"
-            }`}
-            title='Brush Tool'
-            alt='Brush Tool'
+            onClick={() => {
+              // Don't select the tool, just execute the action
+              // Arrange layout with better spacing between nodes
+              if (onRefreshLayout) {
+                console.log("🎨 Tidy tool clicked - arranging layout for better spacing");
+                onRefreshLayout();
+              }
+            }}
+            className='h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 hover:bg-gray-700/50 hover:shadow-md'
+            title='Tidy Layout - Arrange nodes with better spacing'
+            alt='Tidy Layout Tool'
           />
 
-          {/* Comment/Chat Tool */}
+          {/* Comment/Chat Tool - Coming Soon */}
           <img
             src={assets.CommentIcon}
-            onClick={() => handleToolSelect("comment")}
-            className={`h-10 w-10 rounded-xl cursor-pointer transition-all duration-200 p-1 ${
-              selectedTool === "comment"
-                ? "bg-cyan-500/30 shadow-lg shadow-cyan-500/20"
-                : "hover:bg-gray-700/50 hover:shadow-md"
-            }`}
-            title='Comments'
-            alt='Comment Tool'
+            className='h-10 w-10 rounded-xl cursor-not-allowed transition-all duration-200 p-1 opacity-50 hover:opacity-70'
+            title='Coming Soon'
+            alt='Comment Tool - Coming Soon'
           />
         </div>
       </div>

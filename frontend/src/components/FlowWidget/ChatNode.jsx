@@ -47,6 +47,61 @@ function ChatNode({ data, isConnectable }) {
     setMessage(e.target.value);
   };
 
+  const handleKeyDown = (e) => {
+    // Handle keyboard shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          // Select all text
+          e.preventDefault();
+          if (textareaRef.current) {
+            textareaRef.current.select();
+            textareaRef.current.setSelectionRange(0, textareaRef.current.value.length);
+          }
+          break;
+        case 'x':
+          // Cut text
+          e.preventDefault();
+          if (textareaRef.current && textareaRef.current.selectionStart !== textareaRef.current.selectionEnd) {
+            const start = textareaRef.current.selectionStart;
+            const end = textareaRef.current.selectionEnd;
+            const selectedText = message.substring(start, end);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(selectedText).then(() => {
+              // Remove selected text
+              const newMessage = message.substring(0, start) + message.substring(end);
+              setMessage(newMessage);
+              
+              // Set cursor position
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.setSelectionRange(start, start);
+                }
+              }, 0);
+            }).catch(err => {
+              console.error('Failed to copy text: ', err);
+              // Fallback: just remove the text
+              const newMessage = message.substring(0, start) + message.substring(end);
+              setMessage(newMessage);
+            });
+          }
+          break;
+        case 'v':
+          // Paste text - let default behavior handle this
+          break;
+        default:
+          break;
+      }
+    }
+    
+    // Handle Enter key for form submission
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
     <div
       className="rounded-2xl shadow-2xl w-80 p-4"
@@ -62,11 +117,11 @@ function ChatNode({ data, isConnectable }) {
         position={Position.Top}
         isConnectable={isConnectable}
         style={{
-          background: "#3b82f6",
+          background: "#ffffff",
           width: 16,
           height: 16,
           border: "3px solid #fff",
-          boxShadow: "0 0 12px rgba(59, 130, 246, 0.6)",
+          boxShadow: "0 0 12px rgba(255, 255, 255, 0.6)",
           zIndex: 9999,
           top: -8,
         }}
@@ -81,6 +136,7 @@ function ChatNode({ data, isConnectable }) {
               ref={textareaRef}
               value={message}
               onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
               placeholder={getDefaultMessage()}
               className="w-full text-sm p-0 border-0 focus:outline-none resize-none bg-transparent placeholder-gray-500 text-gray-300 leading-relaxed overflow-hidden"
               style={{
@@ -113,10 +169,8 @@ function ChatNode({ data, isConnectable }) {
                 minWidth: "110px",
               }}
             >
-              <option value="GPT-4o mini">GPT-4o mini</option>
-              <option value="GPT-4o">GPT-4o</option>
-              <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
-              <option value="Gemini Pro">Gemini Pro</option>
+              <option value="Concept Writer">Concept Writer</option>
+              
             </select>
 
             {/* Action Icons */}

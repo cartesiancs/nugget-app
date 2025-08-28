@@ -529,7 +529,7 @@ const InterfaceSidebar = ({
 
       {/* Bottom Actions */}
       <div className='p-4  flex-shrink-0'>
-        <div className='flex items-center justify-between bg-yellow-200/10 p-2 rounded-xl mb-3'>
+        <div className='flex items-center justify-between bg-yellow-200/10 p-3 rounded-xl mb-3'>
           <span className='text-yellow-400 text-sm'>Get more credits</span>
           <button
             onClick={onPurchaseCredits}

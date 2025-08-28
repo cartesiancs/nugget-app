@@ -411,7 +411,7 @@ const FinalWorkingInterface = () => {
         />
 
         {/* Main Content Area */}
-        <div className='flex-1 flex flex-col ml-96 mr-4 min-h-0'>
+        <div className='flex-1 flex flex-col ml-96 mr-4 mt-10 min-h-0'>
           {/* Chat Box - Fixed height */}
           <div className=' mb-4'>
             <div className='text-center mb-8'>

@@ -413,39 +413,70 @@ const FinalWorkingInterface = () => {
         {/* Main Content Area */}
         <div className='flex-1 flex flex-col ml-96 mr-4 min-h-0'>
           {/* Chat Box - Fixed height */}
-          <div className='flex-shrink-0 p-6'>
-            <div className='bg-[#18191C80] rounded-lg border border-gray-700 p-4'>
-              <h2 className='text-white font-medium mb-4'>
-                What would you like to create today?
+          <div className=' mb-4'>
+            <div className='text-center mb-8'>
+              <h2 className='text-[#FFFFFF80] text-3xl font-sans'>
+                Set the stage for your next creation
               </h2>
-              <div className='flex gap-3'>
-                <input
-                  type='text'
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder='Describe your video idea...'
-                  className='flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500'
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !isCreatingProject) {
-                      handleCreateProject(chatInput);
-                    }
-                  }}
-                  disabled={isCreatingProject}
-                />
-                <button
-                  onClick={() => handleCreateProject(chatInput)}
-                  disabled={isCreatingProject || !chatInput.trim()}
-                  className='bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors'
-                >
-                  {isCreatingProject ? "Creating..." : "Create"}
-                </button>
+            </div>
+            <div className='max-w-6xl mx-auto'>
+              <div className='bg-gradient-to-t from-[#20272B] to-[#000000]  rounded-2xl border-1 border-white/30 p-8'>
+                <div className='flex items-center gap-4'>
+                  <input
+                    type='text'
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder='how about "A bird flying on the moon with a red cape"...'
+                    className='flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none text-base'
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !isCreatingProject) {
+                        handleCreateProject(chatInput);
+                      }
+                    }}
+                    disabled={isCreatingProject}
+                  />
+                  <div
+                    onClick={() => handleCreateProject(chatInput)}
+                    disabled={isCreatingProject || !chatInput.trim()}
+                    className=' text-white p-2 rounded-lg transition-colors flex items-center justify-center flex-shrink-0'
+                  >
+                    {isCreatingProject ? (
+                      <span className='text-sm'>Creating...</span>
+                    ) : (
+                      <svg
+                        width='28'
+                        height='29'
+                        viewBox='0 0 28 29'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <rect
+                          y='0.5'
+                          width='28'
+                          height='28'
+                          rx='6'
+                          fill='white'
+                          fillOpacity='0.1'
+                        />
+                        <path
+                          d='M12.3594 16.1406L8.70896 14.1497C7.75627 13.6302 7.76571 12.2605 8.72538 11.7672C11.3719 10.407 14.186 9.39704 17.0973 8.76249C17.9332 8.58029 18.8885 8.20889 19.5898 8.91018C20.2911 9.61147 19.9197 10.5668 19.7375 11.4027C19.103 14.314 18.093 17.1281 16.7328 19.7746C16.2395 20.7343 14.8698 20.7437 14.3503 19.791L12.3594 16.1406ZM12.3594 16.1406L14.5651 13.9349'
+                          stroke='white'
+                          strokeOpacity='0.5'
+                          strokeWidth='1.5'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* All Projects Section */}
           <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
-            <h2 className='text-white font-medium mb-4 flex-shrink-0'>
+            <h2 className='text-white font-medium mb-4  flex-shrink-0'>
               {showAllProjects
                 ? `All Projects (${allProjects.length})`
                 : `Recent Projects (${Math.min(recentProjects.length, 6)})`}

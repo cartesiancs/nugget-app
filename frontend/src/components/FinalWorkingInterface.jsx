@@ -24,11 +24,26 @@ const FinalWorkingInterface = () => {
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [activeSection, setActiveSection] = useState("recents");
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   console.log("🔧 Auth state:", { isAuthenticated, user: user?.email });
   useEffect(() => {
     setActiveSection(showAllProjects ? "all-projects" : "recents");
   }, [showAllProjects]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdownId && !event.target.closest('.dropdown-container')) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdownId]);
 
   // Load user data with direct API calls
   const loadUserData = useCallback(async () => {
@@ -291,6 +306,17 @@ const FinalWorkingInterface = () => {
     }
   };
 
+  const handleOpenProject = (project) => {
+    console.log("Opening project:", project);
+    navigateToEditorWithChat(project, "");
+    setOpenDropdownId(null); // Close dropdown
+  };
+
+  const toggleDropdown = (projectId, e) => {
+    e.stopPropagation(); // Prevent project card click
+    setOpenDropdownId(openDropdownId === projectId ? null : projectId);
+  };
+
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const date = new Date(dateString);
@@ -372,12 +398,20 @@ const FinalWorkingInterface = () => {
           <img src={assets.SandBoxLogo} alt='Usuals.ai' className='w-8 h-8' />
           <h1 className='text-white text-2xl font-bold'>Usuals.ai</h1>
         </div>
-        <div
-          onClick={() => handleCreateProject("Quick project creation")}
-          disabled={isCreatingProject}
-          className='bg-[#F9D312] hover:bg-yellow-400 disabled:bg-gray-600 text-black px-4 py-2 rounded-lg font-medium transition-colors'
-        >
-          {isCreatingProject ? "Creating..." : "+ New Project"}
+        <div className='flex items-center gap-3'>
+          <div className='bg-[#FFFFFF0D] hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer'>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Invite</span>
+          </div>
+          <div
+            onClick={() => handleCreateProject("Quick project creation")}
+            disabled={isCreatingProject}
+            className='bg-[#F9D312] hover:bg-yellow-400 disabled:bg-gray-600 text-black px-4 py-2 rounded-lg font-medium transition-colors'
+          >
+            {isCreatingProject ? "Creating..." : "+ New Project"}
+          </div>
         </div>
       </div>
 
@@ -489,7 +523,7 @@ const FinalWorkingInterface = () => {
                 showAllProjects ? { maxHeight: "calc(100vh - 200px)" } : {}
               }
             >
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 '>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 overflow-visible'>
                 {loading ? (
                   Array.from({ length: showAllProjects ? 12 : 6 }, (_, i) => (
                     <div
@@ -511,11 +545,8 @@ const FinalWorkingInterface = () => {
                   ).map((project) => (
                     <div
                       key={project.id}
-                      onClick={() => {
-                        console.log("Opening project:", project);
-                        navigateToEditorWithChat(project, "");
-                      }}
-                      className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-hidden hover:border-white/20 transition-colors cursor-pointer'
+                      onClick={() => handleOpenProject(project)}
+                      className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer'
                     >
                       {/* Project Media - Bigger */}
                       <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>
@@ -594,39 +625,167 @@ const FinalWorkingInterface = () => {
                       {/* Project Info - Bigger */}
                       <div className='p-2 relative'>
                         {/* 3-dot menu */}
-                        <div className='absolute top-1 right-1 p-1 hover:bg-white/10 rounded-full transition-colors'>
-                          <svg
-                            width='21'
-                            height='21'
-                            viewBox='0 0 21 21'
-                            fill='none'
-                            xmlns='http://www.w3.org/2000/svg'
+                        <div className='dropdown-container absolute top-1 right-1'>
+                          <button
+                            onClick={(e) => toggleDropdown(project.id, e)}
+                            className='p-1 bg-[#18191ccc] hover:bg-white/10 rounded-full transition-colors'
                           >
-                            <path
-                              d='M5.54472 10.5988C5.54472 11.0591 5.17162 11.4322 4.71139 11.4322C4.25115 11.4322 3.87805 11.0591 3.87805 10.5988C3.87805 10.1386 4.25115 9.7655 4.71139 9.7655C5.17162 9.7655 5.54472 10.1386 5.54472 10.5988Z'
-                              stroke='white'
-                              stroke-opacity='0.5'
-                              stroke-width='1.5'
-                              stroke-linecap='round'
-                              stroke-linejoin='round'
-                            />
-                            <path
-                              d='M11.3781 10.5988C11.3781 11.0591 11.005 11.4322 10.5447 11.4322C10.0845 11.4322 9.71138 11.0591 9.71138 10.5988C9.71138 10.1386 10.0845 9.7655 10.5447 9.7655C11.005 9.7655 11.3781 10.1386 11.3781 10.5988Z'
-                              stroke='white'
-                              stroke-opacity='0.5'
-                              stroke-width='1.5'
-                              stroke-linecap='round'
-                              stroke-linejoin='round'
-                            />
-                            <path
-                              d='M17.2114 10.5988C17.2114 11.0591 16.8383 11.4322 16.3781 11.4322C15.9178 11.4322 15.5447 11.0591 15.5447 10.5988C15.5447 10.1386 15.9178 9.7655 16.3781 9.7655C16.8383 9.7655 17.2114 10.1386 17.2114 10.5988Z'
-                              stroke='white'
-                              stroke-opacity='0.5'
-                              stroke-width='1.5'
-                              stroke-linecap='round'
-                              stroke-linejoin='round'
-                            />
-                          </svg>
+                            <svg
+                              width='21'
+                              height='21'
+                              viewBox='0 0 21 21'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M5.54472 10.5988C5.54472 11.0591 5.17162 11.4322 4.71139 11.4322C4.25115 11.4322 3.87805 11.0591 3.87805 10.5988C3.87805 10.1386 4.25115 9.7655 4.71139 9.7655C5.17162 9.7655 5.54472 10.1386 5.54472 10.5988Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M11.3781 10.5988C11.3781 11.0591 11.005 11.4322 10.5447 11.4322C10.0845 11.4322 9.71138 11.0591 9.71138 10.5988C9.71138 10.1386 10.0845 9.7655 10.5447 9.7655C11.005 9.7655 11.3781 10.1386 11.3781 10.5988Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M17.2114 10.5988C17.2114 11.0591 16.8383 11.4322 16.3781 11.4322C15.9178 11.4322 15.5447 11.0591 15.5447 10.5988C15.5447 10.1386 15.9178 9.7655 16.3781 9.7655C16.8383 9.7655 17.2114 10.1386 17.2114 10.5988Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Dropdown Menu */}
+                          {openDropdownId === project.id && (
+                            <div className='absolute right-0 top-8 w-36 bg-[#1a1a1a77] rounded-lg shadow-xl z-[9999] py-1 border border-white/10'>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenProject(project);
+                                }}
+                                className='w-full px-3 py-1.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
+                              >
+                                <svg
+                                  className='w-3.5 h-3.5'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+                                  />
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                                  />
+                                </svg>
+                                Open
+                              </div>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Implement rename functionality
+                                }}
+                                className='w-full px-3 py-1.5 text-left text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
+                              >
+                                <svg
+                                  className='w-3.5 h-3.5'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'
+                                  />
+                                </svg>
+                                Rename
+                              </div>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Implement duplicate functionality
+                                }}
+                                className='w-full px-3 py-1.5 text-left text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
+                              >
+                                <svg
+                                  className='w-3.5 h-3.5'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'
+                                  />
+                                </svg>
+                                Duplicate
+                              </div>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Implement share functionality
+                                }}
+                                className='w-full px-3 py-1.5 text-left text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
+                              >
+                                <svg
+                                  className='w-3.5 h-3.5'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z'
+                                  />
+                                </svg>
+                                Share
+                              </div>
+                              <hr className='my-1 border-white/10' />
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // TODO: Implement delete functionality
+                                }}
+                                className='w-full px-3 py-1.5 text-left text-red-400 hover:bg-red-900/20 transition-colors flex items-center gap-2.5 text-xs'
+                              >
+                                <svg
+                                  className='w-3.5 h-3.5'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                  />
+                                </svg>
+                                Delete
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <h3
                           className='text-white font-medium text-base truncate mb-1 pr-8'
@@ -663,7 +822,7 @@ const FinalWorkingInterface = () => {
                     <svg
                       className='w-20 h-20 text-gray-600 mx-auto mb-6'
                       fill='none'
-                      stroke='currentColor'
+                      stroke='white'
                       viewBox='0 0 24 24'
                     >
                       <path
@@ -673,10 +832,10 @@ const FinalWorkingInterface = () => {
                         d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
                       />
                     </svg>
-                    <h3 className='text-gray-400 text-xl font-medium mb-3'>
+                    <h3 className='text-white text-xl font-medium mb-3'>
                       No projects yet
                     </h3>
-                    <p className='text-gray-500 mb-6'>
+                    <p className='text-gray-200 mb-6'>
                       Start creating amazing videos with AI
                     </p>
                     <button
@@ -686,7 +845,7 @@ const FinalWorkingInterface = () => {
                         );
                         input?.focus();
                       }}
-                      className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors'
+                      className='bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-3 rounded-lg font-medium transition-colors'
                     >
                       Create Your First Project
                     </button>

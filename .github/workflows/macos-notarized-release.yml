@@ -1,0 +1,67 @@
+name: macOS Notarized Build
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.19
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+
+      - name: Import Developer ID Application certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTIFICATE }}
+          p12-password: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Build app assets (widgets/render/etc.)
+        run: npm run prebuild:mac
+
+      - name: Build, sign, notarize, staple (DMG)
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run build:mac
+
+      - name: List artifacts
+        run: |
+          ls -lah dist || true
+          ls -lah dist/*.dmg || true
+
+      - name: Upload artifact (DMG)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Usuals-ai-mac
+          path: |
+            dist/*.dmg
+            dist/mac*/**/*.app
+
+      - name: Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            dist/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+

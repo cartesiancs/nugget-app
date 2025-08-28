@@ -62,12 +62,12 @@ const InterfaceSidebar = ({
             >
               <div className='w-8 h-8 rounded-full bg-white flex items-center justify-center'>
                 <span className='text-black font-bold text-sm'>
-                  {user?.email?.charAt(0).toUpperCase() || "K"}
+                  {user?.email?.charAt(0).toUpperCase() || "G"}
                 </span>
               </div>
               <div className='text-left'>
                 <div className='text-white font-medium text-sm'>
-                  {user.name || "User"}
+                  {user?.name || "Guest"}
                 </div>
               </div>
               <svg
@@ -93,16 +93,16 @@ const InterfaceSidebar = ({
                 <div className='bg-white/5 rounded-lg p-3 m-2 flex items-center gap-1'>
                   <div className='w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0'>
                     <span className='text-black font-bold text-lg'>
-                      {user?.email?.charAt(0).toUpperCase() || "U"}
+                      {user?.email?.charAt(0).toUpperCase() || "G"}
                     </span>
                   </div>
 
                   <div className='flex-1 min-w-0'>
                     <div className='text-white text-base font-medium mb-1 truncate'>
-                      {user.name || "User"}
+                      {user?.name || "Guest"}
                     </div>
                     <div className='text-gray-400 text-sm truncate'>
-                      {user?.email || "user@example.com"}
+                      {user?.email || "guest@example.com"}
                     </div>
                   </div>
 
@@ -370,10 +370,10 @@ const InterfaceSidebar = ({
         <div className='flex items-center justify-between text-white text-sm mb-2 px-2 bg-gray-800/30 rounded-lg p-3'>
           <div className='flex items-center gap-2'>
             <span className='text-xs bg-white/20 rounded-full w-7 h-7 flex items-center justify-center'>
-              {user.name?.charAt(0).toUpperCase() || "K"}
+              {user?.name?.charAt(0).toUpperCase() || "G"}
             </span>
             <span className='font-medium text-base'>
-              {user.name || "Kai"}'s Workspace
+              {user?.name || "Guest"}'s Workspace
             </span>
           </div>
           <svg

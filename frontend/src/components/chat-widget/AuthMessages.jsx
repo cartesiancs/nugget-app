@@ -35,7 +35,7 @@ const AuthMessages = ({
         </div>
         <button
           onClick={onCreateProject}
-          className='bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md font-medium'
+          className='bg-[#F9D312] hover:bg-yellow-400 text-black px-4 py-2 rounded-md font-medium'
         >
           Create New Project
         </button>

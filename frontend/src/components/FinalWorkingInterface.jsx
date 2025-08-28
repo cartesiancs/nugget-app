@@ -330,59 +330,94 @@ const FinalWorkingInterface = () => {
     return date.toLocaleDateString();
   };
 
-  // Login screen
+  // Login screen - Same layout as logged in page
   if (!isAuthenticated) {
     return (
-      <div className='w-full h-screen bg-gray-900'>
-        <div className='bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center'>
+      <div className='w-full h-screen bg-black flex flex-col'>
+        {/* Full Width Header - Same as logged in */}
+        <div className='w-full bg-black p-4 flex justify-between items-center z-10'>
           <div className='flex items-center gap-3'>
-            <div className='w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center'>
-              <span className='text-white font-bold'>U</span>
-            </div>
-            <h1 className='text-white text-xl font-bold'>Usuals.ai</h1>
+            <img src={assets.SandBoxLogo} alt='Usuals.ai' className='w-8 h-8' />
+            <h1 className='text-white text-2xl font-bold'>Usuals.ai</h1>
           </div>
-          <ChatLoginButton />
+          <div className='flex items-center gap-3'>
+            <div className='bg-[#FFFFFF0D] hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer'>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Invite</span>
+            </div>
+            <ChatLoginButton />
+          </div>
         </div>
 
-        <button
-          onClick={() => {
-            console.log("Close button clicked");
-            if (typeof window.hideChatInterface === "function") {
-              window.hideChatInterface();
-            } else {
-              // Fallback: hide the overlay directly
-              const overlay = document.querySelector("react-chat-interface");
-              if (overlay) {
-                overlay.style.display = "none";
-              }
-            }
-          }}
-          className='fixed top-4 right-4 z-[9999] w-10 h-10 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-red-500'
-          title='Close Chat Interface'
-        >
-          <svg
-            className='w-5 h-5'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M6 18L18 6M6 6l12 12'
-            />
-          </svg>
-        </button>
+        {/* Main Content Area - Same structure as logged in */}
+        <div className='flex-1 flex relative'>
+          <InterfaceSidebar
+            user={null}
+            creditBalance={0}
+            loading={false}
+            activeSection="recents"
+            onSectionChange={() => {}}
+            onToggleAllProjects={() => {}}
+            onPurchaseCredits={() => {
+              alert("Please log in first to purchase credits");
+            }}
+          />
 
-        <div className='flex-1 flex items-center justify-center h-full'>
-          <div className='text-center'>
-            <h2 className='text-white text-3xl font-bold mb-4'>
-              Welcome to AI Video Creator
-            </h2>
-            <p className='text-gray-400 mb-8'>
-              Please sign in to start creating amazing videos with AI
-            </p>
+          {/* Main Content Area */}
+          <div className='flex-1 flex flex-col ml-96 mr-4 mt-10 min-h-0'>
+            {/* Chat Box - Same as logged in but with sign up message */}
+            <div className=' mb-4'>
+              <div className='text-center mb-8'>
+                <h2 className='text-[#FFFFFF80] text-3xl font-sans'>
+                  Welcome to AI Video Creator
+                </h2>
+              </div>
+              <div className='max-w-6xl mx-auto'>
+                <div className='bg-gradient-to-t from-[#20272B] to-[#000000]  rounded-2xl border-1 border-white/30 p-8'>
+                  <div className='text-center'>
+                    <p className='text-gray-400 mb-6'>
+                      Please sign in to start creating amazing videos with AI
+                    </p>
+                    <ChatLoginButton />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main content area - Show sign up instead of projects */}
+            <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
+              <h1 className='text-white font-medium mb-4 flex-shrink-0'>
+                Get Started
+              </h1>
+
+              {/* Sign up content instead of projects */}
+              <div className='flex-1 flex items-center justify-center'>
+                <div className='text-center'>
+                  <svg
+                    className='w-20 h-20 text-white mx-auto mb-6'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={1}
+                      d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
+                    />
+                  </svg>
+                  <h3 className='text-white text-xl font-medium mb-3'>
+                    Start Creating Amazing Videos
+                  </h3>
+                  <p className='text-gray-200 mb-6'>
+                    Sign in to access AI-powered video creation tools
+                  </p>
+                  <ChatLoginButton />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -405,7 +405,7 @@ const ChatInterface = () => {
           {/* +Project Button */}
           <button
             onClick={() => setShowCreateProject(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            className="bg-[#F9D312] hover:bg-yellow-400 text-black px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
             disabled={creatingProject}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -525,11 +525,11 @@ const ChatInterface = () => {
               <button
                 onClick={handleSendMessage}
                 disabled={!message.trim() || chatFlow.loading || chatFlow.isStreaming || creatingProject}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="bg-[#F9D312] hover:bg-yellow-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-black px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 {chatFlow.loading || chatFlow.isStreaming || creatingProject ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
                     Creating...
                   </>
                 ) : (
@@ -690,7 +690,7 @@ const ChatInterface = () => {
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors"
+                className="flex-1 bg-[#F9D312] hover:bg-yellow-400 text-black py-2 rounded-lg transition-colors"
                 disabled={creatingProject || !newProjectName.trim()}
               >
                 {creatingProject ? 'Creating...' : 'Create'}

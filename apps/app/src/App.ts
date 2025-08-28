@@ -1127,6 +1127,52 @@ export class App extends LitElement {
 
         // Initial check
         updatePublishButtonVisibility();
+
+        // Function to hide timeline UI elements when sandbox is opened
+        const hideTimelineElements = () => {
+          const chatToggleContainer = document.getElementById("chat-toggle-container");
+          const leftActionBar = document.getElementById("left-action-bar");
+          const controlPanel = document.querySelector("control-panel");
+          const timelineUI = document.getElementById("split_bottom");
+
+          if (chatToggleContainer) {
+            chatToggleContainer.style.display = "none";
+          }
+          if (leftActionBar) {
+            leftActionBar.style.display = "none";
+          }
+          if (controlPanel) {
+            (controlPanel as HTMLElement).style.display = "none";
+          }
+          if (timelineUI) {
+            timelineUI.style.display = "none";
+          }
+        };
+
+        // Function to show timeline UI elements when sandbox is closed
+        const showTimelineElements = () => {
+          const chatToggleContainer = document.getElementById("chat-toggle-container");
+          const leftActionBar = document.getElementById("left-action-bar");
+          const controlPanel = document.querySelector("control-panel");
+          const timelineUI = document.getElementById("split_bottom");
+
+          if (chatToggleContainer) {
+            chatToggleContainer.style.display = "flex";
+          }
+          if (leftActionBar) {
+            leftActionBar.style.display = "flex";
+          }
+          if (controlPanel) {
+            (controlPanel as HTMLElement).style.display = "block";
+          }
+          if (timelineUI) {
+            timelineUI.style.display = "block";
+          }
+        };
+
+        // Listen for sandbox open/close events
+        window.addEventListener("sandbox:opened", hideTimelineElements);
+        window.addEventListener("sandbox:closed", showTimelineElements);
       }
     }, 1000);
 

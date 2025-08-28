@@ -15,6 +15,8 @@ import ImageIcon from './Image.svg';
 import VideoIcon from './Video.svg';
 import TextIcon from './Text.svg';
 import ImportIcon from './Import.svg';
+import ConceptIcon from './concept.svg';
+import SegmentIcon from './segment.svg';
 
 export const assets = {
   ChatBotButton,
@@ -34,4 +36,6 @@ export const assets = {
   VideoIcon,
   TextIcon,
   ImportIcon,
+  ConceptIcon,
+  SegmentIcon,
 };

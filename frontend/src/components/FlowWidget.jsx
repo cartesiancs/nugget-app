@@ -1,60 +1,106 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useTimeline } from "../hooks/useTimeline";
+import { useConceptGeneration } from "../hooks/useConceptGeneration";
+import { useScriptGeneration } from "../hooks/useScriptGeneration";
+import { useSegmentCreation } from "../hooks/useSegmentCreation";
+import { useImageGeneration } from "../hooks/useImageGeneration";
+import { useVideoGeneration } from "../hooks/useVideoGeneration";
+import { useErrorHandling } from "../hooks/useErrorHandling";
 import ChatLoginButton from "./ChatLoginButton";
-import LoadingSpinner from "./LoadingSpinner";
 import { projectApi } from "../services/project";
-import { chatApi } from "../services/chat";
-import ModelSelector from "./ModelSelector";
 import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   addEdge,
-  Handle,
-  Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import SegmentNode from "./FlowWidget/SegmentNode";
-import ImageNode from "./FlowWidget/ImageNode";
-import VideoNode from "./FlowWidget/VideoNode";
-import AddImageNode from "./FlowWidget/AddImageNode";
-import AddVideoNode from "./FlowWidget/AddVideoNode";
-import NewTextNode from "./FlowWidget/TextNode";
-// Removed NewImageNode/NewVideoNode; using AddImageNode/AddVideoNode
+
+// Node components
+import NodeImage from "./FlowWidget/Node_Image";
+import NodeVideo from "./FlowWidget/Node_Video";
+import NodeSegment from "./FlowWidget/Node_Segment";
+import NodeConcept from "./FlowWidget/Node_Concept";
+import NodeScript from "./FlowWidget/Node_Script";
 import NodeChat from "./FlowWidget/NodeChat";
+import TextNode from "./FlowWidget/TextNode";
 import FlowWidgetSidebar from "./FlowWidget/FlowWidgetSidebar";
 import ChatNode from "./FlowWidget/ChatNode";
-import { assets } from "../assets/assets";
+import UserNode from "./FlowWidget/UserNode";
+import TaskList from "./FlowWidget/TaskList";
 import FlowWidgetBottomToolbar from "./FlowWidget/FlowWidgetBottomToolbar";
+import UserProfileDropdown from "./UserProfileDropdown";
+
+// Assets and services
+import { assets } from "../assets/assets";
 
 function FlowWidget() {
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const timeline = useTimeline();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // We only track messages via setter; value itself not needed for UI rendering
-  const [, setFlowMessages] = useState([]); // track assistant messages
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [projectData, setProjectData] = useState(null);
-  const [regeneratingImages, setRegeneratingImages] = useState(new Set());
-  const [regeneratingVideos, setRegeneratingVideos] = useState(new Set());
-  const [creatingImages, setCreatingImages] = useState(new Set());
-  const [creatingVideos, setCreatingVideos] = useState(new Set());
-  const [temporaryVideos, setTemporaryVideos] = useState(new Map()); // Store temporary videos: key = `${segmentId}-${imageId}`, value = videoUrl
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  // Model selection states
-  const [selectedImageModel, setSelectedImageModel] = useState(
-    chatApi.getDefaultModel("IMAGE"),
-  );
-  const [selectedVideoModel, setSelectedVideoModel] = useState(
-    chatApi.getDefaultModel("VIDEO"),
-  );
-  // ReactFlow instance for dynamic fitView control
+
   const [rfInstance, setRfInstance] = useState(null);
+  const nodesRef = useRef(nodes);
+  
+  // Update nodesRef whenever nodes change
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  // Auto-remove chat nodes and text nodes when their parent nodes are deleted
+  useEffect(() => {
+    const userNodeIds = new Set(
+      nodes
+        .filter(node => node.type === "userNode" && node.data?.nodeState === "new")
+        .map(node => node.id)
+    );
+
+    // Get all existing node IDs (excluding chat and text nodes)
+    const existingNodeIds = new Set(
+      nodes
+        .filter(node => node.type !== "chatNode" && node.type !== "textNode")
+        .map(node => node.id)
+    );
+
+    // Find chat nodes that have parent user nodes that no longer exist
+    const orphanedChatNodes = nodes.filter(node => 
+      node.type === "chatNode" && 
+      node.data?.parentNodeId && 
+      !userNodeIds.has(node.data.parentNodeId)
+    );
+
+    // Find text nodes that have parent nodes that no longer exist
+    const orphanedTextNodes = nodes.filter(node => 
+      node.type === "textNode" && 
+      node.data?.parentNodeId && 
+      !existingNodeIds.has(node.data.parentNodeId)
+    );
+
+    const orphanedNodes = [...orphanedChatNodes, ...orphanedTextNodes];
+
+    if (orphanedNodes.length > 0) {
+      // Remove orphaned nodes and their edges
+      setNodes(prevNodes => 
+        prevNodes.filter(node => 
+          !orphanedNodes.some(orphan => orphan.id === node.id)
+        )
+      );
+
+      setEdges(prevEdges => 
+        prevEdges.filter(edge => 
+          !orphanedNodes.some(orphan => 
+            edge.target === orphan.id || edge.source === orphan.id
+          )
+        )
+      );
+    }
+  }, [nodes, setNodes, setEdges]);
 
   // Node chat state
   const [chatOpen, setChatOpen] = useState(false);
@@ -64,168 +110,366 @@ function FlowWidget() {
   // Selected node state for sidebar
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // New state for all fetched data
+  // Generation state tracking
+  const [userConcepts, setUserConcepts] = useState(new Map());
+  const [generatingConcepts, setGeneratingConcepts] = useState(new Set());
+  const [generatingScripts, setGeneratingScripts] = useState(new Set());
+  const [generatingImages, setGeneratingImages] = useState(new Set());
+  const [generatingVideos, setGeneratingVideos] = useState(new Set());
+
+  // Generation state helper functions
+  const getGenerationStateKey = (projectId, type) =>
+    `generation-states-${projectId}-${type}`;
+
+  const saveGenerationState = (projectId, type, nodeId, data) => {
+    try {
+      const key = getGenerationStateKey(projectId, type);
+      const existingStates = JSON.parse(localStorage.getItem(key) || "{}");
+      existingStates[nodeId] = {
+        ...data,
+        timestamp: Date.now(),
+        status: data.status || "generating",
+      };
+      localStorage.setItem(key, JSON.stringify(existingStates));
+    } catch (error) {
+      console.error(`Error saving ${type} generation state:`, error);
+    }
+  };
+
+  const removeGenerationState = (projectId, type, nodeId) => {
+    try {
+      const key = getGenerationStateKey(projectId, type);
+      const existingStates = JSON.parse(localStorage.getItem(key) || "{}");
+      delete existingStates[nodeId];
+      localStorage.setItem(key, JSON.stringify(existingStates));
+    } catch (error) {
+      console.error(`Error removing ${type} generation state:`, error);
+    }
+  };
+
+  const getGenerationStates = (projectId, type) => {
+    try {
+      const key = getGenerationStateKey(projectId, type);
+      const states = JSON.parse(localStorage.getItem(key) || "{}");
+      const now = Date.now();
+      const cleanedStates = {};
+
+      Object.entries(states).forEach(([nodeId, data]) => {
+        const isGenerating = data.status === "generating";
+        const maxAge = isGenerating ? 3600000 : 600000;
+        if (now - data.timestamp < maxAge) {
+          cleanedStates[nodeId] = data;
+        }
+      });
+
+      localStorage.setItem(key, JSON.stringify(cleanedStates));
+      return cleanedStates;
+    } catch (error) {
+      console.error(`Error getting ${type} generation states:`, error);
+      return {};
+    }
+  };
+
+  // Task completion tracking
+  const [taskCompletionStates, setTaskCompletionStates] = useState({
+    userInput: false,
+    concept: false,
+    script: false,
+    segment: false,
+    image: false,
+    video: false,
+  });
+
+  // Project data state
   const [allProjectData, setAllProjectData] = useState({
+    concepts: [],
+    scripts: [],
     segments: [],
     images: [],
     videos: [],
   });
 
-  // Project name state
   const [projectName, setProjectName] = useState("Untitled");
 
-  // Helper function to refresh project data
-  const refreshProjectData = useCallback(async () => {
-    if (!isAuthenticated) {
-      console.log("User not authenticated, skipping API calls");
-      return;
-    }
+  const [disableAutoGeneration, setDisableAutoGeneration] = useState(false);
 
-    // Get project ID and name from localStorage
-    let projectId;
-    let projectName = "Untitled";
+  // Initialize generation hooks
+  const { generateConcepts } = useConceptGeneration({
+    setNodes,
+    setEdges,
+    setGeneratingConcepts,
+    setUserConcepts,
+    setTaskCompletionStates,
+    saveGenerationState,
+    removeGenerationState,
+    nodes
+  });
+
+  const { generateScript } = useScriptGeneration({
+    setNodes,
+    setEdges,
+    setGeneratingScripts,
+    setTaskCompletionStates,
+    saveGenerationState,
+    removeGenerationState,
+  });
+
+  const { createSegments } = useSegmentCreation({
+    setNodes,
+    setEdges,
+    setTaskCompletionStates,
+  });
+
+  const { generateImage, regenerateImage } = useImageGeneration({
+    setNodes,
+    setEdges,
+    setGeneratingImages,
+    setTaskCompletionStates,
+    saveGenerationState,
+    removeGenerationState,
+    edges,
+  });
+
+  const { generateVideo, regenerateVideo } = useVideoGeneration({
+    setNodes,
+    setEdges,
+    setGeneratingVideos,
+    setTaskCompletionStates,
+    saveGenerationState,
+    removeGenerationState,
+    edges,
+    nodes,
+  });
+
+  // Initialize error handling hook
+  const { retryGeneration } = useErrorHandling({
+    setNodes,
+    setEdges,
+    saveGenerationState,
+    removeGenerationState,
+    generateConcepts,
+    generateScript,
+    generateImage,
+    generateVideo,
+    nodes
+  });
+
+  // Restore generation states on component load
+  const restoreGenerationStates = useCallback(async () => {
     try {
       const storedProject = localStorage.getItem(
         "project-store-selectedProject",
       );
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
-        projectId = project.id;
-        projectName = project.name || project.title || "Untitled";
-        setProjectName(projectName);
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
 
-    if (!projectId) {
-      console.log("No project ID found in localStorage");
-      setError("No project selected. Please select a project first.");
-      return;
-    }
+      if (!selectedProject) return;
 
-    console.log(
-      "Fetching project segmentations and related images/videos for project ID:",
-      projectId,
-    );
-    try {
-      setLoading(true);
+      const projectId = selectedProject.id;
+      const stateTypes = ["concept", "script", "image", "video"];
+      const setterMap = {
+        concept: setGeneratingConcepts,
+        script: setGeneratingScripts,
+        image: setGeneratingImages,
+        video: setGeneratingVideos,
+      };
 
-      // Fetch project segmentations, images, and videos in parallel
-      const [segmentationsData, imagesData, videosData] = await Promise.all([
-        projectApi.getProjectSegmentations(projectId),
-        projectApi.getProjectImages(projectId),
-        projectApi.getProjectVideos(projectId),
-      ]);
+      stateTypes.forEach((type) => {
+        const states = getGenerationStates(projectId, type);
+        Object.entries(states).forEach(([nodeId, state]) => {
+          const isError = state.status === "error";
+          const isTimedOut = Date.now() - state.timestamp > 900000;
 
-      console.log("Project data fetched successfully:");
-      console.log("Segmentations:", segmentationsData);
-      console.log("Images:", imagesData);
-      console.log("Videos:", videosData);
+          if (isError || isTimedOut) {
+            const errorNode = {
+              id: nodeId,
+              type: `${type}Node`,
+              position: state.position || { x: 400, y: 400 },
+              data: {
+                id: nodeId,
+                content: isTimedOut
+                  ? "Generation timed out"
+                  : state.errorMessage || `Failed to generate ${type}`,
+                nodeState: "error",
+                title: state.title || "Error",
+                error: isTimedOut
+                  ? "Generation timed out after 15 minutes"
+                  : state.errorMessage || "Generation failed",
+                ...state,
+              },
+            };
 
-      // Extract segments from the first segmentation
-      let segments = [];
-      if (
-        segmentationsData &&
-        segmentationsData.success &&
-        segmentationsData.data &&
-        segmentationsData.data.length > 0
-      ) {
-        const firstSegmentation = segmentationsData.data[0];
-        if (
-          firstSegmentation.segments &&
-          Array.isArray(firstSegmentation.segments)
-        ) {
-          segments = firstSegmentation.segments;
-        }
-      }
+            setNodes((prevNodes) => {
+              const existingIndex = prevNodes.findIndex((n) => n.id === nodeId);
+              if (
+                existingIndex >= 0 &&
+                prevNodes[existingIndex].data?.nodeState === "existing"
+              ) {
+                return prevNodes;
+              }
+              const updatedNodes = [...prevNodes];
+              updatedNodes[
+                existingIndex >= 0 ? existingIndex : updatedNodes.length
+              ] = errorNode;
+              return existingIndex >= 0
+                ? updatedNodes
+                : [...prevNodes, errorNode];
+            });
 
-      setAllProjectData({
-        segments: segments,
-        images: imagesData?.data || [],
-        videos: videosData?.data || [],
+            setTimeout(
+              () => removeGenerationState(projectId, type, nodeId),
+              5000,
+            );
+            return;
+          }
+
+          setterMap[type]((prev) => new Set(prev.add(nodeId)));
+
+          const loadingNode = {
+            id: nodeId,
+            type: `${type}Node`,
+            position: state.position || { x: 400, y: 400 },
+            data: {
+              id: nodeId,
+              content: state.loadingMessage || `Generating ${type}...`,
+              nodeState: "loading",
+              title: state.title || `Loading ${type}`,
+              ...state,
+            },
+          };
+
+          setNodes((prevNodes) => {
+            const existingIndex = prevNodes.findIndex((n) => n.id === nodeId);
+            if (
+              existingIndex >= 0 &&
+              prevNodes[existingIndex].data?.nodeState === "existing"
+            ) {
+              return prevNodes;
+            }
+            const updatedNodes = [...prevNodes];
+            updatedNodes[
+              existingIndex >= 0 ? existingIndex : updatedNodes.length
+            ] = loadingNode;
+            return existingIndex >= 0
+              ? updatedNodes
+              : [...prevNodes, loadingNode];
+          });
+
+          if (state.parentNodeId) {
+            const edge = {
+              id: `${state.parentNodeId}-to-${nodeId}`,
+              source: state.parentNodeId,
+              target: nodeId,
+              sourceHandle: "output",
+              targetHandle: "input",
+              style: {
+                stroke: "#E9E8EB33",
+                strokeWidth: 2,
+                filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+              },
+            };
+
+            setEdges((prevEdges) => {
+              const existingIndex = prevEdges.findIndex(
+                (e) => e.id === edge.id,
+              );
+              return existingIndex < 0 ? [...prevEdges, edge] : prevEdges;
+            });
+          }
+        });
       });
-
-      // Keep the old projectData for backward compatibility
-      setProjectData({ success: true, project: { segments: segments } });
     } catch (error) {
-      console.error("Failed to fetch project data:", error);
-      setError("Failed to fetch project data");
-    } finally {
-      setLoading(false);
+      console.error("Error restoring generation states:", error);
     }
-  }, [isAuthenticated]);
+  }, [
+    setNodes,
+    setEdges,
+    setGeneratingConcepts,
+    setGeneratingScripts,
+    setGeneratingImages,
+    setGeneratingVideos,
+  ]);
 
-  // Toggle attribute on the custom element so we can style it via CSS
-  useEffect(() => {
-    const hostEl = document.querySelector("react-flow-widget");
-    if (hostEl) {
-      hostEl.setAttribute("data-open", open ? "true" : "false");
-    }
-  }, [open]);
-
-  // Re-add global open / close custom event listeners for external control
-  useEffect(() => {
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-
-    window.addEventListener("flowWidget:open", handleOpen);
-    window.addEventListener("flowWidget:close", handleClose);
-
-    return () => {
-      window.removeEventListener("flowWidget:open", handleOpen);
-      window.removeEventListener("flowWidget:close", handleClose);
-    };
-  }, []);
-
-  // Load data from API (no localStorage fallback)
+  // Load data from API
   const flowData = useMemo(() => {
-    console.log("🔄 flowData useMemo called, allProjectData:", allProjectData);
+    // Process concepts
+    const concepts = allProjectData.concepts.map((concept) => ({
+      ...concept,
+      id: concept.id,
+      conceptId: concept.id,
+      content:
+        concept.content ||
+        concept.text ||
+        concept.concept ||
+        concept.description ||
+        concept.prompt ||
+        "",
+      title: concept.title || concept.name || `Concept ${concept.id}`,
+    }));
 
-    // 1. Get segments from segmentation API response
+    // Process scripts (segmentations)
+    const scripts = allProjectData.scripts.map((script) => ({
+      ...script,
+      id: script.id,
+      scriptId: script.id,
+      artStyle: script.artStyle || "cinematic photography with soft lighting",
+      concept: script.concept || "",
+      segments: script.segments || [],
+      title: script.title || `Script ${script.id}`,
+    }));
+
+    // Process segments
     const segments = allProjectData.segments.map((seg) => ({
       ...seg,
-      id: seg.segmentId || seg.id, // Use segmentId for mapping
+      id: seg.id, // Keep the original ID from API response
+      segmentId: seg.segmentId || seg.id, // Keep segmentId for backward compatibility
       visual: seg.visual || "",
       narration: seg.narration || "",
       animation: seg.animation || "",
     }));
-    console.log("📋 Processed segments:", segments);
+    
 
-    // 2. Build images/videos lookup by segmentId and store image details
+
+    // Build images lookup by segmentId
     const images = {};
     const imageDetails = {};
     const allImagesBySegment = {};
 
     if (Array.isArray(allProjectData.images)) {
       allProjectData.images.forEach((img) => {
-        if (img && img.success && img.s3Key && img.uuid) {
-          // Extract segmentId from uuid (handles both 'seg-2' and 'seg-2-1234567890' formats)
-          const segmentId = img.uuid.replace(/^seg-(\d+)(?:-\d+)?$/, "$1");
+        if (img && img.success && img.s3Key && img.visualPrompt) {
+          // Find matching segment by comparing segment.visual with image.visualPrompt
+          let matchingSegment = null;
+          
+          // Look for exact match between segment.visual and image.visualPrompt
+          matchingSegment = allProjectData.segments.find((segment) => 
+            segment.visual && segment.visual.trim() === img.visualPrompt.trim()
+          );
+          
+          if (matchingSegment) {
+            // Use the actual segment ID from the project data response
+            const segmentId = matchingSegment.id;
+            
+            
+            if (!allImagesBySegment[segmentId]) {
+              allImagesBySegment[segmentId] = [];
+            }
 
-          // Initialize arrays if they don't exist
-          if (!allImagesBySegment[segmentId]) {
-            allImagesBySegment[segmentId] = [];
+            allImagesBySegment[segmentId].push({
+              id: img.id,
+              url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
+              visualPrompt: img.visualPrompt,
+              artStyle: img.artStyle,
+              s3Key: img.s3Key,
+              uuid: img.uuid,
+              isPrimary: !img.uuid.includes("-"),
+            });
           }
-
-          // Add this image to the segment's image list
-          allImagesBySegment[segmentId].push({
-            id: img.id,
-            url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
-            visualPrompt: img.visualPrompt,
-            artStyle: img.artStyle,
-            s3Key: img.s3Key,
-            uuid: img.uuid,
-            isPrimary: !img.uuid.includes("-"), // Consider images without timestamp as primary
-          });
         }
       });
 
-      // For backward compatibility, keep the first image as the main one
       Object.keys(allImagesBySegment).forEach((segmentId) => {
         const segmentImages = allImagesBySegment[segmentId];
         if (segmentImages.length > 0) {
-          // Sort by primary first, then by creation time (uuid timestamp)
           segmentImages.sort((a, b) => {
             if (a.isPrimary && !b.isPrimary) return -1;
             if (!a.isPrimary && b.isPrimary) return 1;
@@ -239,13 +483,20 @@ function FlowWidget() {
             visualPrompt: primaryImage.visualPrompt,
             artStyle: primaryImage.artStyle,
             s3Key: primaryImage.s3Key,
-            allImages: segmentImages, // Store all images for the segment
+            allImages: segmentImages,
           };
+          
+
         }
       });
+      
+
     }
+    // Build videos lookup - match videos to images by S3 key
     const videos = {};
     const videoDetails = {};
+    const videosByImageS3Key = {}; // New: Map videos by their source image S3 key
+    
     if (Array.isArray(allProjectData.videos)) {
       allProjectData.videos.forEach((video) => {
         if (
@@ -256,594 +507,545 @@ function FlowWidget() {
           video.videoFiles.length > 0 &&
           video.videoFiles[0].s3Key
         ) {
-          const segmentId = video.uuid.replace(/^seg-/, "");
-          videos[
-            segmentId
-          ] = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
-          videoDetails[segmentId] = {
+          const videoKey = video.uuid.replace(/^seg-/, "");
+          const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
+
+          videos[videoKey] = videoUrl;
+          videoDetails[videoKey] = {
             id: video.id,
             artStyle: video.artStyle,
             imageS3Key: video.imageS3Key || null,
           };
+
+          // NEW: If video has imageS3Key, create mapping by image S3 key for precise matching
+          if (video.imageS3Key) {
+            videosByImageS3Key[video.imageS3Key] = {
+              videoUrl: videoUrl,
+              videoId: video.id,
+              videoKey: videoKey,
+              artStyle: video.artStyle,
+              uuid: video.uuid
+            };
+          }
+        }
+      });
+      
+
+    }
+
+    try {
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
+      if (storedProject) {
+        const selectedProject = JSON.parse(storedProject);
+        const videoStorageKey = `generated-videos-${selectedProject.id}`;
+        const savedVideos = JSON.parse(
+          localStorage.getItem(videoStorageKey) || "{}",
+        );
+
+        Object.entries(savedVideos).forEach(([key, videoData]) => {
+          if (videoData && videoData.videoUrl) {
+            videos[key] = videoData.videoUrl;
+            if (!videoDetails[key]) {
+              videoDetails[key] = {
+                id: videoData.videoId,
+                artStyle: videoData.artStyle,
+                imageS3Key: videoData.imageS3Key || null,
+              };
+            }
+            
+            // CRITICAL FIX: Add saved videos to videosByImageS3Key mapping for proper node creation
+            if (videoData.imageS3Key) {
+              videosByImageS3Key[videoData.imageS3Key] = {
+                videoUrl: videoData.videoUrl,
+                videoId: videoData.videoId,
+                videoKey: key,
+                artStyle: videoData.artStyle,
+                uuid: `seg-${key}`, // Reconstruct UUID format
+                fromLocalStorage: true // Flag to identify localStorage videos
+              };
+            }
+          }
+        });
+        
+
+      }
+    } catch (error) {
+      console.error("Error loading saved videos from localStorage:", error);
+    }
+
+    return {
+      concepts,
+      scripts,
+      segments,
+      images,
+      videos,
+      imageDetails,
+      videoDetails,
+      videosByImageS3Key, // NEW: Add the S3 key mapping for precise video-to-image matching
+    };
+  }, [allProjectData]);
+
+  // Create nodes and edges from flow data - ONLY when needed
+  const createFlowElements = useCallback(() => {
+    // PERFORMANCE FIX: Don't recreate if nodes already exist and are just being moved
+    if (nodesRef.current.length > 0) {
+      // Check if we have any new data that requires new nodes
+      const hasNewData = 
+        (flowData.concepts && flowData.concepts.length > 0) ||
+        (flowData.scripts && flowData.scripts.length > 0) ||
+        (flowData.segments && flowData.segments.length > 0) ||
+        (flowData.images && Object.keys(flowData.images).length > 0) ||
+        (flowData.videos && Object.keys(flowData.videos).length > 0);
+      
+      if (!hasNewData) {
+        return; // Don't recreate nodes if no new data
+      }
+    }
+    
+    const newNodes = [];
+    const newEdges = [];
+    
+    // Get existing nodes map for position preservation
+    const existingNodesMap = new Map();
+    nodesRef.current.forEach(node => {
+      existingNodesMap.set(node.id, node);
+    });
+    
+    // Helper function to create node with preserved position
+    const createNodeWithPosition = (nodeId, nodeData, defaultPosition) => {
+      const existingNode = existingNodesMap.get(nodeId);
+      return {
+        id: nodeId,
+        ...nodeData,
+        position: existingNode?.position || defaultPosition,
+        // Preserve user interaction state
+        selected: existingNode?.selected || false,
+        dragging: existingNode?.dragging || false,
+        // Preserve any other React Flow properties
+        ...(existingNode && {
+          width: existingNode.width,
+          height: existingNode.height,
+          positionAbsolute: existingNode.positionAbsolute,
+        })
+      };
+    };
+
+    // Tree Layout configuration
+    const levelHeight = 400; // Vertical space between tree levels
+    const nodeWidth = 380; // Width allocated per node including spacing
+    const startX = 400; // Center starting position
+    const startY = 80; // Top starting position
+
+    // Tree level tracking
+    let currentLevel = 0;
+
+    // Check for user concepts that match current project
+    let selectedProject = null;
+    try {
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
+      selectedProject = storedProject ? JSON.parse(storedProject) : null;
+    } catch (e) {
+      console.error("Error parsing project data:", e);
+    }
+
+    // Add User Node if there are matching user node data for this project (ROOT of tree)
+    let userNodeId = null;
+    if (selectedProject) {
+      const userNodeDataKey = `userNodeData-${selectedProject.id}`;
+      const existingUserNodeData = JSON.parse(
+        localStorage.getItem(userNodeDataKey) || "{}",
+      );
+
+      // Check if there are any user node data for this project
+      const userNodeEntries = Object.entries(existingUserNodeData).filter(
+        ([nodeId, data]) => data && data.projectId === selectedProject.id,
+      );
+
+      if (userNodeEntries.length > 0) {
+        // Create a single user node that represents all user inputs (ROOT)
+        userNodeId = `user-${selectedProject.id}`;
+        const allUserTexts = userNodeEntries
+          .map(([nodeId, data]) => data.text)
+          .join("\n\n");
+
+        newNodes.push(createNodeWithPosition(userNodeId, {
+          type: "userNode",
+          data: {
+            id: userNodeId,
+            userText: allUserTexts,
+            projectId: selectedProject.id,
+            nodeState: "user",
+          },
+        }, { x: startX, y: startY + currentLevel * levelHeight }));
+
+        currentLevel++; // Move to next level for concepts
+      }
+    }
+
+    // Create Concept Nodes
+    if (flowData.concepts && flowData.concepts.length > 0) {
+      const conceptCount = flowData.concepts.length;
+      const totalWidth = (conceptCount - 1) * nodeWidth;
+      const conceptStartX = startX - totalWidth / 2;
+
+      flowData.concepts.forEach((concept, index) => {
+        const conceptX = conceptStartX + index * nodeWidth;
+
+        newNodes.push(createNodeWithPosition(`concept-${concept.id}`, {
+          type: "conceptNode",
+          data: concept,
+        }, { x: conceptX, y: startY + currentLevel * levelHeight }));
+
+        if (userNodeId) {
+          newEdges.push({
+            id: `${userNodeId}-to-concept-${concept.id}`,
+            source: userNodeId,
+            target: `concept-${concept.id}`,
+            sourceHandle: "output",
+            targetHandle: "input",
+            style: {
+              stroke: "#E9E8EB33",
+              strokeWidth: 2,
+              filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+            },
+          });
+        }
+      });
+
+      currentLevel++;
+    }
+
+    // Create Script Nodes
+    if (flowData.scripts && flowData.scripts.length > 0) {
+      const scriptCount = flowData.scripts.length;
+      const scriptSpacing = 400;
+      const totalWidth = (scriptCount - 1) * scriptSpacing;
+      const scriptStartX = startX - totalWidth / 2;
+
+      flowData.scripts.forEach((script, index) => {
+        const scriptX = scriptStartX + index * scriptSpacing;
+
+        newNodes.push(createNodeWithPosition(`script-${script.id}`, {
+          type: "scriptNode",
+          data: script,
+        }, { x: scriptX, y: startY + currentLevel * levelHeight }));
+
+        if (flowData.concepts && flowData.concepts.length > 0) {
+          // Find the concept that matches this script's concept
+          let parentConceptId = null;
+          
+
+          
+          // First, try to find concept by matching the concept field (title/name)
+          if (script.concept) {
+            const matchingConcept = flowData.concepts.find(
+              (concept) => {
+                // Exact match first
+                if (concept.title === script.concept) return true;
+                
+                // Check if script.concept starts with the concept title (handles "Title - Style" format)
+                if (script.concept.startsWith(concept.title)) return true;
+                
+                // Check if concept title is contained in script.concept
+                if (script.concept.includes(concept.title)) return true;
+                
+                // Case-insensitive comparison
+                if (concept.title.toLowerCase() === script.concept.toLowerCase()) return true;
+                
+                return false;
+              }
+            );
+            if (matchingConcept) {
+              parentConceptId = matchingConcept.id;
+            }
+          }
+          
+          // If no match found, try to find concept by conceptId field
+          if (!parentConceptId && script.conceptId) {
+            const matchingConcept = flowData.concepts.find(
+              (concept) => concept.id === script.conceptId
+            );
+            if (matchingConcept) {
+              parentConceptId = matchingConcept.id;
+            }
+          }
+          
+          // If still no match found, default to first concept as fallback
+          if (!parentConceptId) {
+            parentConceptId = flowData.concepts[0].id;
+          }
+
+          newEdges.push({
+            id: `concept-${parentConceptId}-to-script-${script.id}`,
+            source: `concept-${parentConceptId}`,
+            target: `script-${script.id}`,
+            sourceHandle: "output",
+            targetHandle: "input",
+            style: {
+              stroke: "#E9E8EB33",
+              strokeWidth: 2,
+              filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+            },
+          });
+        }
+      });
+
+      currentLevel++;
+    }
+
+    // Show ALL segments from scripts that have at least one segment with an image generated
+    let segmentsToDisplay = [];
+    if (flowData.segments && flowData.segments.length > 0) {
+      // Group segments by their parent script using the parentScriptId field
+      const segmentsByScript = {};
+      
+      flowData.segments.forEach(segment => {
+        const parentScriptId = segment.parentScriptId;
+        if (!segmentsByScript[parentScriptId]) {
+          segmentsByScript[parentScriptId] = [];
+        }
+        segmentsByScript[parentScriptId].push(segment);
+      });
+      
+      // Find scripts that have at least one segment with an image
+      const scriptsWithImages = new Set();
+      flowData.segments.forEach(segment => {
+        if (flowData.images[segment.id]) {
+          scriptsWithImages.add(segment.parentScriptId);
+        }
+      });
+      
+      // Include ALL segments from scripts that have images
+      Object.entries(segmentsByScript).forEach(([scriptId, segments]) => {
+        if (scriptsWithImages.has(scriptId)) {
+          segmentsToDisplay.push(...segments);
         }
       });
     }
-    console.log("🖼️ Images map:", images);
-    console.log("📝 Image details:", imageDetails);
-    console.log("🎬 Videos map:", videos);
+    
 
-    // Add temporary videos to the videos map
-    temporaryVideos.forEach((videoUrl, key) => {
-      videos[key] = videoUrl;
-    });
 
-    console.log("🎬 Videos map (including temporary):", videos);
-    return { segments, images, videos, imageDetails, videoDetails };
-  }, [allProjectData, temporaryVideos]);
+    // Create Segment Nodes - for all segments from scripts with images
+    if (segmentsToDisplay.length > 0) {
+      const segmentCount = segmentsToDisplay.length;
+      const segmentSpacing = 400;
+      const totalWidth = (segmentCount - 1) * segmentSpacing;
+      const segmentStartX = startX - totalWidth / 2;
 
-  // Handle image regeneration
-  const handleRegenerateImage = useCallback(
-    async (imageId, segmentData) => {
-      if (!isAuthenticated || regeneratingImages.has(imageId)) return;
+      segmentsToDisplay.forEach((segment, index) => {
+        const segmentX = segmentStartX + index * segmentSpacing;
 
-      // Get project ID from localStorage
-      let projectId;
-      try {
-        const storedProject = localStorage.getItem(
-          "project-store-selectedProject",
-        );
-        if (storedProject) {
-          const project = JSON.parse(storedProject);
-          projectId = project.id;
-        }
-      } catch (error) {
-        console.error("Error parsing project from localStorage:", error);
-      }
-
-      if (!projectId) {
-        setError("No project selected. Please select a project first.");
-        return;
-      }
-
-      console.log("🔄 Regenerating image:", imageId, segmentData);
-      setRegeneratingImages((prev) => new Set(prev).add(imageId));
-      try {
-        let genResponse;
-
-        // Check if we already have a new s3_key from the ImageNode edit
-        if (segmentData.s3Key) {
-          console.log(
-            "✅ Using existing s3_key from ImageNode edit:",
-            segmentData.s3Key,
-          );
-          genResponse = { s3_key: segmentData.s3Key };
-        } else {
-          // Generate new image
-          genResponse = await chatApi.generateImage({
-            visual_prompt: segmentData.visual,
-            art_style:
-              segmentData.artStyle ||
-              "cinematic photography with soft lighting",
-            uuid: `seg-${segmentData.id}`,
-            project_id: projectId,
-            model: selectedImageModel,
-          });
-          console.log("✅ Image generation successful:", genResponse);
-        }
-
-        // Update the image metadata if we have a new s3_key
-        if (genResponse && genResponse.s3_key) {
-          // Note: The new unified API doesn't have a separate regenerateImage endpoint
-          // The image is regenerated directly through the generateImage call
-          console.log(
-            "✅ Image regeneration completed with s3_key:",
-            genResponse.s3_key,
-          );
-        }
-
-        // Refresh project data to get the updated image
-        await refreshProjectData();
-        setFlowMessages((prev) => [
-          ...prev,
-          {
-            type: "assistant",
-            content: `Image for scene ${segmentData.id} regenerated successfully!`,
-          },
-        ]);
-      } catch (error) {
-        console.error("❌ Image regeneration (overwrite+patch) failed:", error);
-        setError(`Failed to regenerate image: ${error.message}`);
-      } finally {
-        setRegeneratingImages((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(imageId);
-          return newSet;
-        });
-      }
-    },
-    [isAuthenticated, regeneratingImages, refreshProjectData],
-  );
-
-  // Handle video regeneration
-  const handleRegenerateVideo = useCallback(
-    async (videoId, segmentData) => {
-      if (!isAuthenticated || regeneratingVideos.has(videoId)) return;
-
-      // Get project ID from localStorage
-      let projectId;
-      try {
-        const storedProject = localStorage.getItem(
-          "project-store-selectedProject",
-        );
-        if (storedProject) {
-          const project = JSON.parse(storedProject);
-          projectId = project.id;
-        }
-      } catch (error) {
-        console.error("Error parsing project from localStorage:", error);
-      }
-
-      if (!projectId) {
-        setError("No project selected. Please select a project first.");
-        return;
-      }
-
-      setRegeneratingVideos((prev) => new Set(prev).add(videoId));
-      try {
-        // Always use the s3_key of the connected image for imageS3Key
-        const imageS3Key =
-          flowData.imageDetails?.[segmentData.id]?.s3Key ||
-          segmentData.imageS3Key;
-
-        const genResponse = await chatApi.generateVideo({
-          animation_prompt: segmentData.animation,
-          art_style: segmentData.artStyle,
-          image_s3_key: imageS3Key,
-          uuid: `seg-${segmentData.id}`,
-          project_id: projectId,
-          model: selectedVideoModel,
-        });
-        if (genResponse && genResponse.s3_key) {
-          console.log("🔄 Video re-generation response:", genResponse.s3_key);
-          // Note: The new unified API doesn't have a separate regenerateVideo endpoint
-          // The video is regenerated directly through the generateVideo call
-        }
-        // 3. Refresh project data to get the updated video
-        await refreshProjectData();
-        setFlowMessages((prev) => [
-          ...prev,
-          {
-            type: "assistant",
-            content: `Video for scene ${segmentData.id} regenerated, overwritten, and metadata updated successfully!`,
-          },
-        ]);
-      } catch (error) {
-        setError(`Failed to regenerate video: ${error.message}`);
-      } finally {
-        setRegeneratingVideos((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(videoId);
-          return newSet;
-        });
-      }
-    },
-    [
-      isAuthenticated,
-      regeneratingVideos,
-      flowData.imageDetails,
-      refreshProjectData,
-    ],
-  );
-
-  // Handle creating new image for a segment
-  const handleCreateNewImage = useCallback(
-    async (segmentId, segmentData) => {
-      if (!isAuthenticated) return;
-
-      // Get project ID from localStorage
-      let projectId;
-      try {
-        const storedProject = localStorage.getItem(
-          "project-store-selectedProject",
-        );
-        if (storedProject) {
-          const project = JSON.parse(storedProject);
-          projectId = project.id;
-        }
-      } catch (error) {
-        console.error("Error parsing project from localStorage:", error);
-      }
-
-      if (!projectId) {
-        setError("No project selected. Please select a project first.");
-        return;
-      }
-
-      console.log("🆕 Creating new image for segment:", segmentId, segmentData);
-      setCreatingImages((prev) => new Set(prev).add(segmentId));
-      try {
-        // Generate new image with unique timestamp to avoid overwriting
-        const timestamp = Date.now();
-        const uniqueUuid = `seg-${segmentId}-${timestamp}`;
-
-        const genResponse = await chatApi.generateImage({
-          visual_prompt: segmentData.visual,
-          art_style:
-            segmentData.artStyle || "cinematic photography with soft lighting",
-          uuid: uniqueUuid,
-          project_id: projectId,
-          model: selectedImageModel,
-        });
-        console.log("✅ New image generation successful:", genResponse);
-
-        // Refresh project data to get the new image
-        await refreshProjectData();
-        setFlowMessages((prev) => [
-          ...prev,
-          {
-            type: "assistant",
-            content: `New image for scene ${segmentId} created successfully!`,
-          },
-        ]);
-      } catch (error) {
-        console.error("❌ New image creation failed:", error);
-        setError(`Failed to create new image: ${error.message}`);
-      } finally {
-        setCreatingImages((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(segmentId);
-          return newSet;
-        });
-      }
-    },
-    [isAuthenticated, refreshProjectData],
-  );
-
-  // Handle making an image primary
-  const handleMakePrimary = useCallback(
-    async (imageId, segmentId, allImages) => {
-      if (!isAuthenticated) return;
-
-      console.log(
-        "⭐ Making image primary:",
-        imageId,
-        "for segment:",
-        segmentId,
-      );
-      try {
-        // Find the image to make primary
-        const targetImage = allImages.find((img) => img.id === imageId);
-        if (!targetImage) {
-          console.error("Image not found:", imageId);
-          return;
-        }
-
-        // Get project ID from localStorage
-        let projectId;
-        try {
-          const storedProject = localStorage.getItem(
-            "project-store-selectedProject",
-          );
-          if (storedProject) {
-            const project = JSON.parse(storedProject);
-            projectId = project.id;
-          }
-        } catch (error) {
-          console.error("Error parsing project from localStorage:", error);
-        }
-
-        if (!projectId) {
-          setError("No project selected. Please select a project first.");
-          return;
-        }
-
-        // Update the image metadata to make it primary by changing the UUID to the original segment format
-        await imageApi.regenerateImage({
-          id: imageId,
-          visual_prompt: targetImage.visualPrompt,
-          art_style:
-            targetImage.artStyle || "cinematic photography with soft lighting",
-          s3_key: targetImage.s3Key, // Use the existing image's s3_key
-          uuid: `seg-${segmentId}`, // Change UUID to original format to make it primary
-        });
-
-        // Refresh project data to get the updated image
-        await refreshProjectData();
-        setFlowMessages((prev) => [
-          ...prev,
-          {
-            type: "assistant",
-            content: `Image for scene ${segmentId} is now primary!`,
-          },
-        ]);
-      } catch (error) {
-        console.error("❌ Failed to make image primary:", error);
-        setError(`Failed to make image primary: ${error.message}`);
-      }
-    },
-    [isAuthenticated, refreshProjectData],
-  );
-
-  // Handle creating new video for a specific image
-  const handleCreateNewVideo = useCallback(
-    async (segmentId, imageId, segmentData) => {
-      if (!isAuthenticated || creatingVideos.has(imageId)) return;
-
-      // Get project ID from localStorage
-      let projectId;
-      try {
-        const storedProject = localStorage.getItem(
-          "project-store-selectedProject",
-        );
-        if (storedProject) {
-          const project = JSON.parse(storedProject);
-          projectId = project.id;
-        }
-      } catch (error) {
-        console.error("Error parsing project from localStorage:", error);
-      }
-
-      if (!projectId) {
-        setError("No project selected. Please select a project first.");
-        return;
-      }
-
-      console.log(
-        "🎬 Creating new video for image:",
-        imageId,
-        "segment:",
-        segmentId,
-      );
-      setCreatingVideos((prev) => new Set(prev).add(imageId));
-      try {
-        // Find the image details to get the s3_key
-        const imageDetail = flowData.imageDetails[segmentId];
-        const targetImage = imageDetail?.allImages?.find(
-          (img) => img.id === imageId,
-        );
-
-        if (!targetImage) {
-          throw new Error("Image not found");
-        }
-
-        // Generate new video with unique timestamp
-        const timestamp = Date.now();
-        const uniqueUuid = `seg-${segmentId}-${timestamp}`;
-
-        const genResponse = await chatApi.generateVideo({
-          animation_prompt: segmentData.animation,
-          art_style:
-            segmentData.artStyle || "cinematic photography with soft lighting",
-          image_s3_key: targetImage.s3Key,
-          uuid: uniqueUuid,
-          project_id: projectId,
-          model: selectedVideoModel,
-        });
-
-        console.log("✅ New video generation successful:", genResponse);
-
-        // Store the generated video URL in temporary videos state
-        if (genResponse && genResponse.s3_key) {
-          const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${genResponse.s3_key}`;
-          const videoKey = `${segmentId}-${imageId}`;
-          setTemporaryVideos((prev) => new Map(prev).set(videoKey, videoUrl));
-
-          setFlowMessages((prev) => [
-            ...prev,
-            {
-              type: "assistant",
-              content: `New video for scene ${segmentId} generated successfully! (Preview mode - not saved to database)`,
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error("❌ New video creation failed:", error);
-        setError(`Failed to create new video: ${error.message}`);
-      } finally {
-        setCreatingVideos((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(imageId);
-          return newSet;
-        });
-      }
-    },
-    [
-      isAuthenticated,
-      refreshProjectData,
-      flowData.imageDetails,
-      creatingVideos,
-    ],
-  );
-
-  // Create nodes and edges from flow data
-  const createFlowElements = useCallback(() => {
-    console.log("🎯 createFlowElements called with flowData:", flowData);
-    const newNodes = [];
-    const newEdges = [];
-
-    // Create custom node types with regeneration callback
-    const nodeTypes = {
-      segmentNode: SegmentNode,
-      imageNode: (props) => (
-        <ImageNode
-          {...props}
-          onRegenerateImage={handleRegenerateImage}
-          regeneratingImages={regeneratingImages}
-        />
-      ),
-      videoNode: VideoNode,
-    };
-
-    if (flowData.segments && flowData.segments.length > 0) {
-      console.log(
-        "📊 Creating nodes for",
-        flowData.segments.length,
-        "segments",
-      );
-      const nodeSpacing = 220; // horizontal space between columns
-      const rowSpacing = 300; // vertical space between images
-      const startX = 50;
-      const startY = 50;
-      const segmentSpacing = 600; // Space between segments
-
-      flowData.segments.forEach((segment, segIndex) => {
-        const x = startX;
-        const y = startY + segIndex * segmentSpacing; // segmentSpacing = enough vertical space for all images/videos
-        // Segment node
-        newNodes.push({
-          id: `segment-${segment.id}`,
+        newNodes.push(createNodeWithPosition(`segment-${segment.id}`, {
           type: "segmentNode",
-          position: { x, y },
           data: {
             ...segment,
             status: flowData.videos[segment.id]
               ? "completed"
               : flowData.images[segment.id]
               ? "generating"
-              : "pending",
+              : "pending", // Now we show all segments, so some might be pending
           },
+        }, { x: segmentX, y: startY + currentLevel * levelHeight }));
+
+        if (flowData.scripts && flowData.segments.length > 0) {
+          // Use the parentScriptId field that's already available in the segment data
+          const parentScriptId = segment.parentScriptId;
+          
+          if (!parentScriptId) {
+            return; // Skip this segment if no parent script ID
+          }
+
+          newEdges.push({
+            id: `script-${parentScriptId}-to-segment-${segment.id}`,
+            source: `script-${parentScriptId}`,
+            target: `segment-${segment.id}`,
+            sourceHandle: "output",
+            targetHandle: "input",
+            style: {
+              stroke: "#E9E8EB33",
+              strokeWidth: 2,
+              filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+            },
+          });
+          
+
+        }
+      });
+
+      currentLevel++;
+      
+
+    }
+
+    // Create Image Nodes for segments that have images (use all segments from scripts with images)
+    let imageNodesBySegment = new Map();
+    segmentsToDisplay.forEach((segment, segmentIndex) => {
+      const imageDetail = flowData.imageDetails[segment.id];
+      if (flowData.images[segment.id] && imageDetail?.allImages) {
+
+        imageNodesBySegment.set(segment.id, {
+          segment: segment,
+          segmentIndex: segmentIndex,
+          images: imageDetail.allImages,
+          imageDetail: imageDetail,
         });
-        // Add Image node to the right of segment
-        const addImageX = x + nodeSpacing;
-        newNodes.push({
-          id: `add-image-${segment.id}`,
-          type: "addImageNode",
-          position: { x: addImageX, y },
+      }
+    });
+
+    if (imageNodesBySegment.size > 0) {
+      const segmentSpacing = 400;
+
+      imageNodesBySegment.forEach((segmentData, segmentId) => {
+        const { segment, segmentIndex, images, imageDetail } = segmentData;
+
+        const segmentNode = newNodes.find(
+          (n) => n.id === `segment-${segment.id}`,
+        );
+        const segmentX = segmentNode
+          ? segmentNode.position.x
+          : startX + segmentIndex * segmentSpacing;
+
+        const imageSpacing = 320;
+        const imageCount = images.length;
+        const imagesTotalWidth = (imageCount - 1) * imageSpacing;
+        const imageStartX = segmentX - imagesTotalWidth / 2;
+
+        images.forEach((image, imageIndex) => {
+          const imageX = imageStartX + imageIndex * imageSpacing;
+
+          newNodes.push(createNodeWithPosition(`image-${segment.id}-${image.id}`, {
+            type: "imageNode",
+            data: {
+              segmentId: segment.id,
+              imageUrl: image.url,
+              imageId: image.id,
+              isPrimary: image.isPrimary,
+              allImages: imageDetail.allImages,
+              s3Key: image.s3Key,
+              nodeState: "existing",
+              visualPrompt: image.visualPrompt,
+              artStyle:
+                image.artStyle || "cinematic photography with soft lighting",
+              segmentData: {
+                id: segment.id,
+                visual: segment.visual,
+                animation: segment.animation,
+                artStyle:
+                  image.artStyle ||
+                  "cinematic photography with soft lighting",
+              },
+            },
+          }, { x: imageX, y: startY + currentLevel * levelHeight }));
+
+          newEdges.push({
+            id: `segment-${segment.id}-to-image-${segment.id}-${image.id}`,
+            source: `segment-${segment.id}`,
+            target: `image-${segment.id}-${image.id}`,
+            sourceHandle: "output",
+            targetHandle: "input",
+            style: {
+              stroke: "#E9E8EB33",
+              strokeWidth: 2,
+              filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+            },
+          });
+        });
+      });
+
+      currentLevel++;
+    }
+
+    // Create Video Nodes for images that have videos - using S3 key matching for precise attachment
+    let videoNodesByImage = new Map();
+
+    segmentsToDisplay.forEach((segment, segmentIndex) => {
+      const imageDetail = flowData.imageDetails[segment.id];
+      if (flowData.images[segment.id] && imageDetail?.allImages) {
+        imageDetail.allImages.forEach((image, imageIndex) => {
+          let videoUrl = null;
+          let videoId = null;
+          let videoKey = null;
+          let matchedByS3Key = false;
+
+          // PRIORITY 1: Try to match video by image S3 key (most precise)
+          if (image.s3Key && flowData.videosByImageS3Key && flowData.videosByImageS3Key[image.s3Key]) {
+            const videoData = flowData.videosByImageS3Key[image.s3Key];
+            videoUrl = videoData.videoUrl;
+            videoId = videoData.videoId;
+            videoKey = `${segment.id}-${image.id}`;
+            matchedByS3Key = true;
+          }
+          
+          // ONLY use S3 key matching - no fallback logic
+          if (videoUrl) {
+            videoNodesByImage.set(videoKey, {
+              segment: segment,
+              segmentIndex: segmentIndex,
+              image: image,
+              imageIndex: imageIndex,
+              videoUrl: videoUrl,
+              videoId: videoId,
+              matchedByS3Key: matchedByS3Key, // Track how the match was made
+            });
+          }
+        });
+      }
+    });
+
+    if (videoNodesByImage.size > 0) {
+      videoNodesByImage.forEach((videoData, key) => {
+        const {
+          segment,
+          segmentIndex,
+          image,
+          imageIndex,
+          videoUrl,
+          videoId,
+          matchedByS3Key,
+        } = videoData;
+
+        const imageNodeId = `image-${segment.id}-${image.id}`;
+        const imageNode = newNodes.find((n) => n.id === imageNodeId);
+        const videoX = imageNode ? imageNode.position.x : startX;
+
+        newNodes.push(createNodeWithPosition(`video-${segment.id}-${image.id}`, {
+          type: "videoNode",
           data: {
             segmentId: segment.id,
+            imageId: image.id,
+            videoUrl: videoUrl,
+            videoId: videoId,
+            nodeState: "existing",
+            matchedByS3Key: matchedByS3Key, // NEW: Track how video was matched to image
             segmentData: {
               id: segment.id,
-              visual: segment.visual,
               animation: segment.animation,
-              artStyle: "cinematic photography with soft lighting",
+              artStyle:
+                flowData?.videoDetails?.[segment.id]?.artStyle ||
+                "cinematic photography with soft lighting",
+              imageS3Key: image.s3Key,
             },
-            hasExistingImages: !!flowData.images[segment.id],
           },
-        });
+        }, { x: videoX, y: startY + currentLevel * levelHeight }));
+
         newEdges.push({
-          id: `segment-${segment.id}-to-add-image-${segment.id}`,
-          source: `segment-${segment.id}`,
-          target: `add-image-${segment.id}`,
+          id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
+          source: `image-${segment.id}-${image.id}`,
+          target: `video-${segment.id}-${image.id}`,
           sourceHandle: "output",
           targetHandle: "input",
           style: {
-            stroke: "#8b5cf6",
-            strokeWidth: 3,
-            filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
+            stroke: "#E9E8EB33",
+            strokeWidth: 2,
+            filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
           },
         });
-        // If segment has images, stack them vertically to the right of add image node
-        const imageDetail = flowData.imageDetails[segment.id];
-        if (flowData.images[segment.id] && imageDetail?.allImages) {
-          imageDetail.allImages.forEach((image, imageIndex) => {
-            const imageX = addImageX + nodeSpacing;
-            const imageY = y + imageIndex * rowSpacing; // <--- THIS IS THE KEY
-            newNodes.push({
-              id: `image-${segment.id}-${image.id}`,
-              type: "imageNode",
-              position: { x: imageX, y: imageY },
-              data: {
-                segmentId: segment.id,
-                imageUrl: image.url,
-                imageId: image.id,
-                isPrimary: image.isPrimary,
-                allImages: imageDetail.allImages,
-                segmentData: {
-                  id: segment.id,
-                  visual: segment.visual,
-                  animation: segment.animation,
-                  artStyle:
-                    image.artStyle ||
-                    "cinematic photography with soft lighting",
-                },
-              },
-            });
-            newEdges.push({
-              id: `add-image-${segment.id}-to-image-${segment.id}-${image.id}`,
-              source: `add-image-${segment.id}`,
-              target: `image-${segment.id}-${image.id}`,
-              sourceHandle: "output",
-              targetHandle: "input",
-              style: {
-                stroke: "#f59e0b",
-                strokeWidth: 2,
-                strokeDasharray: "5,5",
-                filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))",
-              },
-            });
-            // Video/add-video node to the right of each image
-            const imageVideoUrl =
-              flowData.videos[`${segment.id}-${image.id}`] ||
-              flowData.videos[segment.id];
-            const imageVideoId =
-              flowData?.videoDetails?.[`${segment.id}-${image.id}`]?.id ||
-              flowData?.videoDetails?.[segment.id]?.id;
-            const videoX = imageX + nodeSpacing;
-            if (imageVideoUrl) {
-              newNodes.push({
-                id: `video-${segment.id}-${image.id}`,
-                type: "videoNode",
-                position: { x: videoX, y: imageY },
-                data: {
-                  segmentId: segment.id,
-                  imageId: image.id,
-                  videoUrl: imageVideoUrl,
-                  videoId: imageVideoId,
-                  segmentData: {
-                    id: segment.id,
-                    animation: segment.animation,
-                    artStyle:
-                      flowData?.videoDetails?.[segment.id]?.artStyle ||
-                      "cinematic photography with soft lighting",
-                    imageS3Key: image.s3Key,
-                  },
-                },
-              });
-              newEdges.push({
-                id: `image-${segment.id}-${image.id}-to-video-${segment.id}-${image.id}`,
-                source: `image-${segment.id}-${image.id}`,
-                target: `video-${segment.id}-${image.id}`,
-                sourceHandle: "output",
-                targetHandle: "input",
-                style: {
-                  stroke: "#10b981",
-                  strokeWidth: 3,
-                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
-                },
-              });
-            } else {
-              newNodes.push({
-                id: `add-video-${segment.id}-${image.id}`,
-                type: "addVideoNode",
-                position: { x: videoX, y: imageY },
-                data: {
-                  segmentId: segment.id,
-                  imageId: image.id,
-                  segmentData: {
-                    id: segment.id,
-                    animation: segment.animation,
-                    artStyle:
-                      image.artStyle ||
-                      "cinematic photography with soft lighting",
-                  },
-                },
-              });
-              newEdges.push({
-                id: `image-${segment.id}-${image.id}-to-add-video-${segment.id}-${image.id}`,
-                source: `image-${segment.id}-${image.id}`,
-                target: `add-video-${segment.id}-${image.id}`,
-                sourceHandle: "output",
-                targetHandle: "input",
-                style: {
-                  stroke: "#10b981",
-                  strokeWidth: 2,
-                  strokeDasharray: "5,5",
-                  filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
-                },
-              });
-            }
-          });
-        }
+        
+
       });
     }
 
@@ -851,19 +1053,10 @@ function FlowWidget() {
     setEdges(newEdges);
   }, [flowData, setNodes, setEdges]);
 
-  // Add a stable callback to refresh project data after edit
-  const handleAfterImageEdit = useCallback(async () => {
-    await refreshProjectData();
-  }, [refreshProjectData]);
-
-  // Function to fetch project segmentations and related images/videos
+  // Fetch project data from API
   const fetchAllProjectData = useCallback(async () => {
-    if (!isAuthenticated) {
-      console.log("User not authenticated, skipping API calls");
-      return;
-    }
+    if (!isAuthenticated) return;
 
-    // Get project ID and name from localStorage
     let projectId;
     let projectName = "Untitled";
     try {
@@ -881,62 +1074,245 @@ function FlowWidget() {
     }
 
     if (!projectId) {
-      console.log("No project ID found in localStorage");
       setError("No project selected. Please select a project first.");
       return;
     }
 
-    console.log(
-      "Fetching project segmentations and related images/videos for project ID:",
-      projectId,
-    );
     try {
-      setLoading(true);
+      const [conceptsData, segmentationsData, imagesData, videosData] =
+        await Promise.all([
+          projectApi.getProjectConcepts(projectId),
+          projectApi.getProjectSegmentations(projectId),
+          projectApi.getProjectImages(projectId),
+          projectApi.getProjectVideos(projectId),
+        ]);
 
-      // Fetch project segmentations, images, and videos in parallel
-      const [segmentationsData, imagesData, videosData] = await Promise.all([
-        projectApi.getProjectSegmentations(projectId),
-        projectApi.getProjectImages(projectId),
-        projectApi.getProjectVideos(projectId),
-      ]);
+      let concepts = [];
+      if (conceptsData?.success && Array.isArray(conceptsData.data)) {
+        concepts = conceptsData.data;
+      }
 
-      console.log("Project data fetched successfully:");
-      console.log("Segmentations:", segmentationsData);
-      console.log("Images:", imagesData);
-      console.log("Videos:", videosData);
-
-      // Extract segments from the first segmentation
+      let scripts = [];
       let segments = [];
-      if (
-        segmentationsData &&
-        segmentationsData.success &&
-        segmentationsData.data &&
-        segmentationsData.data.length > 0
-      ) {
-        const firstSegmentation = segmentationsData.data[0];
-        if (
-          firstSegmentation.segments &&
-          Array.isArray(firstSegmentation.segments)
-        ) {
-          segments = firstSegmentation.segments;
-        }
+      if (segmentationsData?.success && segmentationsData.data?.length > 0) {
+        scripts = segmentationsData.data;
+        
+        // Collect segments from ALL scripts, not just the first one
+        segments = [];
+        segmentationsData.data.forEach((script, scriptIndex) => {
+          if (script.segments && Array.isArray(script.segments)) {
+            script.segments.forEach((segment) => {
+              segments.push({
+                ...segment,
+                // Use the actual segment ID from the API response
+                id: segment.id, // Use the original segment.id from API
+                segmentId: segment.segmentId || segment.id, // Keep segmentId for backward compatibility
+                // Add reference to parent script for debugging
+                parentScriptId: script.id,
+                parentScriptIndex: scriptIndex
+              });
+            });
+
+          }
+        });
+        
+
       }
 
       setAllProjectData({
-        segments: segments,
+        concepts,
+        scripts,
+        segments,
         images: imagesData?.data || [],
         videos: videosData?.data || [],
       });
-
-      // Keep the old projectData for backward compatibility
-      setProjectData({ success: true, project: { segments: segments } });
     } catch (error) {
       console.error("Failed to fetch project data:", error);
       setError("Failed to fetch project data");
-    } finally {
-      setLoading(false);
     }
   }, [isAuthenticated]);
+
+  // Handle tidy/layout arrangement - recreate the proper project structure
+  const handleTidyLayout = useCallback(() => {
+    if (!rfInstance) return;
+
+    try {
+      // Use the same layout configuration as createFlowElements
+      const levelHeight = 400; // Same as createFlowElements
+      const nodeWidth = 380; // Same as createFlowElements  
+      const startX = 400; // Same as createFlowElements
+      const startY = 80; // Same as createFlowElements
+
+      let currentLevel = 0;
+      const updatedNodes = [];
+
+      // Step 1: Position User Nodes (ROOT level)
+      const userNodes = nodes.filter((n) => n.type === "userNode");
+      userNodes.forEach((node) => {
+        updatedNodes.push({
+          ...node,
+          position: { x: startX, y: startY + currentLevel * levelHeight }
+        });
+      });
+      if (userNodes.length > 0) currentLevel++;
+
+      // Step 2: Position Concept Nodes
+      const conceptNodes = nodes.filter((n) => n.type === "conceptNode");
+      if (conceptNodes.length > 0) {
+        const conceptCount = conceptNodes.length;
+        const totalWidth = (conceptCount - 1) * nodeWidth;
+        const conceptStartX = startX - totalWidth / 2;
+
+        conceptNodes.forEach((node, index) => {
+          const conceptX = conceptStartX + index * nodeWidth;
+          updatedNodes.push({
+            ...node,
+            position: { x: conceptX, y: startY + currentLevel * levelHeight }
+          });
+        });
+        currentLevel++;
+      }
+
+      // Step 3: Position Script Nodes
+      const scriptNodes = nodes.filter((n) => n.type === "scriptNode");
+      if (scriptNodes.length > 0) {
+        const scriptCount = scriptNodes.length;
+        const scriptSpacing = 400; // Same as createFlowElements
+        const totalWidth = (scriptCount - 1) * scriptSpacing;
+        const scriptStartX = startX - totalWidth / 2;
+
+        scriptNodes.forEach((node, index) => {
+          const scriptX = scriptStartX + index * scriptSpacing;
+          updatedNodes.push({
+            ...node,
+            position: { x: scriptX, y: startY + currentLevel * levelHeight }
+          });
+        });
+        currentLevel++;
+      }
+
+      // Step 4: Position Segment Nodes
+      const segmentNodes = nodes.filter((n) => n.type === "segmentNode");
+      if (segmentNodes.length > 0) {
+        const segmentCount = segmentNodes.length;
+        const segmentSpacing = 400; // Same as createFlowElements
+        const totalWidth = (segmentCount - 1) * segmentSpacing;
+        const segmentStartX = startX - totalWidth / 2;
+
+        segmentNodes.forEach((node, index) => {
+          const segmentX = segmentStartX + index * segmentSpacing;
+          updatedNodes.push({
+            ...node,
+            position: { x: segmentX, y: startY + currentLevel * levelHeight }
+          });
+        });
+        currentLevel++;
+      }
+
+      // Step 5: Position Image Nodes - group by segment and align under their parent segments
+      const imageNodes = nodes.filter((n) => n.type === "imageNode");
+      if (imageNodes.length > 0) {
+        // Group images by segment
+        const imagesBySegment = new Map();
+        imageNodes.forEach((imageNode) => {
+          const segmentId = imageNode.data?.segmentId;
+          if (segmentId) {
+            if (!imagesBySegment.has(segmentId)) {
+              imagesBySegment.set(segmentId, []);
+            }
+            imagesBySegment.get(segmentId).push(imageNode);
+          }
+        });
+
+        // Position images under their parent segments
+        imagesBySegment.forEach((images, segmentId) => {
+          // Find the parent segment node
+          const parentSegmentNode = updatedNodes.find((n) => 
+            n.type === "segmentNode" && 
+            (n.id === `segment-${segmentId}` || n.data?.id === segmentId)
+          );
+          
+          if (parentSegmentNode) {
+            const segmentX = parentSegmentNode.position.x;
+            const imageSpacing = 320; // Same as createFlowElements
+            const imageCount = images.length;
+            const imagesTotalWidth = (imageCount - 1) * imageSpacing;
+            const imageStartX = segmentX - imagesTotalWidth / 2;
+
+            images.forEach((imageNode, imageIndex) => {
+              const imageX = imageStartX + imageIndex * imageSpacing;
+              updatedNodes.push({
+                ...imageNode,
+                position: { x: imageX, y: startY + currentLevel * levelHeight }
+              });
+            });
+          } else {
+            // Fallback: position images in a row if no parent segment found
+            images.forEach((imageNode, imageIndex) => {
+              updatedNodes.push({
+                ...imageNode,
+                position: { x: startX + imageIndex * 350, y: startY + currentLevel * levelHeight }
+              });
+            });
+          }
+        });
+        currentLevel++;
+      }
+
+      // Step 6: Position Video Nodes - align under their parent images
+      const videoNodes = nodes.filter((n) => n.type === "videoNode");
+      if (videoNodes.length > 0) {
+        videoNodes.forEach((videoNode) => {
+          const segmentId = videoNode.data?.segmentId;
+          const imageId = videoNode.data?.imageId;
+          
+          // Find the parent image node
+          const parentImageNode = updatedNodes.find((n) => 
+            n.type === "imageNode" && 
+            (n.data?.segmentId === segmentId || n.data?.imageId === imageId)
+          );
+          
+          if (parentImageNode) {
+            // Position video directly under its parent image
+            updatedNodes.push({
+              ...videoNode,
+              position: { x: parentImageNode.position.x, y: startY + currentLevel * levelHeight }
+            });
+          } else {
+            // Fallback: position in sequence if no parent image found
+            const videoIndex = videoNodes.findIndex((n) => n.id === videoNode.id);
+            updatedNodes.push({
+              ...videoNode,
+              position: { x: startX + videoIndex * 350, y: startY + currentLevel * levelHeight }
+            });
+          }
+        });
+      }
+
+      // Handle any other node types that might exist
+      const otherNodes = nodes.filter((n) => 
+        !['userNode', 'conceptNode', 'scriptNode', 'segmentNode', 'imageNode', 'videoNode'].includes(n.type)
+      );
+      otherNodes.forEach((node) => {
+        updatedNodes.push(node); // Keep original position for unknown node types
+      });
+
+      setNodes(updatedNodes);
+
+      // Fit view with animation
+      setTimeout(() => {
+        rfInstance.fitView({
+          padding: 0.2,
+          includeHiddenNodes: true,
+          duration: 800,
+        });
+      }, 100);
+
+
+    } catch (error) {
+      console.error("Error arranging layout:", error);
+    }
+  }, [nodes, setNodes, rfInstance]);
 
   // Handle chat click for nodes
   const handleChatClick = useCallback((nodeId, nodeType) => {
@@ -952,14 +1328,33 @@ function FlowWidget() {
     setChatNodeType(null);
   }, []);
 
+  // Handle chat message for concept generation
+  const handleChatMessage = useCallback(
+    async (message, nodeId, nodeType, model) => {
+      // Remove chat node after sending message
+      setNodes((prevNodes) =>
+        prevNodes.filter((node) => node.type !== "chatNode"),
+      );
+      setEdges((prevEdges) =>
+        prevEdges.filter((edge) => !edge.target.includes("chat-")),
+      );
+
+      if (nodeType === "userNode") {
+        // Use the concept generation hook
+        await generateConcepts(message, nodeId);
+      }
+    },
+    [nodes, setNodes, setEdges, setError, generateConcepts],
+  );
+
   // Handle adding new nodes
   const handleAddNode = useCallback(
     (nodeType) => {
       const newNodeId = `${nodeType}-${Date.now()}`;
 
       // Get viewport center position instead of random position
-      let centerX = 300; // fallback
-      let centerY = 300; // fallback
+      let centerX = 400; // fallback
+      let centerY = 400; // fallback
 
       if (rfInstance) {
         const viewport = rfInstance.getViewport();
@@ -983,33 +1378,42 @@ function FlowWidget() {
 
       // Set specific data based on node type
       switch (nodeType) {
-        case "text":
-          newNodeType = "textNode";
-          newNodeData.content = "New text content...";
+        case "script":
+          newNodeType = "scriptNode";
+          newNodeData.content = "New script content...";
+          newNodeData.nodeState = "new";
           break;
         case "image":
-          newNodeType = "addImageNode";
-          newNodeData.segmentId = null;
-          newNodeData.segmentData = null;
-          newNodeData.hasExistingImages = false;
-          newNodeData.isStandalone = true; // Mark as standalone
+          newNodeType = "imageNode";
+          newNodeData.content = "New image content...";
+          newNodeData.nodeState = "new";
           break;
         case "video":
-          newNodeType = "addVideoNode";
-          newNodeData.segmentId = null;
-          newNodeData.imageId = null;
-          newNodeData.segmentData = null;
-          newNodeData.isStandalone = true; // Mark as standalone
+          newNodeType = "videoNode";
+          newNodeData.content = "New video content...";
+          newNodeData.nodeState = "new";
           break;
         case "segment":
           newNodeType = "segmentNode";
-          newNodeData.visual = "New segment visual...";
-          newNodeData.narration = "New segment narration...";
-          newNodeData.animation = "New segment animation...";
+          newNodeData.content = "New segment content...";
+          newNodeData.nodeState = "new";
+          break;
+        case "concept":
+          newNodeType = "conceptNode";
+          newNodeData.content = "";
+          newNodeData.nodeState = "new";
+          break;
+        case "user":
+          newNodeType = "userNode";
+          newNodeData.userText = "";
+          newNodeData.nodeState = "new";
+          // Position user node at the top of the flow
+          centerY = 50;
           break;
         default:
-          newNodeType = "textNode";
+          newNodeType = "scriptNode";
           newNodeData.content = "New node...";
+          newNodeData.nodeState = "new";
       }
 
       const newNode = {
@@ -1019,9 +1423,103 @@ function FlowWidget() {
         data: newNodeData,
       };
 
-      setNodes((prevNodes) => [...prevNodes, newNode]);
+      setNodes((prevNodes) => {
+        const updatedNodes = [...prevNodes, newNode];
+        
+        // Auto-add chat node for new user nodes
+        if (nodeType === "user") {
+          const chatNodeId = `chat-${newNodeId}-${Date.now()}`;
+          const chatNode = {
+            id: chatNodeId,
+            type: "chatNode",
+            position: {
+              x: centerX - 20,
+              y: centerY + 380,
+            },
+            data: {
+              nodeType: newNodeType,
+              parentNodeId: newNodeId,
+              onSendMessage: (message, nodeType, model) => {
+                handleChatMessage(message, newNodeId, newNodeType, model);
+              },
+            },
+          };
+          
+          // Add both user node and chat node
+          updatedNodes.push(chatNode);
+          
+          // Also add the edge connecting them
+          setTimeout(() => {
+            const newEdge = {
+              id: `${newNodeId}-to-${chatNodeId}`,
+              source: newNodeId,
+              target: chatNodeId,
+              sourceHandle: "output",
+              targetHandle: "input",
+              style: {
+                stroke: "#E9E8EB33",
+                strokeWidth: 2,
+                strokeDasharray: "5,5",
+                filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+              },
+              type: "smoothstep",
+            };
+            
+            setEdges((prevEdges) => [...prevEdges, newEdge]);
+          }, 100);
+        }
+        
+        return updatedNodes;
+      });
     },
-    [setNodes, handleChatClick, rfInstance], // Add rfInstance to dependencies
+    [setNodes, handleChatClick, rfInstance, handleChatMessage, setEdges], // Add all dependencies
+  );
+
+  // Handle text node toggle for concept, script, and segment nodes
+  const handleToggleTextNode = useCallback(
+    (parentNodeId, parentNodeType, isExpanded, fullText, position) => {
+      // Handle text node creation/removal
+      
+      const textNodeId = `text-${parentNodeId}`;
+      
+      if (isExpanded) {
+        // Use the position passed from the node component
+        const parentPosition = position || { xPos: 400, yPos: 200 }; // fallback
+        
+        // Create text node positioned to the left of the parent node
+        const textNode = {
+          id: textNodeId,
+          type: "textNode",
+          position: {
+            x: parentPosition.xPos - 450, 
+            y: parentPosition.yPos,
+          },
+          data: {
+            parentNodeId: parentNodeId,
+            parentNodeType: parentNodeType,
+            fullText: fullText,
+            onClose: () => {
+              // Remove the text node when close button is clicked and reset parent node state
+              setNodes((prevNodes) => 
+                prevNodes.filter((node) => node.id !== textNodeId)
+              );
+              
+              // Reset the expanded state in the parent node
+              // This will be handled by the component's internal state
+            },
+          },
+        };
+        
+        // Add text node to the flow
+        setNodes((prevNodes) => [...prevNodes, textNode]);
+      } else {
+        // Remove text node
+        setNodes((prevNodes) => 
+          prevNodes.filter((node) => node.id !== textNodeId)
+        );
+      }
+    },
+    [setNodes],
   );
 
   // Handle adding chat node when clicking on other nodes
@@ -1041,21 +1539,15 @@ function FlowWidget() {
         id: chatNodeId,
         type: "chatNode",
         position: {
-          x: clickedNode.position.x - 50,
-          y: clickedNode.position.y + 125 + 120,
+          x: clickedNode.position.x - 20,
+          y: clickedNode.position.y + 380,
         },
         data: {
           nodeType: clickedNode.type,
           parentNodeId: clickedNode.id,
           onSendMessage: (message, nodeType, model) => {
-            console.log(
-              "Message sent:",
-              message,
-              "Node type:",
-              nodeType,
-              "Model:",
-              model,
-            );
+            // Handle the message based on the parent node type
+            handleChatMessage(message, clickedNode.id, clickedNode.type, model);
           },
         },
       };
@@ -1069,12 +1561,12 @@ function FlowWidget() {
         source: clickedNode.id,
         target: chatNodeId,
         sourceHandle: "output",
-        targetHandle: "target",
+        targetHandle: "input",
         style: {
-          stroke: "#3B82F6",
+          stroke: "#E9E8EB33",
           strokeWidth: 2,
           strokeDasharray: "5,5",
-          filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.6))",
+          filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
         },
         type: "smoothstep",
       };
@@ -1083,341 +1575,186 @@ function FlowWidget() {
     },
     [setNodes, setEdges],
   );
-  const handleImageGenerated = useCallback(
-    ({ segmentId, imageData, segmentData, addImageNodeId }) => {
-      console.log("🎨 Auto-creating image node:", {
-        segmentId,
-        imageData,
-        segmentData,
-      });
 
-      // Find the AddImageNode to position the new ImageNode to its right
-      const addImageNode = nodes.find((node) => node.id === addImageNodeId);
-      if (!addImageNode) {
-        console.error(
-          "AddImageNode not found for positioning:",
-          addImageNodeId,
-        );
-        return;
-      }
+  // Update nodeTypes to include all new clean node components with retry functionality
+  const nodeTypes = useMemo(() => {
+    // Memoized components with stable references
+    const MemoizedImageNode = React.memo((props) => <NodeImage {...props} onRetry={retryGeneration} />);
+    const MemoizedVideoNode = React.memo((props) => <NodeVideo {...props} onRetry={retryGeneration} />);
+    const MemoizedScriptNode = React.memo((props) => <NodeScript {...props} onRetry={retryGeneration} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
+    const MemoizedConceptNode = React.memo((props) => <NodeConcept {...props} onRetry={retryGeneration} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
+    const MemoizedSegmentNode = React.memo((props) => <NodeSegment {...props} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
+    const MemoizedChatNode = React.memo(ChatNode);
+    const MemoizedUserNode = React.memo(UserNode);
+    const MemoizedTextNode = React.memo(TextNode);
+    
+    return {
+      imageNode: MemoizedImageNode,
+      videoNode: MemoizedVideoNode,
+      scriptNode: MemoizedScriptNode,
+      segmentNode: MemoizedSegmentNode,
+      conceptNode: MemoizedConceptNode,
+      chatNode: MemoizedChatNode,
+      userNode: MemoizedUserNode,
+      textNode: MemoizedTextNode,
+    };
+  }, [retryGeneration, handleToggleTextNode, nodes]);
 
-      // Calculate position for the new image node (to the right of AddImageNode)
-      const newImageNodePosition = {
-        x: addImageNode.position.x + 220, // 220px to the right
-        y: addImageNode.position.y,
-      };
-
-      // Create new image node ID
-      const newImageNodeId = `generated-image-${segmentId}-${
-        imageData.id || Date.now()
-      }`;
-
-      // Create the new image node
-      const newImageNode = {
-        id: newImageNodeId,
-        type: "imageNode",
-        position: newImageNodePosition,
-        data: {
-          segmentId: segmentId,
-          imageUrl: imageData.url,
-          imageId: imageData.id,
-          isPrimary: false, // Generated images are not primary by default
-          segmentData: {
-            id: segmentId,
-            visual: imageData.prompt,
-            animation: segmentData?.animation || "",
-            artStyle:
-              segmentData?.artStyle ||
-              "cinematic photography with soft lighting",
-          },
-          // Mark as generated for special styling
-          isGenerated: true,
-          generationModel: imageData.model,
-        },
-      };
-
-      // Create edge connecting AddImageNode to the new ImageNode
-      const newEdge = {
-        id: `${addImageNodeId}-to-${newImageNodeId}`,
-        source: addImageNodeId,
-        target: newImageNodeId,
-        sourceHandle: "output",
-        targetHandle: "input",
-        style: {
-          stroke: "#10b981", // Green for generated
-          strokeWidth: 3,
-          filter: "drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))",
-          strokeDasharray: "8,4", // Dashed to indicate it's generated
-        },
-      };
-
-      // Add the new node and edge to the flow
-      setNodes((prevNodes) => [...prevNodes, newImageNode]);
-      setEdges((prevEdges) => [...prevEdges, newEdge]);
-
-      // Also create an AddVideoNode to the right of the new ImageNode
-      const addVideoNodeId = `add-video-${segmentId}-${
-        imageData.id || Date.now()
-      }`;
-      const addVideoNode = {
-        id: addVideoNodeId,
-        type: "addVideoNode",
-        position: {
-          x: newImageNodePosition.x + 220, // Another 220px to the right
-          y: newImageNodePosition.y,
-        },
-        data: {
-          segmentId: segmentId,
-          imageId: imageData.id,
-          segmentData: {
-            id: segmentId,
-            animation: segmentData?.animation || "",
-            artStyle:
-              imageData?.artStyle ||
-              segmentData?.artStyle ||
-              "cinematic photography with soft lighting",
-          },
-        },
-      };
-
-      // Create edge connecting ImageNode to AddVideoNode
-      const imageToVideoEdge = {
-        id: `${newImageNodeId}-to-${addVideoNodeId}`,
-        source: newImageNodeId,
-        target: addVideoNodeId,
-        sourceHandle: "output",
-        targetHandle: "input",
-        style: {
-          stroke: "#8b5cf6", // Purple for video connection
-          strokeWidth: 2,
-          strokeDasharray: "5,5",
-          filter: "drop-shadow(0 0 6px rgba(139, 92, 246, 0.6))",
-        },
-      };
-
-      // Add the AddVideoNode and its edge
-      setNodes((prevNodes) => [...prevNodes, addVideoNode]);
-      setEdges((prevEdges) => [...prevEdges, imageToVideoEdge]);
-
-      // Refresh project data to sync with backend
-      setTimeout(() => {
-        refreshProjectData();
-      }, 1000);
-
-      // Show success message
-      setFlowMessages((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `✅ New image node created for scene ${segmentId}! Ready for video generation.`,
-        },
-      ]);
-    },
-    [nodes, setNodes, setEdges, refreshProjectData, setFlowMessages],
-  );
-
-  // Update nodeTypes to pass onAfterEdit to ImageNode and VideoNode
-  const nodeTypes = useMemo(
-    () => ({
-      segmentNode: SegmentNode,
-      imageNode: (props) => (
-        <ImageNode
-          {...props}
-          onRegenerateImage={handleRegenerateImage}
-          regeneratingImages={regeneratingImages}
-          onAfterEdit={handleAfterImageEdit}
-          onMakePrimary={handleMakePrimary}
-          isPrimary={props.data?.isPrimary}
-          onChatClick={handleChatClick}
-        />
-      ),
-      videoNode: (props) => (
-        <VideoNode
-          {...props}
-          onRegenerateVideo={handleRegenerateVideo}
-          regeneratingVideos={regeneratingVideos}
-          onAfterEdit={handleAfterImageEdit}
-          onChatClick={handleChatClick}
-        />
-      ),
-      textNode: (props) => (
-        <NewTextNode {...props} onChatClick={handleChatClick} />
-      ),
-      addImageNode: (props) => (
-        <AddImageNode
-          {...props}
-          id={props.id}
-          onCreateNewImage={handleCreateNewImage}
-          onImageGenerated={handleImageGenerated}
-          creatingImages={creatingImages}
-          hasExistingImages={props.data?.hasExistingImages}
-        />
-      ),
-      addVideoNode: (props) => (
-        <AddVideoNode
-          {...props}
-          onCreateNewVideo={handleCreateNewVideo}
-          creatingVideos={creatingVideos}
-        />
-      ),
-      chatNode: ChatNode,
-    }),
-    [
-      handleRegenerateImage,
-      regeneratingImages,
-      handleAfterImageEdit,
-      handleRegenerateVideo,
-      regeneratingVideos,
-      handleCreateNewImage,
-      creatingImages,
-      handleMakePrimary,
-      handleCreateNewVideo,
-      creatingVideos,
-      handleChatClick,
-      handleImageGenerated,
-    ],
-  );
-
-  // Initialize flow when data changes
+  // Initialize flow when data changes - but NOT when nodes are just moved
   useEffect(() => {
     createFlowElements();
-  }, [createFlowElements, projectData]);
+  }, [createFlowElements]);
+
+  // Load user concepts on mount
+  useEffect(() => {
+    const projectData = localStorage.getItem("project-store-selectedProject");
+    if (projectData) {
+      try {
+        const project = JSON.parse(projectData);
+        const projectId = project.id;
+
+        const userConceptsKey = `user-concepts-${projectId || "default"}`;
+        const existingUserConcepts = JSON.parse(
+          localStorage.getItem(userConceptsKey) || "{}",
+        );
+        setUserConcepts(new Map(Object.entries(existingUserConcepts)));
+      } catch (e) {
+        console.error("Error loading user concepts:", e);
+      }
+    }
+  }, []);
 
   const onConnect = useCallback(
-    (params) => {
+    async (params) => {
       // Create the edge
       setEdges((eds) => addEdge(params, eds));
 
-      // Handle data inheritance when connecting AddImageNode to SegmentNode
-      const sourceNode = nodes.find((node) => node.id === params.source);
-      const targetNode = nodes.find((node) => node.id === params.target);
-
-      // If connecting SegmentNode to AddImageNode
-      if (
-        sourceNode?.type === "segmentNode" &&
-        targetNode?.type === "addImageNode"
-      ) {
-        setNodes((prevNodes) =>
-          prevNodes.map((node) => {
-            if (node.id === params.target && node.data.isStandalone) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  segmentId: sourceNode.data.id,
-                  segmentData: {
-                    id: sourceNode.data.id,
-                    visual: sourceNode.data.visual,
-                    animation: sourceNode.data.animation,
-                    artStyle:
-                      sourceNode.data.artStyle ||
-                      "cinematic photography with soft lighting",
-                  },
-                  hasExistingImages: !!flowData.images[sourceNode.data.id],
-                  isStandalone: false, // No longer standalone
-                },
-              };
-            }
-            return node;
-          }),
-        );
+      // Skip auto-generation if disabled (e.g., during brush tool operations)
+      if (disableAutoGeneration) {
+        return;
       }
-      if (
-        sourceNode?.type === "addImageNode" &&
-        targetNode?.type === "segmentNode"
-      ) {
-        setNodes((prevNodes) =>
-          prevNodes.map((node) => {
-            if (node.id === params.source && node.data.isStandalone) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  segmentId: targetNode.data.id,
-                  segmentData: {
-                    id: targetNode.data.id,
-                    visual: targetNode.data.visual,
-                    animation: targetNode.data.animation,
-                    artStyle:
-                      targetNode.data.artStyle ||
-                      "cinematic photography with soft lighting",
-                  },
-                  hasExistingImages: !!flowData.images[targetNode.data.id],
-                  isStandalone: false, // No longer standalone
-                },
-              };
-            }
-            return node;
-          }),
-        );
+
+      // Handle special connection logic for new project flow
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      const targetNode = nodes.find((n) => n.id === params.target);
+
+      if (sourceNode && targetNode) {
+        // Script connected to concept - generate script
+        if (
+          sourceNode.type === "conceptNode" &&
+          targetNode.type === "scriptNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
+          await generateScript(sourceNode, targetNode);
+        }
+
+        // Segment connected to script - create 5 segment nodes
+        if (
+          sourceNode.type === "scriptNode" &&
+          targetNode.type === "segmentNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
+          await createSegments(sourceNode, targetNode);
+        }
+
+        // Image connected to segment - generate image
+        if (
+          sourceNode.type === "segmentNode" &&
+          targetNode.type === "imageNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
+          await generateImage(sourceNode, targetNode);
+        }
+
+        // Video connected to image - generate video
+        if (
+          sourceNode.type === "imageNode" &&
+          targetNode.type === "videoNode" &&
+          targetNode.data?.nodeState === "new"
+        ) {
+          await generateVideo(sourceNode, targetNode);
+        }
       }
     },
-    [setEdges, nodes, setNodes, flowData.images],
+    [
+      setEdges,
+      nodes,
+      disableAutoGeneration,
+      generateScript,
+      createSegments,
+      generateImage,
+      generateVideo,
+    ],
   );
 
-  // Keep the graph within bounds when nodes/edges change
-  useEffect(() => {
-    if (rfInstance) {
-      requestAnimationFrame(() => {
-        try {
-          // Only fitView on initial load, not when nodes/edges change
-          // This prevents zoom reset when clicking elsewhere
-          if (nodes.length === 0 && edges.length === 0) {
-            rfInstance.fitView({ padding: 0.2, includeHiddenNodes: true });
-          }
-        } catch (e) {
-          // no-op
-        }
-      });
-    }
-  }, [rfInstance, nodes.length, edges.length]);
+  const handleRegeneration = useCallback(
+    async (regenerationParams) => {
+      const { nodeType } = regenerationParams;
 
-  const handleFlowAction = async (action) => {
-    if (!isAuthenticated) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // simulate
-
-      setFlowMessages((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          content: `Flow action "${action}" completed successfully!`,
-        },
-      ]);
-    } catch (error) {
-      setError(error.message || "Flow action failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getWorkflowStats = () => {
-    const totalSegments = flowData.segments.length;
-    const imagesGenerated = Object.keys(flowData.images).length;
-    const videosGenerated = Object.keys(flowData.videos).length;
-
-    return {
-      totalSegments,
-      imagesGenerated,
-      videosGenerated,
-      completionRate:
-        totalSegments > 0
-          ? Math.round((videosGenerated / totalSegments) * 100)
-          : 0,
-    };
-  };
-
-  const stats = getWorkflowStats();
+      if (nodeType === "image") {
+        await regenerateImage(regenerationParams);
+      } else if (nodeType === "video") {
+        await regenerateVideo(regenerationParams);
+      } else {
+        console.error("Unsupported node type for regeneration:", nodeType);
+      }
+    },
+    [regenerateImage, regenerateVideo],
+  );
 
   useEffect(() => {
     fetchAllProjectData();
   }, [fetchAllProjectData]);
 
-  // Update project name when component mounts or project changes
+  // Restore generation states after data loads
+  useEffect(() => {
+    if (allProjectData && Object.keys(allProjectData).length > 0) {
+      const timeoutId = setTimeout(restoreGenerationStates, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [allProjectData, restoreGenerationStates]);
+
+  // Update task completion states and project name based on project data
+  useEffect(() => {
+    if (!allProjectData) return;
+
+    const newCompletionStates = {
+      userInput: false,
+      concept: allProjectData.concepts?.length > 0,
+      script: allProjectData.scripts?.length > 0,
+      segment: allProjectData.images?.some((img) => img?.success && img?.s3Key), // Complete when any segment has images
+      image: allProjectData.images?.some((img) => img?.success && img?.s3Key),
+      video: allProjectData.videos?.some(
+        (video) =>
+          video?.success &&
+          Array.isArray(video.videoFiles) &&
+          video.videoFiles.length > 0 &&
+          video.videoFiles[0]?.s3Key,
+      ),
+    };
+
+    // Check for user input in localStorage
+    try {
+      const storedProject = localStorage.getItem(
+        "project-store-selectedProject",
+      );
+      if (storedProject) {
+        const project = JSON.parse(storedProject);
+        const userNodeDataKey = `userNodeData-${project.id}`;
+        const existingUserNodeData = JSON.parse(
+          localStorage.getItem(userNodeDataKey) || "{}",
+        );
+        newCompletionStates.userInput =
+          Object.keys(existingUserNodeData).length > 0;
+      }
+    } catch (e) {
+      console.error("Error checking user input data:", e);
+    }
+
+    setTaskCompletionStates(newCompletionStates);
+  }, [allProjectData]);
+
+  // Update project name on mount
   useEffect(() => {
     try {
       const storedProject = localStorage.getItem(
@@ -1425,51 +1762,156 @@ function FlowWidget() {
       );
       if (storedProject) {
         const project = JSON.parse(storedProject);
-        const projectName = project.name || project.title || "Untitled";
-        setProjectName(projectName);
+        setProjectName(project.name || project.title || "Untitled");
       }
     } catch (error) {
       console.error("Error parsing project from localStorage:", error);
     }
   }, []);
 
+  // Cleanup old localStorage data periodically
+  useEffect(() => {
+    const cleanup = () => {
+      try {
+        const storedProject = localStorage.getItem(
+          "project-store-selectedProject",
+        );
+        if (!storedProject) return;
+
+        const project = JSON.parse(storedProject);
+        const projectId = project.id;
+
+        ["concept", "script", "image", "video"].forEach((type) => {
+          getGenerationStates(projectId, type);
+        });
+
+        // Clean up old temporary data and videos
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+
+          try {
+            if (key.startsWith(`temp-`) && key.includes(projectId)) {
+              const data = JSON.parse(localStorage.getItem(key) || "{}");
+              if (data.timestamp && Date.now() - data.timestamp > 3600000) {
+                localStorage.removeItem(key);
+              }
+            }
+
+            if (key.startsWith(`generated-videos-${projectId}`)) {
+              const videos = JSON.parse(localStorage.getItem(key) || "{}");
+              const videoEntries = Object.entries(videos);
+              if (videoEntries.length > 20) {
+                const sortedVideos = videoEntries.sort(
+                  (a, b) => b[1].timestamp - a[1].timestamp,
+                );
+                const videosToKeep = sortedVideos.slice(0, 20);
+                localStorage.setItem(
+                  key,
+                  JSON.stringify(Object.fromEntries(videosToKeep)),
+                );
+              }
+            }
+          } catch (error) {
+            console.error(`Error cleaning up localStorage key ${key}:`, error);
+          }
+        }
+      } catch (error) {
+        console.error("Error during cleanup:", error);
+      }
+    };
+
+    cleanup();
+    const interval = setInterval(cleanup, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Listen for sandbox open/close events
   useEffect(() => {
-    const openHandler = () => setOpen(true);
+    const openHandler = () => {
+      setOpen(true);
+      window.dispatchEvent(new CustomEvent("sandbox:opened"));
+      setTimeout(restoreGenerationStates, 100);
+    };
+
     const closeHandler = () => {
       setOpen(false);
-      // Clear temporary videos when closing the widget
-      setTemporaryVideos(new Map());
+      window.dispatchEvent(new CustomEvent("sandbox:closed"));
     };
+
     window.addEventListener("flowWidget:open", openHandler);
     window.addEventListener("flowWidget:close", closeHandler);
+
     return () => {
       window.removeEventListener("flowWidget:open", openHandler);
       window.removeEventListener("flowWidget:close", closeHandler);
     };
-  }, []);
+  }, [restoreGenerationStates]);
 
-  // Reflect open state on host element attribute for CSS
+  // Listen for addVideoToTimeline events from the sidebar
+  useEffect(() => {
+    const handleAddVideoToTimeline = async (event) => {
+      const { videoUrl, videoId, segmentId, nodeId } = event.detail;
+
+
+
+      try {
+        // Create a videos map with the single video for the timeline function
+        const singleVideoMap = {};
+        if (segmentId) {
+          singleVideoMap[segmentId] = videoUrl;
+        } else {
+          // Fallback: use videoId or nodeId as key
+          const key = videoId || nodeId || "video";
+          singleVideoMap[key] = videoUrl;
+        }
+
+        // Use the existing timeline function to add the single video
+        const success = await timeline.addSingleVideoToTimeline(
+          segmentId || videoId || nodeId || "video",
+          singleVideoMap,
+          setError,
+        );
+
+        if (success) {
+
+          // Optional: Show success notification or close sidebar
+        } else {
+          console.error("❌ Failed to add video to timeline");
+          setError("Failed to add video to timeline");
+        }
+      } catch (error) {
+        console.error("❌ Error adding video to timeline:", error);
+        setError(`Error adding video to timeline: ${error.message}`);
+      }
+    };
+
+    window.addEventListener("addVideoToTimeline", handleAddVideoToTimeline);
+
+    return () => {
+      window.removeEventListener(
+        "addVideoToTimeline",
+        handleAddVideoToTimeline,
+      );
+    };
+  }, [timeline, setError]);
+
+  // Reflect open state and handle dropdown clicks
+  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
+
   useEffect(() => {
     const host = document.querySelector("react-flow-widget");
     if (host) host.setAttribute("data-open", open ? "true" : "false");
   }, [open]);
 
-  // Handle click outside to close dropdowns
-  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest(".relative")) {
         setLogoDropdownOpen(false);
-        setUserDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -1512,20 +1954,83 @@ function FlowWidget() {
                   </svg>
                 </button>
                 {logoDropdownOpen && (
-                  <div className='absolute top-full left-0 mt-1 w-48 bg-gray-800/95 border border-gray-700 rounded-lg shadow-xl backdrop-blur-sm z-[1002]'>
-                    <div className='py-2'>
-                      <button
-                        onClick={() => setLogoDropdownOpen(false)}
-                        className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
-                      >
-                        Option 1
-                      </button>
-                      <button
-                        onClick={() => setLogoDropdownOpen(false)}
-                        className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
-                      >
-                        Option 2
-                      </button>
+                  <div className='absolute top-full left-0 mt-2 w-72 bg-[#191919] border-0 rounded-xl shadow-2xl backdrop-blur-md z-[1002] overflow-hidden'>
+                    <div className='px-2'>
+                      {[
+                        {
+                          icon: (
+                            <svg
+                              className='w-4 h-4'
+                              viewBox='0 0 24 24'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.2569 9.77251 19.9859C9.5799 19.7148 9.31074 19.5067 9 19.39C8.69838 19.2569 8.36381 19.2172 8.03941 19.276C7.71502 19.3348 7.41568 19.4895 7.18 19.72L7.12 19.78C6.93425 19.966 6.71368 20.1135 6.47088 20.2141C6.22808 20.3148 5.96783 20.3666 5.705 20.3666C5.44217 20.3666 5.18192 20.3148 4.93912 20.2141C4.69632 20.1135 4.47575 19.966 4.29 19.78C4.10405 19.5943 3.95653 19.3737 3.85588 19.1309C3.75523 18.8881 3.70343 18.6278 3.70343 18.365C3.70343 18.1022 3.75523 17.8419 3.85588 17.5991C3.95653 17.3563 4.10405 17.1357 4.29 16.95L4.35 16.89C4.58054 16.6543 4.73519 16.355 4.794 16.0306C4.85282 15.7062 4.81312 15.3716 4.68 15.07C4.55324 14.7742 4.34276 14.522 4.07447 14.3443C3.80618 14.1666 3.49179 14.0713 3.17 14.07H3C2.46957 14.07 1.96086 13.8593 1.58579 13.4842C1.21071 13.1091 1 12.6004 1 12.07C1 11.5396 1.21071 11.0309 1.58579 10.6558C1.96086 10.2807 2.46957 10.07 3 10.07H3.09C3.42099 10.0623 3.742 9.95512 4.01309 9.76251C4.28417 9.5699 4.49226 9.30074 4.61 9C4.74312 8.69838 4.78282 8.36381 4.724 8.03941C4.66519 7.71502 4.51054 7.41568 4.28 7.18L4.22 7.12C4.03405 6.93425 3.88653 6.71368 3.78588 6.47088C3.68523 6.22808 3.63343 5.96783 3.63343 5.705C3.63343 5.44217 3.68523 5.18192 3.78588 4.93912C3.88653 4.69632 4.03405 4.47575 4.22 4.29C4.40575 4.10405 4.62632 3.95653 4.86912 3.85588C5.11192 3.75523 5.37217 3.70343 5.635 3.70343C5.89783 3.70343 6.15808 3.75523 6.40088 3.85588C6.64368 3.95653 6.86425 4.10405 7.05 4.29L7.11 4.35C7.34568 4.58054 7.64502 4.73519 7.96941 4.794C8.29381 4.85282 8.62838 4.81312 8.93 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          ),
+                          text: "Settings",
+                          active: true,
+                        },
+                        {
+                          icon: (
+                            <svg
+                              className='w-4 h-4'
+                              viewBox='0 0 24 24'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <circle
+                                cx='12'
+                                cy='12'
+                                r='10'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                              />
+                              <path
+                                d='M9.09 9C9.3251 8.33167 9.78915 7.76811 10.4 7.40913C11.0108 7.05016 11.7289 6.91894 12.4272 7.03871C13.1255 7.15849 13.7588 7.52152 14.2151 8.06353C14.6713 8.60553 14.9211 9.29152 14.92 10C14.92 12 11.92 13 11.92 13'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M12 17H12.01'
+                                stroke='currentColor'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          ),
+                          text: "Help & Resources",
+                        },
+                      ].map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => setLogoDropdownOpen(false)}
+                          className={`p-1.5 px-3 text-white text-xs cursor-pointer rounded-lg mb-1 flex items-center gap-3 transition-colors ${
+                            item.active ? "bg-white/5" : "hover:bg-white/10"
+                          }`}
+                        >
+                          <span className='w-4 flex justify-center text-white'>
+                            {item.icon}
+                          </span>
+                          <span>{item.text}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -1553,7 +2058,10 @@ function FlowWidget() {
                 <button
                   className='h-8 px-3 py-1 text-gray-400 hover:text-white transition-colors flex items-center gap-2 rounded-md hover:bg-gray-700/50'
                   aria-label='Timeline tab'
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    // Use the event system to ensure timeline elements are shown
+                    window.dispatchEvent(new CustomEvent("flowWidget:close"));
+                  }}
                 >
                   <img
                     src={assets.TimelineTabIcon}
@@ -1567,91 +2075,70 @@ function FlowWidget() {
 
             {/* Right Section: User + Chat Bot + Blue Button */}
             <div className='fixed top-4 right-4 z-[1001] flex items-center gap-3'>
-              {/* User Icon with Dropdown */}
-              {isAuthenticated && user ? (
-                <div className='relative'>
-                  <button
-                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className='h-10 flex items-center gap-2  hover:border-0 border-0 rounded-lg px-2 py-2 transition-all duration-200 bg-black/50 backdrop-blur-sm'
+              {/* Credits Display */}
+              {isAuthenticated && user && (
+                <div className='h-10 flex items-center gap-1.5 bg-[#32353E66]/40 border-0 rounded-lg px-4 py-2 backdrop-blur-sm'>
+                  <svg
+                    width='16'
+                    height='16'
+                    viewBox='0 0 16 16'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='text-gray-400'
                   >
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt='Profile'
-                        className='w-6 h-6 rounded-full border border-gray-600'
-                      />
-                    ) : (
-                      <div className='w-6 h-6 rounded-full bg-cyan-600 flex items-center justify-center'>
-                        <span className='text-white text-xs font-medium'>
-                          {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                        </span>
-                      </div>
-                    )}
-                    <svg
-                      className={`w-3 h-3 text-gray-400 transform transition-transform duration-200 ${
-                        userDropdownOpen ? "rotate-180" : ""
-                      }`}
-                      fill='none'
+                    <path
+                      d='M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z'
                       stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 9l-7 7-7-7'
-                      />
-                    </svg>
-                  </button>
-
-                  {userDropdownOpen && (
-                    <div className='absolute top-full right-0 mt-1 w-48 bg-gray-800/95 border border-gray-700 rounded-lg shadow-xl backdrop-blur-sm z-[1002]'>
-                      <div className='py-2'>
-                        <div className='px-4 py-2 border-b border-gray-700'>
-                          <p className='text-sm font-medium text-white'>
-                            {user.name || "User"}
-                          </p>
-                          <p className='text-xs text-gray-400'>{user.email}</p>
-                        </div>
-                        <button
-                          onClick={() => setUserDropdownOpen(false)}
-                          className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
-                        >
-                          Profile Settings
-                        </button>
-                        <button
-                          onClick={() => setUserDropdownOpen(false)}
-                          className='w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/70 transition-colors'
-                        >
-                          Preferences
-                        </button>
-                        <div className='border-t border-gray-700 mt-1 pt-1'>
-                          <button
-                            onClick={() => {
-                              logout();
-                              setUserDropdownOpen(false);
-                            }}
-                            className='w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700/70 transition-colors'
-                          >
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className='h-10 flex items-center bg-black/50 backdrop-blur-sm rounded-lg px-2'>
-                  <ChatLoginButton />
+                      strokeWidth='1.2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                    <path
+                      d='M6.86848 6.46472C7.2645 6.0687 7.4625 5.87069 7.69083 5.7965C7.89168 5.73124 8.10802 5.73124 8.30887 5.7965C8.53719 5.87069 8.7352 6.0687 9.13122 6.46472L9.53515 6.86864C9.93116 7.26466 10.1292 7.46267 10.2034 7.69099C10.2686 7.89184 10.2686 8.10819 10.2034 8.30903C10.1292 8.53736 9.93116 8.73537 9.53515 9.13138L9.13122 9.53531C8.7352 9.93132 8.53719 10.1293 8.30887 10.2035C8.10802 10.2688 7.89168 10.2688 7.69083 10.2035C7.4625 10.1293 7.2645 9.93132 6.86848 9.53531L6.46455 9.13138C6.06854 8.73537 5.87053 8.53736 5.79634 8.30903C5.73108 8.10819 5.73108 7.89184 5.79634 7.69099C5.87053 7.46267 6.06854 7.26466 6.46455 6.86864L6.86848 6.46472Z'
+                      stroke='currentColor'
+                      strokeWidth='1.2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg>
+                  <span className='text-gray-200 text-sm font-medium'>
+                    {user.credits || "2000"}
+                  </span>
                 </div>
               )}
 
-              {/* Chat Bot Icon */}
-              <div className='rounded-lg transition-colors backdrop-blur-sm items-center '>
+              {/* Debug: Project Data Display */}
+              {process.env.NODE_ENV === "development" && (
+                <div className='flex items-center gap-2'>
+                  <button
+                    onClick={() => {
+                    }}
+                    className='h-10 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border-0 text-blue-300 text-sm font-medium rounded-lg transition-colors backdrop-blur-sm'
+                    title='Debug: Log Project Data'
+                  >
+                    📊
+                  </button>
+                </div>
+              )}
+
+              {/* User Profile Dropdown */}
+              <UserProfileDropdown />
+
+              {/* Chat Bot Icon - Click to open chat widget */}
+              <div
+                className='h-10 flex items-center justify-center bg-[#32353E66]/40 hover:bg-[#32353E66] rounded-lg transition-colors backdrop-blur-sm cursor-pointer px-2'
+                onClick={() => {
+                  // Open chat widget if available
+                  if (typeof window.openChat === "function") {
+                    window.openChat();
+                  }
+                }}
+                title='Open Chat Widget'
+              >
                 <img
                   src={assets.ChatBotButton}
                   alt='Chat Bot Icon'
-                  className='w-18 h-18'
+                  className='w-6 h-6'
                 />
               </div>
 
@@ -1665,59 +2152,17 @@ function FlowWidget() {
                 Publish
               </button>
 
-              {/* Chat History */}
-              <div
-                className='fixed top-24  right-4 z-[1001] w-16 h-16 hover:bg-gray-600 border-0 text-white rounded-full shadow-lg transition-all duration-200 flex items-center justify-center  backdrop-blur-sm'
-                style={{ background: "#18191CCC" }}
-              >
-                <img
-                  src={assets.NewChatIcon}
-                  className='w-12 h-12'
-                  alt='New Chat'
+              {/* Task List */}
+              <div className='fixed top-24 right-4 z-[1001]'>
+                <TaskList
+                  nodes={nodes}
+                  collapsed={true}
+                  taskCompletionStates={taskCompletionStates}
                 />
               </div>
             </div>
-            {/* Model Selection */}
-            {/* {isAuthenticated && stats.totalSegments > 0 && (
-              <div className='pt-2 pb-2 pl-4 pr-4 border-b border-gray-800 bg-gray-800'>
-                <h3 className='text-sm font-semibold text-gray-300 mb-3'>
-                  AI Model Selection
-                </h3>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-xs text-gray-400 mb-1'>
-                      Image Generation Model
-                    </label>
-                    <ModelSelector
-                      genType='IMAGE'
-                      selectedModel={selectedImageModel}
-                      onModelChange={setSelectedImageModel}
-                      disabled={loading}
-                      className='w-full'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-xs text-gray-400 mb-1'>
-                      Video Generation Model
-                    </label>
-                    <ModelSelector
-                      genType='VIDEO'
-                      selectedModel={selectedVideoModel}
-                      onModelChange={setSelectedVideoModel}
-                      disabled={loading}
-                      className='w-full'
-                    />
-                  </div>
-                </div>
-              </div>
-            )} */}
-
             <div className='flex-1 overflow-auto'>
-              {loading ? (
-                <div className='flex items-center justify-center h-full'>
-                  <LoadingSpinner />
-                </div>
-              ) : error ? (
+              {error ? (
                 <div className='flex items-center justify-center h-full'>
                   <div className='text-red-400 text-center p-4'>
                     <p>{error}</p>
@@ -1743,32 +2188,6 @@ function FlowWidget() {
                     <ChatLoginButton />
                   </div>
                 </div>
-              ) : flowData.segments.length === 0 ? (
-                <div className='p-4 space-y-4'>
-                  <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg'>
-                    <h3 className='text-lg font-semibold text-white mb-4'>
-                      No Workflow Data
-                    </h3>
-                    <p className='text-gray-400 text-sm mb-4'>
-                      Start creating a video in the chat widget to see the
-                      workflow flow here.
-                    </p>
-                    <button
-                      onClick={() => handleFlowAction("Refresh Data")}
-                      disabled={loading}
-                      className='w-full bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50'
-                    >
-                      {loading ? (
-                        <div className='flex items-center justify-center gap-2'>
-                          <LoadingSpinner />
-                          <span>Processing...</span>
-                        </div>
-                      ) : (
-                        "🔄 Refresh Data"
-                      )}
-                    </button>
-                  </div>
-                </div>
               ) : (
                 <div className='w-full h-full min-w-[1000px] min-h-[700px]'>
                   <ReactFlow
@@ -1778,24 +2197,39 @@ function FlowWidget() {
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    defaultEdgeOptions={{
+                      style: {
+                        stroke: "#E9E8EB33",
+                        strokeWidth: 2,
+                        filter: "drop-shadow(0 0 6px rgba(233, 232, 235, 0.2))",
+                      },
+                    }}
                     fitViewOptions={{ padding: 0.2, includeHiddenNodes: true }}
                     minZoom={0.1}
                     maxZoom={1.5}
                     onNodeClick={(event, node) => {
-                      setSelectedNode(node);
-                      // Add chat node when clicking on non-chat nodes
-                      if (
-                        node.type !== "chatNode" &&
-                        node.type !== "addImageNode"
-                      ) {
+                      // Show sidebar for generated image and video nodes
+                      const shouldShowSidebar =
+                        (node.type === "imageNode" ||
+                          node.type === "videoNode") &&
+                        node.data?.nodeState === "existing";
+
+                      if (shouldShowSidebar) {
+                        setSelectedNode(node);
+                      } else {
+                        setSelectedNode(null);
+                      }
+
+                      // Add chat node only when clicking on user nodes
+                      if (node.type === "userNode") {
                         handleAddChatNode(node);
                       }
                     }}
                     onPaneClick={() => {
                       setSelectedNode(null);
-                      // Remove all chat nodes when deselecting
+                      // Remove all chat nodes and text nodes when deselecting
                       setNodes((prevNodes) =>
-                        prevNodes.filter((node) => node.type !== "chatNode"),
+                        prevNodes.filter((node) => node.type !== "chatNode" && node.type !== "textNode"),
                       );
                       setEdges((prevEdges) =>
                         prevEdges.filter(
@@ -1836,12 +2270,16 @@ function FlowWidget() {
                     selectedNode={selectedNode}
                     onClose={() => setSelectedNode(null)}
                     onChatClick={handleChatClick}
+                    onRegenerate={handleRegeneration}
                   />
                 </div>
               )}
             </div>
           </div>
-          <FlowWidgetBottomToolbar onAddNode={handleAddNode} />
+          <FlowWidgetBottomToolbar
+            onAddNode={handleAddNode}
+            onRefreshLayout={handleTidyLayout}
+          />
         </div>
       </div>
 
@@ -1853,15 +2291,6 @@ function FlowWidget() {
           isOpen={chatOpen}
           onClose={handleChatClose}
           onSendMessage={(message, nodeType, model) => {
-            console.log(
-              "Message sent:",
-              message,
-              "Node type:",
-              nodeType,
-              "Model:",
-              model,
-            );
-            // Handle message sending logic here
           }}
         />
       )}

@@ -67,10 +67,10 @@ const VideoGenerationComponent = ({
     <div>
       <div className='text-gray-100 text-sm mb-4'>
         {isGeneratingVideos
-          ? "🎬 Processing..."
+          ? "Processing..."
           : hasVideos
-          ? "🎥 Generated Videos:"
-          : "🎥 Ready to generate videos"}
+          ? "Generated Videos:"
+          : "Ready to generate videos"}
       </div>
       <MediaGeneration
         type='video'
@@ -106,6 +106,7 @@ const ChatMessages = ({
 
   // Only auto-scroll when new messages are added, not when existing ones are updated
   const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [lastVideoCount, setLastVideoCount] = useState(0);
 
   useEffect(() => {
     // Only scroll if we actually added new messages (not just updated existing ones)
@@ -114,6 +115,34 @@ const ChatMessages = ({
       setLastMessageCount(messages.length);
     }
   }, [messages.length, lastMessageCount]);
+
+  // Auto-scroll when videos are added or updated
+  useEffect(() => {
+    const currentVideoCount = Object.keys(combinedVideosMap || {}).length;
+    if (currentVideoCount > lastVideoCount) {
+      console.log(`🎬 New videos detected (${currentVideoCount} vs ${lastVideoCount}), scrolling to bottom`);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100); // Small delay to ensure content is rendered
+      setLastVideoCount(currentVideoCount);
+    }
+  }, [combinedVideosMap, lastVideoCount]);
+
+  // Listen for custom scroll events (from video completion, etc.)
+  useEffect(() => {
+    const handleScrollToBottom = (event) => {
+      console.log('🔽 Received scroll to bottom event:', event.detail);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100); // Small delay to ensure content is rendered
+    };
+
+    window.addEventListener('scrollChatToBottom', handleScrollToBottom);
+    
+    return () => {
+      window.removeEventListener('scrollChatToBottom', handleScrollToBottom);
+    };
+  }, []);
 
   // Build messages in proper order based on chat flow state and real timestamps
   useEffect(() => {
@@ -298,6 +327,14 @@ const ChatMessages = ({
     
     // Only update if there are actual changes
     setMessages(sortedMessages);
+    
+    // 🎯 AUTO-SCROLL: If we have new video content, scroll to bottom
+    const hasVideos = Object.keys(combinedVideosMap || {}).length > 0;
+    if (hasVideos && sortedMessages.some(msg => msg.id === "video-generation" || msg.id === "timeline-integration")) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 200); // Delay to ensure video components are rendered
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chatFlow.allUserMessages, // Now using real messages with timestamps
@@ -336,7 +373,7 @@ const ChatMessages = ({
               message.id === "video-generation" ||
               message.id === "timeline-integration"
                 ? "w-full p-0" // Full width and no padding/background for component messages
-                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-white/10`
+                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm `
             }`}
           >
             {message.content && (
@@ -393,7 +430,7 @@ const ChatMessages = ({
       {/* Error message */}
       {chatFlow.error && (
         <div className='flex justify-start'>
-          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-gray-900/50 backdrop-blur-sm border border-white/10'>
+          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-gray-900/50 backdrop-blur-sm'>
             <div className='text-xs'>❌ {chatFlow.error}</div>
             <button
               onClick={() => chatFlow.setError(null)}
@@ -410,7 +447,7 @@ const ChatMessages = ({
       {/* Agent Status and Approvals */}
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
-          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-white/10'>
+          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm '>
             {/* Enhanced Agent Working Indicator - Primary loader during streaming */}
             {chatFlow.isStreaming && (
               <VerboseAgentLoader 
@@ -424,38 +461,37 @@ const ChatMessages = ({
             {chatFlow.pendingApprovals && chatFlow.pendingApprovals.map((approval) => (
               <div key={approval.id} className='mb-3 last:mb-0'>
                 <div className='text-gray-100 font-medium mb-2 flex items-center gap-2'>
-                  <span>⏳</span>
                   <span>Approval Required</span>
                 </div>
                 
                 <div className='text-gray-300 text-sm mb-3'>
                   {approval.toolName === 'get_web_info' && (
                     <div>
-                      <div className='mb-1'>🔍 <strong>Web Research Request</strong></div>
+                      <div className='mb-1'><strong>Web Research Request</strong></div>
                       <div>I need permission to research web information for your prompt. This will help me understand current trends, gather relevant data, and provide more accurate and up-to-date concepts.</div>
                     </div>
                   )}
                   {approval.toolName === 'generate_concepts_with_approval' && (
                     <div>
-                      <div className='mb-1'>💡 <strong>Concept Generation Ready</strong></div>
+                      <div className='mb-1'><strong>Concept Generation Ready</strong></div>
                       <div>I'm ready to generate 4 unique content concepts based on the research. Each concept will include a title, description, and creative direction tailored to your request.</div>
                     </div>
                   )}
                   {approval.toolName === 'generate_segmentation' && (
                     <div>
-                      <div className='mb-1'>📜 <strong>Script Creation Ready</strong></div>
+                      <div className='mb-1'><strong>Script Creation Ready</strong></div>
                       <div>I can now create detailed script segmentation for the selected concept. This will break down your content into scenes with visual descriptions, narration, and animation prompts.</div>
                     </div>
                   )}
                   {approval.toolName === 'generate_image_with_approval' && (
                     <div>
-                      <div className='mb-1'>🎨 <strong>Image Generation Ready</strong></div>
+                      <div className='mb-1'><strong>Image Generation Ready</strong></div>
                       <div>I'm ready to generate high-quality images for each script segment. This will create visual assets that match your chosen art style and bring your script to life.</div>
                     </div>
                   )}
                   {approval.toolName === 'generate_video_with_approval' && (
                     <div>
-                      <div className='mb-1'>🎬 <strong>Video Generation Ready</strong></div>
+                      <div className='mb-1'><strong>Video Generation Ready</strong></div>
                       <div>I'm ready to create dynamic videos from your generated images. This will add motion and animation to transform static images into engaging video content.</div>
                     </div>
                   )}
@@ -466,13 +502,13 @@ const ChatMessages = ({
                     onClick={() => chatFlow.approveToolExecution(approval.id)}
                     className='bg-gray-600 hover:bg-gray-700 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
                   >
-                    ✅ Approve
+                    Approve
                   </button>
                   <button
                     onClick={() => chatFlow.rejectToolExecution(approval.id)}
                     className='bg-gray-800 hover:bg-gray-900 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
                   >
-                    ❌ Reject
+                    Reject
                   </button>
                 </div>
               </div>

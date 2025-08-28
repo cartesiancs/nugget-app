@@ -1129,26 +1129,26 @@ export const useChatFlow = () => {
     setError(null);
     setStreamMessages([]);
     setPendingApprovals([]);
-    setAgentActivity("🚀 Initializing agent workflow...");
+    setAgentActivity("Initializing agent workflow...");
     setStreamingProgress(null);
 
     // Add initial verbose messages to chat
     setAllUserMessages(prev => [...prev, 
       {
         id: `agent-init-${Date.now()}`,
-        content: "🚀 Initializing agent workflow - Setting up processing pipeline...",
+        content: "Initializing agent workflow - Setting up processing pipeline...",
         timestamp: Date.now(),
         type: 'system'
       },
       {
         id: `agent-analyzing-${Date.now() + 1}`,
-        content: "🔍 Analyzing your request and determining the best approach...",
+        content: "Analyzing your request and determining the best approach...",
         timestamp: Date.now() + 1,
         type: 'system'
       },
       {
         id: `agent-preparing-${Date.now() + 2}`,
-        content: "⚙️ Preparing tools and resources for content generation...",
+        content: "Preparing tools and resources for content generation...",
         timestamp: Date.now() + 2,
         type: 'system'
       }
@@ -1203,7 +1203,7 @@ export const useChatFlow = () => {
             await new Promise(resolve => setTimeout(resolve, 0));
           }
         } catch (error) {
-          console.error('❌ Stream processing error:', error);
+          console.error('Stream processing error:', error);
           throw error;
         }
       };
@@ -1220,6 +1220,152 @@ export const useChatFlow = () => {
     }
   }, [selectedProject?.id, user?.id]);
 
+  // Handle individual image completion from log messages
+  const handleIndividualImageCompletion = useCallback(async (segmentId, s3Key, imageData) => {
+    try {
+      console.log(`Processing individual image completion for segment ${segmentId}`);
+      
+      // Convert S3 key to CloudFront URL
+      const imageUrl = await s3Api.downloadImage(s3Key);
+      console.log(`Generated image URL for segment ${segmentId}:`, imageUrl);
+      
+      // Update generated images immediately
+      setGeneratedImages(prev => {
+        const newImages = { ...prev, [segmentId]: imageUrl };
+        console.log('Updated generated images (individual):', newImages);
+        return newImages;
+      });
+      
+      // Add individual success message to chat
+      setAllUserMessages(prev => [...prev, {
+        id: `image-individual-${segmentId}-${Date.now()}`,
+        content: `Image for segment ${segmentId} completed and ready!`,
+        timestamp: Date.now(),
+        type: 'success' 
+      }]);
+      
+      // Update agent activity
+      setAgentActivity(`Image completed for segment ${segmentId}`);
+      
+    } catch (error) {
+      console.error(`Failed to process image for segment ${segmentId}:`, error);
+      
+      // Add error message to chat
+      setAllUserMessages(prev => [...prev, {
+        id: `image-error-${segmentId}-${Date.now()}`,
+        content: `Failed to process image for segment ${segmentId}`,
+        timestamp: Date.now(),
+        type: 'error'
+      }]);
+    }
+  }, [s3Api]);
+
+  // Handle individual video completion from log messages
+  const handleIndividualVideoCompletion = useCallback(async (segmentId, s3Key, videoData) => {
+    try {
+      console.log(`Processing individual video completion for segment ${segmentId}`);
+      
+      // Convert S3 key to CloudFront URL
+      const videoUrl = await s3Api.downloadVideo(s3Key);
+      console.log(`Generated video URL for segment ${segmentId}:`, videoUrl);
+      
+      // Update generated videos immediately
+      setGeneratedVideos(prev => {
+        const newVideos = { ...prev, [segmentId]: videoUrl };
+        console.log('Updated generated videos (individual):', newVideos);
+        return newVideos;
+      });
+      
+      // Update stored videos map for timeline
+      setStoredVideosMap(prev => {
+        const updatedMap = { ...prev, [segmentId]: videoUrl };
+        
+        // Save to localStorage for persistence
+        if (selectedProject) {
+          localStorage.setItem(`project-store-videos`, JSON.stringify(updatedMap));
+        } else {
+          localStorage.setItem('segmentVideos', JSON.stringify(updatedMap));
+        }
+        return updatedMap;
+      });
+      
+      // Add individual success message to chat
+      setAllUserMessages(prev => [...prev, {
+        id: `video-individual-${segmentId}-${Date.now()}`,
+        content: `Video for segment ${segmentId} completed and ready!`,
+        timestamp: Date.now(),
+        type: 'success' 
+      }]);
+      
+      // Update agent activity
+      setAgentActivity(`Video completed for segment ${segmentId}`);
+      
+      // 🎯 TRIGGER CHAT SCROLL: Dispatch event to trigger chat scroll to bottom
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('scrollChatToBottom', { 
+          detail: { 
+            reason: 'video_completed',
+            segmentId: segmentId,
+            timestamp: Date.now()
+          } 
+        }));
+      }, 200); // Delay to ensure video UI components are updated
+      
+      // 🎯 AUTO-APPEND INDIVIDUAL VIDEO: Check if we should trigger auto-append
+      setTimeout(() => {
+        // Dispatch event for individual video completion
+        window.dispatchEvent(new CustomEvent('individualVideoCompleted', { 
+          detail: { 
+            segmentId,
+            videoUrl,
+            timestamp: Date.now()
+          } 
+        }));
+        
+        // Also check if we should trigger auto-append for individual videos
+        // Get current video count to see if we have multiple videos ready
+        setTimeout(() => {
+          setStoredVideosMap(currentStoredVideos => {
+            setGeneratedVideos(currentGeneratedVideos => {
+              const currentVideos = { ...currentGeneratedVideos, ...currentStoredVideos };
+              const currentVideoCount = Object.keys(currentVideos).length;
+              
+              console.log(`Individual video completed for ${segmentId}. Total videos: ${currentVideoCount}`);
+              
+              // If we have multiple videos (2+), trigger auto-append
+              if (currentVideoCount >= 2) {
+                console.log('Multiple videos detected, triggering auto-append for individual completion');
+                
+                window.dispatchEvent(new CustomEvent('autoAppendToTimeline', { 
+                  detail: { 
+                    successCount: currentVideoCount,
+                    source: 'individual_video_completion',
+                    segmentId: segmentId,
+                    timestamp: Date.now()
+                  } 
+                }));
+              }
+              
+              return currentGeneratedVideos; // Return unchanged
+            });
+            return currentStoredVideos; // Return unchanged
+          });
+        }, 500); // Small delay to let state updates settle
+      }, 100);
+      
+    } catch (error) {
+      console.error(`Failed to process video for segment ${segmentId}:`, error);
+      
+      // Add error message to chat
+      setAllUserMessages(prev => [...prev, {
+        id: `video-error-${segmentId}-${Date.now()}`,
+        content: `Failed to process video for segment ${segmentId}`,
+        timestamp: Date.now(),
+        type: 'error'
+      }]);
+    }
+  }, [selectedProject, s3Api]);
+
   const handleStreamMessage = useCallback(async (message) => {
     setStreamMessages(prev => [...prev, message]);
 
@@ -1227,13 +1373,97 @@ export const useChatFlow = () => {
       case 'log': {
         // Update agent activity with log message if it contains useful info
         const logMessage = message.data.message || message.data;
+        
+        // Handle individual image completion in log messages (similar to videos)
+        if(message.data?.ImageData?.s3_key && message.data?.segmentId){
+          console.log('Individual image completed:', message.data.ImageData);
+          const segmentId = message.data.segmentId;
+          const s3Key = message.data.ImageData.s3_key;
+          
+          // Process individual image completion
+          handleIndividualImageCompletion(segmentId, s3Key, message.data.ImageData);
+        }
+        
+        // Handle individual video completion in log messages
+        if(message.data?.VideoData?.s3_key && message.data?.segmentId){
+          console.log('Individual video completed:', message.data.VideoData);
+          const segmentId = message.data.segmentId;
+          const s3Key = message.data.VideoData.s3_key;
+          
+          // Process individual video completion
+          handleIndividualVideoCompletion(segmentId, s3Key, message.data.VideoData);
+        }
+        
+        // 🎯 CHECK FOR IMAGE BATCH COMPLETION: Look for completion summary messages
+        if (typeof logMessage === 'string' && logMessage.includes('Image generation') && logMessage.includes('completed:')) {
+          console.log('Image batch completion detected:', logMessage);
+          
+          // Extract counts from message like "Image generation completed: 5 success, 0 failed"
+          const successMatch = logMessage.match(/(\d+)\s+success/);
+          const successCount = successMatch ? parseInt(successMatch[1]) : 0;
+          
+          if (successCount > 0) {
+            console.log(`Detected ${successCount} images completed`);
+            
+            // Add message about image completion
+            setAllUserMessages(prev => [...prev, {
+              id: `agent-images-batch-${Date.now()}`,
+              content: `Image generation complete! Generated ${successCount} images successfully.`,
+              timestamp: Date.now(),
+              type: 'system'
+            }]);
+          }
+        }
+        
+        // 🎯 CHECK FOR VIDEO BATCH COMPLETION: Look for completion summary messages
+        if (typeof logMessage === 'string' && logMessage.includes('Video generation') && logMessage.includes('completed:')) {
+          console.log('Video batch completion detected:', logMessage);
+          
+          // Extract counts from message like "Video generation completed: 3 success, 0 failed"
+          const successMatch = logMessage.match(/(\d+)\s+success/);
+          const successCount = successMatch ? parseInt(successMatch[1]) : 0;
+          
+          if (successCount > 0) {
+            console.log(`Detected ${successCount} videos completed, triggering auto-append`);
+            
+            // Trigger auto-append after a short delay to ensure all videos are processed
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('autoAppendToTimeline', { 
+                detail: { 
+                  successCount: successCount,
+                  source: 'video_batch_completion',
+                  timestamp: Date.now()
+                } 
+              }));
+              
+              // Add message about automatic timeline append
+              setAllUserMessages(prev => [...prev, {
+                id: `agent-timeline-auto-batch-${Date.now()}`,
+                content: `Video generation complete! Automatically adding ${successCount} videos to timeline...`,
+                timestamp: Date.now(),
+                type: 'system'
+              }]);
+              
+              // 🎯 TRIGGER CHAT SCROLL: Scroll to bottom to show completion message
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('scrollChatToBottom', { 
+                  detail: { 
+                    reason: 'video_batch_completed',
+                    successCount: successCount,
+                    timestamp: Date.now()
+                  } 
+                }));
+              }, 100); // Small delay to ensure message is rendered
+            }, 1000); // Slightly longer delay for batch completion
+          }
+        }
         if (typeof logMessage === 'string') {
           setAgentActivity(logMessage);
           
           // Also add verbose log messages to chat for transparency
           setAllUserMessages(prev => [...prev, {
             id: `agent-log-${Date.now()}-${Math.random()}`,
-            content: `🔍 Agent: ${logMessage}`,
+            content: `Agent: ${logMessage}`,
             timestamp: Date.now(),
             type: 'system'
           }]);
@@ -1249,7 +1479,7 @@ export const useChatFlow = () => {
         // Add thinking message to chat
         setAllUserMessages(prev => [...prev, {
           id: `agent-thinking-${Date.now()}`,
-          content: `💭 ${thinkingMessage}`,
+          content: `${thinkingMessage}`,
           timestamp: Date.now(),
           type: 'system'
         }]);
@@ -1285,7 +1515,7 @@ export const useChatFlow = () => {
         if (message.data.message) {
           setAllUserMessages(prev => [...prev, {
             id: `agent-progress-${Date.now()}`,
-            content: `⚙️ Progress: ${message.data.message}`,
+            content: `Progress: ${message.data.message}`,
             timestamp: Date.now(),
             type: 'system'
           }]);
@@ -1357,7 +1587,7 @@ export const useChatFlow = () => {
       }
 
       case 'completed': {
-        const taskCompleteMessage = "✅ Task completed successfully!";
+        const taskCompleteMessage = "Task completed successfully!";
         setAgentActivity(taskCompleteMessage);
         setStreamingProgress(null);
         setIsStreaming(false);
@@ -1377,7 +1607,7 @@ export const useChatFlow = () => {
       }
 
       case 'error': {
-        const errorMessage = `❌ Error: ${message.data.message}`;
+        const errorMessage = `Error: ${message.data.message}`;
         setAgentActivity(errorMessage);
         setStreamingProgress(null);
         setError(message.data.message);
@@ -1404,51 +1634,51 @@ export const useChatFlow = () => {
   const getToolStartMessage = useCallback((toolName) => {
     switch (toolName) {
       case 'get_web_info':
-        return "🔍 Researching web information - Gathering relevant content and insights for your video concept";
+        return "Researching web information - Gathering relevant content and insights for your video concept";
       case 'generate_concepts_with_approval':
-        return "💡 Concept generation running - Analyzing research data and creating multiple creative video concepts";
+        return "Concept generation running - Analyzing research data and creating multiple creative video concepts";
       case 'generate_segmentation':
-        return "📜 Script generation running - Breaking down your concept into detailed segments with visuals and narration";
+        return "Script generation running - Breaking down your concept into detailed segments with visuals and narration";
       case 'generate_image_with_approval':
-        return "🎨 Image generation running - Creating visual content for each script segment using AI";
+        return "Image generation running - Creating visual content for each script segment using AI";
       case 'generate_video_with_approval':
-        return "🎬 Video generation running - Converting images into dynamic video content with animations";
+        return "Video generation running - Converting images into dynamic video content with animations";
       default:
-        return `🔄 Agent processing - ${toolName}`;
+        return `Agent processing - ${toolName}`;
     }
   }, []);
 
   const getApprovalMessage = useCallback((toolName) => {
     switch (toolName) {
       case 'get_web_info':
-        return "⏳ Web research approval - Ready to gather relevant information for your video concept";
+        return "Web research approval - Ready to gather relevant information for your video concept";
       case 'generate_concepts_with_approval':
-        return "⏳ Concept generation approval - Ready to create multiple video concepts from research data";
+        return "Concept generation approval - Ready to create multiple video concepts from research data";
       case 'generate_segmentation':
-        return "⏳ Script generation approval - Ready to break down your concept into detailed segments";
+        return "Script generation approval - Ready to break down your concept into detailed segments";
       case 'generate_image_with_approval':
-        return "⏳ Image generation approval - Ready to create visual content for each script segment";
+        return "Image generation approval - Ready to create visual content for each script segment";
       case 'generate_video_with_approval':
-        return "⏳ Video generation approval - Ready to convert images into dynamic video content";
+        return "Video generation approval - Ready to convert images into dynamic video content";
       default:
-        return `⏳ Approval required - ${toolName}`;
+        return `Approval required - ${toolName}`;
     }
   }, []);
 
   const getToolCompleteMessage = useCallback((toolName) => {
     switch (toolName) {
       case 'get_web_info':
-        return "✅ Web research completed - Information gathered and processed for concept creation";
+        return "Web research completed - Information gathered and processed for concept creation";
       case 'generate_concepts_with_approval':
-        return "✅ Concept generation completed - Multiple video concepts created and ready for selection";
+        return "Concept generation completed - Multiple video concepts created and ready for selection";
       case 'generate_segmentation':
-        return "✅ Script generation completed - Detailed segments with visuals and narration ready";
+        return "Script generation completed - Detailed segments with visuals and narration ready";
       case 'generate_image_with_approval':
-        return "✅ Image generation completed - Visual content created for all script segments";
+        return "Image generation completed - Visual content created for all script segments";
       case 'generate_video_with_approval':
-        return "✅ Video generation completed - Dynamic video content ready for timeline";
+        return "Video generation completed - Dynamic video content ready for timeline";
       default:
-        return `✅ ${toolName} completed successfully`;
+        return `${toolName} completed successfully`;
     }
   }, []);
 
@@ -1476,8 +1706,8 @@ export const useChatFlow = () => {
   }, []);
 
   const handleToolResult = useCallback(async (result) => {
-    console.log('🎯 Tool result received:', result);
-    console.log('🔍 Result data structure:', {
+    console.log('Tool result received:', result);
+    console.log('Result data structure:', {
       hasData: !!result.data,
       dataType: typeof result.data,
       isArray: Array.isArray(result.data),
@@ -1489,17 +1719,17 @@ export const useChatFlow = () => {
     });
 
     // Update agent activity based on result type
-    setAgentActivity("🔄 Processing results and updating interface...");
+    setAgentActivity("Processing results and updating interface...");
     
     // Add result processing message to chat
     setAllUserMessages(prev => [...prev, {
       id: `agent-processing-${Date.now()}`,
-      content: "🔄 Processing results and updating interface...",
+      content: "Processing results and updating interface...",
       timestamp: Date.now(),
       type: 'system'
     }]);
 
-    console.log('🧪 TESTING: About to check image conditions...');
+    console.log('TESTING: About to check image conditions...');
 
     // Check for image generation results FIRST (highest priority)
     const imageConditions = {
@@ -1511,13 +1741,13 @@ export const useChatFlow = () => {
       isDataResultsArray: Array.isArray(result.data && result.data.results)
     };
     
-    console.log('🔍 Checking image generation conditions:', imageConditions);
+    console.log('Checking image generation conditions:', imageConditions);
     
     const condition1 = result.results && Array.isArray(result.results);
     const condition2 = result.data?.results && Array.isArray(result.data.results);
     const finalCondition = condition1 || condition2;
     
-    console.log('🧮 Condition evaluation:', {
+    console.log('Condition evaluation:', {
       condition1: condition1,
       condition2: condition2,
       finalCondition: finalCondition
@@ -1526,12 +1756,12 @@ export const useChatFlow = () => {
     if (finalCondition) {
       console.log('✅ IMAGE CONDITION MET - Processing images...');
       
-      setAgentActivity("🎨 Processing generated images and creating URLs...");
+      setAgentActivity("Processing generated images and creating URLs...");
       
       // Add detailed image processing message to chat
       setAllUserMessages(prev => [...prev, {
         id: `agent-image-processing-${Date.now()}`,
-        content: "🎨 Image generation successful! Converting S3 keys to downloadable URLs...",
+        content: "Image generation successful! Converting S3 keys to downloadable URLs...",
         timestamp: Date.now(),
         type: 'system'
       }]);
@@ -1555,7 +1785,7 @@ export const useChatFlow = () => {
             // Add individual image processing message
             setAllUserMessages(prev => [...prev, {
               id: `agent-image-${item.segmentId}-${Date.now()}`,
-              content: `🖼️ Processing image for segment ${item.segmentId} - Converting to downloadable URL...`,
+              content: `Processing image for segment ${item.segmentId} - Converting to downloadable URL...`,
               timestamp: Date.now(),
               type: 'system'
             }]);
@@ -1568,7 +1798,7 @@ export const useChatFlow = () => {
             // Add success message for individual image
             setAllUserMessages(prev => [...prev, {
               id: `agent-image-success-${item.segmentId}-${Date.now()}`,
-              content: `✅ Image for segment ${item.segmentId} is ready!`,
+              content: `Image for segment ${item.segmentId} is ready!`,
               timestamp: Date.now(),
               type: 'system'
             }]);
@@ -1599,7 +1829,7 @@ export const useChatFlow = () => {
         const successCount = Object.keys(imagesMap).length;
         setAllUserMessages(prev => [...prev, {
           id: `agent-images-${Date.now()}`,
-          content: `🎨 Perfect! I've generated ${successCount} images for your script segments. You can see them below and proceed to video generation!`,
+          content: `Perfect! I've generated ${successCount} images for your script segments. You can see them below and proceed to video generation!`,
           timestamp: Date.now(),
           type: 'system'
         }]);
@@ -1689,7 +1919,7 @@ export const useChatFlow = () => {
       if (isVideoResult) {
         console.log('✅ VIDEO CONDITION MET - Processing videos...');
         
-        setAgentActivity("🎬 Processing generated videos and creating URLs...");
+        setAgentActivity("Processing generated videos and creating URLs...");
         
         // Add detailed video processing message to chat
         setAllUserMessages(prev => [...prev, {
@@ -1748,7 +1978,7 @@ export const useChatFlow = () => {
                 // Add success message for individual video
                 setAllUserMessages(prev => [...prev, {
                   id: `agent-video-success-${segmentId}-${Date.now()}`,
-                  content: `✅ Video for segment ${segmentId} is ready!`,
+                  content: `Video for segment ${segmentId} is ready!`,
                   timestamp: Date.now(),
                   type: 'system'
                 }]);
@@ -1860,26 +2090,26 @@ export const useChatFlow = () => {
     if (result.data) {
       // Handle concept generation results
       if (result.data.concepts) {
-        setAgentActivity("💡 Processing generated concepts and preparing selection...");
+        setAgentActivity("Processing generated concepts and preparing selection...");
         console.log('📝 Setting concepts in UI:', result.data.concepts);
         
         // Add verbose processing messages
         setAllUserMessages(prev => [...prev, 
           {
             id: `agent-concept-processing-${Date.now()}`,
-            content: "💡 Processing generated concepts and preparing selection interface...",
+            content: "Processing generated concepts and preparing selection interface...",
             timestamp: Date.now(),
             type: 'system'
           },
           {
             id: `agent-concept-analysis-${Date.now() + 1}`,
-            content: `📊 Received ${result.data.concepts.length} unique video concepts from AI analysis`,
+            content: `Received ${result.data.concepts.length} unique video concepts from AI analysis`,
             timestamp: Date.now() + 1,
             type: 'system'
           },
           {
             id: `agent-concept-ready-${Date.now() + 2}`,
-            content: "✨ Concepts are now ready for your review and selection!",
+            content: "Concepts are now ready for your review and selection!",
             timestamp: Date.now() + 2,
             type: 'system'
           }
@@ -1903,7 +2133,7 @@ export const useChatFlow = () => {
       
       // Also check if result.data has concept array directly
       if (Array.isArray(result.data) && result.data.length > 0 && result.data[0].title) {
-        setAgentActivity("💡 Processing generated concepts and preparing selection...");
+        setAgentActivity("Processing generated concepts and preparing selection...");
         console.log('📝 Setting concepts from array format:', result.data);
         setConcepts(result.data);
         updateStepStatus(0, "done");
@@ -1923,25 +2153,25 @@ export const useChatFlow = () => {
 
       // Handle segmentation results
       if (result.data.segments) {
-        setAgentActivity("📜 Processing script segments and preparing for image generation...");
+        setAgentActivity("Processing script segments and preparing for image generation...");
         
         // Add verbose script processing messages
         setAllUserMessages(prev => [...prev, 
           {
             id: `agent-script-processing-${Date.now()}`,
-            content: "📜 Processing script segments and analyzing narrative structure...",
+            content: "Processing script segments and analyzing narrative structure...",
             timestamp: Date.now(),
             type: 'system'
           },
           {
             id: `agent-script-breakdown-${Date.now() + 1}`,
-            content: `🎬 Successfully created ${result.data.segments.length} detailed script segments with visuals and narration`,
+            content: `Successfully created ${result.data.segments.length} detailed script segments with visuals and narration`,
             timestamp: Date.now() + 1,
             type: 'system'
           },
           {
             id: `agent-script-ready-${Date.now() + 2}`,
-            content: "🎯 Script is ready for image generation phase!",
+            content: "Script is ready for image generation phase!",
             timestamp: Date.now() + 2,
             type: 'system'
           }
@@ -2056,7 +2286,7 @@ export const useChatFlow = () => {
       if (approval) {
         setAllUserMessages(prev => [...prev, {
           id: `user-approval-${Date.now()}`,
-          content: `✅ Approved: ${getToolApprovalConfirmationMessage(approval.toolName)}`,
+          content: `Approved: ${getToolApprovalConfirmationMessage(approval.toolName)}`,
           timestamp: Date.now(),
           type: 'user'
         }]);

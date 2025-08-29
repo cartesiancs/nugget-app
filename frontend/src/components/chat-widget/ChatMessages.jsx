@@ -362,8 +362,8 @@ const ChatMessages = ({
         <div
           key={message.id}
           className={`flex ${
-            message.type === "user" ? "justify-end" : "justify-start"
-          }`}
+            message.type === "user" ? "justify-end items-end" : "justify-start items-start"
+          } `}
         >
           <div
             className={`${
@@ -373,7 +373,7 @@ const ChatMessages = ({
               message.id === "video-generation" ||
               message.id === "timeline-integration"
                 ? "w-full p-0" // Full width and no padding/background for component messages
-                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm `
+                : `max-w-[80%] p-2.5 text-white rounded-lg  ${ message.type === "user" ? "bg-[#18191C80] rounded-lg backdrop-blur-sm" : ""} `
             }`}
           >
             {message.content && (
@@ -391,7 +391,7 @@ const ChatMessages = ({
       {/* Simple Loading indicator - only show when NOT streaming */}
       {chatFlow.loading && !chatFlow.isStreaming && (
         <div className='flex justify-start'>
-          <div className='text-gray-100 rounded-lg p-2.5 bg-gray-900/50 backdrop-blur-sm border border-white/10'>
+          <div className='text-gray-100 rounded-lg p-2.5  backdrop-blur-sm border border-white/10'>
             <div className='flex items-center space-x-2'>
               <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400'></div>
               <div className='flex flex-col'>
@@ -447,7 +447,7 @@ const ChatMessages = ({
       {/* Agent Status and Approvals */}
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
-          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm '>
+          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg backdrop-blur-sm '>
             {/* Enhanced Agent Working Indicator - Primary loader during streaming */}
             {chatFlow.isStreaming && (
               <VerboseAgentLoader 

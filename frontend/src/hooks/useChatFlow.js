@@ -1140,18 +1140,6 @@ export const useChatFlow = () => {
         timestamp: Date.now(),
         type: 'system'
       },
-      {
-        id: `agent-analyzing-${Date.now() + 1}`,
-        content: "Analyzing your request and determining the best approach...",
-        timestamp: Date.now() + 1,
-        type: 'system'
-      },
-      {
-        id: `agent-preparing-${Date.now() + 2}`,
-        content: "Preparing tools and resources for content generation...",
-        timestamp: Date.now() + 2,
-        type: 'system'
-      }
     ]);
 
     try {
@@ -1237,12 +1225,12 @@ export const useChatFlow = () => {
       });
       
       // Add individual success message to chat
-      setAllUserMessages(prev => [...prev, {
-        id: `image-individual-${segmentId}-${Date.now()}`,
-        content: `Image for segment ${segmentId} completed and ready!`,
-        timestamp: Date.now(),
-        type: 'success' 
-      }]);
+      // setAllUserMessages(prev => [...prev, {
+      //   id: `image-individual-${segmentId}-${Date.now()}`,
+      //   content: `Image for segment ${segmentId} completed and ready!`,
+      //   timestamp: Date.now(),
+      //   type: 'success' 
+      // }]);
       
       // Update agent activity
       setAgentActivity(`Image completed for segment ${segmentId}`);
@@ -1290,12 +1278,12 @@ export const useChatFlow = () => {
       });
       
       // Add individual success message to chat
-      setAllUserMessages(prev => [...prev, {
-        id: `video-individual-${segmentId}-${Date.now()}`,
-        content: `Video for segment ${segmentId} completed and ready!`,
-        timestamp: Date.now(),
-        type: 'success' 
-      }]);
+      // setAllUserMessages(prev => [...prev, {
+      //   id: `video-individual-${segmentId}-${Date.now()}`,
+      //   content: `Video for segment ${segmentId} completed and ready!`,
+      //   timestamp: Date.now(),
+      //   type: 'success' 
+      // }]);
       
       // Update agent activity
       setAgentActivity(`Video completed for segment ${segmentId}`);
@@ -1461,12 +1449,12 @@ export const useChatFlow = () => {
           setAgentActivity(logMessage);
           
           // Also add verbose log messages to chat for transparency
-          setAllUserMessages(prev => [...prev, {
-            id: `agent-log-${Date.now()}-${Math.random()}`,
-            content: `Agent: ${logMessage}`,
-            timestamp: Date.now(),
-            type: 'system'
-          }]);
+          // setAllUserMessages(prev => [...prev, {
+          //   id: `agent-log-${Date.now()}-${Math.random()}`,
+          //   content: `Agent: ${logMessage}`,
+          //   timestamp: Date.now(),
+          //   type: 'system'
+          // }]);
         }
         break;
       }
@@ -1477,12 +1465,12 @@ export const useChatFlow = () => {
         setAgentActivity(thinkingMessage);
         
         // Add thinking message to chat
-        setAllUserMessages(prev => [...prev, {
-          id: `agent-thinking-${Date.now()}`,
-          content: `${thinkingMessage}`,
-          timestamp: Date.now(),
-          type: 'system'
-        }]);
+        // setAllUserMessages(prev => [...prev, {
+        //   id: `agent-thinking-${Date.now()}`,
+        //   content: `${thinkingMessage}`,
+        //   timestamp: Date.now(),
+        //   type: 'system'
+        // }]);
         break;
       }
 
@@ -1494,12 +1482,12 @@ export const useChatFlow = () => {
         setStreamingProgress({ step: toolName, status: 'starting' });
         
         // Add detailed tool start message to chat
-        setAllUserMessages(prev => [...prev, {
-          id: `agent-tool-start-${Date.now()}`,
-          content: startMessage,
-          timestamp: Date.now(),
-          type: 'system'
-        }]);
+        // setAllUserMessages(prev => [...prev, {
+        //   id: `agent-tool-start-${Date.now()}`,
+        //   content: startMessage,
+        //   timestamp: Date.now(),
+        //   type: 'system'
+        // }]);
         break;
       }
 
@@ -1513,12 +1501,12 @@ export const useChatFlow = () => {
         
         // Add progress updates to chat
         if (message.data.message) {
-          setAllUserMessages(prev => [...prev, {
-            id: `agent-progress-${Date.now()}`,
-            content: `Progress: ${message.data.message}`,
-            timestamp: Date.now(),
-            type: 'system'
-          }]);
+          // setAllUserMessages(prev => [...prev, {
+          //   id: `agent-progress-${Date.now()}`,
+          //   content: `Progress: ${message.data.message}`,
+          //   timestamp: Date.now(),
+          //   type: 'system'
+          // }]);
         }
         break;
 
@@ -1530,12 +1518,12 @@ export const useChatFlow = () => {
         setAgentActivity(approvalMessage);
         
         // Add approval request to chat with detailed information
-        setAllUserMessages(prev => [...prev, {
-          id: `agent-approval-${Date.now()}`,
-          content: approvalMessage,
-          timestamp: Date.now(),
-          type: 'system'
-        }]);
+        // setAllUserMessages(prev => [...prev, {
+        //   id: `agent-approval-${Date.now()}`,
+        //   content: approvalMessage,
+        //   timestamp: Date.now(),
+        //   type: 'system'
+        // }]);
         
         // Parse arguments if they come as JSON string
         let parsedArgs = args;
@@ -1722,12 +1710,12 @@ export const useChatFlow = () => {
     setAgentActivity("Processing results and updating interface...");
     
     // Add result processing message to chat
-    setAllUserMessages(prev => [...prev, {
-      id: `agent-processing-${Date.now()}`,
-      content: "Processing results and updating interface...",
-      timestamp: Date.now(),
-      type: 'system'
-    }]);
+    // setAllUserMessages(prev => [...prev, {
+    //   id: `agent-processing-${Date.now()}`,
+    //   content: "Processing results and updating interface...",
+    //   timestamp: Date.now(),
+    //   type: 'system'
+    // }]);
 
     console.log('TESTING: About to check image conditions...');
 
@@ -1759,12 +1747,12 @@ export const useChatFlow = () => {
       setAgentActivity("Processing generated images and creating URLs...");
       
       // Add detailed image processing message to chat
-      setAllUserMessages(prev => [...prev, {
-        id: `agent-image-processing-${Date.now()}`,
-        content: "Image generation successful! Converting S3 keys to downloadable URLs...",
-        timestamp: Date.now(),
-        type: 'system'
-      }]);
+      // setAllUserMessages(prev => [...prev, {
+      //   id: `agent-image-processing-${Date.now()}`,
+      //   content: "Image generation successful! Converting S3 keys to downloadable URLs...",
+      //   timestamp: Date.now(),
+      //   type: 'system'
+      // }]);
       
       console.log('🎨 Processing image generation results:', result);
       
@@ -1783,12 +1771,12 @@ export const useChatFlow = () => {
             console.log(`🔄 Converting S3 key to URL for ${item.segmentId}:`, item.imageData.s3_key);
             
             // Add individual image processing message
-            setAllUserMessages(prev => [...prev, {
-              id: `agent-image-${item.segmentId}-${Date.now()}`,
-              content: `Processing image for segment ${item.segmentId} - Converting to downloadable URL...`,
-              timestamp: Date.now(),
-              type: 'system'
-            }]);
+            // setAllUserMessages(prev => [...prev, {
+            //   id: `agent-image-${item.segmentId}-${Date.now()}`,
+            //   content: `Processing image for segment ${item.segmentId} - Converting to downloadable URL...`,
+            //   timestamp: Date.now(),
+            //   type: 'system'
+            // }]);
             
             // Convert S3 key to full CloudFront URL
             const imageUrl = await s3Api.downloadImage(item.imageData.s3_key);
@@ -1796,12 +1784,12 @@ export const useChatFlow = () => {
             imagesMap[item.segmentId] = imageUrl;
             
             // Add success message for individual image
-            setAllUserMessages(prev => [...prev, {
-              id: `agent-image-success-${item.segmentId}-${Date.now()}`,
-              content: `Image for segment ${item.segmentId} is ready!`,
-              timestamp: Date.now(),
-              type: 'system'
-            }]);
+            // setAllUserMessages(prev => [...prev, {
+            //   id: `agent-image-success-${item.segmentId}-${Date.now()}`,
+            //   content: `Image for segment ${item.segmentId} is ready!`,
+            //   timestamp: Date.now(),
+            //   type: 'system'
+            // }]);
           } catch (error) {
             console.error(`Failed to get image URL for segment ${item.segmentId}:`, error);
             failedSegments.push(item.segmentId);
@@ -1976,12 +1964,12 @@ export const useChatFlow = () => {
                 videosMap[segmentId] = videoUrl;
                 
                 // Add success message for individual video
-                setAllUserMessages(prev => [...prev, {
-                  id: `agent-video-success-${segmentId}-${Date.now()}`,
-                  content: `Video for segment ${segmentId} is ready!`,
-                  timestamp: Date.now(),
-                  type: 'system'
-                }]);
+                // setAllUserMessages(prev => [...prev, {
+                //   id: `agent-video-success-${segmentId}-${Date.now()}`,
+                //   content: `Video for segment ${segmentId} is ready!`,
+                //   timestamp: Date.now(),
+                //   type: 'system'
+                // }]);
               } else {
                 console.warn(`No S3 key found in videoData for segment ${segmentId}:`, item.videoData);
                 failedVideoSegments.push(segmentId);
@@ -2094,26 +2082,26 @@ export const useChatFlow = () => {
         console.log('📝 Setting concepts in UI:', result.data.concepts);
         
         // Add verbose processing messages
-        setAllUserMessages(prev => [...prev, 
-          {
-            id: `agent-concept-processing-${Date.now()}`,
-            content: "Processing generated concepts and preparing selection interface...",
-            timestamp: Date.now(),
-            type: 'system'
-          },
-          {
-            id: `agent-concept-analysis-${Date.now() + 1}`,
-            content: `Received ${result.data.concepts.length} unique video concepts from AI analysis`,
-            timestamp: Date.now() + 1,
-            type: 'system'
-          },
-          {
-            id: `agent-concept-ready-${Date.now() + 2}`,
-            content: "Concepts are now ready for your review and selection!",
-            timestamp: Date.now() + 2,
-            type: 'system'
-          }
-        ]);
+        // setAllUserMessages(prev => [...prev, 
+          // {
+          //   id: `agent-concept-processing-${Date.now()}`,
+          //   content: "Processing generated concepts and preparing selection interface...",
+          //   timestamp: Date.now(),
+          //   type: 'system'
+          // },
+          // {
+          //   id: `agent-concept-analysis-${Date.now() + 1}`,
+          //   content: `Received ${result.data.concepts.length} unique video concepts from AI analysis`,
+          //   timestamp: Date.now() + 1,
+          //   type: 'system'
+          // },
+          // {
+          //   id: `agent-concept-ready-${Date.now() + 2}`,
+          //   content: "Concepts are now ready for your review and selection!",
+          //   timestamp: Date.now() + 2,
+          //   type: 'system'
+          // }
+        // ]);
         
         setConcepts(result.data.concepts);
         updateStepStatus(0, "done");
@@ -2122,7 +2110,7 @@ export const useChatFlow = () => {
         // Add agent message showing concepts
         setAllUserMessages(prev => [...prev, {
           id: `agent-concepts-${Date.now() + 3}`,
-          content: "I've generated 4 video concepts for you! Please select the one you'd like to develop:",
+          content: `I've generated ${result.data.concepts.length} video concepts for you! Please select the one you'd like to develop:`,
           timestamp: Date.now() + 3,
           type: 'system'
         }]);

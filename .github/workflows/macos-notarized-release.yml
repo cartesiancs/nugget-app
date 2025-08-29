@@ -34,11 +34,21 @@ jobs:
       - name: Build app assets (widgets/render/etc.)
         run: npm run prebuild:mac
 
+      - name: Prepare notarytool API key
+        run: |
+          echo "NOTARYTOOL_KEY_ID=${{ secrets.ASC_KEY_ID }}" >> $GITHUB_ENV
+          echo "NOTARYTOOL_ISSUER_ID=${{ secrets.ASC_ISSUER_ID }}" >> $GITHUB_ENV
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > $RUNNER_TEMP/AuthKey.p8
+          echo "NOTARYTOOL_KEY_FILE=$RUNNER_TEMP/AuthKey.p8" >> $GITHUB_ENV
+
       - name: Build, sign, notarize, staple (DMG)
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARYTOOL_KEY_ID: ${{ env.NOTARYTOOL_KEY_ID }}
+          NOTARYTOOL_ISSUER_ID: ${{ env.NOTARYTOOL_ISSUER_ID }}
+          NOTARYTOOL_KEY_FILE: ${{ env.NOTARYTOOL_KEY_FILE }}
           DEBUG: electron-osx-sign*,electron-osx-sign
         run: npm run build:mac
 

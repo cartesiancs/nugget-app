@@ -65,7 +65,7 @@ const FinalWorkingInterface = () => {
     const timer = setTimeout(() => {
       window.dispatchEvent(new CustomEvent("chatInterface:open"));
     }, 100);
-    
+
     // Cleanup: dispatch close event when component unmounts
     return () => {
       clearTimeout(timer);
@@ -76,7 +76,9 @@ const FinalWorkingInterface = () => {
   // Force hide timeline elements immediately if interface is open
   useEffect(() => {
     const hideElements = () => {
-      const chatToggleContainer = document.getElementById("chat-toggle-container");
+      const chatToggleContainer = document.getElementById(
+        "chat-toggle-container",
+      );
       const leftActionBar = document.getElementById("left-action-bar");
       const controlPanel = document.querySelector("control-panel");
       const timelineUI = document.getElementById("split_bottom");
@@ -95,25 +97,25 @@ const FinalWorkingInterface = () => {
     if (interfaceOpen) {
       // Hide immediately
       hideElements();
-      
+
       // Set up periodic check to ensure elements stay hidden (in case App.ts recreates them)
       const interval = setInterval(hideElements, 500);
-      
+
       return () => clearInterval(interval);
     }
   }, [interfaceOpen]);
-  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openDropdownId && !event.target.closest('.dropdown-container')) {
+      if (openDropdownId && !event.target.closest(".dropdown-container")) {
         setOpenDropdownId(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openDropdownId]);
 
@@ -333,7 +335,7 @@ const FinalWorkingInterface = () => {
 
       // Close the chat interface overlay and dispatch close event
       window.dispatchEvent(new CustomEvent("chatInterface:close"));
-      
+
       if (typeof window.hideChatInterface === "function") {
         window.hideChatInterface();
       } else {
@@ -407,9 +409,10 @@ const FinalWorkingInterface = () => {
   // Helper function to trigger Google sign in
   const triggerGoogleSignIn = () => {
     // Find and click the ChatLoginButton
-    const loginButton = document.querySelector('[data-login-button]') || 
-                       document.querySelector('button[aria-label*="login"]') ||
-                       document.querySelector('button[class*="login"]');
+    const loginButton =
+      document.querySelector("[data-login-button]") ||
+      document.querySelector('button[aria-label*="login"]') ||
+      document.querySelector('button[class*="login"]');
     if (loginButton) {
       loginButton.click();
     } else {
@@ -423,56 +426,60 @@ const FinalWorkingInterface = () => {
   // Dummy project data for non-authenticated users
   const dummyProjects = [
     {
-      id: 'demo-1',
-      name: 'AI Nature Documentary',
-      description: 'A stunning wildlife video created with AI',
-      thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
-      updatedAt: '2024-01-15T10:30:00Z',
-      hasMedia: true
+      id: "demo-1",
+      name: "AI Nature Documentary",
+      description: "A stunning wildlife video created with AI",
+      thumbnail:
+        "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop",
+      updatedAt: "2024-01-15T10:30:00Z",
+      hasMedia: true,
     },
     {
-      id: 'demo-2',
-      name: 'Product Showcase',
-      description: 'Professional product video with dynamic animations',
-      thumbnail: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-      updatedAt: '2024-01-14T15:20:00Z',
-      hasMedia: true
+      id: "demo-2",
+      name: "Product Showcase",
+      description: "Professional product video with dynamic animations",
+      thumbnail:
+        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
+      updatedAt: "2024-01-14T15:20:00Z",
+      hasMedia: true,
     },
     {
-      id: 'demo-3',
-      name: 'Travel Adventure',
-      description: 'Epic travel montage with AI-generated scenes',
-      thumbnail: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop',
-      updatedAt: '2024-01-13T09:45:00Z',
-      hasMedia: true
+      id: "demo-3",
+      name: "Travel Adventure",
+      description: "Epic travel montage with AI-generated scenes",
+      thumbnail:
+        "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop",
+      updatedAt: "2024-01-13T09:45:00Z",
+      hasMedia: true,
     },
     {
-      id: 'demo-4',
-      name: 'Corporate Explainer',
-      description: 'Clean and professional AI video for business presentations',
-      thumbnail: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop',
-      updatedAt: '2024-01-12T11:10:00Z',
-      hasMedia: true
+      id: "demo-4",
+      name: "Corporate Explainer",
+      description: "Clean and professional AI video for business presentations",
+      thumbnail:
+        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop",
+      updatedAt: "2024-01-12T11:10:00Z",
+      hasMedia: true,
     },
     {
-      id: 'demo-5',
-      name: 'Music Visualizer',
-      description: 'Dynamic visuals synced perfectly with music beats',
-      thumbnail: 'https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=400&h=300&fit=crop',
-      updatedAt: '2024-01-11T14:50:00Z',
-      hasMedia: true
+      id: "demo-5",
+      name: "Music Visualizer",
+      description: "Dynamic visuals synced perfectly with music beats",
+      thumbnail:
+        "https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=400&h=300&fit=crop",
+      updatedAt: "2024-01-11T14:50:00Z",
+      hasMedia: true,
     },
     {
-      id: 'demo-6',
-      name: 'Fashion Lookbook',
-      description: 'Stylish AI-generated fashion video with modern aesthetics',
-      thumbnail: 'https://unsplash.com/photos/a-rack-of-clothes-and-hats-in-a-room-_a_FlMKo4Lk?w=400&h=300&fit=crop',
-      updatedAt: '2024-01-10T17:25:00Z',
-      hasMedia: true
-    }
+      id: "demo-6",
+      name: "Fashion Lookbook",
+      description: "Stylish AI-generated fashion video with modern aesthetics",
+      thumbnail:
+        "https://unsplash.com/photos/a-rack-of-clothes-and-hats-in-a-room-_a_FlMKo4Lk?w=400&h=300&fit=crop",
+      updatedAt: "2024-01-10T17:25:00Z",
+      hasMedia: true,
+    },
   ];
-  
-  
 
   // Login screen - Same layout as logged in page
   if (!isAuthenticated) {
@@ -485,12 +492,25 @@ const FinalWorkingInterface = () => {
             <h1 className='text-white text-2xl font-bold'>Usuals.ai</h1>
           </div>
           <div className='flex items-center gap-3'>
-            <div 
+            <div
               onClick={triggerGoogleSignIn}
               className='bg-[#FFFFFF0D] hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer'
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                width='16'
+                height='16'
+                viewBox='0 0 16 16'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'
+              >
+                <path
+                  d='M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711'
+                  stroke='white'
+                  strokeOpacity='0.5'
+                  strokeWidth='1.5'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
               </svg>
               <span>Invite</span>
             </div>
@@ -504,7 +524,7 @@ const FinalWorkingInterface = () => {
             user={null}
             creditBalance={0}
             loading={false}
-            activeSection="recents"
+            activeSection='recents'
             onSectionChange={() => {}}
             onToggleAllProjects={() => {}}
             onPurchaseCredits={triggerGoogleSignIn}
@@ -536,7 +556,7 @@ const FinalWorkingInterface = () => {
                     />
                     <div
                       onClick={triggerGoogleSignIn}
-                      className=' text-white p-2 rounded-lg transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer'
+                      className=' text-white p-2 rounded-lg transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer relative group'
                     >
                       <svg
                         width='28'
@@ -562,6 +582,12 @@ const FinalWorkingInterface = () => {
                           strokeLinejoin='round'
                         />
                       </svg>
+
+                      {/* Custom tooltip */}
+                      <div className='absolute bottom-full left-1 transform -translate-x-1/2 mb-2 px-3  py-2 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10'>
+                        Sign in to create project
+                        <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black'></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -569,122 +595,131 @@ const FinalWorkingInterface = () => {
             </div>
 
             {/* Main content area - Show 6 dummy project cards */}
-            <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
+            <div className='flex-1 flex flex-col px-6 pb-8 min-h-0'>
               <h2 className='text-white font-semibold text-2xl mb-4 flex-shrink-0'>
                 Get Started
               </h2>
 
-              {/* 3 Dummy Project Cards */}
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 overflow-visible'>
-                {dummyProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    onClick={triggerGoogleSignIn}
-                    className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer'
-                  >
-                    {/* Project Media */}
-                    <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>
-                      <img
-                        src={project.thumbnail}
-                        alt={project.name}
-                        className='w-full h-full object-cover transition-transform group-hover:scale-105'
-                      />
-                      {/* Overlay with sign in prompt */}
-                      <div className='absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
-                        <div className='text-center'>
-                          <svg
-                            className='w-12 h-12 text-white mx-auto mb-2'
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
+              {/* Scrollable container for dummy projects */}
+              <div
+                className='overflow-y-auto'
+                style={{ maxHeight: "calc(100vh - 350px)" }}
+              >
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 pb-8 auto-rows-max'>
+                  {dummyProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      onClick={triggerGoogleSignIn}
+                      className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer'
+                    >
+                      {/* Project Media */}
+                      <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>
+                        <img
+                          src={project.thumbnail}
+                          alt={project.name}
+                          className='w-full h-full object-cover transition-transform group-hover:scale-105'
+                        />
+                        {/* Overlay with sign in prompt */}
+                        <div className='absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
+                          <div className='text-center'>
+                            <svg
+                              className='w-12 h-12 text-white mx-auto mb-2'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
+                              />
+                            </svg>
+                            <p className='text-white text-sm font-medium'>
+                              Sign in to view
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Project Info */}
+                      <div className='p-2 relative'>
+                        {/* 3-dot menu */}
+                        <div className='dropdown-container absolute top-1 right-1'>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerGoogleSignIn();
+                            }}
+                            className='p-1 bg-[#18191ccc] hover:bg-white/10 rounded-full transition-colors'
                           >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
-                            />
-                          </svg>
-                          <p className='text-white text-sm font-medium'>Sign in to view</p>
+                            <svg
+                              width='21'
+                              height='21'
+                              viewBox='0 0 21 21'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <path
+                                d='M5.54472 10.5988C5.54472 11.0591 5.17162 11.4322 4.71139 11.4322C4.25115 11.4322 3.87805 11.0591 3.87805 10.5988C3.87805 10.1386 4.25115 9.7655 4.71139 9.7655C5.17162 9.7655 5.54472 10.1386 5.54472 10.5988Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M11.3781 10.5988C11.3781 11.0591 11.005 11.4322 10.5447 11.4322C10.0845 11.4322 9.71138 11.0591 9.71138 10.5988C9.71138 10.1386 10.0845 9.7655 10.5447 9.7655C11.005 9.7655 11.3781 10.1386 11.3781 10.5988Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                              <path
+                                d='M17.2114 10.5988C17.2114 11.0591 16.8383 11.4322 16.3781 11.4322C15.9178 11.4322 15.5447 11.0591 15.5447 10.5988C15.5447 10.1386 15.9178 9.7655 16.3781 9.7655C16.8383 9.7655 17.2114 10.1386 17.2114 10.5988Z'
+                                stroke='white'
+                                strokeOpacity='0.5'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                        <h3
+                          className='text-white font-medium text-base truncate mb-1 pr-8'
+                          title={project.name}
+                        >
+                          {project.name}
+                        </h3>
+                        <p className='text-gray-400 text-xs mb-1'>
+                          Edited {formatTimeAgo(project.updatedAt)}
+                        </p>
+                        {project.description && (
+                          <p
+                            className='text-gray-500 text-xs truncate mb-2'
+                            title={project.description}
+                          >
+                            {project.description}
+                          </p>
+                        )}
+                        <div className='flex items-center gap-2'>
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              project.hasMedia ? "bg-green-400" : "bg-gray-500"
+                            }`}
+                          ></div>
+                          <span className='text-xs text-gray-400'>
+                            {project.hasMedia ? "Has content" : "No content"}
+                          </span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Project Info */}
-                    <div className='p-2 relative'>
-                      {/* 3-dot menu */}
-                      <div className='dropdown-container absolute top-1 right-1'>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            triggerGoogleSignIn();
-                          }}
-                          className='p-1 bg-[#18191ccc] hover:bg-white/10 rounded-full transition-colors'
-                        >
-                          <svg
-                            width='21'
-                            height='21'
-                            viewBox='0 0 21 21'
-                            fill='none'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              d='M5.54472 10.5988C5.54472 11.0591 5.17162 11.4322 4.71139 11.4322C4.25115 11.4322 3.87805 11.0591 3.87805 10.5988C3.87805 10.1386 4.25115 9.7655 4.71139 9.7655C5.17162 9.7655 5.54472 10.1386 5.54472 10.5988Z'
-                              stroke='white'
-                              strokeOpacity='0.5'
-                              strokeWidth='1.5'
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                            />
-                            <path
-                              d='M11.3781 10.5988C11.3781 11.0591 11.005 11.4322 10.5447 11.4322C10.0845 11.4322 9.71138 11.0591 9.71138 10.5988C9.71138 10.1386 10.0845 9.7655 10.5447 9.7655C11.005 9.7655 11.3781 10.1386 11.3781 10.5988Z'
-                              stroke='white'
-                              strokeOpacity='0.5'
-                              strokeWidth='1.5'
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                            />
-                            <path
-                              d='M17.2114 10.5988C17.2114 11.0591 16.8383 11.4322 16.3781 11.4322C15.9178 11.4322 15.5447 11.0591 15.5447 10.5988C15.5447 10.1386 15.9178 9.7655 16.3781 9.7655C16.8383 9.7655 17.2114 10.1386 17.2114 10.5988Z'
-                              stroke='white'
-                              strokeOpacity='0.5'
-                              strokeWidth='1.5'
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                      <h3
-                        className='text-white font-medium text-base truncate mb-1 pr-8'
-                        title={project.name}
-                      >
-                        {project.name}
-                      </h3>
-                      <p className='text-gray-400 text-xs mb-1'>
-                        Edited {formatTimeAgo(project.updatedAt)}
-                      </p>
-                      {project.description && (
-                        <p
-                          className='text-gray-500 text-xs truncate mb-2'
-                          title={project.description}
-                        >
-                          {project.description}
-                        </p>
-                      )}
-                      <div className='flex items-center gap-2'>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            project.hasMedia ? "bg-green-400" : "bg-gray-500"
-                          }`}
-                        ></div>
-                        <span className='text-xs text-gray-400'>
-                          {project.hasMedia ? "Has content" : "No content"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {/* Add extra space at the bottom */}
+                <div className='h-8'></div>
               </div>
             </div>
           </div>
@@ -704,8 +739,21 @@ const FinalWorkingInterface = () => {
         </div>
         <div className='flex items-center gap-3'>
           <div className='bg-[#FFFFFF0D] hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer'>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width='16'
+              height='16'
+              viewBox='0 0 16 16'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+            >
+              <path
+                d='M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711'
+                stroke='white'
+                strokeOpacity='0.5'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
             </svg>
             <span>Invite</span>
           </div>
@@ -813,7 +861,7 @@ const FinalWorkingInterface = () => {
           </div>
 
           {/* All Projects Section */}
-          <div className='flex-1 flex flex-col px-6 pb-6 overflow-y-auto '>
+          <div className='flex-1 flex flex-col px-6 pb-8 min-h-0'>
             <h2 className='text-white font-medium mb-4  flex-shrink-0'>
               {showAllProjects
                 ? `All Projects (${allProjects.length})`
@@ -822,12 +870,10 @@ const FinalWorkingInterface = () => {
 
             {/* Projects Container with conditional scrolling */}
             <div
-              className={showAllProjects ? "flex-1 overflow-y-auto" : "flex-1"}
-              style={
-                showAllProjects ? { maxHeight: "calc(100vh - 200px)" } : {}
-              }
+              className='overflow-y-auto'
+              style={{ maxHeight: "calc(100vh - 350px)" }}
             >
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 overflow-visible'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 pb-8 auto-rows-max'>
                 {loading ? (
                   Array.from({ length: showAllProjects ? 12 : 6 }, (_, i) => (
                     <div

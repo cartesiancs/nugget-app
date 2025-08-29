@@ -12,8 +12,6 @@ const FinalWorkingInterface = () => {
 
   const { user, isAuthenticated } = useAuth();
   const [PaymentSuccessComponent, setPaymentSuccessComponent] = useState(null);
-
-  // Local state instead of useProjectStore
   const [recentProjects, setRecentProjects] = useState([]);
   const [allProjects, setAllProjects] = useState([]);
   const [creditBalance, setCreditBalance] = useState(0);
@@ -30,6 +28,59 @@ const FinalWorkingInterface = () => {
   useEffect(() => {
     setActiveSection(showAllProjects ? "all-projects" : "recents");
   }, [showAllProjects]);
+
+  // Hide specific UI elements when this interface is mounted
+  useEffect(() => {
+    const elementsToHide = [
+      "left-action-bar",
+      "publish-button", 
+      "chat-toggle-btn",
+    ];
+
+    const hideElements = () => {
+      elementsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.style.display = 'none';
+          console.log(`🔧 Hidden element with ID: ${id}`);
+        } else {
+          console.log(`🔧 Element with ID ${id} not found`);
+        }
+      });
+    };
+
+    // Try to hide elements immediately
+    hideElements();
+
+    // Also try after a short delay in case elements are rendered later
+    const timeoutId = setTimeout(() => {
+      hideElements();
+    }, 100);
+
+    // Set up a mutation observer to catch dynamically added elements
+    const observer = new MutationObserver(() => {
+      hideElements();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Cleanup function to restore elements when component unmounts
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+      
+      elementsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.style.display = '';
+          console.log(`🔧 Restored element with ID: ${id}`);
+        }
+      });
+    };
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -330,18 +381,91 @@ const FinalWorkingInterface = () => {
     return date.toLocaleDateString();
   };
 
+  // Helper function to trigger Google sign in
+  const triggerGoogleSignIn = () => {
+    // Find and click the ChatLoginButton
+    const loginButton = document.querySelector('[data-login-button]') || 
+                       document.querySelector('button[aria-label*="login"]') ||
+                       document.querySelector('button[class*="login"]');
+    if (loginButton) {
+      loginButton.click();
+    } else {
+      // Fallback: try to trigger the auth flow directly
+      if (window.electronAPI?.auth?.signIn) {
+        window.electronAPI.auth.signIn();
+      }
+    }
+  };
+
+  // Dummy project data for non-authenticated users
+  const dummyProjects = [
+    {
+      id: 'demo-1',
+      name: 'AI Nature Documentary',
+      description: 'A stunning wildlife video created with AI',
+      thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
+      updatedAt: '2024-01-15T10:30:00Z',
+      hasMedia: true
+    },
+    {
+      id: 'demo-2',
+      name: 'Product Showcase',
+      description: 'Professional product video with dynamic animations',
+      thumbnail: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
+      updatedAt: '2024-01-14T15:20:00Z',
+      hasMedia: true
+    },
+    {
+      id: 'demo-3',
+      name: 'Travel Adventure',
+      description: 'Epic travel montage with AI-generated scenes',
+      thumbnail: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop',
+      updatedAt: '2024-01-13T09:45:00Z',
+      hasMedia: true
+    },
+    {
+      id: 'demo-4',
+      name: 'Corporate Explainer',
+      description: 'Clean and professional AI video for business presentations',
+      thumbnail: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=300&fit=crop',
+      updatedAt: '2024-01-12T11:10:00Z',
+      hasMedia: true
+    },
+    {
+      id: 'demo-5',
+      name: 'Music Visualizer',
+      description: 'Dynamic visuals synced perfectly with music beats',
+      thumbnail: 'https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=400&h=300&fit=crop',
+      updatedAt: '2024-01-11T14:50:00Z',
+      hasMedia: true
+    },
+    {
+      id: 'demo-6',
+      name: 'Fashion Lookbook',
+      description: 'Stylish AI-generated fashion video with modern aesthetics',
+      thumbnail: 'https://unsplash.com/photos/a-rack-of-clothes-and-hats-in-a-room-_a_FlMKo4Lk?w=400&h=300&fit=crop',
+      updatedAt: '2024-01-10T17:25:00Z',
+      hasMedia: true
+    }
+  ];
+  
+  
+
   // Login screen - Same layout as logged in page
   if (!isAuthenticated) {
     return (
       <div className='w-full h-screen bg-black flex flex-col'>
-        {/* Full Width Header - Same as logged in */}
+        {/* Full Width Header - Removed user dropdown for non-auth */}
         <div className='w-full bg-black p-4 flex justify-between items-center z-10'>
           <div className='flex items-center gap-3'>
             <img src={assets.SandBoxLogo} alt='Usuals.ai' className='w-8 h-8' />
             <h1 className='text-white text-2xl font-bold'>Usuals.ai</h1>
           </div>
           <div className='flex items-center gap-3'>
-            <div className='bg-[#FFFFFF0D] hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer'>
+            <div 
+              onClick={triggerGoogleSignIn}
+              className='bg-[#FFFFFF0D] hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer'
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9.41405 6.58568L6.58562 9.41411M7.05703 4.22866L7.52843 3.75726C8.83018 2.45551 10.9407 2.45551 12.2425 3.75726C13.5442 5.059 13.5442 7.16955 12.2425 8.4713L11.7711 8.9427M4.2286 7.05709L3.75719 7.52849C2.45545 8.83024 2.45545 10.9408 3.75719 12.2425C5.05894 13.5443 7.16949 13.5443 8.47124 12.2425L8.94264 11.7711" stroke="white" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -360,62 +484,184 @@ const FinalWorkingInterface = () => {
             activeSection="recents"
             onSectionChange={() => {}}
             onToggleAllProjects={() => {}}
-            onPurchaseCredits={() => {
-              alert("Please log in first to purchase credits");
-            }}
+            onPurchaseCredits={triggerGoogleSignIn}
           />
 
           {/* Main Content Area */}
           <div className='flex-1 flex flex-col ml-96 mr-4 mt-10 min-h-0'>
-            {/* Chat Box - Same as logged in but with sign up message */}
+            {/* Chat Box - Original design but send button triggers sign up */}
             <div className=' mb-4'>
               <div className='text-center mb-8'>
                 <h2 className='text-[#FFFFFF80] text-3xl font-sans'>
-                  Welcome to AI Video Creator
+                  Set the stage for your next creation
                 </h2>
               </div>
               <div className='max-w-6xl mx-auto'>
                 <div className='bg-gradient-to-t from-[#20272B] to-[#000000]  rounded-2xl border-1 border-white/30 p-8'>
-                  <div className='text-center'>
-                    <p className='text-gray-400 mb-6'>
-                      Please sign in to start creating amazing videos with AI
-                    </p>
-                    <ChatLoginButton />
+                  <div className='flex items-center gap-4'>
+                    <input
+                      type='text'
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder='how about "A bird flying on the moon with a red cape"...'
+                      className='flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none text-base'
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          triggerGoogleSignIn();
+                        }
+                      }}
+                    />
+                    <div
+                      onClick={triggerGoogleSignIn}
+                      className=' text-white p-2 rounded-lg transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer'
+                    >
+                      <svg
+                        width='28'
+                        height='29'
+                        viewBox='0 0 28 29'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <rect
+                          y='0.5'
+                          width='28'
+                          height='28'
+                          rx='6'
+                          fill='white'
+                          fillOpacity='0.1'
+                        />
+                        <path
+                          d='M12.3594 16.1406L8.70896 14.1497C7.75627 13.6302 7.76571 12.2605 8.72538 11.7672C11.3719 10.407 14.186 9.39704 17.0973 8.76249C17.9332 8.58029 18.8885 8.20889 19.5898 8.91018C20.2911 9.61147 19.9197 10.5668 19.7375 11.4027C19.103 14.314 18.093 17.1281 16.7328 19.7746C16.2395 20.7343 14.8698 20.7437 14.3503 19.791L12.3594 16.1406ZM12.3594 16.1406L14.5651 13.9349'
+                          stroke='white'
+                          strokeOpacity='0.5'
+                          strokeWidth='1.5'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Main content area - Show sign up instead of projects */}
+            {/* Main content area - Show 3 dummy project cards */}
             <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
-              <h1 className='text-white font-medium mb-4 flex-shrink-0'>
+              <h2 className='text-white font-semibold text-2xl mb-4 flex-shrink-0'>
                 Get Started
-              </h1>
+              </h2>
 
-              {/* Sign up content instead of projects */}
-              <div className='flex-1 flex items-center justify-center'>
-                <div className='text-center'>
-                  <svg
-                    className='w-20 h-20 text-white mx-auto mb-6'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
+              {/* 3 Dummy Project Cards */}
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-2 overflow-visible'>
+                {dummyProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    onClick={triggerGoogleSignIn}
+                    className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer'
                   >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={1}
-                      d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
-                    />
-                  </svg>
-                  <h3 className='text-white text-xl font-medium mb-3'>
-                    Start Creating Amazing Videos
-                  </h3>
-                  <p className='text-gray-200 mb-6'>
-                    Sign in to access AI-powered video creation tools
-                  </p>
-                  <ChatLoginButton />
-                </div>
+                    {/* Project Media */}
+                    <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>
+                      <img
+                        src={project.thumbnail}
+                        alt={project.name}
+                        className='w-full h-full object-cover transition-transform group-hover:scale-105'
+                      />
+                      {/* Overlay with sign in prompt */}
+                      <div className='absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'>
+                        <div className='text-center'>
+                          <svg
+                            className='w-12 h-12 text-white mx-auto mb-2'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
+                            />
+                          </svg>
+                          <p className='text-white text-sm font-medium'>Sign in to view</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Project Info */}
+                    <div className='p-2 relative'>
+                      {/* 3-dot menu */}
+                      <div className='dropdown-container absolute top-1 right-1'>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerGoogleSignIn();
+                          }}
+                          className='p-1 bg-[#18191ccc] hover:bg-white/10 rounded-full transition-colors'
+                        >
+                          <svg
+                            width='21'
+                            height='21'
+                            viewBox='0 0 21 21'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M5.54472 10.5988C5.54472 11.0591 5.17162 11.4322 4.71139 11.4322C4.25115 11.4322 3.87805 11.0591 3.87805 10.5988C3.87805 10.1386 4.25115 9.7655 4.71139 9.7655C5.17162 9.7655 5.54472 10.1386 5.54472 10.5988Z'
+                              stroke='white'
+                              strokeOpacity='0.5'
+                              strokeWidth='1.5'
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                            />
+                            <path
+                              d='M11.3781 10.5988C11.3781 11.0591 11.005 11.4322 10.5447 11.4322C10.0845 11.4322 9.71138 11.0591 9.71138 10.5988C9.71138 10.1386 10.0845 9.7655 10.5447 9.7655C11.005 9.7655 11.3781 10.1386 11.3781 10.5988Z'
+                              stroke='white'
+                              strokeOpacity='0.5'
+                              strokeWidth='1.5'
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                            />
+                            <path
+                              d='M17.2114 10.5988C17.2114 11.0591 16.8383 11.4322 16.3781 11.4322C15.9178 11.4322 15.5447 11.0591 15.5447 10.5988C15.5447 10.1386 15.9178 9.7655 16.3781 9.7655C16.8383 9.7655 17.2114 10.1386 17.2114 10.5988Z'
+                              stroke='white'
+                              strokeOpacity='0.5'
+                              strokeWidth='1.5'
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <h3
+                        className='text-white font-medium text-base truncate mb-1 pr-8'
+                        title={project.name}
+                      >
+                        {project.name}
+                      </h3>
+                      <p className='text-gray-400 text-xs mb-1'>
+                        Edited {formatTimeAgo(project.updatedAt)}
+                      </p>
+                      {project.description && (
+                        <p
+                          className='text-gray-500 text-xs truncate mb-2'
+                          title={project.description}
+                        >
+                          {project.description}
+                        </p>
+                      )}
+                      <div className='flex items-center gap-2'>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            project.hasMedia ? "bg-green-400" : "bg-gray-500"
+                          }`}
+                        ></div>
+                        <span className='text-xs text-gray-400'>
+                          {project.hasMedia ? "Has content" : "No content"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -701,7 +947,7 @@ const FinalWorkingInterface = () => {
 
                           {/* Dropdown Menu */}
                           {openDropdownId === project.id && (
-                            <div className='absolute right-0 top-8 w-36 bg-[#1a1a1a77] rounded-lg shadow-xl z-[9999] py-1 border border-white/10'>
+                            <div className='absolute right-0 top-8 w-36 bg-[#1a1a1a77] rounded-lg shadow-xl z-[9999] py-1 border'>
                               <div
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -729,72 +975,6 @@ const FinalWorkingInterface = () => {
                                   />
                                 </svg>
                                 Open
-                              </div>
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // TODO: Implement rename functionality
-                                }}
-                                className='w-full px-3 py-1.5 text-left text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
-                              >
-                                <svg
-                                  className='w-3.5 h-3.5'
-                                  fill='none'
-                                  stroke='currentColor'
-                                  viewBox='0 0 24 24'
-                                >
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'
-                                  />
-                                </svg>
-                                Rename
-                              </div>
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // TODO: Implement duplicate functionality
-                                }}
-                                className='w-full px-3 py-1.5 text-left text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
-                              >
-                                <svg
-                                  className='w-3.5 h-3.5'
-                                  fill='none'
-                                  stroke='currentColor'
-                                  viewBox='0 0 24 24'
-                                >
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'
-                                  />
-                                </svg>
-                                Duplicate
-                              </div>
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // TODO: Implement share functionality
-                                }}
-                                className='w-full px-3 py-1.5 text-left text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs'
-                              >
-                                <svg
-                                  className='w-3.5 h-3.5'
-                                  fill='none'
-                                  stroke='currentColor'
-                                  viewBox='0 0 24 24'
-                                >
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z'
-                                  />
-                                </svg>
-                                Share
                               </div>
                               <hr className='my-1 border-white/10' />
                               <div

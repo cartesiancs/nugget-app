@@ -39,6 +39,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          DEBUG: electron-osx-sign*,electron-osx-sign
         run: npm run build:mac
 
       - name: List artifacts
@@ -53,6 +54,7 @@ jobs:
           path: |
             dist/*.dmg
             dist/mac*/**/*.app
+            dist/builder-debug.yml
 
       - name: Create GitHub Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')

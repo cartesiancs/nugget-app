@@ -67,6 +67,9 @@
             if (button) {
               button.classList.add('hidden');
             }
+            
+            // Dispatch event to open the chat interface and hide timeline elements
+            window.dispatchEvent(new CustomEvent("chatInterface:open"));
           }
 
           function hideChatInterface() {
@@ -78,7 +81,14 @@
             if (button) {
               button.classList.remove('hidden');
             }
+            
+            // Dispatch event to close the chat interface and show timeline elements
+            window.dispatchEvent(new CustomEvent("chatInterface:close"));
           }
+
+          // Expose functions globally for external access
+          window.showChatInterface = showChatInterface;
+          window.hideChatInterface = hideChatInterface;
 
           // Show the switch button when ChatInterface is hidden
           window.addEventListener('load', function() {

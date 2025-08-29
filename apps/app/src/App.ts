@@ -1094,8 +1094,11 @@ export class App extends LitElement {
           const flowWidget = document.querySelector(
             'react-flow-widget[data-open="true"]',
           );
+          const chatInterface = document.querySelector(
+            'react-chat-interface[data-open="true"]',
+          );
 
-          if (chatWidget || flowWidget) {
+          if (chatWidget || flowWidget || chatInterface) {
             publishButton.style.opacity = "0";
             publishButton.style.pointerEvents = "none";
           } else {
@@ -1120,6 +1123,15 @@ export class App extends LitElement {
         const flowWidget = document.querySelector("react-flow-widget");
         if (flowWidget) {
           observer.observe(flowWidget, {
+            attributes: true,
+            attributeFilter: ["data-open"],
+          });
+        }
+
+        // Observe chat interface
+        const chatInterface = document.querySelector("react-chat-interface");
+        if (chatInterface) {
+          observer.observe(chatInterface, {
             attributes: true,
             attributeFilter: ["data-open"],
           });
@@ -1173,6 +1185,10 @@ export class App extends LitElement {
         // Listen for sandbox open/close events
         window.addEventListener("sandbox:opened", hideTimelineElements);
         window.addEventListener("sandbox:closed", showTimelineElements);
+        
+        // Listen for chat interface open/close events
+        window.addEventListener("chatInterface:opened", hideTimelineElements);
+        window.addEventListener("chatInterface:closed", showTimelineElements);
       }
     }, 1000);
 

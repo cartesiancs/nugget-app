@@ -597,7 +597,7 @@ const InterfaceSidebar = ({
           <span className='text-yellow-400 text-sm'>Get more credits</span>
           <button
             onClick={onPurchaseCredits}
-            className='bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1'
+            className='bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1'
           >
             <svg
               width='16'

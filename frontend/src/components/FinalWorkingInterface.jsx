@@ -23,65 +23,86 @@ const FinalWorkingInterface = () => {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [activeSection, setActiveSection] = useState("recents");
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [interfaceOpen, setInterfaceOpen] = useState(true);
 
   console.log("🔧 Auth state:", { isAuthenticated, user: user?.email });
   useEffect(() => {
     setActiveSection(showAllProjects ? "all-projects" : "recents");
   }, [showAllProjects]);
 
-  // Hide specific UI elements when this interface is mounted
+  // Handle interface open/close events and timeline element visibility
   useEffect(() => {
-    const elementsToHide = [
-      "left-action-bar",
-      "publish-button", 
-      "chat-toggle-btn",
-    ];
-
-    const hideElements = () => {
-      elementsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.style.display = 'none';
-          console.log(`🔧 Hidden element with ID: ${id}`);
-        } else {
-          console.log(`🔧 Element with ID ${id} not found`);
-        }
-      });
+    const openHandler = () => {
+      console.log("🔧 Chat interface opening via event");
+      setInterfaceOpen(true);
+      window.dispatchEvent(new CustomEvent("chatInterface:opened"));
     };
 
-    // Try to hide elements immediately
-    hideElements();
+    const closeHandler = () => {
+      console.log("🔧 Chat interface closing via event");
+      setInterfaceOpen(false);
+      window.dispatchEvent(new CustomEvent("chatInterface:closed"));
+    };
 
-    // Also try after a short delay in case elements are rendered later
-    const timeoutId = setTimeout(() => {
-      hideElements();
-    }, 100);
+    window.addEventListener("chatInterface:open", openHandler);
+    window.addEventListener("chatInterface:close", closeHandler);
 
-    // Set up a mutation observer to catch dynamically added elements
-    const observer = new MutationObserver(() => {
-      hideElements();
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    // Cleanup function to restore elements when component unmounts
     return () => {
-      clearTimeout(timeoutId);
-      observer.disconnect();
-      
-      elementsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.style.display = '';
-          console.log(`🔧 Restored element with ID: ${id}`);
-        }
-      });
+      window.removeEventListener("chatInterface:open", openHandler);
+      window.removeEventListener("chatInterface:close", closeHandler);
     };
   }, []);
 
+  // Set the host attribute for visibility tracking (similar to FlowWidget)
+  useEffect(() => {
+    const host = document.querySelector("react-chat-interface");
+    if (host) host.setAttribute("data-open", interfaceOpen ? "true" : "false");
+  }, [interfaceOpen]);
+
+  // Auto-open the interface when component mounts (since this is the chat interface)
+  useEffect(() => {
+    // Dispatch open event when the component mounts with a slight delay to ensure App.ts listeners are ready
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("chatInterface:open"));
+    }, 100);
+    
+    // Cleanup: dispatch close event when component unmounts
+    return () => {
+      clearTimeout(timer);
+      window.dispatchEvent(new CustomEvent("chatInterface:close"));
+    };
+  }, []);
+
+  // Force hide timeline elements immediately if interface is open
+  useEffect(() => {
+    const hideElements = () => {
+      const chatToggleContainer = document.getElementById("chat-toggle-container");
+      const leftActionBar = document.getElementById("left-action-bar");
+      const controlPanel = document.querySelector("control-panel");
+      const timelineUI = document.getElementById("split_bottom");
+      const publishButton = document.getElementById("publish-button");
+
+      if (chatToggleContainer) chatToggleContainer.style.display = "none";
+      if (leftActionBar) leftActionBar.style.display = "none";
+      if (controlPanel) controlPanel.style.display = "none";
+      if (timelineUI) timelineUI.style.display = "none";
+      if (publishButton) {
+        publishButton.style.opacity = "0";
+        publishButton.style.pointerEvents = "none";
+      }
+    };
+
+    if (interfaceOpen) {
+      // Hide immediately
+      hideElements();
+      
+      // Set up periodic check to ensure elements stay hidden (in case App.ts recreates them)
+      const interval = setInterval(hideElements, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [interfaceOpen]);
+  
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -310,7 +331,9 @@ const FinalWorkingInterface = () => {
       console.log("🎯 Navigating to main editor with project:", project);
       console.log("🎯 Starting chat flow with prompt:", prompt);
 
-      // Close the chat interface overlay
+      // Close the chat interface overlay and dispatch close event
+      window.dispatchEvent(new CustomEvent("chatInterface:close"));
+      
       if (typeof window.hideChatInterface === "function") {
         window.hideChatInterface();
       } else {
@@ -545,7 +568,7 @@ const FinalWorkingInterface = () => {
               </div>
             </div>
 
-            {/* Main content area - Show 3 dummy project cards */}
+            {/* Main content area - Show 6 dummy project cards */}
             <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
               <h2 className='text-white font-semibold text-2xl mb-4 flex-shrink-0'>
                 Get Started
@@ -790,7 +813,7 @@ const FinalWorkingInterface = () => {
           </div>
 
           {/* All Projects Section */}
-          <div className='flex-1 flex flex-col px-6 pb-6 min-h-0 '>
+          <div className='flex-1 flex flex-col px-6 pb-6 overflow-y-auto '>
             <h2 className='text-white font-medium mb-4  flex-shrink-0'>
               {showAllProjects
                 ? `All Projects (${allProjects.length})`

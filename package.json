@@ -23,24 +23,105 @@
     "url": "https://github.com/cartesiancs/usuals-ai"
   },
   "build": {
+    "productName": "Usuals.ai",
+    "appId": "ai.usuals.app",
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "./assets",
+        "to": "assets",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "./bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "protocols": {
+      "name": "usualsapp",
+      "schemes": [
+        "usualsapp"
+      ]
+    },
     "mac": {
-      "category": "public.app-category.developer-tools",
       "target": [
+        "dmg",
+        "pkg"
+      ],
+      "icon": "assets/icons/mac/icon.icns",
+      "category": "public.app-category.video",
+      "darkModeSupport": true,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "type": "development"
+    },
+    "dmg": {
+      "contents": [
         {
-          "target": "mas",
-          "arch": "universal"
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
         }
       ],
-      "type": "distribution",
-      "hardenedRuntime": false,
-      "entitlements": "build/entitlements.mas.plist",
-      "entitlementsInherit": "build/entitlements.mas.inherit.plist",
-      "provisioningProfile": "build/embedded.provisionprofile",
-      "minimumSystemVersion": "11.0"
-    }
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "sign": false
+    },
+    "pkg": {
+      "installLocation": "/Applications",
+      "identity": null
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "./assets/icons/win/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "main/**/*",
+      "assets/**/*",
+      "frontend/dist/**/*",
+      "apps/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/call-bind-apply-helpers/**/*",
+      "node_modules/call-bind/**/*",
+      "node_modules/dunder-proto/**/*",
+      "node_modules/get-intrinsic/**/*",
+      "node_modules/color-name/**/*",
+      "node_modules/color-convert/**/*",
+      "node_modules/color/**/*"
+    ]
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.540.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@imgly/background-removal": "^1.5.8",
@@ -52,11 +133,9 @@
     "bootstrap": "^5.0.2",
     "call-bind": "^1.0.8",
     "call-bind-apply-helpers": "^1.0.2",
-    "color-name": "^1.1.4",
     "concurrently": "^9.0.1",
     "decompress": "4.2.1",
     "decompress-zip": "0.3.3",
-    "dotenv": "^16.4.5",
     "electron-is-dev": "^2.0.0",
     "electron-log": "^4.4.8",
     "electron-progressbar": "^2.0.1",
@@ -79,25 +158,23 @@
     "request": "^2.88.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "@aws-sdk/client-s3": "^3.540.0",
+    "dotenv": "^16.4.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.8.3",
     "uuid": "^9.0.0",
     "vite": "^7.0.4",
-    "zustand": "^5.0.0"
+    "zustand": "^5.0.0",
+    "color-name": "^1.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.22.1",
     "@babel/preset-env": "^7.22.4",
-    "@electron-forge/cli": "^7.8.3",
-    "@electron-forge/maker-dmg": "^7.8.3",
-    "@electron-forge/maker-zip": "^7.8.3",
-    "@types/glob": "^8.1.0",
     "babel-loader": "^9.1.2",
     "cross-env": "^7.0.3",
     "css-loader": "^6.7.1",
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8",
-    "electron-osx-sign": "^0.6.0",
     "electron-reload": "^2.0.0-alpha.1",
     "mini-css-extract-plugin": "^2.6.1",
     "sass": "^1.55.0",

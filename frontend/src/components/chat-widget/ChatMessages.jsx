@@ -9,15 +9,6 @@ import VerboseAgentLoader from "./VerboseAgentLoader";
 const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
   const hasImages = Object.keys(chatFlow.generatedImages || {}).length > 0;
   const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
-
-  // console.log("ImageGenerationComponent render:", {
-  //   hasImages,
-  //   isGenerating,
-  //   currentStep: chatFlow.currentStep,
-  //   generatedImagesCount: Object.keys(chatFlow.generatedImages || {}).length,
-  //   loading: chatFlow.loading,
-  // });
-
   return (
     <div>
       <div className='text-gray-100 text-sm mb-4'>
@@ -67,10 +58,10 @@ const VideoGenerationComponent = ({
     <div>
       <div className='text-gray-100 text-sm mb-4'>
         {isGeneratingVideos
-          ? "🎬 Processing..."
+          ? "Processing..."
           : hasVideos
-          ? "🎥 Generated Videos:"
-          : "🎥 Ready to generate videos"}
+          ? "Generated Videos:"
+          : "Ready to generate videos"}
       </div>
       <MediaGeneration
         type='video'
@@ -98,14 +89,42 @@ const ChatMessages = ({
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  
+  // State to track if concepts have been shown but not yet selected
+  const [conceptsShownButNotSelected, setConceptsShownButNotSelected] = useState(false);
+  const [scriptsShownButNotSelected, setScriptsShownButNotSelected] = useState(false);
+
+  // Track concept selection state
+  useEffect(() => {
+    // If concepts exist but no concept is selected, mark as shown but not selected
+    if (chatFlow.concepts && chatFlow.concepts.length > 0 && !chatFlow.selectedConcept) {
+      setConceptsShownButNotSelected(true);
+    } 
+    // If a concept is selected, clear the "shown but not selected" state
+    else if (chatFlow.selectedConcept) {
+      setConceptsShownButNotSelected(false);
+    }
+  }, [chatFlow.concepts, chatFlow.selectedConcept]);
+
+  useEffect(() => {
+
+    if (chatFlow.scripts && chatFlow.scripts.length > 0 && !chatFlow.selectedScript) {
+      setScriptsShownButNotSelected(true);
+    } 
+    else if (chatFlow.selectedScript) {
+      setScriptsShownButNotSelected(false);
+    }
+  }, [chatFlow.scripts, chatFlow.selectedScript]);
+
 
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   // Only auto-scroll when new messages are added, not when existing ones are updated
   const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [lastVideoCount, setLastVideoCount] = useState(0);
 
   useEffect(() => {
     // Only scroll if we actually added new messages (not just updated existing ones)
@@ -114,6 +133,34 @@ const ChatMessages = ({
       setLastMessageCount(messages.length);
     }
   }, [messages.length, lastMessageCount]);
+
+  // Auto-scroll when videos are added or updated
+  useEffect(() => {
+    const currentVideoCount = Object.keys(combinedVideosMap || {}).length;
+    if (currentVideoCount > lastVideoCount) {
+      console.log(`🎬 New videos detected (${currentVideoCount} vs ${lastVideoCount}), scrolling to bottom`);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100); // Small delay to ensure content is rendered
+      setLastVideoCount(currentVideoCount);
+    }
+  }, [combinedVideosMap, lastVideoCount]);
+
+  // Listen for custom scroll events (from video completion, etc.)
+  useEffect(() => {
+    const handleScrollToBottom = (event) => {
+      console.log('🔽 Received scroll to bottom event:', event.detail);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100); // Small delay to ensure content is rendered
+    };
+
+    window.addEventListener('scrollChatToBottom', handleScrollToBottom);
+    
+    return () => {
+      window.removeEventListener('scrollChatToBottom', handleScrollToBottom);
+    };
+  }, []);
 
   // Build messages in proper order based on chat flow state and real timestamps
   useEffect(() => {
@@ -150,7 +197,7 @@ const ChatMessages = ({
             <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedConcept
                 ? `✅ Selected Concept: "${chatFlow.selectedConcept.title}"`
-                : "I've generated 4 video concepts for you! Please choose one to develop:"}
+                : ""}
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}
@@ -188,7 +235,7 @@ const ChatMessages = ({
             <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedScript
                 ? "✅ Script Generated Successfully"
-                : "I've created script segments for your concept! Please choose the version you prefer:"}
+                : ""}
             </div>
             <ScriptSelection
               scripts={chatFlow.scripts}
@@ -298,6 +345,14 @@ const ChatMessages = ({
     
     // Only update if there are actual changes
     setMessages(sortedMessages);
+    
+    // 🎯 AUTO-SCROLL: If we have new video content, scroll to bottom
+    const hasVideos = Object.keys(combinedVideosMap || {}).length > 0;
+    if (hasVideos && sortedMessages.some(msg => msg.id === "video-generation" || msg.id === "timeline-integration")) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 200); // Delay to ensure video components are rendered
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chatFlow.allUserMessages, // Now using real messages with timestamps
@@ -325,8 +380,8 @@ const ChatMessages = ({
         <div
           key={message.id}
           className={`flex ${
-            message.type === "user" ? "justify-end" : "justify-start"
-          }`}
+            message.type === "user" ? "justify-end items-end" : "justify-start items-start"
+          } `}
         >
           <div
             className={`${
@@ -336,7 +391,11 @@ const ChatMessages = ({
               message.id === "video-generation" ||
               message.id === "timeline-integration"
                 ? "w-full p-0" // Full width and no padding/background for component messages
-                : `max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-white/10`
+                : `max-w-[80%] p-2.5 text-white rounded-lg backdrop-blur-sm ${ 
+                    message.type === "user" 
+                      ? "bg-[#FFFFFF1A]" 
+                      : "bg-[#0A0A0A80] border-1 border-gray-700/30"
+                  }`
             }`}
           >
             {message.content && (
@@ -354,9 +413,12 @@ const ChatMessages = ({
       {/* Simple Loading indicator - only show when NOT streaming */}
       {chatFlow.loading && !chatFlow.isStreaming && (
         <div className='flex justify-start'>
-          <div className='text-gray-100 rounded-lg p-2.5 bg-gray-900/50 backdrop-blur-sm border border-white/10'>
+          <div className='text-gray-100 rounded-lg p-2.5 backdrop-blur-sm bg-[#0A0A0A80] border-1 border-gray-700/30'>
             <div className='flex items-center space-x-2'>
-              <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400'></div>
+              <div className='relative w-4 h-4'>
+                <div className='absolute inset-0 rounded-full border-2 border-gray-600'></div>
+                <div className='absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400 animate-spin'></div>
+              </div>
               <div className='flex flex-col'>
                 <span className='text-xs text-gray-100'>
                   {chatFlow.agentActivity || 'Processing...'}
@@ -373,11 +435,6 @@ const ChatMessages = ({
         </div>
       )}
 
-
-
-
-
-
       {/* Credit Deduction Notification */}
       {chatFlow.creditDeductionMessage && (
         <div className='flex justify-start'>
@@ -393,7 +450,7 @@ const ChatMessages = ({
       {/* Error message */}
       {chatFlow.error && (
         <div className='flex justify-start'>
-          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-gray-900/50 backdrop-blur-sm border border-white/10'>
+          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-[#0A0A0A80] backdrop-blur-sm border-1 border-red-700/30'>
             <div className='text-xs'>❌ {chatFlow.error}</div>
             <button
               onClick={() => chatFlow.setError(null)}
@@ -405,14 +462,12 @@ const ChatMessages = ({
         </div>
       )}
 
-
-
       {/* Agent Status and Approvals */}
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
-          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-white/10'>
-            {/* Enhanced Agent Working Indicator - Primary loader during streaming */}
-            {chatFlow.isStreaming && (
+          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg backdrop-blur-sm bg-[#0A0A0A80] border-1 border-gray-700/30'>
+            {/* Enhanced Agent Working Indicator - Primary loader during streaming - Only show after concept selection */}
+            {chatFlow.isStreaming && !conceptsShownButNotSelected && (
               <VerboseAgentLoader 
                 agentActivity={chatFlow.agentActivity}
                 streamingProgress={chatFlow.streamingProgress}
@@ -420,69 +475,69 @@ const ChatMessages = ({
               />
             )}
 
-            {/* Manual Approval Requests */}
-            {chatFlow.pendingApprovals && chatFlow.pendingApprovals.map((approval) => (
+            {/* Manual Approval Requests - Only show after concept selection */}
+            {/* Only show the approval request for script once the script has been selected stored in scriptsShownButNotSelected */}
+            {chatFlow.pendingApprovals && !conceptsShownButNotSelected && !scriptsShownButNotSelected && chatFlow.pendingApprovals.map((approval) => (
               <div key={approval.id} className='mb-3 last:mb-0'>
-                <div className='text-gray-100 font-medium mb-2 flex items-center gap-2'>
-                  <span>⏳</span>
-                  <span>Approval Required</span>
-                </div>
-                
-                <div className='text-gray-300 text-sm mb-3'>
-                  {approval.toolName === 'get_web_info' && (
-                    <div>
-                      <div className='mb-1'>🔍 <strong>Web Research Request</strong></div>
-                      <div>I need permission to research web information for your prompt. This will help me understand current trends, gather relevant data, and provide more accurate and up-to-date concepts.</div>
+                <div 
+                  className='rounded-lg overflow-hidden border-1 border-gray-600/40 hover:border-gray-500/60 bg-white/10 p-3 transition-all duration-300'
+                >
+                  <div className='flex items-center justify-between mb-3'>
+                    <div className='text-white font-bold text-sm'>
+                      Approval Required
                     </div>
-                  )}
-                  {approval.toolName === 'generate_concepts_with_approval' && (
-                    <div>
-                      <div className='mb-1'>💡 <strong>Concept Generation Ready</strong></div>
-                      <div>I'm ready to generate 4 unique content concepts based on the research. Each concept will include a title, description, and creative direction tailored to your request.</div>
+                    <div className='bg-yellow-400/20 text-yellow-300 px-2 py-1 rounded text-xs'>
+                      Waiting
                     </div>
-                  )}
-                  {approval.toolName === 'generate_segmentation' && (
-                    <div>
-                      <div className='mb-1'>📜 <strong>Script Creation Ready</strong></div>
-                      <div>I can now create detailed script segmentation for the selected concept. This will break down your content into scenes with visual descriptions, narration, and animation prompts.</div>
-                    </div>
-                  )}
-                  {approval.toolName === 'generate_image_with_approval' && (
-                    <div>
-                      <div className='mb-1'>🎨 <strong>Image Generation Ready</strong></div>
-                      <div>I'm ready to generate high-quality images for each script segment. This will create visual assets that match your chosen art style and bring your script to life.</div>
-                    </div>
-                  )}
-                  {approval.toolName === 'generate_video_with_approval' && (
-                    <div>
-                      <div className='mb-1'>🎬 <strong>Video Generation Ready</strong></div>
-                      <div>I'm ready to create dynamic videos from your generated images. This will add motion and animation to transform static images into engaging video content.</div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => chatFlow.approveToolExecution(approval.id)}
-                    className='bg-gray-600 hover:bg-gray-700 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
-                  >
-                    ✅ Approve
-                  </button>
-                  <button
-                    onClick={() => chatFlow.rejectToolExecution(approval.id)}
-                    className='bg-gray-800 hover:bg-gray-900 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
-                  >
-                    ❌ Reject
-                  </button>
+                  </div>
+                  
+                  <div className='text-gray-300 text-xs mb-3 leading-relaxed'>
+                    {approval.toolName === 'get_web_info' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Web Research Request</div>
+                        <div>I need permission to research web information for your prompt. This will help me understand current trends, gather relevant data, and provide more accurate and up-to-date concepts.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_concepts_with_approval' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Concept Generation Ready</div>
+                        <div>I'm ready to generate 4 unique content concepts based on the research. Each concept will include a title, description, and creative direction tailored to your request.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_segmentation' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Script Creation Ready</div>
+                        <div>I can now create detailed script segmentation for the selected concept. This will break down your content into scenes with visual descriptions, narration, and animation prompts.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_image_with_approval' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Image Generation Ready</div>
+                        <div>I'm ready to generate high-quality images for each script segment. This will create visual assets that match your chosen art style and bring your script to life.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_video_with_approval' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Video Generation Ready</div>
+                        <div>I'm ready to create dynamic videos from your generated images. This will add motion and animation to transform static images into engaging video content.</div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className='flex gap-2'>
+                    <button
+                      onClick={() => chatFlow.approveToolExecution(approval.id)}
+                      className='bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 px-3 py-1.5 rounded text-xs transition-colors font-medium'
+                    >
+                      Approve
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-
-
       <div ref={messagesEndRef} />
     </div>
   );

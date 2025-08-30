@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 
 const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }) => {
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const [typingText, setTypingText] = useState("");
   const [typingIndex, setTypingIndex] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
 
-
-
+  
+  
   // Get different messages for each activity type
   const getMessagesForActivity = (activity) => {
     if (activity.includes('researching') || activity.includes('web information')) {
@@ -69,10 +69,10 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
         "Preparing final output..."
       ];
     }
-    
+
     return [
       "Working on your request...",
-      "Processing your requirements...", 
+      "Processing your requirements...",
       "Analyzing your prompt...",
       "Preparing creative content...",
       "Thinking through possibilities...",
@@ -88,13 +88,13 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
     const currentMessage = messages[currentMessageIndex % messages.length];
 
     const typingSpeed = 50; // milliseconds per character
-    
+
     if (typingIndex < currentMessage.length) {
       const timer = setTimeout(() => {
         setTypingText(currentMessage.substring(0, typingIndex + 1));
         setTypingIndex(typingIndex + 1);
       }, typingSpeed);
-      
+
       return () => clearTimeout(timer);
     } else {
       // After completing a message, pause then cycle to next message
@@ -103,7 +103,7 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
         setTypingText("");
         setCurrentMessageIndex(prev => prev + 1);
       }, 2000); // 2 second pause before next message
-      
+
       return () => clearTimeout(resetTimer);
     }
   }, [typingIndex, currentMessageIndex, agentActivity]);
@@ -121,16 +121,11 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
     <div className='mb-3'>
       {/* Clean Typing Animation Display */}
       <div className='flex items-center gap-3 mb-3'>
-        <div className='flex space-x-1'>
-          <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse'></div>
-          <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse [animation-delay:0.2s]'></div>
-          <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse [animation-delay:0.4s]'></div>
-        </div>
         <div className='flex-1'>
-          <div className='text-gray-100 text-sm font-medium'>
-            {typingText}
-            <span className='animate-pulse'>|</span>
-          </div>
+        <div className='text-gray-100 text-sm font-medium'>
+          {typingText}
+          <span className='animate-pulse'>|</span>
+        </div>
         </div>
       </div>
 
@@ -169,10 +164,10 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
             onClick={() => setShowDetails(!showDetails)}
             className='flex items-center gap-2 text-xs text-gray-500 hover:text-gray-400 transition-colors'
           >
-            <svg 
+            <svg
               className={`w-3 h-3 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -183,14 +178,14 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
           </button>
 
           {showDetails && (
-            <div className='bg-gray-800/30 rounded p-2 mt-2 max-h-32 overflow-y-auto'>
+            <div className='bg-white/10 rounded p-2 mt-2 max-h-32 overflow-y-auto'>
               <div className='text-xs text-gray-500 space-y-1'>
                 {streamMessages.slice(-5).map((msg, index) => (
                   <div key={index} className='flex items-center gap-2'>
                     <span className='text-blue-400 text-xs'>•</span>
-                    <span>
-                      {typeof msg.data === 'string' 
-                        ? msg.data 
+                    <span className='text-gray-300 text-xs'>
+                      {typeof msg.data === 'string'
+                        ? msg.data
                         : msg.data?.message || 'Processing...'
                       }
                     </span>

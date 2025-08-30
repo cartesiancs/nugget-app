@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+@keyframes flipUp {
+  0% { transform: translateY(100%) rotateX(-90deg); opacity: 0; }
+  50% { transform: translateY(-10%) rotateX(0deg); opacity: 0.8; }
+  100% { transform: translateY(0%) rotateX(0deg); opacity: 1; }
+}

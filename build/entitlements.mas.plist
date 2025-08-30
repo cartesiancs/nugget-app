@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Core App Store requirements -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	
+	<!-- Network access for API calls -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	
+	<!-- Screen recording for screen capture functionality -->
+	<key>com.apple.security.device.screen-recording</key>
+	<true/>
+	
+	<!-- Microphone access for audio recording -->
+	<key>com.apple.security.device.microphone</key>
+	<true/>
+	
+	<!-- File system access for user-selected files -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	
+	<!-- Downloads folder access for saving exports -->
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+	
+	<!-- Movies folder access for video files -->
+	<key>com.apple.security.files.movies.read-write</key>
+	<true/>
+	
+	<!-- Music folder access for audio files -->
+	<key>com.apple.security.files.music.read-write</key>
+	<true/>
+	
+	<!-- Pictures folder access for image files -->
+	<key>com.apple.security.files.pictures.read-write</key>
+	<true/>
+	
+	<!-- Temporary files access -->
+	<key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
+	<array>
+		<string>/tmp/</string>
+	</array>
+</dict>
+</plist>

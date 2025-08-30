@@ -59,7 +59,7 @@ const UserProfileDropdown: React.FC = () => {
   const avatarUrl = (user as any)?.avatar || (user as any)?.picture || (user as any)?.image;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div  className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
         className="flex items-center gap-2 bg-[#191B1D] text-white px-2 py-1.5 rounded-md cursor-pointer transition-all duration-200 hover:bg-[#2A2D2F]"

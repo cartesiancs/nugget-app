@@ -2144,26 +2144,26 @@ export const useChatFlow = () => {
         setAgentActivity("Processing script segments and preparing for image generation...");
         
         // Add verbose script processing messages
-        setAllUserMessages(prev => [...prev, 
-          {
-            id: `agent-script-processing-${Date.now()}`,
-            content: "Processing script segments and analyzing narrative structure...",
-            timestamp: Date.now(),
-            type: 'system'
-          },
-          {
-            id: `agent-script-breakdown-${Date.now() + 1}`,
-            content: `Successfully created ${result.data.segments.length} detailed script segments with visuals and narration`,
-            timestamp: Date.now() + 1,
-            type: 'system'
-          },
-          {
-            id: `agent-script-ready-${Date.now() + 2}`,
-            content: "Script is ready for image generation phase!",
-            timestamp: Date.now() + 2,
-            type: 'system'
-          }
-        ]);
+        // setAllUserMessages(prev => [...prev, 
+        //   {
+        //     id: `agent-script-processing-${Date.now()}`,
+        //     content: "Processing script segments and analyzing narrative structure...",
+        //     timestamp: Date.now(),
+        //     type: 'system'
+        //   },
+        //   {
+        //     id: `agent-script-breakdown-${Date.now() + 1}`,
+        //     content: `Successfully created ${result.data.segments.length} detailed script segments with visuals and narration`,
+        //     timestamp: Date.now() + 1,
+        //     type: 'system'
+        //   },
+        //   {
+        //     id: `agent-script-ready-${Date.now() + 2}`,
+        //     content: "Script is ready for image generation phase!",
+        //     timestamp: Date.now() + 2,
+        //     type: 'system'
+        //   }
+        // ]);
         
         const script = {
           segments: result.data.segments,
@@ -2175,12 +2175,12 @@ export const useChatFlow = () => {
         setCurrentStep(4); // Skip to image generation
         
         // Add agent message showing scripts
-        setAllUserMessages(prev => [...prev, {
-          id: `agent-scripts-${Date.now() + 3}`,
-          content: "I've created script segments for your concept! Please select the script version you prefer:",
-          timestamp: Date.now() + 3,
-          type: 'system'
-        }]);
+        // setAllUserMessages(prev => [...prev, {
+        //   id: `agent-scripts-${Date.now() + 3}`,
+        //   content: "I've created script segments for your concept! Please select the script version you prefer:",
+        //   timestamp: Date.now() + 3,
+        //   type: 'system'
+        // }]);
 
         // Show credit deduction for script generation
         showCreditDeduction("Script Generation", null, 1);

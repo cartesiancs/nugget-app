@@ -92,6 +92,7 @@ const ChatMessages = ({
   
   // State to track if concepts have been shown but not yet selected
   const [conceptsShownButNotSelected, setConceptsShownButNotSelected] = useState(false);
+  const [scriptsShownButNotSelected, setScriptsShownButNotSelected] = useState(false);
 
   // Track concept selection state
   useEffect(() => {
@@ -105,9 +106,20 @@ const ChatMessages = ({
     }
   }, [chatFlow.concepts, chatFlow.selectedConcept]);
 
+  useEffect(() => {
+
+    if (chatFlow.scripts && chatFlow.scripts.length > 0 && !chatFlow.selectedScript) {
+      setScriptsShownButNotSelected(true);
+    } 
+    else if (chatFlow.selectedScript) {
+      setScriptsShownButNotSelected(false);
+    }
+  }, [chatFlow.scripts, chatFlow.selectedScript]);
+
+
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   // Only auto-scroll when new messages are added, not when existing ones are updated
@@ -464,7 +476,8 @@ const ChatMessages = ({
             )}
 
             {/* Manual Approval Requests - Only show after concept selection */}
-            {chatFlow.pendingApprovals && !conceptsShownButNotSelected && chatFlow.pendingApprovals.map((approval) => (
+            {/* Only show the approval request for script once the script has been selected stored in scriptsShownButNotSelected */}
+            {chatFlow.pendingApprovals && !conceptsShownButNotSelected && !scriptsShownButNotSelected && chatFlow.pendingApprovals.map((approval) => (
               <div key={approval.id} className='mb-3 last:mb-0'>
                 <div 
                   className='rounded-lg overflow-hidden border-1 border-gray-600/40 hover:border-gray-500/60 bg-white/10 p-3 transition-all duration-300'

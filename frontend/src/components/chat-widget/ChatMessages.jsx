@@ -9,15 +9,6 @@ import VerboseAgentLoader from "./VerboseAgentLoader";
 const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
   const hasImages = Object.keys(chatFlow.generatedImages || {}).length > 0;
   const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
-
-  // console.log("ImageGenerationComponent render:", {
-  //   hasImages,
-  //   isGenerating,
-  //   currentStep: chatFlow.currentStep,
-  //   generatedImagesCount: Object.keys(chatFlow.generatedImages || {}).length,
-  //   loading: chatFlow.loading,
-  // });
-
   return (
     <div>
       <div className='text-gray-100 text-sm mb-4'>
@@ -98,6 +89,21 @@ const ChatMessages = ({
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  
+  // State to track if concepts have been shown but not yet selected
+  const [conceptsShownButNotSelected, setConceptsShownButNotSelected] = useState(false);
+
+  // Track concept selection state
+  useEffect(() => {
+    // If concepts exist but no concept is selected, mark as shown but not selected
+    if (chatFlow.concepts && chatFlow.concepts.length > 0 && !chatFlow.selectedConcept) {
+      setConceptsShownButNotSelected(true);
+    } 
+    // If a concept is selected, clear the "shown but not selected" state
+    else if (chatFlow.selectedConcept) {
+      setConceptsShownButNotSelected(false);
+    }
+  }, [chatFlow.concepts, chatFlow.selectedConcept]);
 
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
@@ -217,7 +223,7 @@ const ChatMessages = ({
             <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedScript
                 ? "✅ Script Generated Successfully"
-                : "I've created script segments for your concept! Please choose the version you prefer:"}
+                : ""}
             </div>
             <ScriptSelection
               scripts={chatFlow.scripts}
@@ -444,14 +450,12 @@ const ChatMessages = ({
         </div>
       )}
 
-
-
       {/* Agent Status and Approvals */}
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
           <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg backdrop-blur-sm bg-[#0A0A0A80] border-1 border-gray-700/30'>
-            {/* Enhanced Agent Working Indicator - Primary loader during streaming */}
-            {chatFlow.isStreaming && (
+            {/* Enhanced Agent Working Indicator - Primary loader during streaming - Only show after concept selection */}
+            {chatFlow.isStreaming && !conceptsShownButNotSelected && (
               <VerboseAgentLoader 
                 agentActivity={chatFlow.agentActivity}
                 streamingProgress={chatFlow.streamingProgress}
@@ -459,8 +463,8 @@ const ChatMessages = ({
               />
             )}
 
-            {/* Manual Approval Requests */}
-            {chatFlow.pendingApprovals && chatFlow.pendingApprovals.map((approval) => (
+            {/* Manual Approval Requests - Only show after concept selection */}
+            {chatFlow.pendingApprovals && !conceptsShownButNotSelected && chatFlow.pendingApprovals.map((approval) => (
               <div key={approval.id} className='mb-3 last:mb-0'>
                 <div 
                   className='rounded-lg overflow-hidden border-1 border-gray-600/40 hover:border-gray-500/60 bg-white/10 p-3 transition-all duration-300'
@@ -521,9 +525,6 @@ const ChatMessages = ({
           </div>
         </div>
       )}
-
-
-
       <div ref={messagesEndRef} />
     </div>
   );

@@ -46,13 +46,13 @@ export default function StepList({
 
   return (
     <div
-      className='p-2 backdrop-blur-sm rounded-xl mr-2 ml-2'
+      className='px-1 pb-1 mt-2 backdrop-blur-sm rounded-xl mr-2 ml-2'
       style={{
         background: "#18191C",
       }}
     >
       {/* Header */}
-      <div className='flex items-center justify-between mb-2 mt-2'>
+      <div className='flex items-center justify-between mb-1 mt-1'>
         <div className='flex items-center gap-2'>
           <h3 className='text-xs font-semibold text-gray-300 uppercase ml-2 tracking-wide'>
             Tasks

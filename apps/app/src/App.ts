@@ -112,6 +112,14 @@ export class App extends LitElement {
             z-index: 10000;
           `;
           document.body.appendChild(chatToggleContainer);
+          // Move existing "show chat interface" button into this container so it sits beside the chat toggle button
+          const showChatBtn = document.getElementById("show-chat-interface-btn");
+          if (showChatBtn) {
+            // Remove previously applied fixed positioning classes (from Tailwind) that conflict with container layout
+            showChatBtn.classList.remove("fixed", "top-5", "right-5");
+            // Append into the flex container so it aligns horizontally with gap
+            chatToggleContainer.appendChild(showChatBtn);
+          }
         }
 
         /*** VERTICAL ACTION BAR (persistent) ***/

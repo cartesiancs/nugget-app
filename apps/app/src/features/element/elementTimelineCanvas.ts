@@ -392,11 +392,16 @@ export class elementTimelineCanvas extends LitElement {
 
       // Ensure displayed size follows internal resolution
 
-      // Calculate required height based on number of timeline rows
-      const rows = Math.max(
-        ...Object.values(this.timeline).map((el: any) => (el.track ?? 0) + 1),
-        1,
-      );
+      // Determine number of timeline rows
+      let rows: number;
+      const highestTrack = Object.values(this.timeline).length > 0
+        ? Math.max(
+            ...Object.values(this.timeline).map((el: any) => (el.track ?? 0) + 1),
+            1,
+          )
+        : 0;
+      // Always show at least 3 rows; expand further if more tracks are used
+      rows = Math.max(highestTrack, 3);
       const parentHeight = rows * 36; // 30px clip height + ~20% padding
       this.canvas.height = parentHeight * dpr;
 
@@ -442,17 +447,14 @@ export class elementTimelineCanvas extends LitElement {
       // Draw row grid lines only when timeline is empty to avoid duplicate lines.
       const ROW_H = 30;
       const ROW_SPACING = ROW_H * 1.2;
-      const hasElements = Object.keys(this.timeline).length > 0;
-      if (!hasElements) {
-        ctx.strokeStyle = "rgba(255,255,255,0.3)";
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= rows; i++) {
-          const y = i * ROW_SPACING;
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(this.canvas.width / dpr, y);
-          ctx.stroke();
-        }
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= rows; i++) {
+        const y = i * ROW_SPACING;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(this.canvas.width / dpr, y);
+        ctx.stroke();
       }
 
       const sortedTimeline = Object.fromEntries(

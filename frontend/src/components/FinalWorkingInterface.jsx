@@ -300,7 +300,8 @@ const FinalWorkingInterface = () => {
     }
   }, []);
 
-  const handleCreateProject = async (description = "") => {
+  // Creates a new project. If `startChat` is false, it will NOT launch the chat flow afterwards.
+  const handleCreateProject = async (description = "", startChat = true) => {
     if (!description.trim()) return;
 
     setIsCreatingProject(true);
@@ -318,8 +319,10 @@ const FinalWorkingInterface = () => {
       // Add to recent projects
       setRecentProjects((prev) => [newProject, ...prev.slice(0, 5)]);
 
-      // Navigate to main editor with chat flow
-      navigateToEditorWithChat(newProject, description.trim());
+      // Start the chat flow only when requested
+      if (startChat) {
+        navigateToEditorWithChat(newProject, description.trim());
+      }
     } catch (error) {
       console.error("Failed to create project:", error);
       alert("Failed to create project: " + (error.message || "Unknown error"));
@@ -758,7 +761,8 @@ const FinalWorkingInterface = () => {
             <span>Invite</span>
           </div>
           <div
-            onClick={() => handleCreateProject("Quick project creation")}
+            // Quick project creation: create project without triggering chat flow
+            onClick={() => handleCreateProject("Quick project creation", false)}
             disabled={isCreatingProject}
             className='bg-[#F9D312] hover:bg-yellow-400 disabled:bg-gray-600 text-black px-4 py-2 rounded-lg font-medium transition-colors'
           >

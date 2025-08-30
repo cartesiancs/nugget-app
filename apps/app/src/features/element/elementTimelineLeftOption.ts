@@ -74,7 +74,8 @@ export class ElementTimelineLeftOption extends LitElement {
       ? Math.max(...timelineValues.map((el: any) => (el.track ?? 0) + 1))
       : 1;
     
-    const rows = Math.max(maxTrack, 1);
+    // Show 3 empty rows when timeline is empty, otherwise fit exactly to used tracks
+    const rows = Math.max(maxTrack, 3);
 
     const dpr = window.devicePixelRatio;
     const width = this.resize.timelineVertical.leftOption;
@@ -88,13 +89,17 @@ export class ElementTimelineLeftOption extends LitElement {
 
     ctx.clearRect(0, 0, width, height);
 
-    // Only draw icon once, aligned to first row.
+    // Draw icon for each visible row
     if (this.iconLoaded && this.iconImg) {
-      const ICON_SIZE = 40;
-      const MARGIN_TOP = 2; // Minimal top margin to align with closer first timeline row
+      const ICON_SIZE = 34; // bigger icons
+      const MARGIN_TOP = 2;
       const ix = (width - ICON_SIZE) / 2;
-      const iy = MARGIN_TOP + (ROW_H - ICON_SIZE) / 2; // Center in first row with top margin
-      ctx.drawImage(this.iconImg, ix, iy, ICON_SIZE, ICON_SIZE);
+
+      for (let i = 0; i < rows; i++) {
+        const iy =
+          MARGIN_TOP + i * ROW_SPACING + (ROW_SPACING - ICON_SIZE) / 2; // maintain gap
+        ctx.drawImage(this.iconImg, ix, iy, ICON_SIZE, ICON_SIZE);
+      }
     }
   }
 

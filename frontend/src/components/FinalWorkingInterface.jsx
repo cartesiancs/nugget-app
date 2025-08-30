@@ -24,6 +24,7 @@ const FinalWorkingInterface = () => {
   const [activeSection, setActiveSection] = useState("recents");
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [interfaceOpen, setInterfaceOpen] = useState(true);
+  const [highlightProjectId, setHighlightProjectId] = useState(null);
 
   console.log("🔧 Auth state:", { isAuthenticated, user: user?.email });
   useEffect(() => {
@@ -315,6 +316,10 @@ const FinalWorkingInterface = () => {
       });
 
       console.log("✅ Project created:", newProject);
+
+      // Highlight the new project card for 5 seconds
+      setHighlightProjectId(newProject.id);
+      setTimeout(() => setHighlightProjectId(null), 5000);
 
       // Add to recent projects
       setRecentProjects((prev) => [newProject, ...prev.slice(0, 5)]);
@@ -900,7 +905,8 @@ const FinalWorkingInterface = () => {
                     <div
                       key={project.id}
                       onClick={() => handleOpenProject(project)}
-                      className='bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer'
+                      className={`bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer`}
+                      style={highlightProjectId === project.id ? { boxShadow: '4px 6px 12px rgba(255,223,0,0.45), 8px 12px 20px rgba(255,223,0,0.25)', transition: 'box-shadow 0.3s ease' } : {}}
                     >
                       {/* Project Media - Bigger */}
                       <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>

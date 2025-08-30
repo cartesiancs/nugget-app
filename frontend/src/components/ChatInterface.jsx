@@ -32,6 +32,7 @@ const ChatInterface = () => {
   const [creatingProject, setCreatingProject] = useState(false);
   const [recentProjects, setRecentProjects] = useState([]);
   const [loadingRecents, setLoadingRecents] = useState(false);
+  const [highlightProjectId, setHighlightProjectId] = useState(null);
 
   // Refs
   const messageInputRef = useRef(null);
@@ -82,6 +83,7 @@ const ChatInterface = () => {
       );
       
       setRecentProjects(enrichedProjects);
+      setHighlightProjectId(null); // reset any highlight when loading recents
     } catch (error) {
       console.error('Failed to load recent projects:', error);
     } finally {
@@ -109,6 +111,9 @@ const ChatInterface = () => {
 
       // Set as selected project
       setSelectedProject(newProject);
+      // Highlight the new project card for 5 seconds
+      setHighlightProjectId(newProject.id);
+      setTimeout(() => setHighlightProjectId(null), 5000);
       
       // Add to recent projects
       setRecentProjects(prev => [{ ...newProject, hasContent: false }, ...prev.slice(0, 5)]);
@@ -138,6 +143,9 @@ const ChatInterface = () => {
       });
 
       setSelectedProject(newProject);
+      // Highlight the new project card for 5 seconds
+      setHighlightProjectId(newProject.id);
+      setTimeout(() => setHighlightProjectId(null), 5000);
       setRecentProjects(prev => [{ ...newProject, hasContent: false }, ...prev.slice(0, 5)]);
       
       setShowCreateProject(false);
@@ -579,7 +587,8 @@ const ChatInterface = () => {
                   <div
                     key={project.id}
                     onClick={() => handleSelectProject(project)}
-                    className="bg-gray-700 hover:bg-gray-700/50 rounded-lg p-4 cursor-pointer transition-colors border border-gray-600/30 hover:border-gray-500/50"
+                    className={`bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer`}
+                    style={highlightProjectId === project.id ? { boxShadow: '4px 6px 12px rgba(255,223,0,0.45), 8px 12px 20px rgba(255,223,0,0.25)', transition: 'box-shadow 0.3s ease' } : {}}
                   >
                     {/* Demo Video */}
                     <div className="w-full h-32 bg-gray-600 rounded mb-3 overflow-hidden flex items-center justify-center">

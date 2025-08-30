@@ -121,11 +121,6 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
     <div className='mb-3'>
       {/* Clean Typing Animation Display */}
       <div className='flex items-center gap-3 mb-3'>
-        <div className='flex space-x-1'>
-          <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse'></div>
-          <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse [animation-delay:0.2s]'></div>
-          <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse [animation-delay:0.4s]'></div>
-        </div>
         <div className='flex-1'>
         <div className='text-gray-100 text-sm font-medium'>
           {typingText}
@@ -183,12 +178,12 @@ const VerboseAgentLoader = ({ agentActivity, streamingProgress, streamMessages }
           </button>
 
           {showDetails && (
-            <div className='bg-gray-800/30 rounded p-2 mt-2 max-h-32 overflow-y-auto'>
+            <div className='bg-white/10 rounded p-2 mt-2 max-h-32 overflow-y-auto'>
               <div className='text-xs text-gray-500 space-y-1'>
                 {streamMessages.slice(-5).map((msg, index) => (
                   <div key={index} className='flex items-center gap-2'>
                     <span className='text-blue-400 text-xs'>•</span>
-                    <span>
+                    <span className='text-gray-300 text-xs'>
                       {typeof msg.data === 'string'
                         ? msg.data
                         : msg.data?.message || 'Processing...'

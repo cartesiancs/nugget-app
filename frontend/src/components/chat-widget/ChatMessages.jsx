@@ -373,7 +373,11 @@ const ChatMessages = ({
               message.id === "video-generation" ||
               message.id === "timeline-integration"
                 ? "w-full p-0" // Full width and no padding/background for component messages
-                : `max-w-[80%] p-2.5 text-white rounded-lg  ${ message.type === "user" ? "bg-[#FFFFFF1A] rounded-lg backdrop-blur-sm" : ""} `
+                : `max-w-[80%] p-2.5 text-white rounded-lg backdrop-blur-sm ${ 
+                    message.type === "user" 
+                      ? "bg-[#FFFFFF1A]" 
+                      : "bg-[#0A0A0A80] border-1 border-gray-700/30"
+                  }`
             }`}
           >
             {message.content && (
@@ -391,7 +395,7 @@ const ChatMessages = ({
       {/* Simple Loading indicator - only show when NOT streaming */}
       {chatFlow.loading && !chatFlow.isStreaming && (
         <div className='flex justify-start'>
-          <div className='text-gray-100 rounded-lg p-2.5  backdrop-blur-sm border border-white/10'>
+          <div className='text-gray-100 rounded-lg p-2.5 backdrop-blur-sm bg-[#0A0A0A80] border-1 border-gray-700/30'>
             <div className='flex items-center space-x-2'>
               <div className='relative w-4 h-4'>
                 <div className='absolute inset-0 rounded-full border-2 border-gray-600'></div>
@@ -413,11 +417,6 @@ const ChatMessages = ({
         </div>
       )}
 
-
-
-
-
-
       {/* Credit Deduction Notification */}
       {chatFlow.creditDeductionMessage && (
         <div className='flex justify-start'>
@@ -433,7 +432,7 @@ const ChatMessages = ({
       {/* Error message */}
       {chatFlow.error && (
         <div className='flex justify-start'>
-          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-gray-900/50 backdrop-blur-sm'>
+          <div className='text-gray-100 rounded-lg p-2.5 max-w-[80%] bg-[#0A0A0A80] backdrop-blur-sm border-1 border-red-700/30'>
             <div className='text-xs'>❌ {chatFlow.error}</div>
             <button
               onClick={() => chatFlow.setError(null)}
@@ -450,7 +449,7 @@ const ChatMessages = ({
       {/* Agent Status and Approvals */}
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
-          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg backdrop-blur-sm '>
+          <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg backdrop-blur-sm bg-[#0A0A0A80] border-1 border-gray-700/30'>
             {/* Enhanced Agent Working Indicator - Primary loader during streaming */}
             {chatFlow.isStreaming && (
               <VerboseAgentLoader 
@@ -464,7 +463,7 @@ const ChatMessages = ({
             {chatFlow.pendingApprovals && chatFlow.pendingApprovals.map((approval) => (
               <div key={approval.id} className='mb-3 last:mb-0'>
                 <div 
-                  className='rounded-lg overflow-hidden border border-gray-600/40 hover:border-gray-500/60 bg-white/10 p-3 transition-all duration-300'
+                  className='rounded-lg overflow-hidden border-1 border-gray-600/40 hover:border-gray-500/60 bg-white/10 p-3 transition-all duration-300'
                 >
                   <div className='flex items-center justify-between mb-3'>
                     <div className='text-white font-bold text-sm'>
@@ -514,12 +513,6 @@ const ChatMessages = ({
                       className='bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 px-3 py-1.5 rounded text-xs transition-colors font-medium'
                     >
                       Approve
-                    </button>
-                    <button
-                      onClick={() => chatFlow.rejectToolExecution(approval.id)}
-                      className='bg-gray-600/20 hover:bg-gray-600/30 border border-gray-600/50 text-gray-300 px-3 py-1.5 rounded text-xs transition-colors font-medium'
-                    >
-                      Reject
                     </button>
                   </div>
                 </div>

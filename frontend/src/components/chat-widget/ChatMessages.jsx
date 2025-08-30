@@ -179,7 +179,7 @@ const ChatMessages = ({
             <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedConcept
                 ? `✅ Selected Concept: "${chatFlow.selectedConcept.title}"`
-                : "I've generated 4 video concepts for you! Please choose one to develop:"}
+                : ""}
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}
@@ -373,7 +373,7 @@ const ChatMessages = ({
               message.id === "video-generation" ||
               message.id === "timeline-integration"
                 ? "w-full p-0" // Full width and no padding/background for component messages
-                : `max-w-[80%] p-2.5 text-white rounded-lg  ${ message.type === "user" ? "bg-[#18191C80] rounded-lg backdrop-blur-sm" : ""} `
+                : `max-w-[80%] p-2.5 text-white rounded-lg  ${ message.type === "user" ? "bg-[#FFFFFF1A] rounded-lg backdrop-blur-sm" : ""} `
             }`}
           >
             {message.content && (
@@ -393,7 +393,10 @@ const ChatMessages = ({
         <div className='flex justify-start'>
           <div className='text-gray-100 rounded-lg p-2.5  backdrop-blur-sm border border-white/10'>
             <div className='flex items-center space-x-2'>
-              <div className='animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400'></div>
+              <div className='relative w-4 h-4'>
+                <div className='absolute inset-0 rounded-full border-2 border-gray-600'></div>
+                <div className='absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400 animate-spin'></div>
+              </div>
               <div className='flex flex-col'>
                 <span className='text-xs text-gray-100'>
                   {chatFlow.agentActivity || 'Processing...'}
@@ -460,56 +463,65 @@ const ChatMessages = ({
             {/* Manual Approval Requests */}
             {chatFlow.pendingApprovals && chatFlow.pendingApprovals.map((approval) => (
               <div key={approval.id} className='mb-3 last:mb-0'>
-                <div className='text-gray-100 font-medium mb-2 flex items-center gap-2'>
-                  <span>Approval Required</span>
-                </div>
-                
-                <div className='text-gray-300 text-sm mb-3'>
-                  {approval.toolName === 'get_web_info' && (
-                    <div>
-                      <div className='mb-1'><strong>Web Research Request</strong></div>
-                      <div>I need permission to research web information for your prompt. This will help me understand current trends, gather relevant data, and provide more accurate and up-to-date concepts.</div>
+                <div 
+                  className='rounded-lg overflow-hidden border border-gray-600/40 hover:border-gray-500/60 bg-white/10 p-3 transition-all duration-300'
+                >
+                  <div className='flex items-center justify-between mb-3'>
+                    <div className='text-white font-bold text-sm'>
+                      Approval Required
                     </div>
-                  )}
-                  {approval.toolName === 'generate_concepts_with_approval' && (
-                    <div>
-                      <div className='mb-1'><strong>Concept Generation Ready</strong></div>
-                      <div>I'm ready to generate 4 unique content concepts based on the research. Each concept will include a title, description, and creative direction tailored to your request.</div>
+                    <div className='bg-yellow-400/20 text-yellow-300 px-2 py-1 rounded text-xs'>
+                      Waiting
                     </div>
-                  )}
-                  {approval.toolName === 'generate_segmentation' && (
-                    <div>
-                      <div className='mb-1'><strong>Script Creation Ready</strong></div>
-                      <div>I can now create detailed script segmentation for the selected concept. This will break down your content into scenes with visual descriptions, narration, and animation prompts.</div>
-                    </div>
-                  )}
-                  {approval.toolName === 'generate_image_with_approval' && (
-                    <div>
-                      <div className='mb-1'><strong>Image Generation Ready</strong></div>
-                      <div>I'm ready to generate high-quality images for each script segment. This will create visual assets that match your chosen art style and bring your script to life.</div>
-                    </div>
-                  )}
-                  {approval.toolName === 'generate_video_with_approval' && (
-                    <div>
-                      <div className='mb-1'><strong>Video Generation Ready</strong></div>
-                      <div>I'm ready to create dynamic videos from your generated images. This will add motion and animation to transform static images into engaging video content.</div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => chatFlow.approveToolExecution(approval.id)}
-                    className='bg-gray-600 hover:bg-gray-700 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => chatFlow.rejectToolExecution(approval.id)}
-                    className='bg-gray-800 hover:bg-gray-900 text-gray-100 px-3 py-1.5 rounded text-sm transition-colors font-medium'
-                  >
-                    Reject
-                  </button>
+                  </div>
+                  
+                  <div className='text-gray-300 text-xs mb-3 leading-relaxed'>
+                    {approval.toolName === 'get_web_info' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Web Research Request</div>
+                        <div>I need permission to research web information for your prompt. This will help me understand current trends, gather relevant data, and provide more accurate and up-to-date concepts.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_concepts_with_approval' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Concept Generation Ready</div>
+                        <div>I'm ready to generate 4 unique content concepts based on the research. Each concept will include a title, description, and creative direction tailored to your request.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_segmentation' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Script Creation Ready</div>
+                        <div>I can now create detailed script segmentation for the selected concept. This will break down your content into scenes with visual descriptions, narration, and animation prompts.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_image_with_approval' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Image Generation Ready</div>
+                        <div>I'm ready to generate high-quality images for each script segment. This will create visual assets that match your chosen art style and bring your script to life.</div>
+                      </div>
+                    )}
+                    {approval.toolName === 'generate_video_with_approval' && (
+                      <div>
+                        <div className='mb-2 text-cyan-300 font-medium'>Video Generation Ready</div>
+                        <div>I'm ready to create dynamic videos from your generated images. This will add motion and animation to transform static images into engaging video content.</div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className='flex gap-2'>
+                    <button
+                      onClick={() => chatFlow.approveToolExecution(approval.id)}
+                      className='bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 px-3 py-1.5 rounded text-xs transition-colors font-medium'
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => chatFlow.rejectToolExecution(approval.id)}
+                      className='bg-gray-600/20 hover:bg-gray-600/30 border border-gray-600/50 text-gray-300 px-3 py-1.5 rounded text-xs transition-colors font-medium'
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

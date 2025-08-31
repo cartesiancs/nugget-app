@@ -483,7 +483,7 @@ const FinalWorkingInterface = () => {
       name: "Fashion Lookbook",
       description: "Stylish AI-generated fashion video with modern aesthetics",
       thumbnail:
-        "https://unsplash.com/photos/a-rack-of-clothes-and-hats-in-a-room-_a_FlMKo4Lk?w=400&h=300&fit=crop",
+        "https://cdn.prod.website-files.com/5f0fcce0a916ee029d5b60df/66aa60ce9339e87dea1c765f_FASHION%20CLOTHES.jpg",
       updatedAt: "2024-01-10T17:25:00Z",
       hasMedia: true,
     },
@@ -906,7 +906,15 @@ const FinalWorkingInterface = () => {
                       key={project.id}
                       onClick={() => handleOpenProject(project)}
                       className={`bg-[#FFFFFF0D] backdrop-blur-[32.62921142578125px] rounded-lg border-1 border-white/10 overflow-visible hover:border-white/20 transition-colors cursor-pointer`}
-                      style={highlightProjectId === project.id ? { boxShadow: '4px 6px 12px rgba(255,223,0,0.45), 8px 12px 20px rgba(255,223,0,0.25)', transition: 'box-shadow 0.3s ease' } : {}}
+                      style={
+                        highlightProjectId === project.id
+                          ? {
+                              boxShadow:
+                                "4px 6px 12px rgba(255,223,0,0.45), 8px 12px 20px rgba(255,223,0,0.25)",
+                              transition: "box-shadow 0.3s ease",
+                            }
+                          : {}
+                      }
                     >
                       {/* Project Media - Bigger */}
                       <div className='w-full h-52 bg-[#18191C80] flex items-center justify-center overflow-hidden relative group'>

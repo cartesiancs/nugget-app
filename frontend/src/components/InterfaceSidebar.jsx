@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 const InterfaceSidebar = ({
   user,
@@ -9,6 +10,7 @@ const InterfaceSidebar = ({
   onToggleAllProjects,
   onPurchaseCredits,
 }) => {
+  const { logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -25,8 +27,27 @@ const InterfaceSidebar = ({
     };
   }, []);
 
+  // Close dropdown if user logs out
+  useEffect(() => {
+    if (!user || !user.email) {
+      setIsDropdownOpen(false);
+    }
+  }, [user]);
+
   const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+    // Only open dropdown if user is logged in
+    if (user && user.email) {
+      setIsDropdownOpen(!isDropdownOpen);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const sidebarBgStyle = {
@@ -58,7 +79,10 @@ const InterfaceSidebar = ({
           <div className='relative' ref={dropdownRef}>
             <button
               onClick={toggleDropdown}
-              className='flex items-center gap-3 bg-transparent text-white cursor-pointer transition-all duration-200 hover:bg-white/5 rounded-lg p-2'
+              disabled={!user || !user.email}
+              className={`flex items-center gap-3 bg-transparent text-white cursor-pointer transition-all duration-200 hover:bg-white/5 rounded-lg p-2 ${
+                !user || !user.email ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <div className='w-8 h-8 rounded-full bg-white flex items-center justify-center'>
                 <span className='text-black font-bold text-sm'>
@@ -88,7 +112,7 @@ const InterfaceSidebar = ({
               </svg>
             </button>
 
-            {isDropdownOpen && (
+            {isDropdownOpen && user && user.email && (
               <div className='absolute top-full left-0 mt-2 w-80 bg-[#18191CCC] border-1 border-white/10 rounded-xl shadow-2xl backdrop-blur-md z-50 overflow-hidden'>
                 <div className='bg-white/5 rounded-lg p-3 m-2 flex items-center gap-1'>
                   <div className='w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0'>
@@ -135,7 +159,7 @@ const InterfaceSidebar = ({
                 </div>
 
                 <div className='px-2 py-1'>
-                  <div className='p-2 text-white text-sm cursor-pointer rounded-lg mb-0.5 flex items-center gap-3 transition-colors hover:bg-white/5'>
+                  {/* <div className='p-2 text-white text-sm cursor-pointer rounded-lg mb-0.5 flex items-center gap-3 transition-colors hover:bg-white/5'>
                     <svg
                       className='w-5 h-5 text-white'
                       viewBox='0 0 24 24'
@@ -158,9 +182,9 @@ const InterfaceSidebar = ({
                       />
                     </svg>
                     <span>Settings</span>
-                  </div>
-                  
-                  <div className='p-2 text-gray-300 text-sm cursor-pointer rounded-lg mb-0.5 flex items-center gap-3 transition-colors hover:bg-white/5'>
+                  </div> */}
+
+                  {/* <div className='p-2 text-gray-300 text-sm cursor-pointer rounded-lg mb-0.5 flex items-center gap-3 transition-colors hover:bg-white/5'>
                     <svg
                       className='w-4 h-4 text-gray-300'
                       viewBox='0 0 24 24'
@@ -183,9 +207,9 @@ const InterfaceSidebar = ({
                       />
                     </svg>
                     <span>My Profile</span>
-                  </div>
-                  
-                  <div className='p-2 text-gray-300 text-sm cursor-pointer rounded-lg mb-0.5 flex items-center gap-3 transition-colors hover:bg-white/5'>
+                  </div> */}
+
+                  {/* <div className='p-2 text-gray-300 text-sm cursor-pointer rounded-lg mb-0.5 flex items-center gap-3 transition-colors hover:bg-white/5'>
                     <svg
                       className='w-4 h-4 text-gray-300'
                       viewBox='0 0 24 24'
@@ -197,11 +221,14 @@ const InterfaceSidebar = ({
                       <path d='M12 17h.01' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
                     </svg>
                     <span>Help & Resources</span>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className='p-2 border-t border-white/10'>
-                  <button className='w-full py-2 bg-red-600/20 text-red-400 text-sm font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-red-600/30 transition-colors'>
+                  <button
+                    onClick={handleLogout}
+                    className='w-full py-2 bg-red-600/20 text-red-400 text-sm font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-red-600/30 transition-colors'
+                  >
                     <svg
                       className='w-4 h-4'
                       viewBox='0 0 24 24'
@@ -334,16 +361,22 @@ const InterfaceSidebar = ({
         </div>
 
         {/* Marketplace */}
-        <div className='mb-3'>
+        <div className='mb-3 relative'>
           <div
             role='button'
             tabIndex='0'
             className='w-full flex items-center gap-3 px-3 py-2 text-gray-400 text-sm hover:text-white cursor-pointer transition-colors rounded-lg'
             onMouseEnter={(e) => {
               Object.assign(e.currentTarget.style, hoverItemBgStyle);
+              e.currentTarget.querySelector(".tooltip").style.opacity = "1";
+              e.currentTarget.querySelector(".tooltip").style.transform =
+                "translateY(0)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "";
+              e.currentTarget.querySelector(".tooltip").style.opacity = "0";
+              e.currentTarget.querySelector(".tooltip").style.transform =
+                "translateY(4px)";
             }}
           >
             <svg
@@ -364,6 +397,28 @@ const InterfaceSidebar = ({
               />
             </svg>
             <span>Marketplace</span>
+
+            {/* Custom Tooltip */}
+            <div
+              className='tooltip absolute left-1/2 transform -translate-x-1/2 -top-12 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 pointer-events-none transition-all duration-200 ease-in-out whitespace-nowrap'
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(40, 40, 40, 0.95) 100%)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                transform: "translateX(-50%) translateY(4px)",
+              }}
+            >
+              Coming Soon
+              <div
+                className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0'
+                style={{
+                  borderLeft: "4px solid transparent",
+                  borderRight: "4px solid transparent",
+                  borderTop: "4px solid rgba(40, 40, 40, 0.95)",
+                }}
+              ></div>
+            </div>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTimeline } from "../hooks/useTimeline";
 import { useConceptGeneration } from "../hooks/useConceptGeneration";
@@ -44,6 +45,10 @@ function FlowWidget() {
   const [error, setError] = useState(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  
+  // Modal state for image viewing
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState(null);
 
   const [rfInstance, setRfInstance] = useState(null);
   const nodesRef = useRef(nodes);
@@ -52,6 +57,17 @@ function FlowWidget() {
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
+
+  // Image modal handlers
+  const handleImageClick = useCallback((imageUrl) => {
+    setModalImageUrl(imageUrl);
+    setShowImageModal(true);
+  }, []);
+
+  const closeImageModal = useCallback(() => {
+    setShowImageModal(false);
+    setModalImageUrl(null);
+  }, []);
 
   // Auto-remove chat nodes and text nodes when their parent nodes are deleted
   useEffect(() => {
@@ -1579,7 +1595,7 @@ function FlowWidget() {
   // Update nodeTypes to include all new clean node components with retry functionality
   const nodeTypes = useMemo(() => {
     // Memoized components with stable references
-    const MemoizedImageNode = React.memo((props) => <NodeImage {...props} onRetry={retryGeneration} />);
+    const MemoizedImageNode = React.memo((props) => <NodeImage {...props} onRetry={retryGeneration} onImageClick={handleImageClick} />);
     const MemoizedVideoNode = React.memo((props) => <NodeVideo {...props} onRetry={retryGeneration} />);
     const MemoizedScriptNode = React.memo((props) => <NodeScript {...props} onRetry={retryGeneration} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
     const MemoizedConceptNode = React.memo((props) => <NodeConcept {...props} onRetry={retryGeneration} onToggleTextNode={handleToggleTextNode} nodes={nodes} />);
@@ -2293,6 +2309,28 @@ function FlowWidget() {
           onSendMessage={(message, nodeType, model) => {
           }}
         />
+      )}
+
+      {/* Image Modal */}
+      {showImageModal && modalImageUrl && createPortal(
+        <div
+          className='fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10003]'
+          onClick={closeImageModal}
+        >
+          <img
+            src={modalImageUrl}
+            alt='Preview'
+            className='max-w-full max-h-full rounded shadow-lg'
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className='absolute top-4 right-4 text-white text-2xl hover:text-gray-300 transition-colors'
+            onClick={closeImageModal}
+          >
+            ✕
+          </button>
+        </div>,
+        document.body,
       )}
     </div>
   );

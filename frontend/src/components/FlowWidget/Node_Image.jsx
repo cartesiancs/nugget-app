@@ -1,14 +1,39 @@
 
 import React from "react";
 import { Handle } from "@xyflow/react";
-import { Image, Camera, Images, Frame, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Image, Camera, Images, Frame, Loader2, AlertCircle, RefreshCw, Download, Maximize2 } from "lucide-react";
 
-function NodeImage({ data, isConnectable, selected, onRetry }) {
+function NodeImage({ data, isConnectable, selected, onRetry, onImageClick }) {
   // Check node state and data
   const nodeState = data?.nodeState || 'new';
   const hasData = data && (data.imageUrl || data.url);
   const isLoading = nodeState === 'loading';
   const hasError = nodeState === 'error';
+
+  // Download functionality
+  const handleDownload = async (imageUrl) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `image_${data.id || 'node'}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
+  // Enlarge functionality
+  const handleEnlarge = (imageUrl) => {
+    if (onImageClick) {
+      onImageClick(imageUrl);
+    }
+  };
   
   
   return (
@@ -84,12 +109,43 @@ function NodeImage({ data, isConnectable, selected, onRetry }) {
           // Existing/Generated data view - all look the same
           <>
             {/* Full Image Display */}
-            <div className='relative h-full w-full'>
+            <div className='relative w-full h-[240px]'>
               <img
                 src={data.imageUrl || data.url}
                 alt="Generated content"
                 className='w-full h-full object-cover rounded-lg'
               />
+              
+              {/* Floating Action Toolbar */}
+              <div className='absolute bottom-2 right-2'>
+                <div
+                  className='flex items-center space-x-1 px-2 py-1 rounded-lg'
+                  style={{
+                    background: '#18191C33',
+                    backdropFilter: "blur(40px)",
+                  }}
+                >
+                  {/* Download Icon */}
+                  <Download
+                    size={16}
+                    className='cursor-pointer text-white/50 hover:text-white/80 transition-colors'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(data.imageUrl || data.url);
+                    }}
+                  />
+
+                  {/* Enlarge Icon */}
+                  <Maximize2
+                    size={16}
+                    className='cursor-pointer text-white/50 hover:text-white/80 transition-colors'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEnlarge(data.imageUrl || data.url);
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </>
         ) : (

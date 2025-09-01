@@ -16,7 +16,9 @@
     "bundle:prod:src": "webpack --mode=production",
     "build:win": "npm run bundle:prod:src && electron-builder build --win --x64",
     "build:mac": "npm run bundle:prod:src && electron-builder build --mac",
-    "build": "npm run build:win"
+    "build": "npm run build:win",
+    "build:all": "npm --prefix ./frontend run build:all",
+    "start:all": "npm run build:all && npm start"
   },
   "repository": {
     "type": "git",

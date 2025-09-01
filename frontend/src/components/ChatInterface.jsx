@@ -119,6 +119,11 @@ const ChatInterface = () => {
       setRecentProjects(prev => [{ ...newProject, hasContent: false }, ...prev.slice(0, 5)]);
       
       setCreatingProject(false);
+      
+      // Dispatch event to notify FlowWidget about new project creation
+      window.dispatchEvent(new CustomEvent('newProjectCreated', { 
+        detail: { project: newProject } 
+      }));
 
       // Start agent workflow with the prompt
       await chatFlow.startAgentStream(prompt);
@@ -151,6 +156,11 @@ const ChatInterface = () => {
       setShowCreateProject(false);
       setNewProjectName('');
       setNewProjectDesc('');
+      
+      // Dispatch event to notify FlowWidget about new project creation
+      window.dispatchEvent(new CustomEvent('newProjectCreated', { 
+        detail: { project: newProject } 
+      }));
     } catch (error) {
       console.error('Failed to create project:', error);
     } finally {

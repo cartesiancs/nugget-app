@@ -1912,6 +1912,90 @@ function FlowWidget() {
     };
   }, [timeline, setError]);
 
+  // Listen for project change events to automatically refresh FlowWidget
+  useEffect(() => {
+    const handleProjectChanged = async (event) => {
+      const { project } = event.detail;
+      console.log('🔄 FlowWidget received projectChanged event:', project);
+      
+      if (project) {
+        // Update project name in the UI
+        setProjectName(project.name || project.title || "Untitled");
+        
+        // Clear existing nodes and edges to prepare for new project data
+        setNodes([]);
+        setEdges([]);
+        
+        // Clear existing project data
+        setAllProjectData({
+          concepts: [],
+          scripts: [],
+          segments: [],
+          images: [],
+          videos: [],
+        });
+        
+        // Fetch new project data
+        await fetchAllProjectData();
+      }
+    };
+
+    const handleProjectEssentialsLoaded = async (event) => {
+      const { project, projectId } = event.detail;
+      console.log('📊 FlowWidget received projectEssentialsLoaded event:', project);
+      
+      if (project && projectId) {
+        // Refresh the flow data after essentials are loaded
+        await fetchAllProjectData();
+      }
+    };
+
+    const handleNewProjectCreated = async (event) => {
+      const { project } = event.detail;
+      console.log('🆕 FlowWidget received newProjectCreated event:', project);
+      
+      if (project) {
+        // Update project name
+        setProjectName(project.name || project.title || "Untitled");
+        
+        // Clear existing data for new project
+        setNodes([]);
+        setEdges([]);
+        setAllProjectData({
+          concepts: [],
+          scripts: [],
+          segments: [],
+          images: [],
+          videos: [],
+        });
+        
+        // Reset task completion states for new project
+        setTaskCompletionStates({
+          userInput: false,
+          concept: false,
+          script: false,
+          segment: false,
+          image: false,
+          video: false,
+        });
+        
+        // Fetch project data (will be empty for new project)
+        await fetchAllProjectData();
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('projectChanged', handleProjectChanged);
+    window.addEventListener('projectEssentialsLoaded', handleProjectEssentialsLoaded);
+    window.addEventListener('newProjectCreated', handleNewProjectCreated);
+
+    return () => {
+      window.removeEventListener('projectChanged', handleProjectChanged);
+      window.removeEventListener('projectEssentialsLoaded', handleProjectEssentialsLoaded);
+      window.removeEventListener('newProjectCreated', handleNewProjectCreated);
+    };
+  }, [fetchAllProjectData]);
+
   // Reflect open state and handle dropdown clicks
   const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
 

@@ -341,6 +341,11 @@ function ChatWidgetSidebar({ open, setOpen }) {
         chatFlow.setSelectedProject(newProject);
         chatFlow.resetFlow();
         setCreateModalOpen(false);
+        
+        // Dispatch event to notify FlowWidget about new project creation
+        window.dispatchEvent(new CustomEvent('newProjectCreated', { 
+          detail: { project: newProject } 
+        }));
       } catch (err) {
         setCreateProjectError(err.message || "Failed to create project.");
       } finally {

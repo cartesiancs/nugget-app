@@ -324,6 +324,11 @@ const FinalWorkingInterface = () => {
       // Add to recent projects
       setRecentProjects((prev) => [newProject, ...prev.slice(0, 5)]);
 
+      // Dispatch event to notify FlowWidget about new project creation
+      window.dispatchEvent(new CustomEvent('newProjectCreated', { 
+        detail: { project: newProject } 
+      }));
+
       // Start the chat flow only when requested
       if (startChat) {
         navigateToEditorWithChat(newProject, description.trim());
@@ -373,6 +378,11 @@ const FinalWorkingInterface = () => {
         }),
       );
 
+      // Dispatch event to notify FlowWidget about project change
+      window.dispatchEvent(new CustomEvent('projectChanged', { 
+        detail: { project: project } 
+      }));
+
       // Specifically notify ChatWidget if it exists
       window.dispatchEvent(
         new CustomEvent("openChatWithPrompt", {
@@ -392,6 +402,12 @@ const FinalWorkingInterface = () => {
 
   const handleOpenProject = (project) => {
     console.log("Opening project:", project);
+    
+    // Dispatch event to notify FlowWidget about project selection
+    window.dispatchEvent(new CustomEvent('projectChanged', { 
+      detail: { project: project } 
+    }));
+    
     navigateToEditorWithChat(project, "");
     setOpenDropdownId(null); // Close dropdown
   };

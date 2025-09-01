@@ -649,11 +649,15 @@ function FlowWidgetSidebar({ selectedNode, onClose, onRegenerate }) {
                   backdropFilter: "blur(10px)",
                 }}
               >
-                <option value='Anime'>Anime</option>
                 <option value='Realistic'>Realistic</option>
-                <option value='Cartoon'>Cartoon</option>
-                <option value='Abstract'>Abstract</option>
-                <option value='Photographic'>Photographic</option>
+                <option value='Cinematic'>Cinematic</option>
+                <option value='Artistic'>Artistic</option>
+                <option value='Corporate'>Corporate</option>
+                <option value='Vintage'>Vintage</option>
+                <option value='Mordern'>Mordern</option>
+                <option value='Creative'>Creative</option>
+                <option value='Brand'>Brand</option>
+                
               </select>
               <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                 <svg

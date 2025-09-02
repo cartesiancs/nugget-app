@@ -170,7 +170,7 @@ export default function InputArea({
           ) {
             const start = textareaRef.current.selectionStart;
             const end = textareaRef.current.selectionEnd;
-            const selectedText = inputMessage.substring(start, end);
+            const selectedText = prompt.substring(start, end);
 
             // Copy to clipboard
             navigator.clipboard
@@ -178,9 +178,9 @@ export default function InputArea({
               .then(() => {
                 // Remove selected text
                 const newMessage =
-                  inputMessage.substring(0, start) +
-                  inputMessage.substring(end);
-                setInputMessage(newMessage);
+                  prompt.substring(0, start) +
+                  prompt.substring(end);
+                setPrompt(newMessage);
 
                 // Set cursor position
                 setTimeout(() => {
@@ -193,9 +193,9 @@ export default function InputArea({
                 console.error("Failed to copy text: ", err);
                 // Fallback: just remove the text
                 const newMessage =
-                  inputMessage.substring(0, start) +
-                  inputMessage.substring(end);
-                setInputMessage(newMessage);
+                  prompt.substring(0, start) +
+                  prompt.substring(end);
+                setPrompt(newMessage);
               });
           }
           break;
@@ -210,7 +210,7 @@ export default function InputArea({
     // Handle Enter key for sending message
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSubmit(e);
     }
   };
 

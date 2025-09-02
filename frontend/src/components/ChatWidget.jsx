@@ -6,16 +6,10 @@ import { projectApi } from "../services/project";
 import LoadingSpinner from "./LoadingSpinner";
 import CharacterGenerator from "./CharacterGenerator";
 import CreditWidget from "./CreditWidget";
-import FloatingChatButton from "./chat-widget/FloatingChatButton";
 import StepList from "./chat-widget/StepList";
 import InputArea from "./chat-widget/InputArea";
 import ConceptSelection from "./chat-widget/ConceptSelection";
 import ScriptSelection from "./chat-widget/ScriptSelection";
-import ModelSelection from "./chat-widget/ModelSelection";
-import GenerationProgress from "./chat-widget/GenerationProgress";
-import GeneratedImages from "./chat-widget/GeneratedImages";
-import GeneratedVideos from "./chat-widget/GeneratedVideos";
-import ContentSummary from "./chat-widget/ContentSummary";
 import TimelineButton from "./chat-widget/TimelineButton";
 import AuthMessages from "./chat-widget/AuthMessages";
 import Sidebar from "./chat-widget/Sidebar";
@@ -577,45 +571,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
                   selectedScript={chatFlow.selectedScript}
                 />
 
-                {/* Model Selection */}
-                <ModelSelection
-                  currentStep={chatFlow.currentStep}
-                  selectedScriptModel={chatFlow.selectedScriptModel}
-                  setSelectedScriptModel={chatFlow.setSelectedScriptModel}
-                  selectedImageModel={chatFlow.selectedImageModel}
-                  setSelectedImageModel={chatFlow.setSelectedImageModel}
-                  selectedVideoModel={chatFlow.selectedVideoModel}
-                  setSelectedVideoModel={chatFlow.setSelectedVideoModel}
-                />
 
-                {/* Generation Progress */}
-                <GenerationProgress
-                  generationProgress={chatFlow.generationProgress}
-                  currentStep={chatFlow.currentStep}
-                />
-
-                {/* Generated Images */}
-                <GeneratedImages
-                  generatedImages={chatFlow.generatedImages}
-                  currentStep={chatFlow.currentStep}
-                  onImageClick={handleImageClick}
-                />
-
-                {/* Generated Videos */}
-                <GeneratedVideos
-                  combinedVideosMap={combinedVideosMap}
-                  currentStep={chatFlow.currentStep}
-                  onVideoClick={handleVideoClick}
-                  onAddSingleVideo={addSingleVideoToTimeline}
-                />
-
-                {/* Generated Content Summary */}
-                <ContentSummary
-                  selectedScript={chatFlow.selectedScript}
-                  currentStep={chatFlow.currentStep}
-                  generatedImages={chatFlow.generatedImages}
-                  generatedVideos={chatFlow.generatedVideos}
-                />
 
                 {/* Auth/Project Messages */}
                  <AuthMessages
@@ -741,7 +697,6 @@ function ChatWidget() {
 
   return (
     <>
-      <FloatingChatButton open={open} setOpen={setOpen} />
       <ChatWidgetSidebar open={open} setOpen={setOpen} />
     </>
   );

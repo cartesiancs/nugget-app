@@ -178,8 +178,7 @@ export default function InputArea({
               .then(() => {
                 // Remove selected text
                 const newMessage =
-                  prompt.substring(0, start) +
-                  prompt.substring(end);
+                  prompt.substring(0, start) + prompt.substring(end);
                 setPrompt(newMessage);
 
                 // Set cursor position
@@ -193,8 +192,7 @@ export default function InputArea({
                 console.error("Failed to copy text: ", err);
                 // Fallback: just remove the text
                 const newMessage =
-                  prompt.substring(0, start) +
-                  prompt.substring(end);
+                  prompt.substring(0, start) + prompt.substring(end);
                 setPrompt(newMessage);
               });
           }

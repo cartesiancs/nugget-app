@@ -576,9 +576,10 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 {/* Scripts Selection */}
                 <ScriptSelection
                   scripts={chatFlow.scripts}
-                  currentStep={chatFlow.currentStep}
                   onScriptSelect={chatFlow.handleScriptSelect}
                   selectedScript={chatFlow.selectedScript}
+                  isProjectScript={!chatFlow.scripts && !!chatFlow.selectedScript}
+                  selectedSegmentationId={(!chatFlow.scripts && !!chatFlow.selectedScript) ? 'project-script' : null}
                 />
 
 

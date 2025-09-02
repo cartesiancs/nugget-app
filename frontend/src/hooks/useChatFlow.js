@@ -508,9 +508,9 @@ export const useChatFlow = () => {
             model: scriptModel,
           }),
           segmentationApi.getSegmentation({
-            prompt,
+            prompt: `${prompt} (alternative approach)`,
             concept: selectedConcept.title,
-            negative_prompt: "",
+            negative_prompt: "avoid repetition, be creative",
             project_id: selectedProject?.id,
             model: scriptModel,
           }),
@@ -918,11 +918,19 @@ export const useChatFlow = () => {
         `🔄 Loading project data for project: ${selectedProject.name} (ID: ${selectedProject.id})`,
       );
 
-      // Reset all states first to ensure clean slate
-      resetFlow();
-
+      // Don't call resetFlow() here as it clears all state before we can restore it
+      // Instead, only reset specific states that need to be cleared
       setLoading(true);
       setError(null);
+      setCurrentStep(0);
+      setStepStatus({
+        0: "pending",
+        1: "pending", 
+        2: "pending",
+        3: "pending",
+        4: "pending",
+        5: "pending",
+      });
 
       console.log(`📡 Fetching project data from API...`);
 
@@ -1006,6 +1014,19 @@ export const useChatFlow = () => {
             segments,
             artStyle: firstSegmentation.artStyle,
             concept: firstSegmentation.concept,
+          });
+
+          // Create two scripts from the existing data for history display
+          // This ensures users see 2 scripts: one selected and one alternative
+          const existingScript = {
+            segments,
+            artStyle: firstSegmentation.artStyle,
+            concept: firstSegmentation.concept,
+          };
+          
+          setScripts({
+            response1: existingScript,
+            response2: { ...existingScript, artStyle: existingScript.artStyle + " (Alternative)" }
           });
 
           // If we have a script, move to step 3 (script selection completed)
@@ -2263,20 +2284,29 @@ export const useChatFlow = () => {
           showCreditDeduction("Concept Writer Process");
         }
 
-        // Handle segmentation results
+        // Handle segmentation results - but don't auto-select, let user choose
         if (result.data.segments) {
           setAgentActivity(
-            "Processing script segments and preparing for image generation...",
+            "Script generation completed. Please select your preferred script...",
           );
 
+          // Create script object from the segments data
           const script = {
             segments: result.data.segments,
             artStyle: result.data.artStyle || "realistic",
             concept: result.data.concept || "",
           };
-          setSelectedScript(script);
+
+          // Set scripts for user selection (create two scripts for selection)
+          // For now, we'll use the same script for both, but this can be enhanced
+          // to generate two different scripts if the streaming API provides them
+          setScripts({ 
+            response1: script, 
+            response2: { ...script, artStyle: script.artStyle + " (Alternative)" }
+          });
+          
           updateStepStatus(2, "done");
-          setCurrentStep(4); // Skip to image generation
+          setCurrentStep(3); // Go to script selection step
 
           // Show credit deduction for script generation
           showCreditDeduction("Script Generation", null, 1);

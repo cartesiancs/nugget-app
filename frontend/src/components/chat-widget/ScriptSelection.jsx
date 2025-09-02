@@ -4,9 +4,10 @@ const ScriptSelection = ({
   scripts,
   onScriptSelect,
   selectedScript,
-  isProjectScript = false, // New prop to distinguish project scripts
+  isProjectScript = false,
+  selectedSegmentationId = null, // For project scripts, indicates which segmentation is selected
 }) => {
-  const [expandedScript, setExpandedScript] = useState(null);
+  const [expandedCard, setExpandedCard] = useState(null);
 
   // Handle both scenarios: scripts array or single project script
   const hasScripts = scripts && (scripts.response1 || scripts.response2);
@@ -14,437 +15,198 @@ const ScriptSelection = ({
   
   if (!hasScripts && !hasProjectScript) return null;
 
-  const handleScriptClick = (script) => {
+  const handleCardClick = (script) => {
     onScriptSelect(script);
   };
 
-  const handleExpandClick = (e, scriptNumber) => {
+  const handleExpandClick = (e, index) => {
     e.stopPropagation();
-    setExpandedScript(expandedScript === scriptNumber ? null : scriptNumber);
+    setExpandedCard(expandedCard === index ? null : index);
   };
 
-  // Render project script display
+  // Create script cards array for unified rendering
+  const scriptCards = [];
+  
   if (hasProjectScript) {
-    return (
-      <div className="mt-3 w-full">
-        <div className="flex space-x-3 overflow-x-auto pb-4 w-full">
-          {/* Segmentation 1 */}
-          <div 
-            className={`border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer flex-shrink-0 bg-white/10 backdrop-blur-sm shadow-xl ${
-              expandedScript === 'seg1' ? 'w-80' : 'w-44 h-44'
-            }`}
-          >
-            <div className="p-3 flex flex-col relative h-full">
-              {/* Dropdown arrow in top right */}
-              <button
-                onClick={(e) => handleExpandClick(e, 'seg1')}
-                className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
-              >
-                <svg 
-                  className={`w-3 h-3 transition-transform duration-200 ${expandedScript === 'seg1' ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Title */}
-              <div className="text-white font-bold text-sm mb-2 pr-6">
-                Segmentation 1
-              </div>
-
-              {/* Segments and Art Style */}
-              <div className="space-y-1 mb-2">
-                <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Seconds:</span> {selectedScript.segments?.length * 5 || 0}<span>s</span>
-                </div>
-                <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Art Style:</span> {selectedScript.artStyle || "Default"}
-                </div>
-              </div>
-
-              {/* Full segmentation content */}
-              <div className="flex-1">
-                {expandedScript === 'seg1' ? (
-                  <div className="text-gray-300 text-xs leading-relaxed">
-                    <span className="text-cyan-300">Full Content:</span>
-                    <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                      {selectedScript.segments?.map((segment, index) => (
-                        <div key={index} className="border-l-2 border-cyan-400/30 pl-2">
-                          <div className="text-cyan-300 text-xs font-medium mb-1">
-                            Segment {index + 1}:
-                          </div>
-                          {segment.visual && (
-                            <div className="text-gray-300 text-xs mb-1">
-                              <span className="text-cyan-300">Visual:</span> {segment.visual}
-                            </div>
-                          )}
-                          {segment.animation && (
-                            <div className="text-gray-300 text-xs mb-1">
-                              <span className="text-cyan-300">Animation:</span> {segment.animation}
-                            </div>
-                          )}
-                          {segment.narration && (
-                            <div className="text-gray-300 text-xs mb-1">
-                              <span className="text-cyan-300">Narration:</span> {segment.narration}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className="text-gray-300 text-xs leading-relaxed">
-                      <span className="text-cyan-300">Preview:</span> {selectedScript.segments?.[0]?.visual?.substring(0, 60) || selectedScript.segments?.[0]?.narration?.substring(0, 60) || "No content"}...
-                    </div>
-                    {/* Blur effect at bottom when collapsed */}
-                    <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Segmentation 2 */}
-          <div 
-            className={`border border-gray-600/40 rounded-lg overflow-hidden hover:border-gray-500/60 transition-all duration-300 cursor-pointer flex-shrink-0 bg-white/10 backdrop-blur-sm shadow-xl ${
-              expandedScript === 'seg2' ? 'w-80' : 'w-44 h-44'
-            }`}
-          >
-            <div className="p-3 flex flex-col relative h-full">
-              {/* Dropdown arrow in top right */}
-              <button
-                onClick={(e) => handleExpandClick(e, 'seg2')}
-                className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
-              >
-                <svg 
-                  className={`w-3 h-3 transition-transform duration-200 ${expandedScript === 'seg2' ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Title */}
-              <div className="text-white font-bold text-sm mb-2 pr-6">
-                Segmentation 2
-              </div>
-
-              {/* Segments and Art Style */}
-              <div className="space-y-1 mb-2">
-                <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Seconds:</span> {selectedScript.segments?.length * 5 || 0}<span>s</span>
-                </div>
-                <div className="text-gray-300 text-xs">
-                  <span className="text-cyan-300">Art Style:</span> {selectedScript.artStyle || "Default"}
-                </div>
-              </div>
-
-              {/* Full segmentation content */}
-              <div className="flex-1">
-                {expandedScript === 'seg2' ? (
-                  <div className="text-gray-300 text-xs leading-relaxed">
-                    <span className="text-cyan-300">Full Content:</span>
-                    <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                      {selectedScript.segments?.map((segment, index) => (
-                        <div key={index} className="border-l-2 border-cyan-400/30 pl-2">
-                          <div className="text-cyan-300 text-xs font-medium mb-1">
-                            Segment {index + 1}:
-                          </div>
-                          {segment.visual && (
-                            <div className="text-gray-300 text-xs mb-1">
-                              <span className="text-cyan-300">Visual:</span> {segment.visual}
-                            </div>
-                          )}
-                          {segment.animation && (
-                            <div className="text-gray-300 text-xs mb-1">
-                              <span className="text-cyan-300">Animation:</span> {segment.animation}
-                            </div>
-                          )}
-                          {segment.narration && (
-                            <div className="text-gray-300 text-xs mb-1">
-                              <span className="text-cyan-300">Narration:</span> {segment.narration}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className="text-gray-300 text-xs leading-relaxed">
-                      <span className="text-cyan-300">Preview:</span> {selectedScript.segments?.[0]?.visual?.substring(0, 60) || selectedScript.segments?.[0]?.narration?.substring(0, 60) || "No content"}...
-                    </div>
-                    {/* Blur effect at bottom when collapsed */}
-                    <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    // For project scripts (history), create two cards - one selected, one alternative
+    scriptCards.push(
+      {
+        id: 'project-script-1',
+        title: 'Selected Script',
+        script: selectedScript,
+        isProject: true,
+        isSelected: true
+      },
+      {
+        id: 'project-script-2',
+        title: 'Alternative Script',
+        script: selectedScript,
+        isProject: true,
+        isSelected: false
+      }
     );
+  } else if (hasScripts) {
+    // For newly generated scripts, create two cards for user selection
+    if (scripts.response1) {
+      scriptCards.push({
+        id: 1,
+        title: 'Script 1',
+        script: scripts.response1,
+        isProject: false,
+        isSelected: false
+      });
+    }
+    if (scripts.response2) {
+      scriptCards.push({
+        id: 2,
+        title: 'Script 2', 
+        script: scripts.response2,
+        isProject: false,
+        isSelected: false
+      });
+    }
   }
 
-  // Render generated scripts selection
-  if (hasScripts) {
-    return (
-      <div className="mt-3 w-full">
-        <div className="flex space-x-3 overflow-x-auto pb-4 w-full">
-          {/* Script 1 */}
-          {(() => {
-            // More robust selection comparison
-            const isSelected = selectedScript && selectedScript.segments && scripts.response1 && scripts.response1.segments &&
-              selectedScript.segments.length === scripts.response1.segments.length &&
-              selectedScript.segments.every((segment, index) => {
-                const response1Segment = scripts.response1.segments[index];
-                return response1Segment && 
-                  segment.id === response1Segment.id &&
-                  segment.visual === response1Segment.visual &&
-                  segment.narration === response1Segment.narration;
-              });
-            
-            // Debug logging
-            if (selectedScript && scripts.response1) {
-              console.log('Script 1 Selection Debug:', {
-                hasSelectedScript: !!selectedScript,
-                hasSelectedSegments: !!selectedScript?.segments,
-                hasResponse1: !!scripts.response1,
-                hasResponse1Segments: !!scripts.response1?.segments,
-                selectedSegmentsLength: selectedScript?.segments?.length,
-                response1SegmentsLength: scripts.response1?.segments?.length,
-                isSelected,
-                selectedScriptSample: selectedScript?.segments?.[0],
-                response1Sample: scripts.response1?.segments?.[0]
-              });
+  return (
+    <div className="mt-3 w-full">
+      <div className="flex space-x-3 overflow-x-auto pb-4 w-full">
+        {scriptCards.map((card, index) => {
+          // Check if this card is selected
+          let isSelected = false;
+          
+          if (hasProjectScript) {
+            // For project scripts (history), use the isSelected property from the card
+            isSelected = card.isSelected;
+          } else if (hasScripts) {
+            // For newly generated scripts, check if this specific script matches the selected one
+            if (selectedScript && card.script) {
+              // First try object reference comparison
+              if (selectedScript === card.script) {
+                isSelected = true;
+              } else {
+                // If not the same object, check if it's the same script by comparing unique identifiers
+                const selectedFirstSegment = selectedScript.segments?.[0];
+                const cardFirstSegment = card.script.segments?.[0];
+                
+                if (selectedFirstSegment && cardFirstSegment) {
+                  // Use a combination of ID, visual, and narration to uniquely identify the script
+                  isSelected = selectedFirstSegment.id === cardFirstSegment.id &&
+                             selectedFirstSegment.visual === cardFirstSegment.visual &&
+                             selectedFirstSegment.narration === cardFirstSegment.narration;
+                }
+              }
             }
-            return (
-              <div 
-                className={`rounded-lg overflow-hidden transition-all duration-300 cursor-pointer flex-shrink-0 backdrop-blur-sm ${
-                  expandedScript === 1 ? 'w-80' : 'w-44 h-44'
-                } ${
-                  isSelected 
-                    ? 'border-2 border-cyan-400 shadow-lg shadow-cyan-400/50 bg-gradient-to-br from-cyan-500/15 to-blue-500/15' 
-                    : 'border border-gray-600/40 hover:border-gray-500/60 bg-white/10'
-                }`}
-                onClick={() => handleScriptClick(scripts.response1)}
-              >
-                <div className="p-3 flex flex-col relative h-full">
-                  {/* Selection indicator */}
-                  {isSelected && (
-                    <div className="absolute top-2 left-2 z-10">
-                      <div className="bg-cyan-400 rounded-full p-1">
-                        <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
+          }
+
+          return (
+            <div
+              key={card.id}
+              className={`rounded-lg overflow-hidden transition-all duration-300 cursor-pointer ${
+                expandedCard === index 
+                  ? 'flex-shrink-0 w-80 h-auto min-h-44' 
+                  : 'flex-shrink-0 w-44 h-44'
+              } ${
+                isSelected 
+                  ? 'border-2 border-cyan-400 shadow-lg shadow-cyan-400/50 bg-gradient-to-br from-cyan-500/15 to-blue-500/15' 
+                  : 'border border-gray-600/40 hover:border-gray-500/60 bg-white/10'
+              }`}
+              onClick={() => handleCardClick(card.script)}
+            >
+              <div className="p-3 h-full flex flex-col relative">
+                {/* Selection indicator */}
+                {isSelected && (
+                  <div className="absolute top-2 left-2 z-10">
+                    <div className="bg-cyan-400 rounded-full p-1">
+                      <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                  )}
-                  
-                  {/* Dropdown arrow in top right */}
-                  <button
-                    onClick={(e) => handleExpandClick(e, 1)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
+                  </div>
+                )}
+                
+                {/* Dropdown arrow in top right */}
+                <button
+                  onClick={(e) => handleExpandClick(e, index)}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
+                >
+                  <svg 
+                    className={`w-3 h-3 transition-transform duration-200 ${expandedCard === index ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
                   >
-                    <svg 
-                      className={`w-3 h-3 transition-transform duration-200 ${expandedScript === 1 ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-                  {/* Title */}
-                  <div className={`font-bold text-sm mb-2 pr-6 ${isSelected ? 'text-cyan-300' : 'text-white'}`}>
-                    Script 1
-                    {isSelected && <span className="ml-2 text-xs">✓ Selected</span>}
+                {/* Title */}
+                <div className={`font-bold text-sm mb-2 pr-6 ${isSelected ? 'text-cyan-300' : 'text-white'}`}>
+                  {card.title}
+                  {isSelected && <span className="ml-2 text-xs">✓ Selected</span>}
+                </div>
+
+                {/* Segments and Art Style */}
+                <div className="space-y-1 mb-2">
+                  <div className="text-gray-300 text-xs">
+                    <span className="text-cyan-300">Seconds:</span> {card.script?.segments?.length ? card.script.segments.length * 5 : 0}<span>s</span>
                   </div>
-
-                  {/* Segments and Art Style */}
-                  <div className="space-y-1 mb-2">
-                    <div className="text-gray-300 text-xs">
-                      <span className="text-cyan-300">Seconds:</span> {scripts.response1.segments?.length * 5 || 0}<span>s</span>
-                    </div>
-                    <div className="text-gray-300 text-xs">
-                      <span className="text-cyan-300">Art Style:</span> {scripts.response1.artStyle || "Default"}
-                    </div>
-                  </div>
-
-                  {/* Narration content */}
-                  <div className="flex-1">
-                    {expandedScript === 1 ? (
-                      <div className="text-gray-300 text-xs leading-relaxed">
-                        <span className="text-cyan-300">Full Content:</span>
-                        <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                          {scripts.response1.segments?.map((segment, index) => (
-                            <div key={index} className="border-l-2 border-cyan-400/30 pl-2">
-                              <div className="text-cyan-300 text-xs font-medium mb-1">
-                                Segment {index + 1}:
-                              </div>
-                              {segment.narration && (
-                                <div className="text-gray-300 text-xs mb-1">
-                                  <span className="text-cyan-300">Narration:</span> {segment.narration}
-                                </div>
-                              )}
-                              {segment.visual && (
-                                <div className="text-gray-300 text-xs mb-1">
-                                  <span className="text-cyan-300">Visual:</span> {segment.visual}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <div className="text-gray-300 text-xs leading-relaxed">
-                          <span className="text-cyan-300">Preview:</span> {scripts.response1.segments?.[0]?.narration?.substring(0, 60) || scripts.response1.segments?.[0]?.visual?.substring(0, 60) || "No content"}...
-                        </div>
-                        {/* Blur effect at bottom when collapsed */}
-                        <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
-                      </div>
-                    )}
+                  <div className="text-gray-300 text-xs">
+                    <span className="text-cyan-300">Art Style:</span> {card.script?.artStyle || "Default"}
                   </div>
                 </div>
-              </div>
-            );
-          })()}
 
-          {/* Script 2 */}
-          {(() => {
-            // More robust selection comparison
-            const isSelected = selectedScript && selectedScript.segments && scripts.response2 && scripts.response2.segments &&
-              selectedScript.segments.length === scripts.response2.segments.length &&
-              selectedScript.segments.every((segment, index) => {
-                const response2Segment = scripts.response2.segments[index];
-                return response2Segment && 
-                  segment.id === response2Segment.id &&
-                  segment.visual === response2Segment.visual &&
-                  segment.narration === response2Segment.narration;
-              });
-            
-            // Debug logging
-            if (selectedScript && scripts.response2) {
-              console.log('Script 2 Selection Debug:', {
-                hasSelectedScript: !!selectedScript,
-                hasSelectedSegments: !!selectedScript?.segments,
-                hasResponse2: !!scripts.response2,
-                hasResponse2Segments: !!scripts.response2?.segments,
-                selectedSegmentsLength: selectedScript?.segments?.length,
-                response2SegmentsLength: scripts.response2?.segments?.length,
-                isSelected,
-                selectedScriptSample: selectedScript?.segments?.[0],
-                response2Sample: scripts.response2?.segments?.[0]
-              });
-            }
-            return (
-              <div 
-                className={`rounded-lg overflow-hidden transition-all duration-300 cursor-pointer flex-shrink-0 backdrop-blur-sm ${
-                  expandedScript === 2 ? 'w-80' : 'w-44 h-44'
-                } ${
-                  isSelected 
-                    ? 'border-2 border-cyan-400 shadow-lg shadow-cyan-400/50 bg-gradient-to-br from-cyan-500/15 to-blue-500/15' 
-                    : 'border border-gray-600/40 hover:border-gray-500/60 bg-white/10'
-                }`}
-                onClick={() => handleScriptClick(scripts.response2)}
-              >
-                <div className="p-3 flex flex-col relative h-full">
-                  {/* Selection indicator */}
-                  {isSelected && (
-                    <div className="absolute top-2 left-2 z-10">
-                      <div className="bg-cyan-400 rounded-full p-1">
-                        <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+                {/* Script content */}
+                <div className="flex-1">
+                  {expandedCard === index ? (
+                    <div className="text-gray-300 text-xs leading-relaxed">
+                      <span className="text-cyan-300">Full Content:</span>
+                      <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                        {card.script?.segments?.map((segment, segIndex) => (
+                          <div 
+                            key={segIndex} 
+                            className={`border-l-2 pl-2 ${
+                              isSelected ? 'border-cyan-400 bg-cyan-400/10' : 'border-cyan-400/30'
+                            }`}
+                          >
+                            <div className="text-cyan-300 text-xs font-medium mb-1">
+                              Segment {segIndex + 1}:
+                            </div>
+                            {segment.visual && (
+                              <div className="text-gray-300 text-xs mb-1">
+                                <span className="text-cyan-300">Visual:</span> {segment.visual}
+                              </div>
+                            )}
+                            {segment.animation && (
+                              <div className="text-gray-300 text-xs mb-1">
+                                <span className="text-cyan-300">Animation:</span> {segment.animation}
+                              </div>
+                            )}
+                            {segment.narration && (
+                              <div className="text-gray-300 text-xs mb-1">
+                                <span className="text-cyan-300">Narration:</span> {segment.narration}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="text-gray-300 text-xs leading-relaxed">
+                        <span className="text-cyan-300">Preview:</span> {card.script?.segments?.[0]?.visual?.substring(0, 60) || card.script?.segments?.[0]?.narration?.substring(0, 60) || "No content"}...
+                      </div>
+                      {/* Blur effect at bottom when collapsed */}
+                      <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
                     </div>
                   )}
-                  
-                  {/* Dropdown arrow in top right */}
-                  <button
-                    onClick={(e) => handleExpandClick(e, 2)}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-cyan-300 transition-colors p-1"
-                  >
-                    <svg 
-                      className={`w-3 h-3 transition-transform duration-200 ${expandedScript === 2 ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {/* Title */}
-                  <div className={`font-bold text-sm mb-2 pr-6 ${isSelected ? 'text-cyan-300' : 'text-white'}`}>
-                    Script 2
-                    {isSelected && <span className="ml-2 text-xs">✓ Selected</span>}
-                  </div>
-
-                  {/* Segments and Art Style */}
-                  <div className="space-y-1 mb-2">
-                    <div className="text-gray-300 text-xs">
-                      <span className="text-cyan-300">Seconds:</span> {scripts.response2.segments?.length * 5 || 0}<span>s</span>
-                    </div>
-                    <div className="text-gray-300 text-xs">
-                      <span className="text-cyan-300">Art Style:</span> {scripts.response2.artStyle || "Default"}
-                    </div>
-                  </div>
-
-                  {/* Narration content */}
-                  <div className="flex-1">
-                    {expandedScript === 2 ? (
-                      <div className="text-gray-300 text-xs leading-relaxed">
-                        <span className="text-cyan-300">Full Content:</span>
-                        <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                          {scripts.response2.segments?.map((segment, index) => (
-                            <div key={index} className="border-l-2 border-cyan-400/30 pl-2">
-                              <div className="text-cyan-300 text-xs font-medium mb-1">
-                                Segment {index + 1}:
-                              </div>
-                              {segment.narration && (
-                                <div className="text-gray-300 text-xs mb-1">
-                                  <span className="text-cyan-300">Narration:</span> {segment.narration}
-                                </div>
-                              )}
-                              {segment.visual && (
-                                <div className="text-gray-300 text-xs mb-1">
-                                  <span className="text-cyan-300">Visual:</span> {segment.visual}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <div className="text-gray-300 text-xs leading-relaxed">
-                          <span className="text-cyan-300">Preview:</span> {scripts.response2.segments?.[0]?.narration?.substring(0, 60) || scripts.response2.segments?.[0]?.visual?.substring(0, 60) || "No content"}...
-                        </div>
-                        {/* Blur effect at bottom when collapsed */}
-                        <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
-            );
-          })()}
-        </div>
+            </div>
+          );
+        })}
       </div>
-    );
-  }
-
-  // Fallback - should not reach here in normal flow
-  return null;
+    </div>
+  );
 };
 
 export default ScriptSelection;

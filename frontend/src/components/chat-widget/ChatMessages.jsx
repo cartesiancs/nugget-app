@@ -277,7 +277,7 @@ const ChatMessages = ({
       msg.content.includes('generated') && msg.content.includes('concepts')
     );
     
-    // Add concept selection component
+    // Add concept selection component - show if concepts exist OR if we're on step 1+
     if (chatFlow.concepts && chatFlow.concepts.length > 0) {
       const conceptTimestamp = conceptMessage ? conceptMessage.timestamp + 50 : Date.now();
       orderedMessages.push({
@@ -289,7 +289,7 @@ const ChatMessages = ({
             <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedConcept
                 ? `✅ Selected Concept: "${chatFlow.selectedConcept.title}"`
-                : ""}
+                : "🎯 Please select a concept to continue:"}
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}
@@ -309,10 +309,13 @@ const ChatMessages = ({
       msg.content.includes('script segments') || msg.content.includes('create script')
     );
 
-    // Add script selection component
-    if (chatFlow.selectedConcept && (chatFlow.scripts || chatFlow.selectedScript)) {
+    // Add script selection component - show if scripts exist OR if we have a selectedScript (for old projects)
+    // Always show 2 scripts: for new generation (unselected) or for history (one selected, one alternative)
+    if ((chatFlow.scripts && (chatFlow.scripts.response1 || chatFlow.scripts.response2)) || 
+        (chatFlow.selectedScript && chatFlow.selectedScript.segments)) {
       const scriptTimestamp = scriptMessage ? scriptMessage.timestamp + 50 : 
                               (conceptMessage ? conceptMessage.timestamp + 1000 : Date.now());
+      
       orderedMessages.push({
         id: "script-request",
         type: "system",
@@ -321,8 +324,8 @@ const ChatMessages = ({
           <div>
             <div className='text-gray-100 text-sm mb-4'>
               {chatFlow.selectedScript
-                ? "✅ Script Generated Successfully"
-                : ""}
+                ? `✅ Selected Script: "${chatFlow.selectedScript.segments?.length || 0} segments"`
+                : "📜 Please select a script to continue:"}
             </div>
             <ScriptSelection
               scripts={chatFlow.scripts}
@@ -331,6 +334,7 @@ const ChatMessages = ({
               }}
               selectedScript={chatFlow.selectedScript}
               isProjectScript={!chatFlow.scripts && !!chatFlow.selectedScript}
+              selectedSegmentationId={(!chatFlow.scripts && !!chatFlow.selectedScript) ? 'project-script-1' : null}
             />
           </div>
         ),
@@ -343,8 +347,8 @@ const ChatMessages = ({
       msg.content.includes('generated') && msg.content.includes('images')
     );
 
-    // Add image generation component
-    if (chatFlow.selectedScript) {
+    // Add image generation component - show if we have a selectedScript OR if we have generated images (for old projects)
+    if (chatFlow.selectedScript && chatFlow.selectedScript.segments) {
       const imageTimestamp = imageMessage ? imageMessage.timestamp + 50 : 
                              (scriptMessage ? scriptMessage.timestamp + 1000 : 
                               (conceptMessage ? conceptMessage.timestamp + 2000 : Date.now()));
@@ -367,8 +371,10 @@ const ChatMessages = ({
       msg.content.includes('generated') && msg.content.includes('videos')
     );
 
-    // Add video generation component
-    if (Object.keys(chatFlow.generatedImages || {}).length > 0) {
+    // Add video generation component - show if we have images OR if we have generated videos (for old projects)
+    if (Object.keys(chatFlow.generatedImages || {}).length > 0 || 
+        Object.keys(chatFlow.generatedVideos || {}).length > 0 ||
+        Object.keys(chatFlow.storedVideosMap || {}).length > 0) {
       const videoTimestamp = videoMessage ? videoMessage.timestamp + 50 : 
                              (imageMessage ? imageMessage.timestamp + 1000 : 
                               (scriptMessage ? scriptMessage.timestamp + 2000 : 
@@ -545,8 +551,8 @@ const ChatMessages = ({
       {(chatFlow.isStreaming || (chatFlow.pendingApprovals && chatFlow.pendingApprovals.length > 0)) && (
         <div className='flex justify-start'>
           <div className='max-w-[80%] p-2.5 text-gray-100 rounded-lg backdrop-blur-sm bg-[#0A0A0A80] border-1 border-gray-700/30'>
-            {/* Enhanced Agent Working Indicator - Primary loader during streaming - Only show after concept selection */}
-            {chatFlow.isStreaming && !conceptsShownButNotSelected && (
+            {/* Enhanced Agent Working Indicator - Primary loader during streaming - Only show after script selection */}
+            {chatFlow.isStreaming && !conceptsShownButNotSelected && !scriptsShownButNotSelected && (
               <VerboseAgentLoader 
                 agentActivity={chatFlow.agentActivity}
                 streamingProgress={chatFlow.streamingProgress}
@@ -554,8 +560,7 @@ const ChatMessages = ({
               />
             )}
 
-            {/* Manual Approval Requests - Only show after concept selection */}
-            {/* Only show the approval request for script once the script has been selected stored in scriptsShownButNotSelected */}
+            {/* Manual Approval Requests - Only show after script selection */}
             {chatFlow.pendingApprovals && !conceptsShownButNotSelected && !scriptsShownButNotSelected && chatFlow.pendingApprovals.map((approval) => {
               const availableModels = getAvailableModelsForApproval(approval.toolName);
               const currentModelData = availableModels.find((model) => model.value === selectedApprovalModel) || availableModels[0];

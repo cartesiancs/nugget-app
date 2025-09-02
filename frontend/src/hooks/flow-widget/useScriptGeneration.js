@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { segmentationApi } from '../services/segmentationapi';
+import { segmentationApi } from '../../services/segmentationapi';
 
 /**
  * Custom hook for handling script generation from concepts

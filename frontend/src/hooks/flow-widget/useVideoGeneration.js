@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { chatApi } from '../services/chat';
-import { s3Api } from '../services/s3';
+import { chatApi } from '../../services/chat';
+import { s3Api } from '../../services/s3';
 
 /**
  * Custom hook for handling video generation from images

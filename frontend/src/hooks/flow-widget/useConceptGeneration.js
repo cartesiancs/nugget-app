@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { webInfoApi } from '../services/web-info';
-import { conceptWriterApi } from '../services/concept-writer';
+import { webInfoApi } from '../../services/web-info';
+import { conceptWriterApi } from '../../services/concept-writer';
 
 /**
  * Custom hook for handling concept generation

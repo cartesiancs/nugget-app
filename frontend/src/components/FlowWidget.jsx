@@ -2,12 +2,12 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { createPortal } from "react-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTimeline } from "../hooks/useTimeline";
-import { useConceptGeneration } from "../hooks/useConceptGeneration";
-import { useScriptGeneration } from "../hooks/useScriptGeneration";
-import { useSegmentCreation } from "../hooks/useSegmentCreation";
-import { useImageGeneration } from "../hooks/useImageGeneration";
-import { useVideoGeneration } from "../hooks/useVideoGeneration";
-import { useErrorHandling } from "../hooks/useErrorHandling";
+import { useConceptGeneration } from "../hooks/flow-widget/useConceptGeneration";
+import { useScriptGeneration } from "../hooks/flow-widget/useScriptGeneration";
+import { useSegmentCreation } from "../hooks/flow-widget/useSegmentCreation";
+import { useImageGeneration } from "../hooks/flow-widget/useImageGeneration";
+import { useVideoGeneration } from "../hooks/flow-widget/useVideoGeneration";
+import { useErrorHandling } from "../hooks/flow-widget/useErrorHandling";
 import ChatLoginButton from "./ChatLoginButton";
 import { projectApi } from "../services/project";
 import {

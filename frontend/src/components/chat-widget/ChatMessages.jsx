@@ -6,7 +6,7 @@ import TimelineButton from "./TimelineButton";
 import VerboseAgentLoader from "./VerboseAgentLoader";
 
 // Dynamic image generation component that always shows current state
-const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
+const ImageGenerationComponent = ({ chatFlow, onImageClick }) => {
   const hasImages = Object.keys(chatFlow.generatedImages || {}).length > 0;
   const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
   return (
@@ -26,10 +26,7 @@ const ImageGenerationComponent = ({ chatFlow, onImageClick, setPrompt }) => {
         onImageClick={onImageClick}
         loading={isGenerating}
         onImagesGenerated={() => {
-          if (setPrompt && hasImages && !isGenerating) {
-            setPrompt("Start generating video");
-            console.log("Setting prompt to generate video");
-          }
+          // Images generated - no automatic prompt setting
         }}
       />
     </div>
@@ -85,7 +82,6 @@ const ChatMessages = ({
   sendVideosToTimeline,
   combinedVideosMap,
   currentPrompt = "",
-  setPrompt, // Add this to control the input
 }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -204,9 +200,6 @@ const ChatMessages = ({
               currentStep={chatFlow.currentStep}
               onConceptSelect={(concept) => {
                 chatFlow.handleConceptSelect(concept, false, currentPrompt);
-                if (setPrompt) {
-                  setPrompt(`Generate script for ${concept.title}`);
-                }
               }}
               selectedConcept={chatFlow.selectedConcept}
               showAsCards={true}
@@ -242,9 +235,6 @@ const ChatMessages = ({
               currentStep={chatFlow.currentStep}
               onScriptSelect={(script) => {
                 chatFlow.handleScriptSelect(script, false);
-                if (setPrompt) {
-                  setPrompt(`Start generating images`);
-                }
               }}
               selectedScript={chatFlow.selectedScript}
               showAsCollapsible={true}
@@ -274,7 +264,6 @@ const ChatMessages = ({
           <ImageGenerationComponent 
             chatFlow={chatFlow}
             onImageClick={onImageClick}
-            setPrompt={setPrompt}
           />
         ),
         timestamp: imageTimestamp,
@@ -367,7 +356,6 @@ const ChatMessages = ({
     chatFlow.addingTimeline,
     combinedVideosMap,
     currentPrompt,
-    setPrompt,
     onImageClick,
     onVideoClick,
     onAddSingleVideo,

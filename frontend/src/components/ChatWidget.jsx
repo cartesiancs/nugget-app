@@ -512,7 +512,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 sendVideosToTimeline={sendVideosToTimeline}
                 combinedVideosMap={combinedVideosMap}
                 currentPrompt={prompt}
-                setPrompt={setPrompt}
               />
 
               {/* Input area */}

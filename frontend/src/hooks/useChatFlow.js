@@ -1363,9 +1363,8 @@ export const useChatFlow = () => {
           );
         }, 200); // Delay to ensure video UI components are updated
 
-        // 🎯 AUTO-APPEND INDIVIDUAL VIDEO: Check if we should trigger auto-append
+        // Dispatch event for individual video completion (for UI updates only)
         setTimeout(() => {
-          // Dispatch event for individual video completion
           window.dispatchEvent(
             new CustomEvent("individualVideoCompleted", {
               detail: {
@@ -1375,45 +1374,6 @@ export const useChatFlow = () => {
               },
             }),
           );
-
-          // Also check if we should trigger auto-append for individual videos
-          // Get current video count to see if we have multiple videos ready
-          setTimeout(() => {
-            setStoredVideosMap((currentStoredVideos) => {
-              setGeneratedVideos((currentGeneratedVideos) => {
-                const currentVideos = {
-                  ...currentGeneratedVideos,
-                  ...currentStoredVideos,
-                };
-                const currentVideoCount = Object.keys(currentVideos).length;
-
-                console.log(
-                  `Individual video completed for ${segmentId}. Total videos: ${currentVideoCount}`,
-                );
-
-                // If we have multiple videos (2+), trigger auto-append
-                if (currentVideoCount >= 2) {
-                  console.log(
-                    "Multiple videos detected, triggering auto-append for individual completion",
-                  );
-
-                  window.dispatchEvent(
-                    new CustomEvent("autoAppendToTimeline", {
-                      detail: {
-                        successCount: currentVideoCount,
-                        source: "individual_video_completion",
-                        segmentId: segmentId,
-                        timestamp: Date.now(),
-                      },
-                    }),
-                  );
-                }
-
-                return currentGeneratedVideos; // Return unchanged
-              });
-              return currentStoredVideos; // Return unchanged
-            });
-          }, 500); // Small delay to let state updates settle
         }, 100);
       } catch (error) {
         console.error(
@@ -1514,45 +1474,32 @@ export const useChatFlow = () => {
 
           if (successCount > 0) {
             console.log(
-              `Detected ${successCount} videos completed, triggering auto-append`,
+              `Detected ${successCount} videos completed`,
             );
 
-            // Trigger auto-append after a short delay to ensure all videos are processed
+            // Add message about video completion (without auto-append)
+            setAllUserMessages((prev) => [
+              ...prev,
+              {
+                id: `agent-videos-complete-${Date.now()}`,
+                content: `Video generation complete! ${successCount} videos are ready for timeline.`,
+                timestamp: Date.now(),
+                type: "system",
+              },
+            ]);
+
+            // 🎯 TRIGGER CHAT SCROLL: Scroll to bottom to show completion message
             setTimeout(() => {
               window.dispatchEvent(
-                new CustomEvent("autoAppendToTimeline", {
+                new CustomEvent("scrollChatToBottom", {
                   detail: {
+                    reason: "video_batch_completed",
                     successCount: successCount,
-                    source: "video_batch_completion",
                     timestamp: Date.now(),
                   },
                 }),
               );
-
-              // Add message about automatic timeline append
-              setAllUserMessages((prev) => [
-                ...prev,
-                {
-                  id: `agent-timeline-auto-batch-${Date.now()}`,
-                  content: `Video generation complete! Automatically adding ${successCount} videos to timeline...`,
-                  timestamp: Date.now(),
-                  type: "system",
-                },
-              ]);
-
-              // 🎯 TRIGGER CHAT SCROLL: Scroll to bottom to show completion message
-              setTimeout(() => {
-                window.dispatchEvent(
-                  new CustomEvent("scrollChatToBottom", {
-                    detail: {
-                      reason: "video_batch_completed",
-                      successCount: successCount,
-                      timestamp: Date.now(),
-                    },
-                  }),
-                );
-              }, 100); // Small delay to ensure message is rendered
-            }, 1000); // Slightly longer delay for batch completion
+            }, 100); // Small delay to ensure message is rendered
           }
         }
         if (typeof logMessage === "string") {

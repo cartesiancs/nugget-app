@@ -9,8 +9,6 @@ export default function InputArea({
   prompt,
   setPrompt,
   loading,
-  currentStep,
-
   chatFlow, // Add chatFlow to determine available models
 }) {
   const [selectedModel, setSelectedModel] = useState("GPT-4o mini");
@@ -29,18 +27,15 @@ export default function InputArea({
     "kling-v2.1-master": { label: "Kling", tokens: "20", time: "4" },
   };
 
-  // Get available models based on current step and flow state
+  // Get available models based on flow state
   const getAvailableModels = () => {
     // Initial concept generation - only Gemini 2.5 Flash
-    if (currentStep === 0 && !chatFlow?.concepts) {
+    if (!chatFlow?.concepts) {
       return [{ value: "gpt-2.5", ...modelData["gpt-2.5"] }];
     }
 
     // Script generation after concept selection - Flash default, Pro option
-    if (
-      currentStep === 2 ||
-      (chatFlow?.selectedConcept && !chatFlow?.selectedScript)
-    ) {
+    if (chatFlow?.selectedConcept && !chatFlow?.selectedScript) {
       return [
         { value: "gemini-flash", ...modelData["gemini-flash"] },
         { value: "gemini-pro", ...modelData["gemini-pro"] },
@@ -49,9 +44,8 @@ export default function InputArea({
 
     // Image generation after script selection - Recraft default, Imagen option
     if (
-      currentStep === 4 ||
-      (chatFlow?.selectedScript &&
-        Object.keys(chatFlow?.generatedImages || {}).length === 0)
+      chatFlow?.selectedScript &&
+      Object.keys(chatFlow?.generatedImages || {}).length === 0
     ) {
       return [
         { value: "recraft-v3", ...modelData["recraft-v3"] },
@@ -61,9 +55,8 @@ export default function InputArea({
 
     // Video generation after image generation - Runway default, Kling option
     if (
-      currentStep === 5 ||
-      (Object.keys(chatFlow?.generatedImages || {}).length > 0 &&
-        Object.keys(chatFlow?.generatedVideos || {}).length === 0)
+      Object.keys(chatFlow?.generatedImages || {}).length > 0 &&
+      Object.keys(chatFlow?.generatedVideos || {}).length === 0
     ) {
       return [
         { value: "gen4-turbo", ...modelData["gen4-turbo"] },
@@ -79,35 +72,29 @@ export default function InputArea({
   useEffect(() => {
     const availableModels = getAvailableModels();
     if (availableModels.length > 0) {
-      // Set default model based on step - always use the first option (which is the default)
-      if (currentStep === 0 && !chatFlow?.concepts) {
+      // Set default model based on flow state - always use the first option (which is the default)
+      if (!chatFlow?.concepts) {
         setSelectedModel("gpt-2.5");
-      } else if (
-        currentStep === 2 ||
-        (chatFlow?.selectedConcept && !chatFlow?.selectedScript)
-      ) {
+      } else if (chatFlow?.selectedConcept && !chatFlow?.selectedScript) {
         setSelectedModel("gemini-flash"); // Default to Gemini Flash
         // Also ensure the chatFlow has the correct default
         if (chatFlow && chatFlow.setSelectedScriptModel) {
           chatFlow.setSelectedScriptModel("flash");
         }
-        console.log("Set default script model to flash for step", currentStep);
+        console.log("Set default script model to flash");
       } else if (
-        currentStep === 4 ||
-        (chatFlow?.selectedScript &&
-          Object.keys(chatFlow?.generatedImages || {}).length === 0)
+        chatFlow?.selectedScript &&
+        Object.keys(chatFlow?.generatedImages || {}).length === 0
       ) {
         setSelectedModel("recraft-v3"); // Default to Recraft
       } else if (
-        currentStep === 5 ||
-        (Object.keys(chatFlow?.generatedImages || {}).length > 0 &&
-          Object.keys(chatFlow?.generatedVideos || {}).length === 0)
+        Object.keys(chatFlow?.generatedImages || {}).length > 0 &&
+        Object.keys(chatFlow?.generatedVideos || {}).length === 0
       ) {
         setSelectedModel("gen4-turbo"); // Default to RunwayML
       }
     }
   }, [
-    currentStep,
     chatFlow?.concepts,
     chatFlow?.selectedConcept,
     chatFlow?.selectedScript,
@@ -243,7 +230,6 @@ export default function InputArea({
 
       console.log("Model selection updated:", {
         inputAreaModel: modelValue,
-        currentStep: currentStep,
         chatFlowModels: {
           script: chatFlow?.selectedScriptModel,
           image: chatFlow?.selectedImageModel,

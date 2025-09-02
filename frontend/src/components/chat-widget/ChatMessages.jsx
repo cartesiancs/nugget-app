@@ -8,7 +8,7 @@ import VerboseAgentLoader from "./VerboseAgentLoader";
 // Dynamic image generation component that always shows current state
 const ImageGenerationComponent = ({ chatFlow, onImageClick }) => {
   const hasImages = Object.keys(chatFlow.generatedImages || {}).length > 0;
-  const isGenerating = chatFlow.loading && chatFlow.currentStep === 4;
+  const isGenerating = chatFlow.loading && chatFlow.selectedScript && Object.keys(chatFlow.generatedImages || {}).length === 0;
   return (
     <div>
       <div className='text-gray-100 text-sm mb-4'>
@@ -22,7 +22,6 @@ const ImageGenerationComponent = ({ chatFlow, onImageClick }) => {
         type='image'
         generatedImages={chatFlow.generatedImages || {}}
         generationProgress={chatFlow.generationProgress}
-        currentStep={chatFlow.currentStep}
         onImageClick={onImageClick}
         loading={isGenerating}
         onImagesGenerated={() => {
@@ -41,12 +40,11 @@ const VideoGenerationComponent = ({
   onAddSingleVideo,
 }) => {
   const hasVideos = Object.keys(combinedVideosMap || {}).length > 0;
-  const isGeneratingVideos = chatFlow.loading && chatFlow.currentStep === 5;
+  const isGeneratingVideos = chatFlow.loading && Object.keys(chatFlow.generatedImages || {}).length > 0 && Object.keys(chatFlow.generatedVideos || {}).length === 0;
 
   console.log('VideoGenerationComponent render:', { 
     hasVideos, 
     isGeneratingVideos, 
-    currentStep: chatFlow.currentStep, 
     combinedVideosCount: Object.keys(combinedVideosMap || {}).length,
     loading: chatFlow.loading
   });
@@ -65,7 +63,6 @@ const VideoGenerationComponent = ({
         generatedImages={chatFlow.generatedImages || {}}
         combinedVideosMap={combinedVideosMap || {}}
         generationProgress={chatFlow.generationProgress}
-        currentStep={chatFlow.currentStep}
         onVideoClick={onVideoClick}
         onAddSingleVideo={onAddSingleVideo}
         loading={isGeneratingVideos}
@@ -296,12 +293,10 @@ const ChatMessages = ({
             </div>
             <ConceptSelection
               concepts={chatFlow.concepts}
-              currentStep={chatFlow.currentStep}
               onConceptSelect={(concept) => {
-                chatFlow.handleConceptSelect(concept, false, currentPrompt);
+                chatFlow.handleConceptSelect(concept);
               }}
               selectedConcept={chatFlow.selectedConcept}
-              showAsCards={true}
             />
           </div>
         ),
@@ -331,12 +326,10 @@ const ChatMessages = ({
             </div>
             <ScriptSelection
               scripts={chatFlow.scripts}
-              currentStep={chatFlow.currentStep}
               onScriptSelect={(script) => {
-                chatFlow.handleScriptSelect(script, false);
+                chatFlow.handleScriptSelect(script);
               }}
               selectedScript={chatFlow.selectedScript}
-              showAsCollapsible={true}
               isProjectScript={!chatFlow.scripts && !!chatFlow.selectedScript}
             />
           </div>
@@ -351,7 +344,7 @@ const ChatMessages = ({
     );
 
     // Add image generation component
-    if (chatFlow.selectedScript && chatFlow.currentStep >= 4) {
+    if (chatFlow.selectedScript) {
       const imageTimestamp = imageMessage ? imageMessage.timestamp + 50 : 
                              (scriptMessage ? scriptMessage.timestamp + 1000 : 
                               (conceptMessage ? conceptMessage.timestamp + 2000 : Date.now()));
@@ -375,7 +368,7 @@ const ChatMessages = ({
     );
 
     // Add video generation component
-    if (Object.keys(chatFlow.generatedImages || {}).length > 0 && chatFlow.currentStep >= 5) {
+    if (Object.keys(chatFlow.generatedImages || {}).length > 0) {
       const videoTimestamp = videoMessage ? videoMessage.timestamp + 50 : 
                              (imageMessage ? imageMessage.timestamp + 1000 : 
                               (scriptMessage ? scriptMessage.timestamp + 2000 : 
@@ -448,7 +441,6 @@ const ChatMessages = ({
     chatFlow.selectedConcept,
     chatFlow.scripts,
     chatFlow.selectedScript,
-    chatFlow.currentStep,
     chatFlow.generatedImages,
     chatFlow.generatedVideos,
     chatFlow.storedVideosMap,

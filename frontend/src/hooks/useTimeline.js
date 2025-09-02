@@ -51,6 +51,9 @@ export const useTimeline = () => {
         return false;
       }
 
+      console.log('🎬 Sending videos to timeline:', payload);
+      console.log('🎬 Combined videos map keys:', Object.keys(combinedVideosMap));
+
       let success = false;
       try {
         const addByUrlWithDir = window?.api?.ext?.timeline?.addByUrlWithDir;

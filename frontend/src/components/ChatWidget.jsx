@@ -155,17 +155,28 @@ function ChatWidgetSidebar({ open, setOpen }) {
     };
   }, [chatFlow, open, setOpen]);
 
-  // Combined videos map for display
+  // Combined videos map for display - maintain order by sorting
   const combinedVideosMap = useMemo(
     () => {
+      // Combine both maps
       const combined = { ...chatFlow.generatedVideos, ...chatFlow.storedVideosMap };
-      console.log('🔄 Combined videos map updated:', {
+      
+      // Create a sorted version to maintain consistent order
+      const sortedEntries = Object.entries(combined).sort(([a], [b]) => {
+        const numA = parseInt(String(a).replace(/[^0-9]/g, '')) || 0;
+        const numB = parseInt(String(b).replace(/[^0-9]/g, '')) || 0;
+        return numA - numB;
+      });
+      
+      const sortedCombined = Object.fromEntries(sortedEntries);
+      
+      console.log('🔄 Combined videos map updated (sorted):', {
         generatedVideos: chatFlow.generatedVideos,
         storedVideosMap: chatFlow.storedVideosMap,
-        combined,
+        combined: sortedCombined,
         trigger: videoUpdateTrigger
       });
-      return combined;
+      return sortedCombined;
     },
     [chatFlow.generatedVideos, chatFlow.storedVideosMap, videoUpdateTrigger],
   );

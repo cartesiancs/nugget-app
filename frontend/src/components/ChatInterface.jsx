@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useChatFlow } from '../hooks/useChatFlow';
+import { useChatFlow } from '../hooks/chatWidget/useChatFlow';
 import { useProjectStore } from '../store/useProjectStore';
 import { projectApi } from '../services/project';
 import ChatLoginButton from './ChatLoginButton';

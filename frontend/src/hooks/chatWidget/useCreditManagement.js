@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
-import { useProjectStore } from "../store/useProjectStore";
+import { useProjectStore } from "../../store/useProjectStore";
 import {
   getTextCreditCost,
   getImageCreditCost,
   getVideoCreditCost,
   formatCreditDeduction,
-} from "../lib/pricing";
+} from "../../lib/pricing";
 
 export const useCreditManagement = (user) => {
   const { fetchBalance } = useProjectStore();

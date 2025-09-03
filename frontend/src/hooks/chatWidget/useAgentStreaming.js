@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { agentApi } from "../services/agent";
-import { s3Api } from "../services/s3";
+import { agentApi } from "../../services/agent";
+import { s3Api } from "../../services/s3";
 
 export const useAgentStreaming = () => {
   // Streaming states

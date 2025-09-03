@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { useChatFlow } from "../hooks/useChatFlow";
+import { useChatFlow } from "../hooks/chatWidget/useChatFlow";
 import { useTimeline } from "../hooks/useTimeline";
 import { projectApi } from "../services/project";
 import LoadingSpinner from "./LoadingSpinner";

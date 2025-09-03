@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "./useAuth";
-import { useProjectStore } from "../store/useProjectStore";
+import { useAuth } from "../useAuth";
+import { useProjectStore } from "../../store/useProjectStore";
 import { useAgentStreaming } from "./useAgentStreaming";
 import { useCreditManagement } from "./useCreditManagement";
 import { useModelSelection } from "./useModelSelection";
 import { useTimelineIntegration } from "./useTimelineIntegration";
 import { useRetryLogic } from "./useRetryLogic";
-import { webInfoApi } from "../services/web-info";
-import { conceptWriterApi } from "../services/concept-writer";
-import { segmentationApi } from "../services/segmentationapi";
-import { chatApi } from "../services/chat";
-import { s3Api } from "../services/s3";
-import { projectApi } from "../services/project";
+import { webInfoApi } from "../../services/web-info";
+import { conceptWriterApi } from "../../services/concept-writer";
+import { segmentationApi } from "../../services/segmentationapi";
+import { chatApi } from "../../services/chat";
+import { s3Api } from "../../services/s3";
+import { projectApi } from "../../services/project";
 
 export const useChatFlow = () => {
   const { isAuthenticated, user } = useAuth();

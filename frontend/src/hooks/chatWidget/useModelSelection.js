@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { chatApi } from "../services/chat";
+import { chatApi } from "../../services/chat";
 
 export const useModelSelection = () => {
   // Model selection states

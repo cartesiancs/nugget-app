@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { chatApi } from "../services/chat";
-import { s3Api } from "../services/s3";
+import { chatApi } from "../../services/chat";
+import { s3Api } from "../../services/s3";
 
 export const useRetryLogic = () => {
   // Retry failed image generation using chat endpoint

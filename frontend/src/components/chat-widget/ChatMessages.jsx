@@ -757,7 +757,11 @@ const ChatMessages = ({
                     
                     <div className='flex gap-2'>
                       <button
-                        onClick={() => chatFlow.approveToolExecution(approval.id)}
+                        onClick={() => {
+                          console.log('📝 ChatMessages: Approve button clicked for approval:', approval.id);
+                          console.log('📝 Available chatFlow.approveToolExecution:', typeof chatFlow.approveToolExecution);
+                          chatFlow.approveToolExecution(approval.id);
+                        }}
                         className='bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 px-3 py-1.5 rounded text-xs transition-colors font-medium'
                       >
                         Approve

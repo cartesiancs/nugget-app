@@ -1739,17 +1739,17 @@ export const useChatFlow = () => {
   const getToolApprovalConfirmationMessage = useCallback((toolName) => {
     switch (toolName) {
       case "get_web_info":
-        return "Starting web research to gather relevant information";
+        return "Approved web research to gather relevant information";
       case "generate_concepts_with_approval":
-        return "Starting concept generation to create video ideas";
+        return "Approved concept generation to create video ideas";
       case "generate_segmentation":
-        return "Starting script generation to create detailed segments";
+        return "Approved script generation to create detailed segments";
       case "generate_image_with_approval":
-        return "Starting image generation for visual content";
+        return "Approved image generation for visual content";
       case "generate_video_with_approval":
-        return "Starting video generation to create dynamic content";
+        return "Approved video generation to create dynamic content";
       default:
-        return `Starting ${toolName} process`;
+        return `Approved ${toolName} process`;
     }
   }, []);
 

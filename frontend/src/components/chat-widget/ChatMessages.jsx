@@ -273,14 +273,16 @@ const ChatMessages = ({
 
     // Step 2: Add component-based messages with contextual timestamps based on related system messages
     
-    // Find concept-related message timestamp
-    const conceptMessage = chatFlow.allUserMessages?.find(msg => 
-      msg.content.includes('generated') && msg.content.includes('concepts')
+    // Find concept-related completion message timestamp
+    const conceptCompletionMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('Concept generation completed') || 
+      msg.content.includes('concept generation') ||
+      (msg.content.includes('generated') && msg.content.includes('concepts'))
     );
     
     // Add concept selection component - show if concepts exist OR if we're on step 1+
     if (chatFlow.concepts && chatFlow.concepts.length > 0) {
-      const conceptTimestamp = conceptMessage ? conceptMessage.timestamp + 50 : Date.now();
+      const conceptTimestamp = conceptCompletionMessage ? conceptCompletionMessage.timestamp + 100 : Date.now();
       orderedMessages.push({
         id: "concept-request",
         type: "system",
@@ -305,17 +307,37 @@ const ChatMessages = ({
       });
     }
 
-    // Find script-related message timestamp
-    const scriptMessage = chatFlow.allUserMessages?.find(msg => 
-      msg.content.includes('script segments') || msg.content.includes('create script')
+    // Find script-related completion message timestamp - look for any completion message after script approval
+    const scriptApprovalMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('Approved: Approved script generation')
+    );
+    
+    const scriptCompletionMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.timestamp > (scriptApprovalMessage?.timestamp || 0) && 
+      (msg.content.includes('Script generation completed') ||
+       msg.content.includes('operation completed successfully') ||
+       msg.content.includes('script generation') ||
+       msg.content.includes('script segments') || 
+       msg.content.includes('create script'))
     );
 
     // Add script selection component - show if scripts exist OR if we have a selectedScript (for old projects)
     // Always show 2 scripts: for new generation (unselected) or for history (one selected, one alternative)
     if ((chatFlow.scripts && (chatFlow.scripts.response1 || chatFlow.scripts.response2)) || 
         (chatFlow.selectedScript && chatFlow.selectedScript.segments)) {
-      const scriptTimestamp = scriptMessage ? scriptMessage.timestamp + 50 : 
-                              (conceptMessage ? conceptMessage.timestamp + 1000 : Date.now());
+      
+      // Use the latest relevant completion message or fall back to current time
+      const scriptTimestamp = scriptCompletionMessage ? scriptCompletionMessage.timestamp + 100 : Date.now();
+      
+      // Debug logging for script timestamp
+      console.log('🔍 Script component timing:', {
+        scriptApprovalMessage: scriptApprovalMessage?.content,
+        scriptApprovalTimestamp: scriptApprovalMessage?.timestamp,
+        scriptCompletionMessage: scriptCompletionMessage?.content,
+        scriptCompletionTimestamp: scriptCompletionMessage?.timestamp,
+        scriptTimestamp,
+        hasScripts: !!(chatFlow.scripts && (chatFlow.scripts.response1 || chatFlow.scripts.response2))
+      });
       
       orderedMessages.push({
         id: "script-request",
@@ -343,16 +365,22 @@ const ChatMessages = ({
       });
     }
 
-    // Find image-related message timestamp
-    const imageMessage = chatFlow.allUserMessages?.find(msg => 
-      msg.content.includes('generated') && msg.content.includes('images')
+    // Find image-related completion message timestamp
+    const imageApprovalMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('Approved: Approved image generation')
+    );
+    
+    const imageCompletionMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.timestamp > (imageApprovalMessage?.timestamp || 0) && 
+      (msg.content.includes('Image generation completed') ||
+       msg.content.includes('operation completed successfully') ||
+       msg.content.includes('image generation') ||
+       (msg.content.includes('generated') && msg.content.includes('images')))
     );
 
     // Add image generation component - show if we have a selectedScript OR if we have generated images (for old projects)
     if (chatFlow.selectedScript && chatFlow.selectedScript.segments) {
-      const imageTimestamp = imageMessage ? imageMessage.timestamp + 50 : 
-                             (scriptMessage ? scriptMessage.timestamp + 1000 : 
-                              (conceptMessage ? conceptMessage.timestamp + 2000 : Date.now()));
+      const imageTimestamp = imageCompletionMessage ? imageCompletionMessage.timestamp + 100 : Date.now();
       orderedMessages.push({
         id: "image-generation",
         type: "system",
@@ -367,19 +395,24 @@ const ChatMessages = ({
       });
     }
 
-    // Find video-related message timestamp
-    const videoMessage = chatFlow.allUserMessages?.find(msg => 
-      msg.content.includes('generated') && msg.content.includes('videos')
+    // Find video-related completion message timestamp
+    const videoApprovalMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.content.includes('Approved: Approved video generation')
+    );
+    
+    const videoCompletionMessage = chatFlow.allUserMessages?.find(msg => 
+      msg.timestamp > (videoApprovalMessage?.timestamp || 0) && 
+      (msg.content.includes('Video generation completed') ||
+       msg.content.includes('operation completed successfully') ||
+       msg.content.includes('video generation') ||
+       (msg.content.includes('generated') && msg.content.includes('videos')))
     );
 
     // Add video generation component - show if we have images OR if we have generated videos (for old projects)
     if (Object.keys(chatFlow.generatedImages || {}).length > 0 || 
         Object.keys(chatFlow.generatedVideos || {}).length > 0 ||
         Object.keys(chatFlow.storedVideosMap || {}).length > 0) {
-      const videoTimestamp = videoMessage ? videoMessage.timestamp + 50 : 
-                             (imageMessage ? imageMessage.timestamp + 1000 : 
-                              (scriptMessage ? scriptMessage.timestamp + 2000 : 
-                               (conceptMessage ? conceptMessage.timestamp + 3000 : Date.now())));
+      const videoTimestamp = videoCompletionMessage ? videoCompletionMessage.timestamp + 100 : Date.now();
       orderedMessages.push({
         id: "video-generation",
         type: "system",
@@ -403,10 +436,7 @@ const ChatMessages = ({
       Object.keys(combinedVideosMap || {}).length > 0;
 
     if (canSendTimeline) {
-      const timelineTimestamp = videoMessage ? videoMessage.timestamp + 50 : 
-                               (imageMessage ? imageMessage.timestamp + 1000 : 
-                                (scriptMessage ? scriptMessage.timestamp + 2000 : 
-                                 (conceptMessage ? conceptMessage.timestamp + 4000 : Date.now())));
+      const timelineTimestamp = videoCompletionMessage ? videoCompletionMessage.timestamp + 100 : Date.now();
       orderedMessages.push({
         id: "timeline-integration",
         type: "system",
@@ -430,6 +460,21 @@ const ChatMessages = ({
 
     // Sort all messages by timestamp to ensure chronological order
     const sortedMessages = orderedMessages.sort((a, b) => a.timestamp - b.timestamp);
+    
+    // Debug logging for message ordering
+    console.log('📝 Message ordering debug:', {
+      allMessages: orderedMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content?.substring(0, 50) + (msg.content?.length > 50 ? '...' : ''),
+        timestamp: msg.timestamp,
+        type: msg.type
+      })),
+      sortedOrder: sortedMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content?.substring(0, 50) + (msg.content?.length > 50 ? '...' : ''),
+        timestamp: msg.timestamp
+      }))
+    });
     
     // Only update if there are actual changes
     setMessages(sortedMessages);

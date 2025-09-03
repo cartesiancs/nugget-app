@@ -59,9 +59,6 @@ export const useChatFlow = () => {
   const [generatedVideos, setGeneratedVideos] = useState({});
   const [generationProgress, setGenerationProgress] = useState({});
 
-  // All model selection, credit management, timeline integration, and streaming states
-  // are now handled by specialized hooks
-
   // Listen to localStorage changes for project selection
   useEffect(() => {
     const handleStorage = () => {
@@ -1309,7 +1306,7 @@ export const useChatFlow = () => {
     generatedVideos,
     generationProgress,
 
-    // Specialized hook states (exposed for backward compatibility)
+    // Specialized hook states
     ...modelSelection,
     ...creditManagement,
     ...timelineIntegration,
@@ -1326,7 +1323,7 @@ export const useChatFlow = () => {
     handleScriptSelect,
     loadProjectData,
 
-    // Enhanced streaming and approval actions (override the ones from agentStreaming spread)
+    // Enhanced streaming and approval actions
     startAgentStream: startAgentStreamWithCallbacks,
     approveToolExecution: approveToolExecutionWithCallbacks,
     rejectToolExecution: rejectToolExecutionWithCallbacks,

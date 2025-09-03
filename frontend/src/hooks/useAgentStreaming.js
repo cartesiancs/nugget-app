@@ -410,8 +410,11 @@ export const useAgentStreaming = () => {
       }
 
       case "result": {
+        // Debug the message data to understand the structure
+        console.log('🔍 Result message data:', message.data);
+        
         const completeMessage = getToolCompleteMessage(
-          message.data.toolName || "operation",
+          message.data.toolName || message.data.tool_name || "operation",
         );
         setAgentActivity(completeMessage);
         setStreamingProgress(null); // Clear progress
@@ -427,8 +430,11 @@ export const useAgentStreaming = () => {
           },
         ]);
 
+        // Add small delay to ensure completion message is processed before tool result
         if (handleToolResult) {
-          await handleToolResult(message.data);
+          setTimeout(async () => {
+            await handleToolResult(message.data);
+          }, 50); // Small delay to ensure message ordering
         }
         break;
       }

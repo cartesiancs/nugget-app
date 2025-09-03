@@ -199,10 +199,11 @@ const ChatMessages = ({
   }, [chatFlow.concepts, chatFlow.selectedConcept]);
 
   useEffect(() => {
-
-    if (chatFlow.scripts && chatFlow.scripts.length > 0 && !chatFlow.selectedScript) {
+    // If scripts exist but no script is selected, mark as shown but not selected
+    if (chatFlow.scripts && (chatFlow.scripts.response1 || chatFlow.scripts.response2) && !chatFlow.selectedScript) {
       setScriptsShownButNotSelected(true);
     } 
+    // If a script is selected, clear the "shown but not selected" state
     else if (chatFlow.selectedScript) {
       setScriptsShownButNotSelected(false);
     }
@@ -211,7 +212,7 @@ const ChatMessages = ({
 
   // Auto-scroll to bottom when new messages are added
   const scrollToBottom = () => {
-    // messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   // Only auto-scroll when new messages are added, not when existing ones are updated

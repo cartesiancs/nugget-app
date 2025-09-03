@@ -15,8 +15,8 @@ const ScriptSelection = ({
   
   if (!hasScripts && !hasProjectScript) return null;
 
-  const handleCardClick = (script) => {
-    onScriptSelect(script);
+  const handleCardClick = (script, cardId) => {
+    onScriptSelect(script, cardId);
   };
 
   const handleExpandClick = (e, index) => {
@@ -84,15 +84,10 @@ const ScriptSelection = ({
               if (selectedScript === card.script) {
                 isSelected = true;
               } else {
-                // If not the same object, check if it's the same script by comparing unique identifiers
-                const selectedFirstSegment = selectedScript.segments?.[0];
-                const cardFirstSegment = card.script.segments?.[0];
-                
-                if (selectedFirstSegment && cardFirstSegment) {
-                  // Use a combination of ID, visual, and narration to uniquely identify the script
-                  isSelected = selectedFirstSegment.id === cardFirstSegment.id &&
-                             selectedFirstSegment.visual === cardFirstSegment.visual &&
-                             selectedFirstSegment.narration === cardFirstSegment.narration;
+                // If not the same object, check if this is the same script by comparing the card ID
+                // This is more reliable than comparing segment properties
+                if (selectedScript.cardId === card.id) {
+                  isSelected = true;
                 }
               }
             }
@@ -110,7 +105,7 @@ const ScriptSelection = ({
                   ? 'border-2 border-cyan-400 shadow-lg shadow-cyan-400/50 bg-gradient-to-br from-cyan-500/15 to-blue-500/15' 
                   : 'border border-gray-600/40 hover:border-gray-500/60 bg-white/10'
               }`}
-              onClick={() => handleCardClick(card.script)}
+              onClick={() => handleCardClick(card.script, card.id)}
             >
               <div className="p-3 h-full flex flex-col relative">
                 {/* Selection indicator */}

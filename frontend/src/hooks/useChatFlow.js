@@ -890,9 +890,16 @@ export const useChatFlow = () => {
   );
 
   const handleScriptSelect = useCallback(
-    async (script) => {
-      console.log("📜 Script selected:", script);
-      setSelectedScript(script);
+    async (script, cardId) => {
+      console.log("📜 Script selected:", script, "from card:", cardId);
+      
+      // Add cardId to the selected script for proper identification
+      const scriptWithCardId = {
+        ...script,
+        cardId: cardId
+      };
+      
+      setSelectedScript(scriptWithCardId);
       updateStepStatus(3, "done");
       setCurrentStep(4);
 

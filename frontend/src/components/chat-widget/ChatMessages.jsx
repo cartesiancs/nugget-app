@@ -329,8 +329,8 @@ const ChatMessages = ({
             </div>
             <ScriptSelection
               scripts={chatFlow.scripts}
-              onScriptSelect={(script) => {
-                chatFlow.handleScriptSelect(script);
+              onScriptSelect={(script, cardId) => {
+                chatFlow.handleScriptSelect(script, cardId);
               }}
               selectedScript={chatFlow.selectedScript}
               isProjectScript={!chatFlow.scripts && !!chatFlow.selectedScript}

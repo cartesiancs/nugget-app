@@ -5,6 +5,19 @@ import { creditApi } from "../services/credit";
 const storeImpl = (set, get) => ({
   projects: [],
   selectedProject: null,
+  storedVideosMap: (() => {
+    try {
+      const stored = localStorage.getItem("project-store-selectedProject");
+      if (stored) {
+        const _project = JSON.parse(stored);
+        return JSON.parse(localStorage.getItem(`project-store-videos`) || "{}");
+      }
+      return JSON.parse(localStorage.getItem("segmentVideos") || "{}");
+    } catch (e) {
+      console.error(e);
+      return {};
+    }
+  })(),
   conversations: [],
   concepts: [],
   images: [],
@@ -29,6 +42,20 @@ const storeImpl = (set, get) => ({
   creditBalance: 0,
 
   setProjects: (projects) => set({ projects }),
+  setStoredVideosMap: (videosMap) => {
+    const { selectedProject } = get();
+    set({ storedVideosMap: videosMap });
+    
+    // Save to localStorage for persistence
+    if (selectedProject) {
+      localStorage.setItem(
+        `project-store-videos`,
+        JSON.stringify(videosMap),
+      );
+    } else {
+      localStorage.setItem("segmentVideos", JSON.stringify(videosMap));
+    }
+  },
   setSelectedProject: (project) => {
     console.log('🏪 Store: Setting selected project:', project?.name);
     set({ selectedProject: project });
@@ -38,6 +65,16 @@ const storeImpl = (set, get) => ({
       localStorage.setItem("project-store-selectedProject", JSON.stringify(project));
     } else {
       localStorage.removeItem("project-store-selectedProject");
+    }
+    
+    // Update storedVideosMap based on project selection
+    const { setStoredVideosMap } = get();
+    if (project) {
+      const projectVideos = JSON.parse(localStorage.getItem(`project-store-videos`) || "{}");
+      setStoredVideosMap(projectVideos);
+    } else {
+      const segmentVideos = JSON.parse(localStorage.getItem("segmentVideos") || "{}");
+      setStoredVideosMap(segmentVideos);
     }
     
     // Dispatch custom event to notify components

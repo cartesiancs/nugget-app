@@ -1,8 +1,12 @@
 import { useCallback } from "react";
 import { chatApi } from "../../services/chat";
 import { s3Api } from "../../services/s3";
+import { useProjectStore } from "../../store/useProjectStore";
 
 export const useRetryLogic = () => {
+  // Get setStoredVideosMap from Zustand store
+  const { setStoredVideosMap } = useProjectStore();
+  
   // Retry failed image generation using chat endpoint
   const retryFailedImageGeneration = useCallback(
     async (failedSegmentIds, selectedScript, selectedProject, selectedImageModel, setGeneratedImages) => {
@@ -69,7 +73,7 @@ export const useRetryLogic = () => {
 
   // Retry failed video generation using chat endpoint
   const retryFailedVideoGeneration = useCallback(
-    async (failedSegmentIds, selectedScript, selectedProject, selectedVideoModel, generatedImages, setGeneratedVideos, setStoredVideosMap) => {
+    async (failedSegmentIds, selectedScript, selectedProject, selectedVideoModel, generatedImages, setGeneratedVideos) => {
       if (!selectedScript?.segments) return;
 
       console.log(
@@ -131,20 +135,7 @@ export const useRetryLogic = () => {
 
         if (Object.keys(successfulRetries).length > 0) {
           setGeneratedVideos((prev) => ({ ...prev, ...successfulRetries }));
-          setStoredVideosMap((prev) => {
-            const updatedMap = { ...prev, ...successfulRetries };
-
-            // Save to localStorage for persistence
-            if (selectedProject) {
-              localStorage.setItem(
-                `project-store-videos`,
-                JSON.stringify(updatedMap),
-              );
-            } else {
-              localStorage.setItem("segmentVideos", JSON.stringify(updatedMap));
-            }
-            return updatedMap;
-          });
+          setStoredVideosMap(successfulRetries);
           console.log(
             "Successfully retried videos for segments:",
             Object.keys(successfulRetries),

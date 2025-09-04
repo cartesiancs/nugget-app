@@ -1,8 +1,12 @@
 import { useState, useCallback } from "react";
 import { agentApi } from "../../services/agent";
 import { s3Api } from "../../services/s3";
+import { useProjectStore } from "../../store/useProjectStore";
 
 export const useAgentStreaming = () => {
+  // Get setStoredVideosMap from Zustand store
+  const { setStoredVideosMap } = useProjectStore();
+  
   // Streaming states
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamMessages, setStreamMessages] = useState([]);
@@ -124,7 +128,7 @@ export const useAgentStreaming = () => {
 
   // Handle individual video completion from log messages
   const handleIndividualVideoCompletion = useCallback(
-    async (segmentId, s3Key, videoData, setGeneratedVideos, setStoredVideosMap, setAllUserMessages, selectedProject) => {
+    async (segmentId, s3Key, videoData, setGeneratedVideos, setAllUserMessages, selectedProject) => {
       try {
         console.log(
           `Processing individual video completion for segment ${segmentId}`,
@@ -142,20 +146,7 @@ export const useAgentStreaming = () => {
         });
 
         // Update stored videos map for timeline
-        setStoredVideosMap((prev) => {
-          const updatedMap = { ...prev, [segmentId]: videoUrl };
-
-          // Save to localStorage for persistence
-          if (selectedProject) {
-            localStorage.setItem(
-              `project-store-videos`,
-              JSON.stringify(updatedMap),
-            );
-          } else {
-            localStorage.setItem("segmentVideos", JSON.stringify(updatedMap));
-          }
-          return updatedMap;
-        });
+        setStoredVideosMap({ [segmentId]: videoUrl });
 
         // Update agent activity
         setAgentActivity(`Video completed for segment ${segmentId}`);
@@ -211,7 +202,6 @@ export const useAgentStreaming = () => {
       setAllUserMessages,
       setGeneratedImages,
       setGeneratedVideos,
-      setStoredVideosMap,
       selectedProject,
       handleToolResult,
     } = callbacks;
@@ -251,7 +241,6 @@ export const useAgentStreaming = () => {
             s3Key,
             message.data.VideoData,
             setGeneratedVideos,
-            setStoredVideosMap,
             setAllUserMessages,
             selectedProject,
           );

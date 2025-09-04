@@ -15,7 +15,7 @@ import { projectApi } from "../../services/project";
 
 export const useChatFlow = () => {
   const { isAuthenticated, user } = useAuth();
-  const { fetchBalance } = useProjectStore();
+  const { fetchBalance, selectedProject, setSelectedProject, setStoredVideosMap } = useProjectStore();
 
   // Use specialized hooks
   const agentStreaming = useAgentStreaming();
@@ -27,17 +27,6 @@ export const useChatFlow = () => {
   // Loading and error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Project states
-  const [selectedProject, setSelectedProject] = useState(() => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      return stored ? JSON.parse(stored) : null;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  });
 
   // Flow states
   const [currentStep, setCurrentStep] = useState(0);
@@ -59,59 +48,16 @@ export const useChatFlow = () => {
   const [generatedVideos, setGeneratedVideos] = useState({});
   const [generationProgress, setGenerationProgress] = useState({});
 
-  // Listen to localStorage changes for project selection
+  // Listen to project changes from Zustand store
   useEffect(() => {
-    const handleStorage = () => {
-      try {
-        const stored = localStorage.getItem("project-store-selectedProject");
-        const newSelectedProject = stored ? JSON.parse(stored) : null;
-
-        // Only update if the project actually changed
-        if (newSelectedProject?.id !== selectedProject?.id) {
-          console.log(
-            "🔄 Project changed, updating selected project:",
-            newSelectedProject,
-          );
-
-          // Show loading message for project switch
-          if (newSelectedProject) {
-            agentStreaming.setAgentActivity?.(
-              `🔄 Switching to project: ${newSelectedProject.name}...`,
-            );
-            setTimeout(() => agentStreaming.setAgentActivity?.(null), 3000);
-          }
-
-          setSelectedProject(newSelectedProject);
-
-          if (newSelectedProject) {
-            timelineIntegration.setStoredVideosMap(
-              JSON.parse(localStorage.getItem(`project-store-videos`) || "{}"),
-            );
-          } else {
-            timelineIntegration.setStoredVideosMap(
-              JSON.parse(localStorage.getItem("segmentVideos") || "{}"),
-            );
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    // Check for changes immediately on mount
-    handleStorage();
-
-    // Listen for storage events (from other tabs/windows)
-    window.addEventListener("storage", handleStorage);
-
-    // Also listen for a custom event we'll dispatch when project changes in same tab
-    window.addEventListener("projectChanged", handleStorage);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("projectChanged", handleStorage);
-    };
-  }, [selectedProject?.id, agentStreaming, timelineIntegration]);
+    if (selectedProject) {
+      // Show loading message for project switch
+      agentStreaming.setAgentActivity?.(
+        `🔄 Switching to project: ${selectedProject.name}...`,
+      );
+      setTimeout(() => agentStreaming.setAgentActivity?.(null), 3000);
+    }
+  }, [selectedProject?.id, agentStreaming]);
 
   // Load credit balance when user is authenticated
   useEffect(() => {
@@ -1072,7 +1018,7 @@ export const useChatFlow = () => {
         });
         console.log("Setting generated videos:", videosMap);
         setGeneratedVideos(videosMap);
-        timelineIntegration.setStoredVideosMap(videosMap);
+        setStoredVideosMap(videosMap);
 
         // If we have videos, move to step 5 (video generation completed)
         if (Object.keys(videosMap).length > 0) {
@@ -1081,7 +1027,7 @@ export const useChatFlow = () => {
       } else {
         console.log("No videos found in API response");
         setGeneratedVideos({});
-        timelineIntegration.setStoredVideosMap({});
+        setStoredVideosMap({});
       }
 
       // Reset other states
@@ -1226,7 +1172,6 @@ export const useChatFlow = () => {
         setAllUserMessages: timelineIntegration.setAllUserMessages,
         setGeneratedImages,
         setGeneratedVideos,
-        setStoredVideosMap: timelineIntegration.setStoredVideosMap,
         selectedProject,
         handleToolResult,
       };

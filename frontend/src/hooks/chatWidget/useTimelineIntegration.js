@@ -1,24 +1,15 @@
 import { useState } from "react";
+import { useProjectStore } from "../../store/useProjectStore";
 
 export const useTimelineIntegration = () => {
+  // Get storedVideosMap from Zustand store
+  const { storedVideosMap, setStoredVideosMap } = useProjectStore();
+  
   // Timeline states
   const [addingTimeline, setAddingTimeline] = useState(false);
   const [currentUserMessage, setCurrentUserMessage] = useState("");
   const [messageCounter, setMessageCounter] = useState(0);
   const [allUserMessages, setAllUserMessages] = useState([]);
-  const [storedVideosMap, setStoredVideosMap] = useState(() => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      if (stored) {
-        const _project = JSON.parse(stored);
-        return JSON.parse(localStorage.getItem(`project-store-videos`) || "{}");
-      }
-      return JSON.parse(localStorage.getItem("segmentVideos") || "{}");
-    } catch (e) {
-      console.error(e);
-      return {};
-    }
-  });
 
   // Reset timeline states
   const resetTimelineStates = () => {
@@ -30,20 +21,8 @@ export const useTimelineIntegration = () => {
 
   // Update stored videos map and persist to localStorage
   const updateStoredVideosMap = (videosMap, selectedProject) => {
-    setStoredVideosMap((prev) => {
-      const updatedMap = { ...prev, ...videosMap };
-
-      // Save to localStorage for persistence
-      if (selectedProject) {
-        localStorage.setItem(
-          `project-store-videos`,
-          JSON.stringify(updatedMap),
-        );
-      } else {
-        localStorage.setItem("segmentVideos", JSON.stringify(updatedMap));
-      }
-      return updatedMap;
-    });
+    const updatedMap = { ...storedVideosMap, ...videosMap };
+    setStoredVideosMap(updatedMap);
   };
 
   return {

@@ -332,7 +332,7 @@ const FinalWorkingInterface = () => {
 
       // Start the chat flow only when requested
       if (startChat) {
-        navigateToEditorWithChat(newProject, description.trim());
+        await navigateToEditorWithChat(newProject, description.trim());
       }
     } catch (error) {
       console.error("Failed to create project:", error);
@@ -342,7 +342,7 @@ const FinalWorkingInterface = () => {
     }
   };
 
-  const navigateToEditorWithChat = (project, prompt) => {
+  const navigateToEditorWithChat = async (project, prompt) => {
     try {
       console.log("🎯 Navigating to main editor with project:", project);
       console.log("🎯 Starting chat flow with prompt:", prompt);
@@ -366,11 +366,24 @@ const FinalWorkingInterface = () => {
         JSON.stringify(project),
       );
 
+      // IMPORTANT: Update the Zustand store immediately to sync state
+      if (window.__MY_GLOBAL_PROJECT_STORE__) {
+        console.log("🔄 Updating Zustand store with project:", project);
+        window.__MY_GLOBAL_PROJECT_STORE__.getState().setSelectedProject(project);
+        console.log("✅ Zustand store updated. Current selectedProject:", 
+          window.__MY_GLOBAL_PROJECT_STORE__.getState().selectedProject);
+      } else {
+        console.warn("⚠️ Zustand store not available!");
+      }
+
       // If we have a prompt, also set it for the chat flow
       if (prompt && prompt.trim()) {
         localStorage.setItem("chatInterfacePrompt", prompt.trim());
         localStorage.setItem("startChatFlow", "true");
       }
+
+      // Small delay to ensure Zustand store update propagates
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Dispatch events to notify the main app components
       window.dispatchEvent(
@@ -401,15 +414,20 @@ const FinalWorkingInterface = () => {
     }
   };
 
-  const handleOpenProject = (project) => {
+  const handleOpenProject = async (project) => {
     console.log("Opening project:", project);
+    
+    // Update Zustand store immediately
+    if (window.__MY_GLOBAL_PROJECT_STORE__) {
+      window.__MY_GLOBAL_PROJECT_STORE__.getState().setSelectedProject(project);
+    }
     
     // Dispatch event to notify FlowWidget about project selection
     window.dispatchEvent(new CustomEvent('projectChanged', { 
       detail: { project: project } 
     }));
     
-    navigateToEditorWithChat(project, "");
+    await navigateToEditorWithChat(project, "");
     setOpenDropdownId(null); // Close dropdown
   };
 

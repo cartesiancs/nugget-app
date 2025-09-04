@@ -443,9 +443,6 @@ const ChatMessages = ({
         content: "",
         component: (
           <div>
-            <div className='text-gray-100 text-sm mb-4'>
-              🎬 Your videos are ready!
-            </div>
             <TimelineButton
               canSendTimeline={canSendTimeline}
               addingTimeline={chatFlow.addingTimeline}

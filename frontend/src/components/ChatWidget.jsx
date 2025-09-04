@@ -6,7 +6,6 @@ import { useProjectStore } from "../store/useProjectStore";
 import { projectApi } from "../services/project";
 import LoadingSpinner from "./LoadingSpinner";
 import CharacterGenerator from "./CharacterGenerator";
-import CreditWidget from "./CreditWidget";
 import StepList from "./chat-widget/StepList";
 import InputArea from "./chat-widget/InputArea";
 import ConceptSelection from "./chat-widget/ConceptSelection";
@@ -301,13 +300,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
     setRedoStepId(null);
   }, [chatFlow, redoStepId, redoImageModel, redoVideoModel]);
 
-  // Project management functions
-  const clearProjectLocalStorage = useCallback(() => {
-    const { clearProjects, clearSelectedProject } = useProjectStore.getState();
-    clearProjects();
-    clearSelectedProject();
-    chatFlow.setSelectedProject(null);
-  }, [chatFlow]);
+  
 
   const openCreateModal = useCallback(() => {
     setNewProjectName("");
@@ -412,15 +405,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
     setShowRedoModal(false);
   }, []);
 
-  const SelectedProjectBanner = () => {
-    if (!chatFlow.selectedProject) return null;
-    return (
-      <div className='px-4 py-2 bg-blue-900 text-blue-100 text-sm border-b border-blue-800'>
-        Working on:{" "}
-        <span className='font-semibold'>{chatFlow.selectedProject.name}</span>
-      </div>
-    );
-  };
+  
 
   return (
     <div
@@ -656,9 +641,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
   );
 }
 
-// Wrapper component to keep the public <ChatWidget /> API small.
-// Manages only the "open" state & publish-button visibility then delegates
-// all heavy UI / logic to <ChatWidgetSidebar />.
 function ChatWidget() {
   const [open, setOpen] = React.useState(false);
   

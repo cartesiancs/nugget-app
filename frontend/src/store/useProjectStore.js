@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { projectApi } from "../services/project";
 import { creditApi } from "../services/credit";
+import { useSegmentStore } from "./useSegmentStore";
 
 const storeImpl = (set, get) => ({
   projects: (() => {
@@ -21,6 +22,8 @@ const storeImpl = (set, get) => ({
       return null;
     }
   })(),
+  // Note: storedVideosMap is now managed by useSegmentStore
+  // This is kept for backward compatibility but will be deprecated
   storedVideosMap: (() => {
     try {
       const stored = localStorage.getItem("project-store-selectedProject");
@@ -69,15 +72,9 @@ const storeImpl = (set, get) => ({
     const { selectedProject } = get();
     set({ storedVideosMap: videosMap });
     
-    
-    if (selectedProject) {
-      localStorage.setItem(
-        `project-store-videos`,
-        JSON.stringify(videosMap),
-      );
-    } else {
-      localStorage.setItem("segmentVideos", JSON.stringify(videosMap));
-    }
+    // Also update the segment store
+    const segmentStore = useSegmentStore.getState();
+    segmentStore.setSegmentVideos(videosMap, !!selectedProject);
   },
   setSelectedProject: (project) => {
     console.log('🏪 Store: Setting selected project:', project?.name);
@@ -99,6 +96,10 @@ const storeImpl = (set, get) => ({
       const segmentVideos = JSON.parse(localStorage.getItem("segmentVideos") || "{}");
       setStoredVideosMap(segmentVideos);
     }
+    
+    // Also load segment store data for the new project context
+    const segmentStore = useSegmentStore.getState();
+    segmentStore.loadFromStorage(!!project);
     
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('projectChanged', { 

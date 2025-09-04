@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { videoApi } from '../services/video-gen';
 import { s3Api } from '../services/s3';
+import { useSegmentStore } from '../store/useSegmentStore';
+import { useProjectStore } from '../store/useProjectStore';
 
 function SegmentDetail({ segment }) {
   const [retryLoading, setRetryLoading] = useState(false);
@@ -9,33 +11,23 @@ function SegmentDetail({ segment }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [segmentImageUrl, setSegmentImageUrl] = useState(null);
   const [segmentVideoUrl, setSegmentVideoUrl] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(() => {
-    try {
-      const stored = localStorage.getItem('project-store-selectedProject');
-      return stored ? JSON.parse(stored) : null;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  });
+  
+  // Use stores
+  const { selectedProject } = useProjectStore();
+  const { 
+    getSegmentImage, 
+    getSegmentVideo, 
+    setSegmentVideo 
+  } = useSegmentStore();
 
   // Function to load segment data
   const loadSegmentData = () => {
     if (segment) {
-      let storedImages = {};
-      let storedVideos = {};
+      const isProject = !!selectedProject;
       
-      if (selectedProject) {
-        storedImages = JSON.parse(localStorage.getItem(`project-store-images`) || '{}');
-        storedVideos = JSON.parse(localStorage.getItem(`project-store-videos`) || '{}');
-      } else {
-        storedImages = JSON.parse(localStorage.getItem('segmentImages') || '{}');
-        storedVideos = JSON.parse(localStorage.getItem('segmentVideos') || '{}');
-      }
-      
-      // Get this segment's specific image and video URLs
-      const currentImageUrl = segment.imageUrl || storedImages[segment.id];
-      const currentVideoUrl = segment.videoUrl || storedVideos[segment.id];
+      // Get this segment's specific image and video URLs from store
+      const currentImageUrl = segment.imageUrl || getSegmentImage(segment.id, isProject);
+      const currentVideoUrl = segment.videoUrl || getSegmentVideo(segment.id, isProject);
       
       // Update state variables
       setSegmentImageUrl(currentImageUrl);
@@ -84,20 +76,13 @@ function SegmentDetail({ segment }) {
   }, [segment]);
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const stored = localStorage.getItem('project-store-selectedProject');
-        const newSelectedProject = stored ? JSON.parse(stored) : null;
-        setSelectedProject(newSelectedProject);
-      } catch (e) {
-        console.error(e);
-      }
+    const handleProjectChange = () => {
       loadSegmentData();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [segment]);
+    window.addEventListener('projectChanged', handleProjectChange);
+    return () => window.removeEventListener('projectChanged', handleProjectChange);
+  }, [segment, selectedProject]);
 
   const handleRetryVideo = async () => {
     if (!segmentImageUrl || !segment?.narration) {
@@ -128,17 +113,9 @@ function SegmentDetail({ segment }) {
         // Get CloudFront URL directly
         const videoUrl = await s3Api.downloadVideo(result.s3Keys[0]);
         
-        // Save to project-specific storage
-        let storedVideos = {};
-        if (selectedProject) {
-          storedVideos = JSON.parse(localStorage.getItem(`project-store-videos`) || '{}');
-          storedVideos[segment.id] = videoUrl;
-          localStorage.setItem(`project-store-videos`, JSON.stringify(storedVideos));
-        } else {
-          storedVideos = JSON.parse(localStorage.getItem('segmentVideos') || '{}');
-          storedVideos[segment.id] = videoUrl;
-          localStorage.setItem('segmentVideos', JSON.stringify(storedVideos));
-        }
+        // Save to store
+        const isProject = !!selectedProject;
+        setSegmentVideo(segment.id, videoUrl, isProject);
 
         // Update state variables
         setSegmentVideoUrl(videoUrl);

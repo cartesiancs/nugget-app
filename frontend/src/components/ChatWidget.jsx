@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect } from "react"
 import { useAuth } from "../hooks/useAuth";
 import { useChatFlow } from "../hooks/chatWidget/useChatFlow";
 import { useTimeline } from "../hooks/useTimeline";
+import { useProjectStore } from "../store/useProjectStore";
 import { projectApi } from "../services/project";
 import LoadingSpinner from "./LoadingSpinner";
 import CharacterGenerator from "./CharacterGenerator";
@@ -302,8 +303,9 @@ function ChatWidgetSidebar({ open, setOpen }) {
 
   // Project management functions
   const clearProjectLocalStorage = useCallback(() => {
-    localStorage.removeItem("project-store-projects");
-    localStorage.removeItem("project-store-selectedProject");
+    const { clearProjects, clearSelectedProject } = useProjectStore.getState();
+    clearProjects();
+    clearSelectedProject();
     chatFlow.setSelectedProject(null);
   }, [chatFlow]);
 
@@ -334,15 +336,12 @@ function ChatWidgetSidebar({ open, setOpen }) {
           name: newProjectName,
           description: newProjectDesc,
         });
-        clearProjectLocalStorage();
-        localStorage.setItem(
-          "project-store-selectedProject",
-          JSON.stringify(newProject),
-        );
-        localStorage.setItem(
-          "project-store-projects",
-          JSON.stringify([newProject]),
-        );
+        
+        // Use Zustand store to manage projects
+        const { addProject, setSelectedProject } = useProjectStore.getState();
+        addProject(newProject);
+        setSelectedProject(newProject);
+        
         chatFlow.setSelectedProject(newProject);
         chatFlow.resetFlow();
         setCreateModalOpen(false);
@@ -357,7 +356,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
         setCreatingProject(false);
       }
     },
-    [newProjectName, newProjectDesc, clearProjectLocalStorage, chatFlow],
+    [newProjectName, newProjectDesc, chatFlow],
   );
 
   // Timeline functions

@@ -1,36 +1,31 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useProjectStore } from "../store/useProjectStore";
 import { projectApi } from "../services/project";
 
 export function ProjectHistoryDropdown({ onSelect }) {
   const { isAuthenticated } = useAuth();
-  const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  
-  useEffect(() => {
-    const storedProjects = localStorage.getItem("project-store-projects");
-    const storedSelected = localStorage.getItem("project-store-selectedProject");
-    if (storedProjects) setProjects(JSON.parse(storedProjects));
-    if (storedSelected) setSelectedProject(JSON.parse(storedSelected));
-  }, []);
+  const { 
+    projects, 
+    selectedProject, 
+    loading, 
+    error, 
+    setSelectedProject, 
+    fetchProjects, 
+    setError 
+  } = useProjectStore();
+  const [localLoading, setLocalLoading] = useState(false);
+  const [localError, setLocalError] = useState(null);
 
   // Fetch projects if needed
   useEffect(() => {
-    if (isAuthenticated && projects.length === 0 && !loading) {
-      setLoading(true);
-      projectApi
-        .getProjects({ page: 1, limit: 20 })
-        .then((data) => {
-          setProjects(data);
-          localStorage.setItem("project-store-projects", JSON.stringify(data));
-        })
-        .catch((e) => setError(e.message || "Failed to fetch projects"))
-        .finally(() => setLoading(false));
+    if (isAuthenticated && projects.length === 0 && !loading && !localLoading) {
+      setLocalLoading(true);
+      fetchProjects(1, 20)
+        .catch((e) => setLocalError(e.message || "Failed to fetch projects"))
+        .finally(() => setLocalLoading(false));
     }
-  }, [isAuthenticated, projects.length, loading]);
+  }, [isAuthenticated, projects.length, loading, localLoading, fetchProjects]);
 
   const handleSelect = async (e) => {
     const projectId = e.target.value;
@@ -38,33 +33,17 @@ export function ProjectHistoryDropdown({ onSelect }) {
     
     console.log('🎯 Project selected in dropdown:', selected?.name, `(ID: ${projectId})`);
     
+    // Use Zustand store to set selected project
     setSelectedProject(selected);
-    localStorage.setItem("project-store-selectedProject", JSON.stringify(selected));
     
     if (onSelect) onSelect(selected);
     
     if (projectId) {
       try {
-        console.log('📡 Fetching project essentials for localStorage...');
-        // Fetch essentials and store in localStorage
-        const [images, videos, segmentations] = await Promise.all([
-          projectApi.getProjectImages(projectId, { page: 1, limit: 100 }),
-          projectApi.getProjectVideos(projectId, { page: 1, limit: 100 }),
-          projectApi.getProjectSegmentations(projectId, { page: 1, limit: 50 }),
-        ]);
-        
-        localStorage.setItem(
-          "project-store-images",
-          JSON.stringify(images?.data || []),
-        );
-        localStorage.setItem(
-          "project-store-videos",
-          JSON.stringify(videos?.data || []),
-        );
-        localStorage.setItem(
-          "project-store-segmentations",
-          JSON.stringify(segmentations?.data || []),
-        );
+        console.log('📡 Fetching project essentials...');
+        // Fetch essentials using the store method
+        const { fetchProjectEssentials } = useProjectStore.getState();
+        await fetchProjectEssentials(projectId);
         
         console.log("✅ Fetched and stored essentials for project", selected?.name);
         
@@ -75,11 +54,12 @@ export function ProjectHistoryDropdown({ onSelect }) {
         
       } catch (err) {
         console.error("❌ Failed to fetch essentials for project", err);
+        setLocalError(err.message || "Failed to fetch project essentials");
       }
     }
   };
 
-  if (loading) {
+  if (loading || localLoading) {
     return (
       <div
         className='absolute right-0 mt-2 w-80 rounded-lg shadow-lg z-[1100] max-h-96 overflow-y-auto border border-gray-700/40'
@@ -95,7 +75,7 @@ export function ProjectHistoryDropdown({ onSelect }) {
     );
   }
 
-  if (error) {
+  if (error || localError) {
     return (
       <div
         className='absolute right-0 mt-2 w-80 rounded-lg shadow-lg z-[1100] max-h-96 overflow-y-auto border border-red-700/40'
@@ -105,7 +85,7 @@ export function ProjectHistoryDropdown({ onSelect }) {
         }}
       >
         <div className='p-4 text-red-400 text-sm text-center bg-red-900/20 border border-red-700/40 rounded m-2'>
-          {error}
+          {error || localError}
         </div>
       </div>
     );
@@ -176,12 +156,7 @@ export function ProjectLoader() {
 }
 
 export function SelectedProjectBanner() {
-  const [selectedProject, setSelectedProject] = useState(null);
-
-  useEffect(() => {
-    const storedSelected = localStorage.getItem("project-store-selectedProject");
-    if (storedSelected) setSelectedProject(JSON.parse(storedSelected));
-  }, []);
+  const { selectedProject } = useProjectStore();
 
   if (!selectedProject) return null;
 

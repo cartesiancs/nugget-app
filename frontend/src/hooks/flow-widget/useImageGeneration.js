@@ -27,13 +27,8 @@ export const useImageGeneration = ({
       setGeneratingImages(prev => new Set(prev.add(imageNode.id)));
       
       // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -236,13 +231,8 @@ export const useImageGeneration = ({
       }
 
       // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');

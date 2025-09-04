@@ -274,9 +274,7 @@ function FlowWidget() {
   // Restore generation states on component load
   const restoreGenerationStates = useCallback(async () => {
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
+      const storedProject = localStorage.getItem("project-store-selectedProject");
       const selectedProject = storedProject ? JSON.parse(storedProject) : null;
 
       if (!selectedProject) return;
@@ -551,11 +549,9 @@ function FlowWidget() {
     }
 
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
-      if (storedProject) {
-        const selectedProject = JSON.parse(storedProject);
+      const storedProject = localStorage.getItem("project-store-selectedProject");
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      if (selectedProject) {
         const videoStorageKey = `generated-videos-${selectedProject.id}`;
         const savedVideos = JSON.parse(
           localStorage.getItem(videoStorageKey) || "{}",
@@ -661,9 +657,7 @@ function FlowWidget() {
     // Check for user concepts that match current project
     let selectedProject = null;
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
+      const storedProject = localStorage.getItem("project-store-selectedProject");
       selectedProject = storedProject ? JSON.parse(storedProject) : null;
     } catch (e) {
       console.error("Error parsing project data:", e);
@@ -1077,11 +1071,9 @@ function FlowWidget() {
     let projectId;
     let projectName = "Untitled";
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
+          const storedProject = localStorage.getItem("project-store-selectedProject");
+    const project = storedProject ? JSON.parse(storedProject) : null;
+      if (project) {
         projectId = project.id;
         projectName = project.name || project.title || "Untitled";
         setProjectName(projectName);
@@ -1624,10 +1616,10 @@ function FlowWidget() {
 
   // Load user concepts on mount
   useEffect(() => {
-    const projectData = localStorage.getItem("project-store-selectedProject");
-    if (projectData) {
+    const storedProject = localStorage.getItem("project-store-selectedProject");
+    const project = storedProject ? JSON.parse(storedProject) : null;
+    if (project) {
       try {
-        const project = JSON.parse(projectData);
         const projectId = project.id;
 
         const userConceptsKey = `user-concepts-${projectId || "default"}`;
@@ -1752,11 +1744,9 @@ function FlowWidget() {
 
     // Check for user input in localStorage
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
+          const storedProject = localStorage.getItem("project-store-selectedProject");
+    const project = storedProject ? JSON.parse(storedProject) : null;
+      if (project) {
         const userNodeDataKey = `userNodeData-${project.id}`;
         const existingUserNodeData = JSON.parse(
           localStorage.getItem(userNodeDataKey) || "{}",
@@ -1774,11 +1764,9 @@ function FlowWidget() {
   // Update project name on mount
   useEffect(() => {
     try {
-      const storedProject = localStorage.getItem(
-        "project-store-selectedProject",
-      );
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
+          const storedProject = localStorage.getItem("project-store-selectedProject");
+    const project = storedProject ? JSON.parse(storedProject) : null;
+      if (project) {
         setProjectName(project.name || project.title || "Untitled");
       }
     } catch (error) {
@@ -1790,12 +1778,10 @@ function FlowWidget() {
   useEffect(() => {
     const cleanup = () => {
       try {
-        const storedProject = localStorage.getItem(
-          "project-store-selectedProject",
-        );
-        if (!storedProject) return;
+            const storedProject = localStorage.getItem("project-store-selectedProject");
+    const project = storedProject ? JSON.parse(storedProject) : null;
+        if (!project) return;
 
-        const project = JSON.parse(storedProject);
         const projectId = project.id;
 
         ["concept", "script", "image", "video"].forEach((type) => {

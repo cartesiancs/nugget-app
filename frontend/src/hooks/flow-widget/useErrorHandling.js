@@ -223,13 +223,8 @@ export const useErrorHandling = ({
     
     try {
       // Get selected project for error state persistence
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
       const result = await generationFunction(params);
       

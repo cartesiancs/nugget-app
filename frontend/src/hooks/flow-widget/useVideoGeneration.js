@@ -29,13 +29,8 @@ export const useVideoGeneration = ({
       setGeneratingVideos(prev => new Set(prev.add(videoNode.id)));
       
       // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -162,13 +157,8 @@ export const useVideoGeneration = ({
       console.error('Error generating video:', error);
       
       // Get selected project again for error handling
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
       const animationPrompt = imageNode.data?.segmentData?.animation || imageNode.data?.segmentData?.visual || 'Smooth cinematic movement';
       const artStyle = imageNode.data?.artStyle || 'cinematic photography with soft lighting';
@@ -262,13 +252,8 @@ export const useVideoGeneration = ({
       }
 
       // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const storedProject = localStorage.getItem('project-store-selectedProject');
+      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');

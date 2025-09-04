@@ -361,12 +361,6 @@ const FinalWorkingInterface = () => {
       }
 
       // Set the project as selected in project store for the main app
-      localStorage.setItem(
-        "project-store-selectedProject",
-        JSON.stringify(project),
-      );
-
-      // IMPORTANT: Update the Zustand store immediately to sync state
       if (window.__MY_GLOBAL_PROJECT_STORE__) {
         console.log("🔄 Updating Zustand store with project:", project);
         window.__MY_GLOBAL_PROJECT_STORE__.getState().setSelectedProject(project);

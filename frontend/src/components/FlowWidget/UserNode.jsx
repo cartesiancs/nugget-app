@@ -45,8 +45,8 @@ function UserNode({ data, isConnectable, selected }) {
     // Save to localStorage with project ID using new structure
     try {
       const storedProject = localStorage.getItem('project-store-selectedProject');
-      if (storedProject) {
-        const project = JSON.parse(storedProject);
+      const project = storedProject ? JSON.parse(storedProject) : null;
+      if (project) {
         const userNodeDataKey = `userNodeData-${project.id}`;
         const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
         

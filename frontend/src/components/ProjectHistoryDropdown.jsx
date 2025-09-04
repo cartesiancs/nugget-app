@@ -12,9 +12,7 @@ export function ProjectHistoryDropdown({ onSelect }) {
   // Load from localStorage on mount
   useEffect(() => {
     const storedProjects = localStorage.getItem("project-store-projects");
-    const storedSelected = localStorage.getItem(
-      "project-store-selectedProject",
-    );
+    const storedSelected = localStorage.getItem("project-store-selectedProject");
     if (storedProjects) setProjects(JSON.parse(storedProjects));
     if (storedSelected) setSelectedProject(JSON.parse(storedSelected));
   }, []);
@@ -41,15 +39,7 @@ export function ProjectHistoryDropdown({ onSelect }) {
     console.log('🎯 Project selected in dropdown:', selected?.name, `(ID: ${projectId})`);
     
     setSelectedProject(selected);
-    localStorage.setItem(
-      "project-store-selectedProject",
-      JSON.stringify(selected),
-    );
-    
-    // Dispatch custom event to notify other components about project change
-    window.dispatchEvent(new CustomEvent('projectChanged', { 
-      detail: { project: selected } 
-    }));
+    localStorage.setItem("project-store-selectedProject", JSON.stringify(selected));
     
     if (onSelect) onSelect(selected);
     
@@ -189,9 +179,7 @@ export function SelectedProjectBanner() {
   const [selectedProject, setSelectedProject] = useState(null);
 
   useEffect(() => {
-    const storedSelected = localStorage.getItem(
-      "project-store-selectedProject",
-    );
+    const storedSelected = localStorage.getItem("project-store-selectedProject");
     if (storedSelected) setSelectedProject(JSON.parse(storedSelected));
   }, []);
 

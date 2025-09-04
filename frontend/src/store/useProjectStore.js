@@ -86,6 +86,77 @@ const storeImpl = (set, get) => ({
       get().fetchProjectEssentials(project.id);
     }
   },
+
+  // Selected project management methods
+  getSelectedProject: () => {
+    const { selectedProject } = get();
+    return selectedProject;
+  },
+
+  clearSelectedProject: () => {
+    console.log('🏪 Store: Clearing selected project');
+    set({ selectedProject: null });
+    localStorage.removeItem("project-store-selectedProject");
+    
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('projectChanged', { 
+      detail: { project: null } 
+    }));
+  },
+
+  loadSelectedProjectFromStorage: () => {
+    try {
+      const stored = localStorage.getItem("project-store-selectedProject");
+      if (stored) {
+        const project = JSON.parse(stored);
+        set({ selectedProject: project });
+        return project;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading project from localStorage:', error);
+      return null;
+    }
+  },
+
+  saveSelectedProjectToStorage: (project) => {
+    try {
+      if (project) {
+        localStorage.setItem("project-store-selectedProject", JSON.stringify(project));
+        set({ selectedProject: project });
+      } else {
+        localStorage.removeItem("project-store-selectedProject");
+        set({ selectedProject: null });
+      }
+      return true;
+    } catch (error) {
+      console.error('Error saving project to localStorage:', error);
+      return false;
+    }
+  },
+
+  hasProjectInStorage: () => {
+    try {
+      const stored = localStorage.getItem("project-store-selectedProject");
+      return stored !== null;
+    } catch (error) {
+      console.error('Error checking project in localStorage:', error);
+      return false;
+    }
+  },
+
+  getProjectFromStorage: () => {
+    try {
+      const stored = localStorage.getItem("project-store-selectedProject");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting project from localStorage:', error);
+      return null;
+    }
+  },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   setConversations: (conversations) => set({ conversations }),
@@ -371,6 +442,9 @@ const storeImpl = (set, get) => ({
       research: [],
       selectedProject: null,
     });
+    
+    // Clear the selected project
+    get().clearSelectedProject();
   },
 });
 
@@ -379,4 +453,12 @@ export const useProjectStore =
 
 if (!window.__MY_GLOBAL_PROJECT_STORE__) {
   window.__MY_GLOBAL_PROJECT_STORE__ = useProjectStore;
+  
+  // Initialize selected project from localStorage
+  setTimeout(() => {
+    const project = useProjectStore.getState().loadSelectedProjectFromStorage();
+    if (project) {
+      console.log('✅ ProjectStore: Initialized with project from storage:', project.name);
+    }
+  }, 0);
 }

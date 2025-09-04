@@ -26,13 +26,8 @@ export const useConceptGeneration = ({
 }) => {
   const generateConcepts = useCallback(async (message, nodeId) => {
     // Get selected project from localStorage
-    let selectedProject = null;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      selectedProject = storedProject ? JSON.parse(storedProject) : null;
-    } catch (e) {
-      console.error('Error parsing project data:', e);
-    }
+    const storedProject = localStorage.getItem('project-store-selectedProject');
+    const selectedProject = storedProject ? JSON.parse(storedProject) : null;
     
     if (!selectedProject) {
       console.error('No project selected');

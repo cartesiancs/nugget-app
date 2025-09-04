@@ -9,7 +9,7 @@ export function ProjectHistoryDropdown({ onSelect }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load from localStorage on mount
+  
   useEffect(() => {
     const storedProjects = localStorage.getItem("project-store-projects");
     const storedSelected = localStorage.getItem("project-store-selectedProject");

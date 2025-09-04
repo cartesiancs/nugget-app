@@ -46,7 +46,7 @@ const storeImpl = (set, get) => ({
     const { selectedProject } = get();
     set({ storedVideosMap: videosMap });
     
-    // Save to localStorage for persistence
+    
     if (selectedProject) {
       localStorage.setItem(
         `project-store-videos`,
@@ -454,7 +454,7 @@ export const useProjectStore =
 if (!window.__MY_GLOBAL_PROJECT_STORE__) {
   window.__MY_GLOBAL_PROJECT_STORE__ = useProjectStore;
   
-  // Initialize selected project from localStorage
+  // Initialize selected project 
   setTimeout(() => {
     const project = useProjectStore.getState().loadSelectedProjectFromStorage();
     if (project) {

@@ -19,7 +19,6 @@ export const useTimelineIntegration = () => {
     setAllUserMessages([]);
   };
 
-  // Update stored videos map and persist to localStorage
   const updateStoredVideosMap = (videosMap, selectedProject) => {
     const updatedMap = { ...storedVideosMap, ...videosMap };
     setStoredVideosMap(updatedMap);

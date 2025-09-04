@@ -2,18 +2,6 @@ import { useCallback } from 'react';
 import { webInfoApi } from '../../services/web-info';
 import { conceptWriterApi } from '../../services/concept-writer';
 
-/**
- * Custom hook for handling concept generation
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.setGeneratingConcepts - Function to update generating concepts state
- * @param {Function} params.setUserConcepts - Function to update user concepts state
- * @param {Function} params.setTaskCompletionStates - Function to update task completion states
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- * @param {Array} params.nodes - Current nodes array
- */
 export const useConceptGeneration = ({
   setNodes,
   setEdges,
@@ -25,7 +13,6 @@ export const useConceptGeneration = ({
   nodes
 }) => {
   const generateConcepts = useCallback(async (message, nodeId) => {
-    // Get selected project from localStorage
     const storedProject = localStorage.getItem('project-store-selectedProject');
     const selectedProject = storedProject ? JSON.parse(storedProject) : null;
     
@@ -46,8 +33,6 @@ export const useConceptGeneration = ({
       }));
       return;
     }
-    
-    // Store user node data in localStorage with project ID and user text
     const userNodeDataKey = `userNodeData-${selectedProject.id}`;
     const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
     existingUserNodeData[nodeId] = {
@@ -284,10 +269,6 @@ export const useConceptGeneration = ({
         return node;
       }));
       
-      // Don't auto-remove error states - let user manually retry or dismiss
-      // setTimeout(() => {
-      //   removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
-      // }, 5000);
     } finally {
       setGeneratingConcepts(prev => {
         const newSet = new Set(prev);

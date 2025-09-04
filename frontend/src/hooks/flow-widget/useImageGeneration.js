@@ -2,17 +2,6 @@ import { useCallback } from 'react';
 import { chatApi } from '../../services/chat';
 import { s3Api } from '../../services/s3';
 
-/**
- * Custom hook for handling image generation from segments
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.setGeneratingImages - Function to update generating images state
- * @param {Function} params.setTaskCompletionStates - Function to update task completion states
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- * @param {Array} params.edges - Current edges array
- */
 export const useImageGeneration = ({
   setNodes,
   setEdges,
@@ -25,8 +14,6 @@ export const useImageGeneration = ({
   const generateImage = useCallback(async (segmentNode, imageNode) => {
     try {
       setGeneratingImages(prev => new Set(prev.add(imageNode.id)));
-      
-      // Get selected project from localStorage
       const storedProject = localStorage.getItem('project-store-selectedProject');
       const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
@@ -92,7 +79,7 @@ export const useImageGeneration = ({
         try {
           const tempImageKey = `temp-image-${selectedProject.id}-${imageNode.id}`;
           localStorage.removeItem(tempImageKey);
-          console.log('✅ Cleaned up temporary image data from localStorage');
+          console.log('✅ Cleaned up temporary image data');
         } catch (error) {
           console.error('Error cleaning up temporary image data:', error);
         }
@@ -206,12 +193,7 @@ export const useImageGeneration = ({
         return node;
       }));
       
-      // Don't auto-remove error states - let user manually retry or dismiss
-      // if (selectedProject) {
-      //   setTimeout(() => {
-      //     removeGenerationState(selectedProject.id, 'image', imageNode.id);
-      //   }, 5000);
-      // }
+     
     } finally {
       setGeneratingImages(prev => {
         const newSet = new Set(prev);
@@ -230,7 +212,7 @@ export const useImageGeneration = ({
         return;
       }
 
-      // Get selected project from localStorage
+      // Get selected project 
       const storedProject = localStorage.getItem('project-store-selectedProject');
       const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       

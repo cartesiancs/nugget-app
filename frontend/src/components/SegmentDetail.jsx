@@ -22,7 +22,6 @@ function SegmentDetail({ segment }) {
   // Function to load segment data
   const loadSegmentData = () => {
     if (segment) {
-      // Load segment-specific data from localStorage
       let storedImages = {};
       let storedVideos = {};
       
@@ -84,10 +83,8 @@ function SegmentDetail({ segment }) {
     loadSegmentData();
   }, [segment]);
 
-  // Listen for localStorage changes to update segment data
   useEffect(() => {
     const handleStorageChange = () => {
-      // Update selected project when localStorage changes
       try {
         const stored = localStorage.getItem('project-store-selectedProject');
         const newSelectedProject = stored ? JSON.parse(stored) : null;

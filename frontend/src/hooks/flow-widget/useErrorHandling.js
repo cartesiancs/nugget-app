@@ -1,18 +1,5 @@
 import { useCallback } from 'react';
 
-/**
- * Custom hook for handling errors and retry functionality for concept, script, image, and video nodes
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- * @param {Function} params.generateConcepts - Function to regenerate concepts
- * @param {Function} params.generateScript - Function to regenerate scripts
- * @param {Function} params.generateImage - Function to regenerate images
- * @param {Function} params.generateVideo - Function to regenerate videos
- * @param {Array} params.nodes - Current nodes array
- */
 export const useErrorHandling = ({
   setNodes,
   setEdges,
@@ -24,11 +11,6 @@ export const useErrorHandling = ({
   generateVideo,
   nodes
 }) => {
-  /**
-   * Determines error type and message based on error object
-   * @param {Error|Object} error - Error object
-   * @returns {Object} - Error type and message
-   */
   const getErrorDetails = useCallback((error) => {
     const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
     
@@ -85,12 +67,6 @@ export const useErrorHandling = ({
     };
   }, []);
 
-  /**
-   * Updates a node to show error state with red styling and retry button
-   * @param {string} nodeId - ID of the node to update
-   * @param {Error|Object} error - Error object
-   * @param {Object} originalData - Original node data for retry
-   */
   const showErrorState = useCallback((nodeId, error, originalData = {}) => {
     const errorDetails = getErrorDetails(error);
     
@@ -114,10 +90,6 @@ export const useErrorHandling = ({
     }));
   }, [setNodes, getErrorDetails]);
 
-  /**
-   * Clears error state from a node
-   * @param {string} nodeId - ID of the node to clear error from
-   */
   const clearErrorState = useCallback((nodeId) => {
     setNodes(prevNodes => prevNodes.map(node => {
       if (node.id === nodeId) {
@@ -131,11 +103,6 @@ export const useErrorHandling = ({
     }));
   }, [setNodes]);
 
-  /**
-   * Handles retry functionality for different node types
-   * @param {string} nodeId - ID of the node to retry
-   * @param {string} nodeType - Type of node (conceptNode, scriptNode, imageNode, videoNode)
-   */
   const retryGeneration = useCallback(async (nodeId, nodeType) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node || !node.data?.originalData) {
@@ -211,13 +178,6 @@ export const useErrorHandling = ({
     }
   }, [nodes, setNodes, generateConcepts, generateScript, generateImage, generateVideo, showErrorState]);
 
-  /**
-   * Enhanced error handling wrapper for generation functions
-   * @param {Function} generationFunction - The generation function to wrap
-   * @param {string} nodeType - Type of node being generated
-   * @param {Object} params - Parameters for the generation function
-   * @returns {Promise} - Promise that resolves/rejects with enhanced error handling
-   */
   const withErrorHandling = useCallback(async (generationFunction, nodeType, params) => {
     const { nodeId, ...originalData } = params;
     
@@ -237,7 +197,6 @@ export const useErrorHandling = ({
     } catch (error) {
       console.error(`Error in ${nodeType} generation:`, error);
       
-      // Save error state to localStorage for persistence
       if (selectedProject) {
         saveGenerationState(selectedProject.id, nodeType.replace('Node', ''), nodeId, {
           status: 'error',

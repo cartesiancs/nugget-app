@@ -576,7 +576,7 @@ function FlowWidget() {
                 videoKey: key,
                 artStyle: videoData.artStyle,
                 uuid: `seg-${key}`, // Reconstruct UUID format
-                fromLocalStorage: true // Flag to identify localStorage videos
+                fromLocalStorage: true // Flag to identify videos
               };
             }
           }

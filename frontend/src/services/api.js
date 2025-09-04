@@ -11,7 +11,7 @@ export const getAuthHeaders = async () => {
     "Content-Type": "application/json",
   };
 
-  // Get token from localStorage (for web) or Electron store
+  // Get token
   let token = localStorage.getItem("authToken");
 
   // If we're in Electron, try to get token from Electron store
@@ -24,12 +24,12 @@ export const getAuthHeaders = async () => {
       const tokenResult = await window.electronAPI.req.auth.getToken();
       if (tokenResult.status === 1 && tokenResult.token) {
         token = tokenResult.token;
-        // Sync with localStorage for consistency
+        // Sync 
         localStorage.setItem("authToken", token);
       }
     } catch (error) {
       console.warn("Failed to get token from Electron store:", error);
-      // Fallback to localStorage token
+      // Fallback 
     }
   }
 

@@ -1,16 +1,7 @@
 import { useCallback } from 'react';
 import { segmentationApi } from '../../services/segmentationapi';
 
-/**
- * Custom hook for handling script generation from concepts
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.setGeneratingScripts - Function to update generating scripts state
- * @param {Function} params.setTaskCompletionStates - Function to update task completion states
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- */
+
 export const useScriptGeneration = ({
   setNodes,
   setEdges,
@@ -23,7 +14,7 @@ export const useScriptGeneration = ({
     try {
       setGeneratingScripts(prev => new Set(prev.add(scriptNode.id)));
       
-      // Get selected project from localStorage
+      // Get selected project
       const storedProject = localStorage.getItem('project-store-selectedProject');
       const selectedProject = storedProject ? JSON.parse(storedProject) : null;
       
@@ -91,7 +82,7 @@ export const useScriptGeneration = ({
         try {
           const tempScriptKey = `temp-script-${selectedProject.id}-${scriptNode.id}`;
           localStorage.removeItem(tempScriptKey);
-          console.log('✅ Cleaned up temporary script data from localStorage');
+          console.log('✅ Cleaned up temporary script');
         } catch (error) {
           console.error('Error cleaning up temporary script data:', error);
         }
@@ -258,12 +249,7 @@ export const useScriptGeneration = ({
         return node;
       }));
       
-      // Don't auto-remove error states - let user manually retry or dismiss
-      // if (selectedProject) {
-      //   setTimeout(() => {
-      //     removeGenerationState(selectedProject.id, 'script', scriptNode.id);
-      //   }, 5000);
-      // }
+      
     } finally {
       setGeneratingScripts(prev => {
         const newSet = new Set(prev);

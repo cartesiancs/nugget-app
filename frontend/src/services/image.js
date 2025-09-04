@@ -1,4 +1,8 @@
-import { axiosInstance } from "../lib/axiosInstance";
+import axios from "axios";
+
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
 import { getAuthHeaders } from "./api";
 
 // Image generation API wrapper

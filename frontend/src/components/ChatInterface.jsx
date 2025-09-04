@@ -63,7 +63,7 @@ const ChatInterface = () => {
             let demoVideo = null;
             
             if (videos.length > 0 && videos[0]?.videoFiles?.[0]?.s3Key) {
-              demoVideo = `https://ds0fghatf06yb.cloudfront.net/${videos[0].videoFiles[0].s3Key}`;
+              demoVideo = `${import.meta.env.VITE_CLOUDFRONT_URL}/${videos[0].videoFiles[0].s3Key}`;
             }
             
             return {

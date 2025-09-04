@@ -1,5 +1,9 @@
 import { getAuthHeaders } from "./api";
-import { axiosInstance } from "../lib/axiosInstance";
+import axios from "axios";
+
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
 
 export const segmentationApi = {
   getSegmentation: async ({ prompt, concept = "", negative_prompt = "", project_id ,model}) => {

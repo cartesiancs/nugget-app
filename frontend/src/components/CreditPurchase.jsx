@@ -19,7 +19,7 @@ const CreditPurchase = ({ onClose, onSuccess }) => {
       // Use consistent token name - check both possible locations
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       
-      const response = await fetch(`https://backend.usuals.ai/credits/verify-session?session_id=${sessionId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/credits/verify-session?session_id=${sessionId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -226,7 +226,7 @@ const CreditPurchase = ({ onClose, onSuccess }) => {
       }
       
       // Create checkout session via backend
-      const response = await fetch('https://backend.usuals.ai/credits/create_checkout_session', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/credits/create_checkout_session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

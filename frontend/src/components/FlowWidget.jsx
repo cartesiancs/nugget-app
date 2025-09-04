@@ -472,7 +472,7 @@ function FlowWidget() {
 
             allImagesBySegment[segmentId].push({
               id: img.id,
-              url: `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`,
+              url: `${import.meta.env.VITE_CLOUDFRONT_URL}/${img.s3Key}`,
               visualPrompt: img.visualPrompt,
               artStyle: img.artStyle,
               s3Key: img.s3Key,
@@ -524,7 +524,7 @@ function FlowWidget() {
           video.videoFiles[0].s3Key
         ) {
           const videoKey = video.uuid.replace(/^seg-/, "");
-          const videoUrl = `https://ds0fghatf06yb.cloudfront.net/${video.videoFiles[0].s3Key}`;
+          const videoUrl = `${import.meta.env.VITE_CLOUDFRONT_URL}/${video.videoFiles[0].s3Key}`;
 
           videos[videoKey] = videoUrl;
           videoDetails[videoKey] = {

@@ -1007,7 +1007,7 @@ export const useChatFlow = () => {
           const key =
             img.s3Key || img.imageS3Key || img.imageS3key || img.image_s3_key;
           const imageUrl = key
-            ? `https://ds0fghatf06yb.cloudfront.net/${key}`
+            ? `${import.meta.env.VITE_CLOUDFRONT_URL}/${key}`
             : img.url || img.imageUrl;
           if (imageUrl) {
             imagesMap[segmentId] = imageUrl;
@@ -1064,7 +1064,7 @@ export const useChatFlow = () => {
           }
 
           const videoUrl = videoKey
-            ? `https://ds0fghatf06yb.cloudfront.net/${videoKey}`
+            ? `${import.meta.env.VITE_CLOUDFRONT_URL}/${videoKey}`
             : video.url || null;
           if (videoUrl) {
             videosMap[segmentId] = videoUrl;

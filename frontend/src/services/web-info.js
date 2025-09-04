@@ -1,5 +1,9 @@
 import { getAuthHeaders } from "./api";
-import { axiosInstance } from "../lib/axiosInstance";
+import axios from "axios";
+
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
 
 // Web-info API wrapper
 export const webInfoApi = {

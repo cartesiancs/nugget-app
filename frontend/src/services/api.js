@@ -1,4 +1,11 @@
-import { axiosInstance, API_BASE_URL } from "../lib/axiosInstance";
+import axios from "axios";
+
+// Create axios instance with environment variable
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Utility function to get auth headers
 export const getAuthHeaders = async () => {
   const headers = {

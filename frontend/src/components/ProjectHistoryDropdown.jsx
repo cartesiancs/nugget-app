@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useProjectStore } from "../store/useProjectStore";
 import { projectApi } from "../services/project";
@@ -11,21 +11,24 @@ export function ProjectHistoryDropdown({ onSelect }) {
     loading, 
     error, 
     setSelectedProject, 
-    fetchProjects, 
+    setProjects,
     setError 
   } = useProjectStore();
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
 
-  // Fetch projects if needed
+  // Fetch projects every time dropdown is opened
   useEffect(() => {
-    if (isAuthenticated && projects.length === 0 && !loading && !localLoading) {
+    if (isAuthenticated && !localLoading) {
       setLocalLoading(true);
-      fetchProjects(1, 20)
+      projectApi.getProjects({ page: 1, limit: 20 })
+        .then((data) => {
+          setProjects(data);
+        })
         .catch((e) => setLocalError(e.message || "Failed to fetch projects"))
         .finally(() => setLocalLoading(false));
     }
-  }, [isAuthenticated, projects.length, loading, localLoading, fetchProjects]);
+  }, [isAuthenticated, setProjects]);
 
   const handleSelect = async (e) => {
     const projectId = e.target.value;

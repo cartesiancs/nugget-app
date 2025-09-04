@@ -1,11 +1,10 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/baseurl.js";
 
-// Create axios instance with environment variable
+// Create axios instance with base URL from config
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE_URL,
 });
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Utility function to get auth headers
 export const getAuthHeaders = async () => {
   const headers = {

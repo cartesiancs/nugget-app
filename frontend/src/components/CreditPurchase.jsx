@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { creditPlans, formatPrice, formatCredits } from '../config/creditPlans';
+import { API_BASE_URL } from '../config/baseurl.js';
 
 // Check if we're in Electron environment
 const isElectron = typeof window !== 'undefined' && window.electronAPI && window.electronAPI.req;
@@ -19,7 +20,7 @@ const CreditPurchase = ({ onClose, onSuccess }) => {
       // Use consistent token name - check both possible locations
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/credits/verify-session?session_id=${sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/credits/verify-session?session_id=${sessionId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -226,7 +227,7 @@ const CreditPurchase = ({ onClose, onSuccess }) => {
       }
       
       // Create checkout session via backend
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/credits/create_checkout_session`, {
+      const response = await fetch(`${API_BASE_URL}/credits/create_checkout_session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

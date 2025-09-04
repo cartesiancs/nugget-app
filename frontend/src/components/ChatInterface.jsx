@@ -9,6 +9,7 @@ import {
   getImageCreditCost, 
   getVideoCreditCost
 } from '../lib/pricing';
+import { CLOUDFRONT_URL } from '../config/baseurl.js';
 
 const ChatInterface = () => {
   console.log('🔧 ChatInterface component rendering...');
@@ -63,7 +64,7 @@ const ChatInterface = () => {
             let demoVideo = null;
             
             if (videos.length > 0 && videos[0]?.videoFiles?.[0]?.s3Key) {
-              demoVideo = `${import.meta.env.VITE_CLOUDFRONT_URL}/${videos[0].videoFiles[0].s3Key}`;
+              demoVideo = `${CLOUDFRONT_URL}/${videos[0].videoFiles[0].s3Key}`;
             }
             
             return {

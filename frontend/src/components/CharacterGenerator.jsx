@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { characterGenApi } from "../services/api";
 import LoadingSpinner from "./LoadingSpinner";
+import { CLOUDFRONT_URL, CDN_BASE_URL } from "../config/baseurl.js";
 
 function CharacterGenerator({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("generate"); // "generate", "characters", or "videos"
@@ -323,11 +324,11 @@ function CharacterGenerator({ isOpen, onClose }) {
                       Sprite Sheet
                     </label>
                     <img
-                      src={result.sprite_sheet_url || `${import.meta.env.VITE_CLOUDFRONT_URL}/${result.spriteSheetS3Key}`}
+                      src={result.sprite_sheet_url || `${CLOUDFRONT_URL}/${result.spriteSheetS3Key}`}
                       alt="Sprite Sheet"
                       className="w-full h-48 object-contain rounded border border-gray-700 bg-gray-800"
                       onError={(e) => {
-                        e.target.src = `${import.meta.env.VITE_CDN_BASE_URL}/${result.spriteSheetS3Key}`;
+                        e.target.src = `${CDN_BASE_URL}/${result.spriteSheetS3Key}`;
                       }}
                     />
                   </div>
@@ -337,11 +338,11 @@ function CharacterGenerator({ isOpen, onClose }) {
                       Final Character
                     </label>
                     <img
-                      src={result.final_character_url || `${import.meta.env.VITE_CLOUDFRONT_URL}/${result.finalCharacterS3Key}`}
+                      src={result.final_character_url || `${CLOUDFRONT_URL}/${result.finalCharacterS3Key}`}
                       alt="Final Character"
                       className="w-full h-48 object-contain rounded border border-gray-700 bg-gray-800"
                       onError={(e) => {
-                        e.target.src = `${import.meta.env.VITE_CDN_BASE_URL}/${result.finalCharacterS3Key}`;
+                        e.target.src = `${CDN_BASE_URL}/${result.finalCharacterS3Key}`;
                       }}
                     />
                   </div>
@@ -576,7 +577,7 @@ function CharacterGenerator({ isOpen, onClose }) {
                       <div className="space-y-2 mb-4">
                         {(() => {
                           const imageUrl = character.final_character_url || 
-                            (character.finalCharacterS3Key && `${import.meta.env.VITE_CLOUDFRONT_URL}/${character.finalCharacterS3Key}`);
+                            (character.finalCharacterS3Key && `${CLOUDFRONT_URL}/${character.finalCharacterS3Key}`);
                           
                           return imageUrl ? (
                             <img
@@ -585,7 +586,7 @@ function CharacterGenerator({ isOpen, onClose }) {
                               className="w-full h-32 object-contain rounded border border-gray-600 bg-gray-700"
                               onError={(e) => {
                                 if (character.finalCharacterS3Key) {
-                                  e.target.src = `${import.meta.env.VITE_CDN_BASE_URL}/${character.finalCharacterS3Key}`;
+                                  e.target.src = `${CDN_BASE_URL}/${character.finalCharacterS3Key}`;
                                 } else {
                                   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMzc0MTUxIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5Q0EzQUYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD4KPC9zdmc+';
                                 }

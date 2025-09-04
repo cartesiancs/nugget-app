@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/baseurl.js';
 
 const AuthContext = createContext();
 
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }) => {
           let tokenData = null;
           if (code && !accessToken) {
             // Exchange the code for JWT token via backend endpoint
-            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/google-redirect?code=${encodeURIComponent(code)}`);
+            const res = await fetch(`${API_BASE_URL}/auth/google-redirect?code=${encodeURIComponent(code)}`);
             if (!res.ok) throw new Error('Token exchange failed');
             tokenData = await res.json();
           } else {
@@ -173,7 +174,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         // In web browser, redirect to Google OAuth
         const redirectUri = `${window.location.origin}/auth/google-redirect`;
-        window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+        window.location.href = `${API_BASE_URL}/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
       }
     } catch (error) {
       console.error('Login failed:', error);

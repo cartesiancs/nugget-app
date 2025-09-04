@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import { useAuth } from '../hooks/useAuth';
 import { formatCredits } from '../config/creditPlans';
+import { API_BASE_URL } from '../config/baseurl.js';
 
 const PaymentSuccess = ({ onClose }) => {
   // const { user } = useAuth();
@@ -26,7 +27,7 @@ const PaymentSuccess = ({ onClose }) => {
       setLoading(true);
       
       // Verify session and add credits
-              const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/credits/verify-session?session_id=${sessionId}`, {
+              const verifyResponse = await fetch(`${API_BASE_URL}/credits/verify-session?session_id=${sessionId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
@@ -41,7 +42,7 @@ const PaymentSuccess = ({ onClose }) => {
 
       if (verifyResult.verified) {
         // Get detailed session info
-                  const detailsResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/credits/stripe-session-details?session_id=${sessionId}`, {
+                  const detailsResponse = await fetch(`${API_BASE_URL}/credits/stripe-session-details?session_id=${sessionId}`, {
                   headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }

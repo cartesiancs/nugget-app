@@ -12,6 +12,7 @@ import { segmentationApi } from "../../services/segmentationapi";
 import { chatApi } from "../../services/chat";
 import { s3Api } from "../../services/s3";
 import { projectApi } from "../../services/project";
+import { CLOUDFRONT_URL } from "../../config/baseurl.js";
 
 export const useChatFlow = () => {
   const { isAuthenticated, user } = useAuth();
@@ -953,7 +954,7 @@ export const useChatFlow = () => {
           const key =
             img.s3Key || img.imageS3Key || img.imageS3key || img.image_s3_key;
           const imageUrl = key
-            ? `${import.meta.env.VITE_CLOUDFRONT_URL}/${key}`
+            ? `${CLOUDFRONT_URL}/${key}`
             : img.url || img.imageUrl;
           if (imageUrl) {
             imagesMap[segmentId] = imageUrl;
@@ -1010,7 +1011,7 @@ export const useChatFlow = () => {
           }
 
           const videoUrl = videoKey
-            ? `${import.meta.env.VITE_CLOUDFRONT_URL}/${videoKey}`
+            ? `${CLOUDFRONT_URL}/${videoKey}`
             : video.url || null;
           if (videoUrl) {
             videosMap[segmentId] = videoUrl;

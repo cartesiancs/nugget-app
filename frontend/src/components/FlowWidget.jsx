@@ -10,6 +10,7 @@ import { useVideoGeneration } from "../hooks/flow-widget/useVideoGeneration";
 import { useErrorHandling } from "../hooks/flow-widget/useErrorHandling";
 import ChatLoginButton from "./ChatLoginButton";
 import { projectApi } from "../services/project";
+import { CLOUDFRONT_URL } from "../config/baseurl.js";
 import {
   ReactFlow,
   Background,
@@ -472,7 +473,7 @@ function FlowWidget() {
 
             allImagesBySegment[segmentId].push({
               id: img.id,
-              url: `${import.meta.env.VITE_CLOUDFRONT_URL}/${img.s3Key}`,
+              url: `${CLOUDFRONT_URL}/${img.s3Key}`,
               visualPrompt: img.visualPrompt,
               artStyle: img.artStyle,
               s3Key: img.s3Key,
@@ -524,7 +525,7 @@ function FlowWidget() {
           video.videoFiles[0].s3Key
         ) {
           const videoKey = video.uuid.replace(/^seg-/, "");
-          const videoUrl = `${import.meta.env.VITE_CLOUDFRONT_URL}/${video.videoFiles[0].s3Key}`;
+          const videoUrl = `${CLOUDFRONT_URL}/${video.videoFiles[0].s3Key}`;
 
           videos[videoKey] = videoUrl;
           videoDetails[videoKey] = {

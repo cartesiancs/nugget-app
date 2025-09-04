@@ -6,6 +6,7 @@ import ChatLoginButton from "./ChatLoginButton";
 import CreditPurchase from "./CreditPurchase";
 import InterfaceSidebar from "./InterfaceSidebar";
 import { assets } from "../assets/assets";
+import { CLOUDFRONT_URL } from "../config/baseurl.js";
 
 const FinalWorkingInterface = () => {
   console.log("🔧 FinalWorkingInterface rendering...");
@@ -208,10 +209,10 @@ const FinalWorkingInterface = () => {
                 console.log(`🖼️ First image for ${project.id}:`, image);
 
                 if (image?.s3Key) {
-                  thumbnail = `${import.meta.env.VITE_CLOUDFRONT_URL}/${image.s3Key}`;
+                  thumbnail = `${CLOUDFRONT_URL}/${image.s3Key}`;
                   mediaType = "image";
                 } else if (image?.imageFiles?.[0]?.s3Key) {
-                  thumbnail = `${import.meta.env.VITE_CLOUDFRONT_URL}/${image.imageFiles[0].s3Key}`;
+                  thumbnail = `${CLOUDFRONT_URL}/${image.imageFiles[0].s3Key}`;
                   mediaType = "image";
                 } else if (image?.url) {
                   thumbnail = image.url;
@@ -241,9 +242,9 @@ const FinalWorkingInterface = () => {
                   .slice(0, 3)
                   .map((img) => ({
                     url: img.s3Key
-                      ? `${import.meta.env.VITE_CLOUDFRONT_URL}/${img.s3Key}`
+                      ? `${CLOUDFRONT_URL}/${img.s3Key}`
                       : img.imageFiles?.[0]?.s3Key
-                      ? `${import.meta.env.VITE_CLOUDFRONT_URL}/${img.imageFiles[0].s3Key}`
+                      ? `${CLOUDFRONT_URL}/${img.imageFiles[0].s3Key}`
                       : img.url || null,
                     alt: img.name || "Project image",
                   }))

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Handle } from "@xyflow/react";
 import { User, Edit3, MessageSquare, Lightbulb, Target, ChevronDown, ChevronUp } from "lucide-react";
 import useFlowWidgetStore from "../../store/useFlowWidgetStore";
+import useFlowKeyStore from "../../store/useFlowKeyStore";
 
 function UserNode({ data, isConnectable, selected }) {
   const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(data.userText || "");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -47,16 +49,12 @@ function UserNode({ data, isConnectable, selected }) {
     try {
       const project = getSelectedProject();
       if (project) {
-        const userNodeDataKey = `userNodeData-${project.id}`;
-        const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-        
         const nodeId = data.id || `user-${Date.now()}`;
-        existingUserNodeData[nodeId] = {
-          projectId: project.id,
-          text: newText
-        };
         
-        localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
+        // Use the store to save user node data
+        flowKeyStore.setUserNodeData(project.id, nodeId, {
+          text: newText
+        });
         
         // Update node data if onChange callback exists
         if (data.onChange) {

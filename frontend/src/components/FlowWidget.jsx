@@ -12,6 +12,7 @@ import ChatLoginButton from "./ChatLoginButton";
 import { projectApi } from "../services/project";
 import { CLOUDFRONT_URL } from "../config/baseurl.js";
 import useFlowWidgetStore from "../store/useFlowWidgetStore";
+import useFlowKeyStore from "../store/useFlowKeyStore";
 import {
   ReactFlow,
   Background,
@@ -44,6 +45,7 @@ function FlowWidget() {
   const { isAuthenticated, user } = useAuth();
   const timeline = useTimeline();
   const { getSelectedProject, getProjectId, getProjectName, hasSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -136,57 +138,17 @@ function FlowWidget() {
   const [generatingImages, setGeneratingImages] = useState(new Set());
   const [generatingVideos, setGeneratingVideos] = useState(new Set());
 
-  // Generation state helper functions
-  const getGenerationStateKey = (projectId, type) =>
-    `generation-states-${projectId}-${type}`;
-
+  // Generation state helper functions - now using the store
   const saveGenerationState = (projectId, type, nodeId, data) => {
-    try {
-      const key = getGenerationStateKey(projectId, type);
-      const existingStates = JSON.parse(localStorage.getItem(key) || "{}");
-      existingStates[nodeId] = {
-        ...data,
-        timestamp: Date.now(),
-        status: data.status || "generating",
-      };
-      localStorage.setItem(key, JSON.stringify(existingStates));
-    } catch (error) {
-      console.error(`Error saving ${type} generation state:`, error);
-    }
+    flowKeyStore.saveGenerationState(projectId, type, nodeId, data);
   };
 
   const removeGenerationState = (projectId, type, nodeId) => {
-    try {
-      const key = getGenerationStateKey(projectId, type);
-      const existingStates = JSON.parse(localStorage.getItem(key) || "{}");
-      delete existingStates[nodeId];
-      localStorage.setItem(key, JSON.stringify(existingStates));
-    } catch (error) {
-      console.error(`Error removing ${type} generation state:`, error);
-    }
+    flowKeyStore.removeGenerationState(projectId, type, nodeId);
   };
 
   const getGenerationStates = (projectId, type) => {
-    try {
-      const key = getGenerationStateKey(projectId, type);
-      const states = JSON.parse(localStorage.getItem(key) || "{}");
-      const now = Date.now();
-      const cleanedStates = {};
-
-      Object.entries(states).forEach(([nodeId, data]) => {
-        const isGenerating = data.status === "generating";
-        const maxAge = isGenerating ? 3600000 : 600000;
-        if (now - data.timestamp < maxAge) {
-          cleanedStates[nodeId] = data;
-        }
-      });
-
-      localStorage.setItem(key, JSON.stringify(cleanedStates));
-      return cleanedStates;
-    } catch (error) {
-      console.error(`Error getting ${type} generation states:`, error);
-      return {};
-    }
+    return flowKeyStore.getGenerationStates(projectId, type);
   };
 
   // Task completion tracking
@@ -552,10 +514,7 @@ function FlowWidget() {
     try {
       const selectedProject = getSelectedProject();
       if (selectedProject) {
-        const videoStorageKey = `generated-videos-${selectedProject.id}`;
-        const savedVideos = JSON.parse(
-          localStorage.getItem(videoStorageKey) || "{}",
-        );
+        const savedVideos = flowKeyStore.getGeneratedVideos(selectedProject.id);
 
         Object.entries(savedVideos).forEach(([key, videoData]) => {
           if (videoData && videoData.videoUrl) {
@@ -576,7 +535,6 @@ function FlowWidget() {
                 videoKey: key,
                 artStyle: videoData.artStyle,
                 uuid: `seg-${key}`, // Reconstruct UUID format
-                fromLocalStorage: true // Flag to identify videos
               };
             }
           }
@@ -585,7 +543,7 @@ function FlowWidget() {
 
       }
     } catch (error) {
-      console.error("Error loading saved videos from localStorage:", error);
+      console.error("Error loading saved videos", error);
     }
 
     return {
@@ -660,10 +618,7 @@ function FlowWidget() {
     // Add User Node if there are matching user node data for this project (ROOT of tree)
     let userNodeId = null;
     if (selectedProject) {
-      const userNodeDataKey = `userNodeData-${selectedProject.id}`;
-      const existingUserNodeData = JSON.parse(
-        localStorage.getItem(userNodeDataKey) || "{}",
-      );
+      const existingUserNodeData = flowKeyStore.getUserNodeData(selectedProject.id);
 
       // Check if there are any user node data for this project
       const userNodeEntries = Object.entries(existingUserNodeData).filter(
@@ -1605,12 +1560,8 @@ function FlowWidget() {
     if (project) {
       try {
         const projectId = project.id;
-
-        const userConceptsKey = `user-concepts-${projectId || "default"}`;
-        const existingUserConcepts = JSON.parse(
-          localStorage.getItem(userConceptsKey) || "{}",
-        );
-        setUserConcepts(new Map(Object.entries(existingUserConcepts)));
+        const existingUserConcepts = flowKeyStore.getUserConcepts(projectId);
+        setUserConcepts(existingUserConcepts);
       } catch (e) {
         console.error("Error loading user concepts:", e);
       }
@@ -1726,14 +1677,11 @@ function FlowWidget() {
       ),
     };
 
-    // Check for user input in localStorage
+    // Check for user input
     try {
       const project = getSelectedProject();
       if (project) {
-        const userNodeDataKey = `userNodeData-${project.id}`;
-        const existingUserNodeData = JSON.parse(
-          localStorage.getItem(userNodeDataKey) || "{}",
-        );
+        const existingUserNodeData = flowKeyStore.getUserNodeData(project.id);
         newCompletionStates.userInput =
           Object.keys(existingUserNodeData).length > 0;
       }
@@ -1752,7 +1700,7 @@ function FlowWidget() {
     }
   }, []);
 
-  // Cleanup old localStorage data periodically
+  // Cleanup
   useEffect(() => {
     const cleanup = () => {
       try {
@@ -1760,42 +1708,7 @@ function FlowWidget() {
         if (!project) return;
 
         const projectId = project.id;
-
-        ["concept", "script", "image", "video"].forEach((type) => {
-          getGenerationStates(projectId, type);
-        });
-
-        // Clean up old temporary data and videos
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (!key) continue;
-
-          try {
-            if (key.startsWith(`temp-`) && key.includes(projectId)) {
-              const data = JSON.parse(localStorage.getItem(key) || "{}");
-              if (data.timestamp && Date.now() - data.timestamp > 3600000) {
-                localStorage.removeItem(key);
-              }
-            }
-
-            if (key.startsWith(`generated-videos-${projectId}`)) {
-              const videos = JSON.parse(localStorage.getItem(key) || "{}");
-              const videoEntries = Object.entries(videos);
-              if (videoEntries.length > 20) {
-                const sortedVideos = videoEntries.sort(
-                  (a, b) => b[1].timestamp - a[1].timestamp,
-                );
-                const videosToKeep = sortedVideos.slice(0, 20);
-                localStorage.setItem(
-                  key,
-                  JSON.stringify(Object.fromEntries(videosToKeep)),
-                );
-              }
-            }
-          } catch (error) {
-            console.error(`Error cleaning up localStorage key ${key}:`, error);
-          }
-        }
+        flowKeyStore.cleanupOldData(projectId);
       } catch (error) {
         console.error("Error during cleanup:", error);
       }

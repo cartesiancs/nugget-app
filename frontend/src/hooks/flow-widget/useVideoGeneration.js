@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { chatApi } from '../../services/chat';
 import { s3Api } from '../../services/s3';
 import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
 export const useVideoGeneration = ({
   setNodes,
@@ -14,6 +15,7 @@ export const useVideoGeneration = ({
   nodes
 }) => {
   const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   
   const generateVideo = useCallback(async (imageNode, videoNode) => {
     try {
@@ -105,8 +107,7 @@ export const useVideoGeneration = ({
         
         // Clean up any temporary video generation data
         try {
-          const tempVideoKey = `temp-video-${selectedProject.id}-${videoNode.id}`;
-          localStorage.removeItem(tempVideoKey);
+          flowKeyStore.removeTempData(selectedProject.id, 'video', videoNode.id);
           console.log('✅ Cleaned up temporary video data');
         } catch (error) {
           console.error('Error cleaning up temporary video data:', error);

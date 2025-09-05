@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { segmentationApi } from '../../services/segmentationapi';
 import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
 
 export const useScriptGeneration = ({
@@ -12,6 +13,7 @@ export const useScriptGeneration = ({
   removeGenerationState
 }) => {
   const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   
   const generateScript = useCallback(async (conceptNode, scriptNode) => {
     try {
@@ -82,8 +84,7 @@ export const useScriptGeneration = ({
         
         // Clean up any temporary script generation data
         try {
-          const tempScriptKey = `temp-script-${selectedProject.id}-${scriptNode.id}`;
-          localStorage.removeItem(tempScriptKey);
+          flowKeyStore.removeTempData(selectedProject.id, 'script', scriptNode.id);
           console.log('✅ Cleaned up temporary script');
         } catch (error) {
           console.error('Error cleaning up temporary script data:', error);

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { webInfoApi } from '../../services/web-info';
 import { conceptWriterApi } from '../../services/concept-writer';
 import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
 export const useConceptGeneration = ({
   setNodes,
@@ -14,6 +15,7 @@ export const useConceptGeneration = ({
   nodes
 }) => {
   const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   
   const generateConcepts = useCallback(async (message, nodeId) => {
     const selectedProject = getSelectedProject();
@@ -35,13 +37,9 @@ export const useConceptGeneration = ({
       }));
       return;
     }
-    const userNodeDataKey = `userNodeData-${selectedProject.id}`;
-    const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-    existingUserNodeData[nodeId] = {
-      projectId: selectedProject.id,
+    flowKeyStore.setUserNodeData(selectedProject.id, nodeId, {
       text: message
-    };
-    localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
+    });
 
     // Update state
     setUserConcepts(prev => new Map(prev.set(nodeId, message)));
@@ -127,20 +125,12 @@ export const useConceptGeneration = ({
       );
       
       if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
-        // Remove persistent generation state and clean up localStorage
+        // Remove persistent generation state and clean 
         removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
         
         // Mark user data as processed
         try {
-          const userNodeDataKey = `userNodeData-${selectedProject.id}`;
-          const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-          Object.keys(existingUserNodeData).forEach(key => {
-            if (existingUserNodeData[key].text === message) {
-              existingUserNodeData[key].processed = true;
-              existingUserNodeData[key].processedAt = Date.now();
-            }
-          });
-          localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
+          flowKeyStore.markUserNodeAsProcessed(selectedProject.id, message);
         } catch (error) {
           console.error('Error updating user node data:', error);
         }

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { chatApi } from '../../services/chat';
 import { s3Api } from '../../services/s3';
 import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
 export const useImageGeneration = ({
   setNodes,
@@ -13,6 +14,7 @@ export const useImageGeneration = ({
   edges
 }) => {
   const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   
   const generateImage = useCallback(async (segmentNode, imageNode) => {
     try {
@@ -79,8 +81,7 @@ export const useImageGeneration = ({
         
         // Clean up any temporary image generation data
         try {
-          const tempImageKey = `temp-image-${selectedProject.id}-${imageNode.id}`;
-          localStorage.removeItem(tempImageKey);
+          flowKeyStore.removeTempData(selectedProject.id, 'image', imageNode.id);
           console.log('✅ Cleaned up temporary image data');
         } catch (error) {
           console.error('Error cleaning up temporary image data:', error);

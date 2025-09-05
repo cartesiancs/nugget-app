@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
 export const useErrorHandling = ({
   setNodes,
@@ -13,6 +14,7 @@ export const useErrorHandling = ({
   nodes
 }) => {
   const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
   const getErrorDetails = useCallback((error) => {
     const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
     
@@ -231,8 +233,7 @@ export const useErrorHandling = ({
     
     nodeTypes.forEach(type => {
       try {
-        const key = `generation-states-${projectId}-${type}`;
-        const states = JSON.parse(localStorage.getItem(key) || '{}');
+        const states = flowKeyStore.getGenerationStates(projectId, type);
         
         Object.values(states).forEach(state => {
           if (state.status === 'error') {
@@ -259,17 +260,13 @@ export const useErrorHandling = ({
     
     nodeTypes.forEach(type => {
       try {
-        const key = `generation-states-${projectId}-${type}`;
-        const states = JSON.parse(localStorage.getItem(key) || '{}');
-        const cleanedStates = {};
+        const states = flowKeyStore.getGenerationStates(projectId, type);
         
         Object.entries(states).forEach(([nodeId, state]) => {
-          if (state.status !== 'error') {
-            cleanedStates[nodeId] = state;
+          if (state.status === 'error') {
+            flowKeyStore.removeGenerationState(projectId, type, nodeId);
           }
         });
-        
-        localStorage.setItem(key, JSON.stringify(cleanedStates));
       } catch (error) {
         console.error(`Error clearing ${type} error states:`, error);
       }

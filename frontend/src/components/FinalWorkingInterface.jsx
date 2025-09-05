@@ -370,11 +370,7 @@ const FinalWorkingInterface = () => {
         console.warn("⚠️ Zustand store not available!");
       }
 
-      // If we have a prompt, also set it for the chat flow
-      if (prompt && prompt.trim()) {
-        localStorage.setItem("chatInterfacePrompt", prompt.trim());
-        localStorage.setItem("startChatFlow", "true");
-      }
+      
 
       // Small delay to ensure Zustand store update propagates
       await new Promise(resolve => setTimeout(resolve, 100));

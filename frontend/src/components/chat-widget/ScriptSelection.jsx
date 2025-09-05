@@ -5,9 +5,9 @@ const ScriptSelection = ({
   onScriptSelect,
   selectedScript,
   isProjectScript = false,
-  selectedSegmentationId = null, // For project scripts, indicates which segmentation is selected
 }) => {
   const [expandedCard, setExpandedCard] = useState(null);
+
 
   // Handle both scenarios: scripts array or single project script
   const hasScripts = scripts && (scripts.response1 || scripts.response2);
@@ -140,58 +140,24 @@ const ScriptSelection = ({
                   {isSelected && <span className="ml-2 text-xs">✓ Selected</span>}
                 </div>
 
-                {/* Segments and Art Style */}
+                {/* Seconds and Summary */}
                 <div className="space-y-1 mb-2">
                   <div className="text-gray-300 text-xs">
                     <span className="text-cyan-300">Seconds:</span> {card.script?.segments?.length ? card.script.segments.length * 5 : 0}<span>s</span>
                   </div>
-                  <div className="text-gray-300 text-xs">
-                    <span className="text-cyan-300">Art Style:</span> {card.script?.artStyle || "Default"}
-                  </div>
                 </div>
 
-                {/* Script content */}
+                {/* Summary content */}
                 <div className="flex-1">
                   {expandedCard === index ? (
                     <div className="text-gray-300 text-xs leading-relaxed">
-                      <span className="text-cyan-300">Full Content:</span>
-                      <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                        {card.script?.segments?.map((segment, segIndex) => (
-                          <div 
-                            key={segIndex} 
-                            className={`border-l-2 pl-2 ${
-                              isSelected ? 'border-cyan-400 bg-cyan-400/10' : 'border-cyan-400/30'
-                            }`}
-                          >
-                            <div className="text-cyan-300 text-xs font-medium mb-1">
-                              Segment {segIndex + 1}:
-                            </div>
-                            {segment.visual && (
-                              <div className="text-gray-300 text-xs mb-1">
-                                <span className="text-cyan-300">Visual:</span> {segment.visual}
-                              </div>
-                            )}
-                            {segment.animation && (
-                              <div className="text-gray-300 text-xs mb-1">
-                                <span className="text-cyan-300">Animation:</span> {segment.animation}
-                              </div>
-                            )}
-                            {segment.narration && (
-                              <div className="text-gray-300 text-xs mb-1">
-                                <span className="text-cyan-300">Narration:</span> {segment.narration}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      <span className="text-cyan-300">Summary:</span> {card.script?.summary || "No summary available"}
                     </div>
                   ) : (
                     <div className="relative">
                       <div className="text-gray-300 text-xs leading-relaxed">
-                        <span className="text-cyan-300">Preview:</span> {card.script?.segments?.[0]?.visual?.substring(0, 60) || card.script?.segments?.[0]?.narration?.substring(0, 60) || "No content"}...
+                        <span className="text-cyan-300">Summary:</span> {(card.script?.summary || "No summary")}
                       </div>
-                      {/* Blur effect at bottom when collapsed */}
-                      <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
                     </div>
                   )}
                 </div>

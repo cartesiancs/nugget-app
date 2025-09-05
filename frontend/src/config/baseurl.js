@@ -4,8 +4,8 @@
 
 export const BASE_URLS = {
   // Main API base URL
-  API_BASE_URL: "https://backend.usuals.ai",
-  
+  // API_BASE_URL: "https://backend.usuals.ai",
+  API_BASE_URL: "http://localhost:8080",
   // CloudFront CDN URL for media files
   CLOUDFRONT_URL: "https://ds0fghatf06yb.cloudfront.net",
   

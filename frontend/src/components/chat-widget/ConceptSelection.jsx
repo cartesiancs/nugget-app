@@ -8,6 +8,7 @@ const ConceptSelection = ({
   const [expandedCard, setExpandedCard] = useState(null);
   const containerRef = React.useRef(null);
 
+
   if (!concepts) return null;
 
   const handleCardClick = (concept) => {
@@ -95,30 +96,18 @@ const ConceptSelection = ({
                   {isSelected && <span className="ml-2 text-xs">✓ Selected</span>}
                 </div>
 
-              {/* Tone and Goal */}
-              <div className='space-y-1 mb-2'>
-                <div className='text-gray-300 text-xs'>
-                  <span className='text-cyan-300'>Tone:</span> {concept.tone}
-                </div>
-                <div className='text-gray-300 text-xs'>
-                  <span className='text-cyan-300'>Goal:</span> {concept.goal}
-                </div>
-              </div>
-
-              {/* Concept text */}
+              {/* Summary */}
               <div className='flex-1'>
                 {expandedCard === index ? (
                   <div className='text-gray-300 text-xs leading-relaxed'>
-                    <span className='text-cyan-300'>Concept:</span>{" "}
-                    {concept.concept}
+                    <span className='text-cyan-300'>Summary:</span>{" "}
+                    {concept.summary || "No summary available"}
                   </div>
                 ) : (
                   <div className="relative">
                     <div className="text-gray-300 text-xs leading-relaxed max-h-16 overflow-hidden">
-                      <span className="text-cyan-300">Concept:</span> {concept.concept.substring(0, 120)}...
+                      <span className="text-cyan-300">Summary:</span> {(concept.summary|| "No summary")}
                     </div>
-                    {/* Blur effect at bottom when collapsed */}
-                    <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none bg-gradient-to-t from-gray-900/80 to-transparent"></div>
                   </div>
                 )}
                 </div>

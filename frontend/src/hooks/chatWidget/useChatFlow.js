@@ -846,6 +846,7 @@ export const useChatFlow = () => {
         projectImages,
         projectVideos,
         projectSegmentations,
+        projectSummaries,
       ] = await Promise.all([
         projectApi.getProjectById(selectedProject.id),
         projectApi.getProjectConcepts(selectedProject.id, {
@@ -858,6 +859,10 @@ export const useChatFlow = () => {
           page: 1,
           limit: 50,
         }),
+        projectApi.getProjectSummaries(selectedProject.id, {
+          page: 1,
+          limit: 50,
+        }),
       ]);
 
       console.log("Raw API responses:", {
@@ -866,7 +871,9 @@ export const useChatFlow = () => {
         projectImages,
         projectVideos,
         projectSegmentations,
+        projectSummaries,
       });
+      
 
       // Set concepts if available
       if (
@@ -914,11 +921,13 @@ export const useChatFlow = () => {
             videoUrl: seg.videoUrl || seg.video_url,
           }));
 
-          console.log("Setting selected script with segments:", segments);
+          const finalSummary = firstSegmentation.summary;
+          
           setSelectedScript({
             segments,
             artStyle: firstSegmentation.artStyle,
             concept: firstSegmentation.concept,
+            summary: finalSummary,
           });
 
           // Create two scripts from the existing data for history display
@@ -927,6 +936,7 @@ export const useChatFlow = () => {
             segments,
             artStyle: firstSegmentation.artStyle,
             concept: firstSegmentation.concept,
+            summary: finalSummary,
           };
           
           setScripts({
@@ -1148,6 +1158,7 @@ export const useChatFlow = () => {
           segments: result.data.segments,
           artStyle: result.data.artStyle || "realistic",
           concept: result.data.concept || "",
+          summary: result.data.summary || "",
         };
         
         // Set scripts for user selection (create two scripts for selection)

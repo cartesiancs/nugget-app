@@ -4,39 +4,11 @@ import { creditApi } from "../services/credit";
 import { useSegmentStore } from "./useSegmentStore";
 
 const storeImpl = (set, get) => ({
-  projects: (() => {
-    try {
-      const stored = localStorage.getItem("project-store-projects");
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.error('Error loading projects from localStorage:', e);
-      return [];
-    }
-  })(),
-  selectedProject: (() => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      return stored ? JSON.parse(stored) : null;
-    } catch (e) {
-      console.error('Error loading selected project from localStorage:', e);
-      return null;
-    }
-  })(),
+  projects: [],
+  selectedProject: null,
   // Note: storedVideosMap is now managed by useSegmentStore
   // This is kept for backward compatibility but will be deprecated
-  storedVideosMap: (() => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      if (stored) {
-        const _project = JSON.parse(stored);
-        return JSON.parse(localStorage.getItem(`project-store-videos`) || "{}");
-      }
-      return JSON.parse(localStorage.getItem("segmentVideos") || "{}");
-    } catch (e) {
-      console.error(e);
-      return {};
-    }
-  })(),
+  storedVideosMap: {},
   conversations: [],
   concepts: [],
   images: [],
@@ -62,11 +34,6 @@ const storeImpl = (set, get) => ({
 
   setProjects: (projects) => {
     set({ projects });
-    try {
-      localStorage.setItem("project-store-projects", JSON.stringify(projects));
-    } catch (e) {
-      console.error('Error saving projects to localStorage:', e);
-    }
   },
   setStoredVideosMap: (videosMap) => {
     const { selectedProject } = get();
@@ -80,26 +47,19 @@ const storeImpl = (set, get) => ({
     console.log('🏪 Store: Setting selected project:', project?.name);
     set({ selectedProject: project });
     
-    // Update localStorage
-    if (project) {
-      localStorage.setItem("project-store-selectedProject", JSON.stringify(project));
-    } else {
-      localStorage.removeItem("project-store-selectedProject");
-    }
-    
     // Update storedVideosMap based on project selection
     const { setStoredVideosMap } = get();
     if (project) {
-      const projectVideos = JSON.parse(localStorage.getItem(`project-store-videos`) || "{}");
+      // Get project videos from segment store
+      const segmentStore = useSegmentStore.getState();
+      const projectVideos = segmentStore.projectVideos || {};
       setStoredVideosMap(projectVideos);
     } else {
-      const segmentVideos = JSON.parse(localStorage.getItem("segmentVideos") || "{}");
+      // Get segment videos from segment store
+      const segmentStore = useSegmentStore.getState();
+      const segmentVideos = segmentStore.segmentVideos || {};
       setStoredVideosMap(segmentVideos);
     }
-    
-    // Also load segment store data for the new project context
-    const segmentStore = useSegmentStore.getState();
-    segmentStore.loadFromStorage(!!project);
     
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('projectChanged', { 
@@ -120,7 +80,6 @@ const storeImpl = (set, get) => ({
   clearSelectedProject: () => {
     console.log('🏪 Store: Clearing selected project');
     set({ selectedProject: null });
-    localStorage.removeItem("project-store-selectedProject");
     
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('projectChanged', { 
@@ -129,57 +88,23 @@ const storeImpl = (set, get) => ({
   },
 
   loadSelectedProjectFromStorage: () => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      if (stored) {
-        const project = JSON.parse(stored);
-        set({ selectedProject: project });
-        return project;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error loading project from localStorage:', error);
-      return null;
-    }
+    const { selectedProject } = get();
+    return selectedProject;
   },
 
   saveSelectedProjectToStorage: (project) => {
-    try {
-      if (project) {
-        localStorage.setItem("project-store-selectedProject", JSON.stringify(project));
-        set({ selectedProject: project });
-      } else {
-        localStorage.removeItem("project-store-selectedProject");
-        set({ selectedProject: null });
-      }
-      return true;
-    } catch (error) {
-      console.error('Error saving project to localStorage:', error);
-      return false;
-    }
+    set({ selectedProject: project });
+    return true;
   },
 
   hasProjectInStorage: () => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      return stored !== null;
-    } catch (error) {
-      console.error('Error checking project in localStorage:', error);
-      return false;
-    }
+    const { selectedProject } = get();
+    return selectedProject !== null;
   },
 
   getProjectFromStorage: () => {
-    try {
-      const stored = localStorage.getItem("project-store-selectedProject");
-      if (stored) {
-        return JSON.parse(stored);
-      }
-      return null;
-    } catch (error) {
-      console.error('Error getting project from localStorage:', error);
-      return null;
-    }
+    const { selectedProject } = get();
+    return selectedProject;
   },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
@@ -515,13 +440,9 @@ export const useProjectStore =
 if (!window.__MY_GLOBAL_PROJECT_STORE__) {
   window.__MY_GLOBAL_PROJECT_STORE__ = useProjectStore;
   
-  // Initialize projects and selected project from localStorage
+  
   setTimeout(() => {
     const store = useProjectStore.getState();
-    const project = store.loadSelectedProjectFromStorage();
-    if (project) {
-      console.log('✅ ProjectStore: Initialized with project from storage:', project.name);
-    }
-    console.log('✅ ProjectStore: Initialized with projects from storage:', store.projects.length);
+    console.log('✅ ProjectStore: Initialized in memory mode');
   }, 0);
 }

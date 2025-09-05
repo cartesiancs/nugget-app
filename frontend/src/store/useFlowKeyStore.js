@@ -1,43 +1,54 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 /**
- * Zustand store for centralized localStorage operations in FlowWidget
+ * Zustand store for centralized memory operations in FlowWidget
  * Replaces scattered localStorage calls throughout the application
  */
 export const useFlowKeyStore = create((set, get) => ({
-  // Core localStorage operations
+  // In-memory storage
+  memory: {},
+  
   getItem: (key, defaultValue = null) => {
     try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
+      return get().memory[key] !== undefined ? get().memory[key] : defaultValue;
     } catch (error) {
-      console.error(`Error getting localStorage item ${key}:`, error);
+      console.error(`Error getting memory item ${key}:`, error);
       return defaultValue;
     }
   },
 
   setItem: (key, value) => {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      set((state) => ({
+        memory: {
+          ...state.memory,
+          [key]: value
+        }
+      }));
       return true;
     } catch (error) {
-      console.error(`Error setting localStorage item ${key}:`, error);
+      console.error(`Error setting memory item ${key}:`, error);
       return false;
     }
   },
 
   removeItem: (key) => {
     try {
-      localStorage.removeItem(key);
+      set((state) => {
+        const newMemory = { ...state.memory };
+        delete newMemory[key];
+        return { memory: newMemory };
+      });
       return true;
     } catch (error) {
-      console.error(`Error removing localStorage item ${key}:`, error);
+      console.error(`Error removing memory item ${key}:`, error);
       return false;
     }
   },
 
   // Generation state operations
-  getGenerationStateKey: (projectId, type) => `generation-states-${projectId}-${type}`,
+  getGenerationStateKey: (projectId, type) =>
+    `generation-states-${projectId}-${type}`,
 
   saveGenerationState: (projectId, type, nodeId, data) => {
     const key = get().getGenerationStateKey(projectId, type);
@@ -88,7 +99,7 @@ export const useFlowKeyStore = create((set, get) => ({
     const existingData = get().getUserNodeData(projectId);
     existingData[nodeId] = {
       projectId,
-      ...data
+      ...data,
     };
     return get().setItem(key, existingData);
   },
@@ -107,15 +118,15 @@ export const useFlowKeyStore = create((set, get) => ({
     const key = get().getUserNodeDataKey(projectId);
     const existingData = get().getUserNodeData(projectId);
     let updated = false;
-    
-    Object.keys(existingData).forEach(key => {
+
+    Object.keys(existingData).forEach((key) => {
       if (existingData[key].text === message) {
         existingData[key].processed = true;
         existingData[key].processedAt = Date.now();
         updated = true;
       }
     });
-    
+
     if (updated) {
       return get().setItem(key, existingData);
     }
@@ -133,7 +144,8 @@ export const useFlowKeyStore = create((set, get) => ({
 
   setUserConcepts: (projectId, concepts) => {
     const key = get().getUserConceptsKey(projectId);
-    const conceptsObj = concepts instanceof Map ? Object.fromEntries(concepts) : concepts;
+    const conceptsObj =
+      concepts instanceof Map ? Object.fromEntries(concepts) : concepts;
     return get().setItem(key, conceptsObj);
   },
 
@@ -155,13 +167,14 @@ export const useFlowKeyStore = create((set, get) => ({
     const existingVideos = get().getGeneratedVideos(projectId);
     existingVideos[videoKey] = {
       ...videoData,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     return get().setItem(key, existingVideos);
   },
 
   // Temporary data operations
-  getTempDataKey: (projectId, type, nodeId) => `temp-${type}-${projectId}-${nodeId}`,
+  getTempDataKey: (projectId, type, nodeId) =>
+    `temp-${type}-${projectId}-${nodeId}`,
 
   getTempData: (projectId, type, nodeId) => {
     const key = get().getTempDataKey(projectId, type, nodeId);
@@ -172,7 +185,7 @@ export const useFlowKeyStore = create((set, get) => ({
     const key = get().getTempDataKey(projectId, type, nodeId);
     return get().setItem(key, {
       ...data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   },
 
@@ -189,14 +202,12 @@ export const useFlowKeyStore = create((set, get) => ({
       const maxVideos = 20;
 
       // Clean up old temporary data
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key) continue;
-
+      const memory = get().memory;
+      Object.keys(memory).forEach(key => {
         try {
           // Clean up temp data
           if (key.startsWith(`temp-`) && key.includes(projectId)) {
-            const data = get().getItem(key, null);
+            const data = memory[key];
             if (data && data.timestamp && now - data.timestamp > maxAge) {
               get().removeItem(key);
             }
@@ -204,20 +215,20 @@ export const useFlowKeyStore = create((set, get) => ({
 
           // Clean up old videos (keep only recent ones)
           if (key.startsWith(`generated-videos-${projectId}`)) {
-            const videos = get().getItem(key, {});
+            const videos = memory[key] || {};
             const videoEntries = Object.entries(videos);
             if (videoEntries.length > maxVideos) {
               const sortedVideos = videoEntries.sort(
-                (a, b) => b[1].timestamp - a[1].timestamp
+                (a, b) => b[1].timestamp - a[1].timestamp,
               );
               const videosToKeep = sortedVideos.slice(0, maxVideos);
               get().setItem(key, Object.fromEntries(videosToKeep));
             }
           }
         } catch (error) {
-          console.error(`Error cleaning up localStorage key ${key}:`, error);
+          console.error(`Error cleaning up memory key ${key}:`, error);
         }
-      }
+      });
 
       // Clean up generation states
       ["concept", "script", "image", "video"].forEach((type) => {
@@ -244,15 +255,15 @@ export const useFlowKeyStore = create((set, get) => ({
         get().getGenerationStateKey(projectId, "video"),
       ];
 
-      keysToRemove.forEach(key => get().removeItem(key));
+      keysToRemove.forEach((key) => get().removeItem(key));
 
       // Remove temp data
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.includes(projectId) && key.startsWith('temp-')) {
+      const memory = get().memory;
+      Object.keys(memory).forEach(key => {
+        if (key.includes(projectId) && key.startsWith("temp-")) {
           get().removeItem(key);
         }
-      }
+      });
 
       return true;
     } catch (error) {
@@ -266,10 +277,12 @@ export const useFlowKeyStore = create((set, get) => ({
     const userNodeData = get().getUserNodeData(projectId);
     const userConcepts = get().getUserConcepts(projectId);
     const generatedVideos = get().getGeneratedVideos(projectId);
-    
-    return Object.keys(userNodeData).length > 0 || 
-           userConcepts.size > 0 || 
-           Object.keys(generatedVideos).length > 0;
+
+    return (
+      Object.keys(userNodeData).length > 0 ||
+      userConcepts.size > 0 ||
+      Object.keys(generatedVideos).length > 0
+    );
   },
 
   getProjectDataSize: (projectId) => {
@@ -284,7 +297,7 @@ export const useFlowKeyStore = create((set, get) => ({
       get().getGenerationStateKey(projectId, "video"),
     ];
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       const data = get().getItem(key, null);
       if (data) {
         size += JSON.stringify(data).length;
@@ -296,22 +309,16 @@ export const useFlowKeyStore = create((set, get) => ({
 
   // Debug methods
   getAllProjectKeys: (projectId) => {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.includes(projectId)) {
-        keys.push(key);
-      }
-    }
-    return keys;
+    const memory = get().memory;
+    return Object.keys(memory).filter(key => key.includes(projectId));
   },
 
-  // Migration helper - in case we need to migrate old localStorage keys
   migrateOldKeys: (projectId) => {
-    // This can be used to migrate from old localStorage patterns to new ones
-    console.log('Migration helper - no migration needed for current implementation');
+    console.log(
+      "Migration helper - no migration needed for current implementation",
+    );
     return true;
-  }
+  },
 }));
 
 export default useFlowKeyStore;

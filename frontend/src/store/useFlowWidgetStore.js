@@ -1,13 +1,20 @@
 import { create } from 'zustand';
 
 const useFlowWidgetStore = create((set, get) => ({
-  // Get the selected project from localStorage
+  // Get the selected project from the project store
   getSelectedProject: () => {
     try {
-      const storedProject = localStorage.getItem("project-store-selectedProject");
-      return storedProject ? JSON.parse(storedProject) : null;
+      // Import the project store dynamically to avoid circular dependencies
+      const projectStore = window.__MY_GLOBAL_PROJECT_STORE__;
+      if (projectStore) {
+        const selectedProject = projectStore.getState().selectedProject;
+        console.log('🔍 FlowWidgetStore: Getting selected project:', selectedProject);
+        return selectedProject;
+      }
+      console.log('⚠️ FlowWidgetStore: Project store not available, waiting for initialization...');
+      return null;
     } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
+      console.error("Error getting project from store:", error);
       return null;
     }
   },

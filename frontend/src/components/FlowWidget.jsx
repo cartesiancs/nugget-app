@@ -1019,7 +1019,8 @@ function FlowWidget() {
 
     const project = getSelectedProject();
     if (!project) {
-      setError("No project selected. Please select a project first.");
+      console.log('⚠️ FlowWidget: No project selected, waiting for project selection...');
+      // Don't set error immediately, just wait for project selection
       return;
     }
 
@@ -1692,13 +1693,27 @@ function FlowWidget() {
     setTaskCompletionStates(newCompletionStates);
   }, [allProjectData]);
 
-  // Update project name on mount
+  // Update project name on mount and periodically check for project changes
   useEffect(() => {
-    const project = getSelectedProject();
-    if (project) {
-      setProjectName(project.name || project.title || "Untitled");
-    }
-  }, []);
+    const checkProject = () => {
+      const project = getSelectedProject();
+      if (project) {
+        setProjectName(project.name || project.title || "Untitled");
+        // If we have a project and no data, fetch it
+        if (!allProjectData || Object.keys(allProjectData).length === 0) {
+          fetchAllProjectData();
+        }
+      }
+    };
+    
+    // Check immediately
+    checkProject();
+    
+    // Check periodically in case project was selected after FlowWidget opened
+    const interval = setInterval(checkProject, 2000);
+    
+    return () => clearInterval(interval);
+  }, [allProjectData, fetchAllProjectData]);
 
   // Cleanup
   useEffect(() => {
@@ -1724,6 +1739,19 @@ function FlowWidget() {
     const openHandler = () => {
       setOpen(true);
       window.dispatchEvent(new CustomEvent("sandbox:opened"));
+      
+      // Clear any error state when opening
+      setError(null);
+      
+      // Check if we have a project selected and fetch data if needed
+      const project = getSelectedProject();
+      if (project) {
+        console.log('🔄 FlowWidget opened with project:', project.name);
+        fetchAllProjectData();
+      } else {
+        console.log('⚠️ FlowWidget opened without project selected');
+      }
+      
       setTimeout(restoreGenerationStates, 100);
     };
 
@@ -2149,6 +2177,33 @@ function FlowWidget() {
                     >
                       Dismiss
                     </button>
+                  </div>
+                </div>
+              ) : !getSelectedProject() ? (
+                <div className='flex items-center justify-center h-full'>
+                  <div className='text-center p-6 bg-gray-800 border border-gray-700 rounded-lg max-w-md'>
+                    <div className='mb-4'>
+                      <div className='w-16 h-16 mx-auto mb-4 bg-gray-700 rounded-full flex items-center justify-center'>
+                        <svg className='w-8 h-8 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' />
+                        </svg>
+                      </div>
+                      <h3 className='text-lg font-semibold text-white mb-2'>
+                        No Project Selected
+                      </h3>
+                      <p className='text-gray-400 text-sm mb-4'>
+                        Please select a project from the project dropdown to start creating your video workflow.
+                      </p>
+                      <button
+                        onClick={() => {
+                          // Dispatch event to open project selector
+                          window.dispatchEvent(new CustomEvent('openProjectSelector'));
+                        }}
+                        className='px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors'
+                      >
+                        Select Project
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : !isAuthenticated ? (

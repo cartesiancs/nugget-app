@@ -23,9 +23,14 @@ export const useTimeline = () => {
       let payload = [];
       if (selectedScript) {
         // Prefer the unified map so we cover both freshly generated and previously stored videos
+        // Sort by segment ID to ensure correct order
         payload = selectedScript.segments
           .filter((s) => combinedVideosMap[s.id])
-          .sort((a, b) => a.id - b.id)
+          .sort((a, b) => {
+            const idA = typeof a.id === 'number' ? a.id : parseInt(String(a.id).replace(/[^0-9]/g, '')) || 0;
+            const idB = typeof b.id === 'number' ? b.id : parseInt(String(b.id).replace(/[^0-9]/g, '')) || 0;
+            return idA - idB;
+          })
           .map((s) => ({ id: s.id, url: combinedVideosMap[s.id] }));
       }
 
@@ -39,11 +44,12 @@ export const useTimeline = () => {
           };
         });
 
-        // If all IDs are numeric, sort them; otherwise keep original order
-        const allNumeric = payload.every((p) => typeof p.id === "number");
-        if (allNumeric) {
-          payload.sort((a, b) => a.id - b.id);
-        }
+        // Sort by ID using the same robust logic as the main sorting
+        payload.sort((a, b) => {
+          const idA = typeof a.id === 'number' ? a.id : parseInt(String(a.id).replace(/[^0-9]/g, '')) || 0;
+          const idB = typeof b.id === 'number' ? b.id : parseInt(String(b.id).replace(/[^0-9]/g, '')) || 0;
+          return idA - idB;
+        });
       }
 
       if (payload.length === 0) {
@@ -53,6 +59,7 @@ export const useTimeline = () => {
 
       console.log('🎬 Sending videos to timeline:', payload);
       console.log('🎬 Combined videos map keys:', Object.keys(combinedVideosMap));
+      console.log('🎬 Timeline payload order:', payload.map(p => ({ id: p.id, url: p.url?.substring(0, 50) + '...' })));
 
       let success = false;
       try {

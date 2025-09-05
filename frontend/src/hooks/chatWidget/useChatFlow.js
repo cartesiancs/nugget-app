@@ -48,6 +48,7 @@ export const useChatFlow = () => {
   const [generatedImages, setGeneratedImages] = useState({});
   const [generatedVideos, setGeneratedVideos] = useState({});
   const [generationProgress, setGenerationProgress] = useState({});
+  const [videoGenerationComplete, setVideoGenerationComplete] = useState(false);
 
   // Listen to project changes from Zustand store
   useEffect(() => {
@@ -175,6 +176,7 @@ export const useChatFlow = () => {
     setGeneratedImages({});
     setGeneratedVideos({});
     setGenerationProgress({});
+    setVideoGenerationComplete(false);
 
     // Reset model selections to defaults
     modelSelection.resetModelsToDefaults();
@@ -592,6 +594,7 @@ export const useChatFlow = () => {
     setError(null);
     updateStepStatus(5, "loading");
     setGenerationProgress({});
+    setVideoGenerationComplete(false);
 
     // Don't clear user message immediately - let it stay visible during processing
 
@@ -735,7 +738,12 @@ export const useChatFlow = () => {
       }
 
       setGeneratedVideos(videosMap);
+      
+      // Also update storedVideosMap to maintain consistency
+      setStoredVideosMap((prev) => ({ ...prev, ...videosMap }));
 
+      // Mark video generation as complete
+      setVideoGenerationComplete(true);
       updateStepStatus(5, "done");
 
       // Clear user message after videos are generated
@@ -1024,6 +1032,7 @@ export const useChatFlow = () => {
         // If we have videos, move to step 5 (video generation completed)
         if (Object.keys(videosMap).length > 0) {
           setCurrentStep(5);
+          setVideoGenerationComplete(true);
         }
       } else {
         console.log("No videos found in API response");
@@ -1251,6 +1260,7 @@ export const useChatFlow = () => {
     generatedImages,
     generatedVideos,
     generationProgress,
+    videoGenerationComplete,
 
     // Specialized hook states
     ...modelSelection,

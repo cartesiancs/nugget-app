@@ -145,8 +145,12 @@ export const useAgentStreaming = () => {
           return newVideos;
         });
 
-        // Update stored videos map for timeline
-        setStoredVideosMap({ [segmentId]: videoUrl });
+        // Update stored videos map for timeline (merge instead of overwrite)
+        setStoredVideosMap((prev) => {
+          const updated = { ...prev, [segmentId]: videoUrl };
+          console.log("Updated stored videos map (individual):", updated);
+          return updated;
+        });
 
         // Update agent activity
         setAgentActivity(`Video completed for segment ${segmentId}`);

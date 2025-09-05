@@ -163,9 +163,28 @@ function ChatWidgetSidebar({ open, setOpen }) {
       
       // Create a sorted version to maintain consistent order
       const sortedEntries = Object.entries(combined).sort(([a], [b]) => {
-        const numA = parseInt(String(a).replace(/[^0-9]/g, '')) || 0;
-        const numB = parseInt(String(b).replace(/[^0-9]/g, '')) || 0;
-        return numA - numB;
+        // Extract numeric part from segment IDs more robustly
+        const extractNumericId = (id) => {
+          const str = String(id);
+          // Handle formats like "seg-5", "5", "segment-5", etc.
+          const match = str.match(/(?:seg(?:ment)?-?)?(\d+)/i);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+        
+        const numA = extractNumericId(a);
+        const numB = extractNumericId(b);
+        
+        // If both have valid numeric IDs, sort by number
+        if (numA > 0 && numB > 0) {
+          return numA - numB;
+        }
+        
+        // If only one has a valid numeric ID, prioritize it
+        if (numA > 0) return -1;
+        if (numB > 0) return 1;
+        
+        // If neither has a valid numeric ID, sort alphabetically
+        return String(a).localeCompare(String(b));
       });
       
       const sortedCombined = Object.fromEntries(sortedEntries);
@@ -174,6 +193,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
         generatedVideos: chatFlow.generatedVideos,
         storedVideosMap: chatFlow.storedVideosMap,
         combined: sortedCombined,
+        sortedKeys: Object.keys(sortedCombined),
         trigger: videoUpdateTrigger
       });
       return sortedCombined;
@@ -183,8 +203,9 @@ function ChatWidgetSidebar({ open, setOpen }) {
 
   // Helper functions
   const canSendTimeline =
-    Object.keys(chatFlow.generatedVideos).length > 0 ||
-    Object.keys(chatFlow.storedVideosMap).length > 0;
+    (Object.keys(chatFlow.generatedVideos).length > 0 ||
+    Object.keys(chatFlow.storedVideosMap).length > 0) &&
+    chatFlow.videoGenerationComplete;
 
   const getStepIcon = useCallback(
     (stepId) => {

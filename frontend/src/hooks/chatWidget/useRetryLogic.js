@@ -135,7 +135,7 @@ export const useRetryLogic = () => {
 
         if (Object.keys(successfulRetries).length > 0) {
           setGeneratedVideos((prev) => ({ ...prev, ...successfulRetries }));
-          setStoredVideosMap(successfulRetries);
+          setStoredVideosMap((prev) => ({ ...prev, ...successfulRetries }));
           console.log(
             "Successfully retried videos for segments:",
             Object.keys(successfulRetries),

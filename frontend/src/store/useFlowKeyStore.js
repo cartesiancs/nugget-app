@@ -1,9 +1,6 @@
 import { create } from "zustand";
 
-/**
- * Zustand store for centralized memory operations in FlowWidget
- * Replaces scattered localStorage calls throughout the application
- */
+
 export const useFlowKeyStore = create((set, get) => ({
   // In-memory storage
   memory: {},

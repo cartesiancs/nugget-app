@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { chatApi } from '../../services/chat';
 import { s3Api } from '../../services/s3';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
 
 export const useImageGeneration = ({
   setNodes,
@@ -11,11 +12,12 @@ export const useImageGeneration = ({
   removeGenerationState,
   edges
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  
   const generateImage = useCallback(async (segmentNode, imageNode) => {
     try {
       setGeneratingImages(prev => new Set(prev.add(imageNode.id)));
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -119,13 +121,7 @@ export const useImageGeneration = ({
       console.error('Error generating image:', error);
       
       // Get selected project again for error handling
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const selectedProject = getSelectedProject();
       
       const visualPrompt = segmentNode.data?.visual || 'A cinematic scene';
       const artStyle = segmentNode.data?.artStyle || 'cinematic photography with soft lighting';
@@ -213,8 +209,7 @@ export const useImageGeneration = ({
       }
 
       // Get selected project 
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');

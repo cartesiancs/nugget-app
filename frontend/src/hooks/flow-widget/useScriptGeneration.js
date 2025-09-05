@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { segmentationApi } from '../../services/segmentationapi';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
 
 
 export const useScriptGeneration = ({
@@ -10,13 +11,14 @@ export const useScriptGeneration = ({
   saveGenerationState,
   removeGenerationState
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  
   const generateScript = useCallback(async (conceptNode, scriptNode) => {
     try {
       setGeneratingScripts(prev => new Set(prev.add(scriptNode.id)));
       
       // Get selected project
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -181,13 +183,7 @@ export const useScriptGeneration = ({
       console.error('Error generating script:', error);
       
       // Get selected project again for error handling
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const selectedProject = getSelectedProject();
       
       // Determine error type and message
       const getErrorDetails = (error) => {

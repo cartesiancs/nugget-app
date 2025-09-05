@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Handle } from "@xyflow/react";
 import { User, Edit3, MessageSquare, Lightbulb, Target, ChevronDown, ChevronUp } from "lucide-react";
+import useFlowWidgetStore from "../../store/useFlowWidgetStore";
 
 function UserNode({ data, isConnectable, selected }) {
+  const { getSelectedProject } = useFlowWidgetStore();
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(data.userText || "");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,8 +45,7 @@ function UserNode({ data, isConnectable, selected }) {
 
   const saveUserText = (newText) => {
     try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const project = storedProject ? JSON.parse(storedProject) : null;
+      const project = getSelectedProject();
       if (project) {
         const userNodeDataKey = `userNodeData-${project.id}`;
         const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');

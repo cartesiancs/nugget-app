@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
 
 export const useErrorHandling = ({
   setNodes,
@@ -11,6 +12,7 @@ export const useErrorHandling = ({
   generateVideo,
   nodes
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
   const getErrorDetails = useCallback((error) => {
     const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
     
@@ -183,8 +185,7 @@ export const useErrorHandling = ({
     
     try {
       // Get selected project for error state persistence
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       const result = await generationFunction(params);
       

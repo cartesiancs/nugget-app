@@ -11,6 +11,7 @@ import { useErrorHandling } from "../hooks/flow-widget/useErrorHandling";
 import ChatLoginButton from "./ChatLoginButton";
 import { projectApi } from "../services/project";
 import { CLOUDFRONT_URL } from "../config/baseurl.js";
+import useFlowWidgetStore from "../store/useFlowWidgetStore";
 import {
   ReactFlow,
   Background,
@@ -42,6 +43,7 @@ import { assets } from "../assets/assets";
 function FlowWidget() {
   const { isAuthenticated, user } = useAuth();
   const timeline = useTimeline();
+  const { getSelectedProject, getProjectId, getProjectName, hasSelectedProject } = useFlowWidgetStore();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -274,8 +276,7 @@ function FlowWidget() {
   // Restore generation states on component load
   const restoreGenerationStates = useCallback(async () => {
     try {
-      const storedProject = localStorage.getItem("project-store-selectedProject");
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
 
       if (!selectedProject) return;
 
@@ -549,8 +550,7 @@ function FlowWidget() {
     }
 
     try {
-      const storedProject = localStorage.getItem("project-store-selectedProject");
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       if (selectedProject) {
         const videoStorageKey = `generated-videos-${selectedProject.id}`;
         const savedVideos = JSON.parse(
@@ -655,13 +655,7 @@ function FlowWidget() {
     let currentLevel = 0;
 
     // Check for user concepts that match current project
-    let selectedProject = null;
-    try {
-      const storedProject = localStorage.getItem("project-store-selectedProject");
-      selectedProject = storedProject ? JSON.parse(storedProject) : null;
-    } catch (e) {
-      console.error("Error parsing project data:", e);
-    }
+    const selectedProject = getSelectedProject();
 
     // Add User Node if there are matching user node data for this project (ROOT of tree)
     let userNodeId = null;
@@ -1068,24 +1062,15 @@ function FlowWidget() {
   const fetchAllProjectData = useCallback(async () => {
     if (!isAuthenticated) return;
 
-    let projectId;
-    let projectName = "Untitled";
-    try {
-          const storedProject = localStorage.getItem("project-store-selectedProject");
-    const project = storedProject ? JSON.parse(storedProject) : null;
-      if (project) {
-        projectId = project.id;
-        projectName = project.name || project.title || "Untitled";
-        setProjectName(projectName);
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
-    }
-
-    if (!projectId) {
+    const project = getSelectedProject();
+    if (!project) {
       setError("No project selected. Please select a project first.");
       return;
     }
+
+    const projectId = project.id;
+    const projectName = getProjectName();
+    setProjectName(projectName);
 
     try {
       const [conceptsData, segmentationsData, imagesData, videosData] =
@@ -1616,8 +1601,7 @@ function FlowWidget() {
 
   // Load user concepts on mount
   useEffect(() => {
-    const storedProject = localStorage.getItem("project-store-selectedProject");
-    const project = storedProject ? JSON.parse(storedProject) : null;
+    const project = getSelectedProject();
     if (project) {
       try {
         const projectId = project.id;
@@ -1744,8 +1728,7 @@ function FlowWidget() {
 
     // Check for user input in localStorage
     try {
-          const storedProject = localStorage.getItem("project-store-selectedProject");
-    const project = storedProject ? JSON.parse(storedProject) : null;
+      const project = getSelectedProject();
       if (project) {
         const userNodeDataKey = `userNodeData-${project.id}`;
         const existingUserNodeData = JSON.parse(
@@ -1763,14 +1746,9 @@ function FlowWidget() {
 
   // Update project name on mount
   useEffect(() => {
-    try {
-          const storedProject = localStorage.getItem("project-store-selectedProject");
-    const project = storedProject ? JSON.parse(storedProject) : null;
-      if (project) {
-        setProjectName(project.name || project.title || "Untitled");
-      }
-    } catch (error) {
-      console.error("Error parsing project from localStorage:", error);
+    const project = getSelectedProject();
+    if (project) {
+      setProjectName(project.name || project.title || "Untitled");
     }
   }, []);
 
@@ -1778,8 +1756,7 @@ function FlowWidget() {
   useEffect(() => {
     const cleanup = () => {
       try {
-            const storedProject = localStorage.getItem("project-store-selectedProject");
-    const project = storedProject ? JSON.parse(storedProject) : null;
+        const project = getSelectedProject();
         if (!project) return;
 
         const projectId = project.id;
@@ -1907,7 +1884,7 @@ function FlowWidget() {
       
       if (project) {
         // Update project name in the UI
-        setProjectName(project.name || project.title || "Untitled");
+        setProjectName(getProjectName());
         
         // Clear existing nodes and edges to prepare for new project data
         setNodes([]);
@@ -1943,7 +1920,7 @@ function FlowWidget() {
       
       if (project) {
         // Update project name
-        setProjectName(project.name || project.title || "Untitled");
+        setProjectName(getProjectName());
         
         // Clear existing data for new project
         setNodes([]);

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { webInfoApi } from '../../services/web-info';
 import { conceptWriterApi } from '../../services/concept-writer';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
 
 export const useConceptGeneration = ({
   setNodes,
@@ -12,9 +13,10 @@ export const useConceptGeneration = ({
   removeGenerationState,
   nodes
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  
   const generateConcepts = useCallback(async (message, nodeId) => {
-    const storedProject = localStorage.getItem('project-store-selectedProject');
-    const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+    const selectedProject = getSelectedProject();
     
     if (!selectedProject) {
       console.error('No project selected');

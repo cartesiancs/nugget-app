@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { chatApi } from '../../services/chat';
 import { s3Api } from '../../services/s3';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
 
 export const useVideoGeneration = ({
   setNodes,
@@ -12,13 +13,14 @@ export const useVideoGeneration = ({
   edges,
   nodes
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  
   const generateVideo = useCallback(async (imageNode, videoNode) => {
     try {
       setGeneratingVideos(prev => new Set(prev.add(videoNode.id)));
       
       // Get selected project
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -145,8 +147,7 @@ export const useVideoGeneration = ({
       console.error('Error generating video:', error);
       
       // Get selected project again for error handling
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       const animationPrompt = imageNode.data?.segmentData?.animation || imageNode.data?.segmentData?.visual || 'Smooth cinematic movement';
       const artStyle = imageNode.data?.artStyle || 'cinematic photography with soft lighting';
@@ -234,8 +235,7 @@ export const useVideoGeneration = ({
       }
 
       // Get selected project
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      const selectedProject = storedProject ? JSON.parse(storedProject) : null;
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');

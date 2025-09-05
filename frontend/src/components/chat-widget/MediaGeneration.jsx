@@ -5,7 +5,6 @@ const MediaGeneration = ({
   generatedImages,
   combinedVideosMap,
   generationProgress,
-  currentStep,
   onImageClick,
   onVideoClick,
   onAddSingleVideo,
@@ -21,7 +20,6 @@ const MediaGeneration = ({
     isImageGeneration,
     mediaMapEntries: Object.entries(mediaMap || {}),
     loading,
-    currentStep,
   });
 
   // Additional debug for image URLs

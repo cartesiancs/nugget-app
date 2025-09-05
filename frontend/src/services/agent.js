@@ -1,4 +1,5 @@
 import { getAuthHeaders } from "./api";
+import { API_BASE_URL } from "../config/baseurl.js";
 
 export const agentApi = {
 
@@ -22,7 +23,7 @@ export const agentApi = {
       console.log('EventSource Agent API request:', { body, headers });
 
       // Create a URL with auth header as query param since EventSource doesn't support custom headers
-      const url = new URL('https://backend.usuals.ai/agent/run');
+      const url = new URL(`${API_BASE_URL}/agent/run`);
       
       // For EventSource, we need to send the data differently
       // Let's make a POST request first to start the stream, then connect via EventSource
@@ -67,7 +68,7 @@ export const agentApi = {
 
       console.log('Agent API request:', { body, headers });
 
-      const response = await fetch('https://backend.usuals.ai/agent/run', {
+      const response = await fetch(`${API_BASE_URL}/agent/run`, {
         method: 'POST',
         headers: {
           ...headers,
@@ -104,12 +105,12 @@ export const agentApi = {
       };
 
       console.log('🟢 Sending approval request:', {
-        url: 'https://backend.usuals.ai/agent/approval',
+        url: `${API_BASE_URL}/agent/approval`,
         headers,
         body
       });
 
-      const response = await fetch('https://backend.usuals.ai/agent/approval', {
+      const response = await fetch(`${API_BASE_URL}/agent/approval`, {
         method: 'POST',
         headers: {
           ...headers,
@@ -144,7 +145,7 @@ export const agentApi = {
     try {
       const headers = await getAuthHeaders();
       
-      const response = await fetch('https://backend.usuals.ai/agent/approvals', {
+      const response = await fetch(`${API_BASE_URL}/agent/approvals`, {
         method: 'GET',
         headers,
       });

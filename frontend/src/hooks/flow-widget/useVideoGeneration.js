@@ -1,19 +1,9 @@
 import { useCallback } from 'react';
-import { chatApi } from '../services/chat';
-import { s3Api } from '../services/s3';
+import { chatApi } from '../../services/chat';
+import { s3Api } from '../../services/s3';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
-/**
- * Custom hook for handling video generation from images
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.setGeneratingVideos - Function to update generating videos state
- * @param {Function} params.setTaskCompletionStates - Function to update task completion states
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- * @param {Array} params.edges - Current edges array
- * @param {Array} params.nodes - Current nodes array
- */
 export const useVideoGeneration = ({
   setNodes,
   setEdges,
@@ -24,18 +14,15 @@ export const useVideoGeneration = ({
   edges,
   nodes
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
+  
   const generateVideo = useCallback(async (imageNode, videoNode) => {
     try {
       setGeneratingVideos(prev => new Set(prev.add(videoNode.id)));
       
-      // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      // Get selected project
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -120,9 +107,8 @@ export const useVideoGeneration = ({
         
         // Clean up any temporary video generation data
         try {
-          const tempVideoKey = `temp-video-${selectedProject.id}-${videoNode.id}`;
-          localStorage.removeItem(tempVideoKey);
-          console.log('✅ Cleaned up temporary video data from localStorage');
+          flowKeyStore.removeTempData(selectedProject.id, 'video', videoNode.id);
+          console.log('✅ Cleaned up temporary video data');
         } catch (error) {
           console.error('Error cleaning up temporary video data:', error);
         }
@@ -162,13 +148,7 @@ export const useVideoGeneration = ({
       console.error('Error generating video:', error);
       
       // Get selected project again for error handling
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const selectedProject = getSelectedProject();
       
       const animationPrompt = imageNode.data?.segmentData?.animation || imageNode.data?.segmentData?.visual || 'Smooth cinematic movement';
       const artStyle = imageNode.data?.artStyle || 'cinematic photography with soft lighting';
@@ -237,12 +217,6 @@ export const useVideoGeneration = ({
         return node;
       }));
       
-      // Don't auto-remove error states - let user manually retry or dismiss
-      // if (selectedProject) {
-      //   setTimeout(() => {
-      //     removeGenerationState(selectedProject.id, 'video', videoNode.id);
-      //   }, 5000);
-      // }
     } finally {
       setGeneratingVideos(prev => {
         const newSet = new Set(prev);
@@ -261,14 +235,8 @@ export const useVideoGeneration = ({
         return;
       }
 
-      // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      // Get selected project
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');

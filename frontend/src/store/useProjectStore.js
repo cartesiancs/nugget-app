@@ -1,10 +1,14 @@
 import { create } from "zustand";
 import { projectApi } from "../services/project";
 import { creditApi } from "../services/credit";
+import { useSegmentStore } from "./useSegmentStore";
 
 const storeImpl = (set, get) => ({
   projects: [],
   selectedProject: null,
+  // Note: storedVideosMap is now managed by useSegmentStore
+  // This is kept for backward compatibility but will be deprecated
+  storedVideosMap: {},
   conversations: [],
   concepts: [],
   images: [],
@@ -28,16 +32,33 @@ const storeImpl = (set, get) => ({
   error: null,
   creditBalance: 0,
 
-  setProjects: (projects) => set({ projects }),
+  setProjects: (projects) => {
+    set({ projects });
+  },
+  setStoredVideosMap: (videosMap) => {
+    const { selectedProject } = get();
+    set({ storedVideosMap: videosMap });
+    
+    // Also update the segment store
+    const segmentStore = useSegmentStore.getState();
+    segmentStore.setSegmentVideos(videosMap, !!selectedProject);
+  },
   setSelectedProject: (project) => {
     console.log('🏪 Store: Setting selected project:', project?.name);
     set({ selectedProject: project });
     
-    // Update localStorage
+    // Update storedVideosMap based on project selection
+    const { setStoredVideosMap } = get();
     if (project) {
-      localStorage.setItem("project-store-selectedProject", JSON.stringify(project));
+      // Get project videos from segment store
+      const segmentStore = useSegmentStore.getState();
+      const projectVideos = segmentStore.projectVideos || {};
+      setStoredVideosMap(projectVideos);
     } else {
-      localStorage.removeItem("project-store-selectedProject");
+      // Get segment videos from segment store
+      const segmentStore = useSegmentStore.getState();
+      const segmentVideos = segmentStore.segmentVideos || {};
+      setStoredVideosMap(segmentVideos);
     }
     
     // Dispatch custom event to notify components
@@ -48,6 +69,42 @@ const storeImpl = (set, get) => ({
     if (project?.id) {
       get().fetchProjectEssentials(project.id);
     }
+  },
+
+  // Selected project management methods
+  getSelectedProject: () => {
+    const { selectedProject } = get();
+    return selectedProject;
+  },
+
+  clearSelectedProject: () => {
+    console.log('🏪 Store: Clearing selected project');
+    set({ selectedProject: null });
+    
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('projectChanged', { 
+      detail: { project: null } 
+    }));
+  },
+
+  loadSelectedProjectFromStorage: () => {
+    const { selectedProject } = get();
+    return selectedProject;
+  },
+
+  saveSelectedProjectToStorage: (project) => {
+    set({ selectedProject: project });
+    return true;
+  },
+
+  hasProjectInStorage: () => {
+    const { selectedProject } = get();
+    return selectedProject !== null;
+  },
+
+  getProjectFromStorage: () => {
+    const { selectedProject } = get();
+    return selectedProject;
   },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
@@ -65,10 +122,46 @@ const storeImpl = (set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await projectApi.getProjects({ page, limit });
-      set({ projects: data, loading: false });
+      get().setProjects(data);
+      set({ loading: false });
     } catch (e) {
       set({ error: e.message || "Failed to fetch projects", loading: false });
     }
+  },
+
+  // Project management methods
+  addProject: (project) => {
+    const { projects } = get();
+    const updatedProjects = [...projects, project];
+    get().setProjects(updatedProjects);
+  },
+
+  updateProject: (projectId, updates) => {
+    const { projects } = get();
+    const updatedProjects = projects.map(project => 
+      project.id === projectId ? { ...project, ...updates } : project
+    );
+    get().setProjects(updatedProjects);
+  },
+
+  removeProject: (projectId) => {
+    const { projects, selectedProject } = get();
+    const updatedProjects = projects.filter(project => project.id !== projectId);
+    get().setProjects(updatedProjects);
+    
+    // Clear selected project if it was removed
+    if (selectedProject && selectedProject.id === projectId) {
+      get().clearSelectedProject();
+    }
+  },
+
+  clearProjects: () => {
+    get().setProjects([]);
+  },
+
+  getProjectById: (projectId) => {
+    const { projects } = get();
+    return projects.find(project => project.id === projectId);
   },
   fetchProjectEssentials: async (projectId) => {
     const { setSegmentations, setImages, setVideos } = get();
@@ -334,6 +427,10 @@ const storeImpl = (set, get) => ({
       research: [],
       selectedProject: null,
     });
+    
+    // Clear the selected project and projects list
+    get().clearSelectedProject();
+    get().clearProjects();
   },
 });
 
@@ -342,4 +439,10 @@ export const useProjectStore =
 
 if (!window.__MY_GLOBAL_PROJECT_STORE__) {
   window.__MY_GLOBAL_PROJECT_STORE__ = useProjectStore;
+  
+  
+  setTimeout(() => {
+    const store = useProjectStore.getState();
+    console.log('✅ ProjectStore: Initialized in memory mode');
+  }, 0);
 }

@@ -1,14 +1,11 @@
 import { createContext, useState, useEffect } from 'react';
-import { API_BASE_URL } from '../lib/axiosInstance';
+import { API_BASE_URL } from '../config/baseurl.js';
 
 const AuthContext = createContext();
 
 export { AuthContext };
 
 export const AuthProvider = ({ children }) => {
-  // Persisted user information (if any) is loaded from localStorage first so that
-  // we can immediately render the authenticated state. We will still validate the
-  // token with the backend in the background.
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('authUser');

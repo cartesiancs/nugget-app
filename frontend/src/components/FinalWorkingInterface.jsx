@@ -6,6 +6,7 @@ import ChatLoginButton from "./ChatLoginButton";
 import CreditPurchase from "./CreditPurchase";
 import InterfaceSidebar from "./InterfaceSidebar";
 import { assets } from "../assets/assets";
+import { CLOUDFRONT_URL } from "../config/baseurl.js";
 
 const FinalWorkingInterface = () => {
   console.log("🔧 FinalWorkingInterface rendering...");
@@ -208,10 +209,10 @@ const FinalWorkingInterface = () => {
                 console.log(`🖼️ First image for ${project.id}:`, image);
 
                 if (image?.s3Key) {
-                  thumbnail = `https://ds0fghatf06yb.cloudfront.net/${image.s3Key}`;
+                  thumbnail = `${CLOUDFRONT_URL}/${image.s3Key}`;
                   mediaType = "image";
                 } else if (image?.imageFiles?.[0]?.s3Key) {
-                  thumbnail = `https://ds0fghatf06yb.cloudfront.net/${image.imageFiles[0].s3Key}`;
+                  thumbnail = `${CLOUDFRONT_URL}/${image.imageFiles[0].s3Key}`;
                   mediaType = "image";
                 } else if (image?.url) {
                   thumbnail = image.url;
@@ -241,9 +242,9 @@ const FinalWorkingInterface = () => {
                   .slice(0, 3)
                   .map((img) => ({
                     url: img.s3Key
-                      ? `https://ds0fghatf06yb.cloudfront.net/${img.s3Key}`
+                      ? `${CLOUDFRONT_URL}/${img.s3Key}`
                       : img.imageFiles?.[0]?.s3Key
-                      ? `https://ds0fghatf06yb.cloudfront.net/${img.imageFiles[0].s3Key}`
+                      ? `${CLOUDFRONT_URL}/${img.imageFiles[0].s3Key}`
                       : img.url || null,
                     alt: img.name || "Project image",
                   }))
@@ -331,7 +332,7 @@ const FinalWorkingInterface = () => {
 
       // Start the chat flow only when requested
       if (startChat) {
-        navigateToEditorWithChat(newProject, description.trim());
+        await navigateToEditorWithChat(newProject, description.trim());
       }
     } catch (error) {
       console.error("Failed to create project:", error);
@@ -341,7 +342,7 @@ const FinalWorkingInterface = () => {
     }
   };
 
-  const navigateToEditorWithChat = (project, prompt) => {
+  const navigateToEditorWithChat = async (project, prompt) => {
     try {
       console.log("🎯 Navigating to main editor with project:", project);
       console.log("🎯 Starting chat flow with prompt:", prompt);
@@ -360,16 +361,19 @@ const FinalWorkingInterface = () => {
       }
 
       // Set the project as selected in project store for the main app
-      localStorage.setItem(
-        "project-store-selectedProject",
-        JSON.stringify(project),
-      );
-
-      // If we have a prompt, also set it for the chat flow
-      if (prompt && prompt.trim()) {
-        localStorage.setItem("chatInterfacePrompt", prompt.trim());
-        localStorage.setItem("startChatFlow", "true");
+      if (window.__MY_GLOBAL_PROJECT_STORE__) {
+        console.log("🔄 Updating Zustand store with project:", project);
+        window.__MY_GLOBAL_PROJECT_STORE__.getState().setSelectedProject(project);
+        console.log("✅ Zustand store updated. Current selectedProject:", 
+          window.__MY_GLOBAL_PROJECT_STORE__.getState().selectedProject);
+      } else {
+        console.warn("⚠️ Zustand store not available!");
       }
+
+      
+
+      // Small delay to ensure Zustand store update propagates
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Dispatch events to notify the main app components
       window.dispatchEvent(
@@ -400,15 +404,20 @@ const FinalWorkingInterface = () => {
     }
   };
 
-  const handleOpenProject = (project) => {
+  const handleOpenProject = async (project) => {
     console.log("Opening project:", project);
+    
+    // Update Zustand store immediately
+    if (window.__MY_GLOBAL_PROJECT_STORE__) {
+      window.__MY_GLOBAL_PROJECT_STORE__.getState().setSelectedProject(project);
+    }
     
     // Dispatch event to notify FlowWidget about project selection
     window.dispatchEvent(new CustomEvent('projectChanged', { 
       detail: { project: project } 
     }));
     
-    navigateToEditorWithChat(project, "");
+    await navigateToEditorWithChat(project, "");
     setOpenDropdownId(null); // Close dropdown
   };
 

@@ -1,4 +1,9 @@
+import { useSegmentStore } from '../store/useSegmentStore';
+import { useProjectStore } from '../store/useProjectStore';
+
 function SegmentList({ segments, onSegmentClick, selectedSegmentId }) {
+  const { selectedProject } = useProjectStore();
+  const { getSegmentImage } = useSegmentStore();
   return (
     <div className="h-full flex flex-col">
       <div className="p-3 border-b border-gray-800">
@@ -18,8 +23,8 @@ function SegmentList({ segments, onSegmentClick, selectedSegmentId }) {
                   <div className="flex items-center gap-2">
                     {/** Thumbnail **/}
                     {(() => {
-                      const imgMap = JSON.parse(localStorage.getItem('segmentImages') || '{}');
-                      const thumbUrl = segment.imageUrl || imgMap[segment.id];
+                      const isProject = !!selectedProject;
+                      const thumbUrl = segment.imageUrl || getSegmentImage(segment.id, isProject);
                       
                       // thumbUrl is now a blob URL from S3 download
                       return thumbUrl ? (

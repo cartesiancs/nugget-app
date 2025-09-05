@@ -1,19 +1,9 @@
 import { useCallback } from 'react';
-import { webInfoApi } from '../services/web-info';
-import { conceptWriterApi } from '../services/concept-writer';
+import { webInfoApi } from '../../services/web-info';
+import { conceptWriterApi } from '../../services/concept-writer';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
-/**
- * Custom hook for handling concept generation
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.setGeneratingConcepts - Function to update generating concepts state
- * @param {Function} params.setUserConcepts - Function to update user concepts state
- * @param {Function} params.setTaskCompletionStates - Function to update task completion states
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- * @param {Array} params.nodes - Current nodes array
- */
 export const useConceptGeneration = ({
   setNodes,
   setEdges,
@@ -24,15 +14,11 @@ export const useConceptGeneration = ({
   removeGenerationState,
   nodes
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
+  
   const generateConcepts = useCallback(async (message, nodeId) => {
-    // Get selected project from localStorage
-    let selectedProject = null;
-    try {
-      const storedProject = localStorage.getItem('project-store-selectedProject');
-      selectedProject = storedProject ? JSON.parse(storedProject) : null;
-    } catch (e) {
-      console.error('Error parsing project data:', e);
-    }
+    const selectedProject = getSelectedProject();
     
     if (!selectedProject) {
       console.error('No project selected');
@@ -51,15 +37,9 @@ export const useConceptGeneration = ({
       }));
       return;
     }
-    
-    // Store user node data in localStorage with project ID and user text
-    const userNodeDataKey = `userNodeData-${selectedProject.id}`;
-    const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-    existingUserNodeData[nodeId] = {
-      projectId: selectedProject.id,
+    flowKeyStore.setUserNodeData(selectedProject.id, nodeId, {
       text: message
-    };
-    localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
+    });
 
     // Update state
     setUserConcepts(prev => new Map(prev.set(nodeId, message)));
@@ -145,20 +125,12 @@ export const useConceptGeneration = ({
       );
       
       if (conceptsResponse && conceptsResponse.concepts && Array.isArray(conceptsResponse.concepts)) {
-        // Remove persistent generation state and clean up localStorage
+        // Remove persistent generation state and clean 
         removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
         
         // Mark user data as processed
         try {
-          const userNodeDataKey = `userNodeData-${selectedProject.id}`;
-          const existingUserNodeData = JSON.parse(localStorage.getItem(userNodeDataKey) || '{}');
-          Object.keys(existingUserNodeData).forEach(key => {
-            if (existingUserNodeData[key].text === message) {
-              existingUserNodeData[key].processed = true;
-              existingUserNodeData[key].processedAt = Date.now();
-            }
-          });
-          localStorage.setItem(userNodeDataKey, JSON.stringify(existingUserNodeData));
+          flowKeyStore.markUserNodeAsProcessed(selectedProject.id, message);
         } catch (error) {
           console.error('Error updating user node data:', error);
         }
@@ -289,10 +261,6 @@ export const useConceptGeneration = ({
         return node;
       }));
       
-      // Don't auto-remove error states - let user manually retry or dismiss
-      // setTimeout(() => {
-      //   removeGenerationState(selectedProject.id, 'concept', loadingConceptNodeId);
-      // }, 5000);
     } finally {
       setGeneratingConcepts(prev => {
         const newSet = new Set(prev);

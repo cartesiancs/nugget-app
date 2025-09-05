@@ -1,21 +1,15 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { useChatFlow } from "../hooks/useChatFlow";
+import { useChatFlow } from "../hooks/chatWidget/useChatFlow";
 import { useTimeline } from "../hooks/useTimeline";
+import { useProjectStore } from "../store/useProjectStore";
 import { projectApi } from "../services/project";
 import LoadingSpinner from "./LoadingSpinner";
 import CharacterGenerator from "./CharacterGenerator";
-import CreditWidget from "./CreditWidget";
-import FloatingChatButton from "./chat-widget/FloatingChatButton";
 import StepList from "./chat-widget/StepList";
 import InputArea from "./chat-widget/InputArea";
 import ConceptSelection from "./chat-widget/ConceptSelection";
 import ScriptSelection from "./chat-widget/ScriptSelection";
-import ModelSelection from "./chat-widget/ModelSelection";
-import GenerationProgress from "./chat-widget/GenerationProgress";
-import GeneratedImages from "./chat-widget/GeneratedImages";
-import GeneratedVideos from "./chat-widget/GeneratedVideos";
-import ContentSummary from "./chat-widget/ContentSummary";
 import TimelineButton from "./chat-widget/TimelineButton";
 import AuthMessages from "./chat-widget/AuthMessages";
 import Sidebar from "./chat-widget/Sidebar";
@@ -161,25 +155,57 @@ function ChatWidgetSidebar({ open, setOpen }) {
     };
   }, [chatFlow, open, setOpen]);
 
-  // Combined videos map for display
+  // Combined videos map for display - maintain order by sorting
   const combinedVideosMap = useMemo(
     () => {
+      // Combine both maps
       const combined = { ...chatFlow.generatedVideos, ...chatFlow.storedVideosMap };
-      console.log('🔄 Combined videos map updated:', {
+      
+      // Create a sorted version to maintain consistent order
+      const sortedEntries = Object.entries(combined).sort(([a], [b]) => {
+        // Extract numeric part from segment IDs more robustly
+        const extractNumericId = (id) => {
+          const str = String(id);
+          // Handle formats like "seg-5", "5", "segment-5", etc.
+          const match = str.match(/(?:seg(?:ment)?-?)?(\d+)/i);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+        
+        const numA = extractNumericId(a);
+        const numB = extractNumericId(b);
+        
+        // If both have valid numeric IDs, sort by number
+        if (numA > 0 && numB > 0) {
+          return numA - numB;
+        }
+        
+        // If only one has a valid numeric ID, prioritize it
+        if (numA > 0) return -1;
+        if (numB > 0) return 1;
+        
+        // If neither has a valid numeric ID, sort alphabetically
+        return String(a).localeCompare(String(b));
+      });
+      
+      const sortedCombined = Object.fromEntries(sortedEntries);
+      
+      console.log('🔄 Combined videos map updated (sorted):', {
         generatedVideos: chatFlow.generatedVideos,
         storedVideosMap: chatFlow.storedVideosMap,
-        combined,
+        combined: sortedCombined,
+        sortedKeys: Object.keys(sortedCombined),
         trigger: videoUpdateTrigger
       });
-      return combined;
+      return sortedCombined;
     },
     [chatFlow.generatedVideos, chatFlow.storedVideosMap, videoUpdateTrigger],
   );
 
   // Helper functions
   const canSendTimeline =
-    Object.keys(chatFlow.generatedVideos).length > 0 ||
-    Object.keys(chatFlow.storedVideosMap).length > 0;
+    (Object.keys(chatFlow.generatedVideos).length > 0 ||
+    Object.keys(chatFlow.storedVideosMap).length > 0) &&
+    chatFlow.videoGenerationComplete;
 
   const getStepIcon = useCallback(
     (stepId) => {
@@ -295,12 +321,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
     setRedoStepId(null);
   }, [chatFlow, redoStepId, redoImageModel, redoVideoModel]);
 
-  // Project management functions
-  const clearProjectLocalStorage = useCallback(() => {
-    localStorage.removeItem("project-store-projects");
-    localStorage.removeItem("project-store-selectedProject");
-    chatFlow.setSelectedProject(null);
-  }, [chatFlow]);
+  
 
   const openCreateModal = useCallback(() => {
     setNewProjectName("");
@@ -329,15 +350,12 @@ function ChatWidgetSidebar({ open, setOpen }) {
           name: newProjectName,
           description: newProjectDesc,
         });
-        clearProjectLocalStorage();
-        localStorage.setItem(
-          "project-store-selectedProject",
-          JSON.stringify(newProject),
-        );
-        localStorage.setItem(
-          "project-store-projects",
-          JSON.stringify([newProject]),
-        );
+        
+        // Use Zustand store to manage projects
+        const { addProject, setSelectedProject } = useProjectStore.getState();
+        addProject(newProject);
+        setSelectedProject(newProject);
+        
         chatFlow.setSelectedProject(newProject);
         chatFlow.resetFlow();
         setCreateModalOpen(false);
@@ -352,7 +370,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
         setCreatingProject(false);
       }
     },
-    [newProjectName, newProjectDesc, clearProjectLocalStorage, chatFlow],
+    [newProjectName, newProjectDesc, chatFlow],
   );
 
   // Timeline functions
@@ -408,15 +426,7 @@ function ChatWidgetSidebar({ open, setOpen }) {
     setShowRedoModal(false);
   }, []);
 
-  const SelectedProjectBanner = () => {
-    if (!chatFlow.selectedProject) return null;
-    return (
-      <div className='px-4 py-2 bg-blue-900 text-blue-100 text-sm border-b border-blue-800'>
-        Working on:{" "}
-        <span className='font-semibold'>{chatFlow.selectedProject.name}</span>
-      </div>
-    );
-  };
+  
 
   return (
     <div
@@ -507,7 +517,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 sendVideosToTimeline={sendVideosToTimeline}
                 combinedVideosMap={combinedVideosMap}
                 currentPrompt={prompt}
-                setPrompt={setPrompt}
               />
 
               {/* Input area */}
@@ -572,50 +581,13 @@ function ChatWidgetSidebar({ open, setOpen }) {
                 {/* Scripts Selection */}
                 <ScriptSelection
                   scripts={chatFlow.scripts}
-                  currentStep={chatFlow.currentStep}
                   onScriptSelect={chatFlow.handleScriptSelect}
                   selectedScript={chatFlow.selectedScript}
+                  isProjectScript={!chatFlow.scripts && !!chatFlow.selectedScript}
+                  selectedSegmentationId={(!chatFlow.scripts && !!chatFlow.selectedScript) ? 'project-script' : null}
                 />
 
-                {/* Model Selection */}
-                <ModelSelection
-                  currentStep={chatFlow.currentStep}
-                  selectedScriptModel={chatFlow.selectedScriptModel}
-                  setSelectedScriptModel={chatFlow.setSelectedScriptModel}
-                  selectedImageModel={chatFlow.selectedImageModel}
-                  setSelectedImageModel={chatFlow.setSelectedImageModel}
-                  selectedVideoModel={chatFlow.selectedVideoModel}
-                  setSelectedVideoModel={chatFlow.setSelectedVideoModel}
-                />
 
-                {/* Generation Progress */}
-                <GenerationProgress
-                  generationProgress={chatFlow.generationProgress}
-                  currentStep={chatFlow.currentStep}
-                />
-
-                {/* Generated Images */}
-                <GeneratedImages
-                  generatedImages={chatFlow.generatedImages}
-                  currentStep={chatFlow.currentStep}
-                  onImageClick={handleImageClick}
-                />
-
-                {/* Generated Videos */}
-                <GeneratedVideos
-                  combinedVideosMap={combinedVideosMap}
-                  currentStep={chatFlow.currentStep}
-                  onVideoClick={handleVideoClick}
-                  onAddSingleVideo={addSingleVideoToTimeline}
-                />
-
-                {/* Generated Content Summary */}
-                <ContentSummary
-                  selectedScript={chatFlow.selectedScript}
-                  currentStep={chatFlow.currentStep}
-                  generatedImages={chatFlow.generatedImages}
-                  generatedVideos={chatFlow.generatedVideos}
-                />
 
                 {/* Auth/Project Messages */}
                  <AuthMessages
@@ -690,9 +662,6 @@ function ChatWidgetSidebar({ open, setOpen }) {
   );
 }
 
-// Wrapper component to keep the public <ChatWidget /> API small.
-// Manages only the "open" state & publish-button visibility then delegates
-// all heavy UI / logic to <ChatWidgetSidebar />.
 function ChatWidget() {
   const [open, setOpen] = React.useState(false);
   
@@ -741,7 +710,6 @@ function ChatWidget() {
 
   return (
     <>
-      <FloatingChatButton open={open} setOpen={setOpen} />
       <ChatWidgetSidebar open={open} setOpen={setOpen} />
     </>
   );

@@ -1,16 +1,9 @@
 import { useCallback } from 'react';
-import { segmentationApi } from '../services/segmentationapi';
+import { segmentationApi } from '../../services/segmentationapi';
+import useFlowWidgetStore from '../../store/useFlowWidgetStore';
+import useFlowKeyStore from '../../store/useFlowKeyStore';
 
-/**
- * Custom hook for handling script generation from concepts
- * @param {Object} params - Hook parameters
- * @param {Function} params.setNodes - React Flow setNodes function
- * @param {Function} params.setEdges - React Flow setEdges function
- * @param {Function} params.setGeneratingScripts - Function to update generating scripts state
- * @param {Function} params.setTaskCompletionStates - Function to update task completion states
- * @param {Function} params.saveGenerationState - Function to save generation state to localStorage
- * @param {Function} params.removeGenerationState - Function to remove generation state from localStorage
- */
+
 export const useScriptGeneration = ({
   setNodes,
   setEdges,
@@ -19,18 +12,15 @@ export const useScriptGeneration = ({
   saveGenerationState,
   removeGenerationState
 }) => {
+  const { getSelectedProject } = useFlowWidgetStore();
+  const flowKeyStore = useFlowKeyStore();
+  
   const generateScript = useCallback(async (conceptNode, scriptNode) => {
     try {
       setGeneratingScripts(prev => new Set(prev.add(scriptNode.id)));
       
-      // Get selected project from localStorage
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      // Get selected project
+      const selectedProject = getSelectedProject();
       
       if (!selectedProject) {
         throw new Error('No project selected. Please select a project first.');
@@ -94,9 +84,8 @@ export const useScriptGeneration = ({
         
         // Clean up any temporary script generation data
         try {
-          const tempScriptKey = `temp-script-${selectedProject.id}-${scriptNode.id}`;
-          localStorage.removeItem(tempScriptKey);
-          console.log('✅ Cleaned up temporary script data from localStorage');
+          flowKeyStore.removeTempData(selectedProject.id, 'script', scriptNode.id);
+          console.log('✅ Cleaned up temporary script');
         } catch (error) {
           console.error('Error cleaning up temporary script data:', error);
         }
@@ -195,13 +184,7 @@ export const useScriptGeneration = ({
       console.error('Error generating script:', error);
       
       // Get selected project again for error handling
-      let selectedProject = null;
-      try {
-        const storedProject = localStorage.getItem('project-store-selectedProject');
-        selectedProject = storedProject ? JSON.parse(storedProject) : null;
-      } catch (e) {
-        console.error('Error parsing project data:', e);
-      }
+      const selectedProject = getSelectedProject();
       
       // Determine error type and message
       const getErrorDetails = (error) => {
@@ -263,12 +246,7 @@ export const useScriptGeneration = ({
         return node;
       }));
       
-      // Don't auto-remove error states - let user manually retry or dismiss
-      // if (selectedProject) {
-      //   setTimeout(() => {
-      //     removeGenerationState(selectedProject.id, 'script', scriptNode.id);
-      //   }, 5000);
-      // }
+      
     } finally {
       setGeneratingScripts(prev => {
         const newSet = new Set(prev);

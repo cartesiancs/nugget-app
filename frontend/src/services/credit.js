@@ -1,4 +1,9 @@
-import { axiosInstance } from "../lib/axiosInstance";
+import axios from "axios";
+import { API_BASE_URL } from "../config/baseurl.js";
+
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+});
 import { getAuthHeaders } from "./api";
 
 /**

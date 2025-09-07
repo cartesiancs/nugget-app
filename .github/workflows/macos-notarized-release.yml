@@ -1,0 +1,103 @@
+name: macOS Notarized Build
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.19
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+
+      - name: Import Developer ID Application certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTIFICATE }}
+          p12-password: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Build app assets (widgets/render/etc.)
+        run: npm run prebuild:mac
+
+      - name: Prepare notarytool API key
+        run: |
+          echo "NOTARYTOOL_KEY_ID=${{ secrets.ASC_KEY_ID }}" >> $GITHUB_ENV
+          echo "NOTARYTOOL_ISSUER_ID=${{ secrets.ASC_ISSUER_ID }}" >> $GITHUB_ENV
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > $RUNNER_TEMP/AuthKey.p8
+          echo "NOTARYTOOL_KEY_FILE=$RUNNER_TEMP/AuthKey.p8" >> $GITHUB_ENV
+
+      - name: Build, sign, notarize, staple (DMG)
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARYTOOL_KEY_ID: ${{ env.NOTARYTOOL_KEY_ID }}
+          NOTARYTOOL_ISSUER_ID: ${{ env.NOTARYTOOL_ISSUER_ID }}
+          NOTARYTOOL_KEY_FILE: ${{ env.NOTARYTOOL_KEY_FILE }}
+          DEBUG: electron-osx-sign*,electron-osx-sign
+        run: npm run bundle:prod:src && npx electron-builder build --mac --publish=never
+
+      - name: Notarize DMG (wait)
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -e
+          DMG=$(ls -1 dist/*.dmg | head -n 1)
+          echo "Submitting DMG to notary service: $DMG"
+          xcrun notarytool submit "$DMG" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+
+      - name: Staple DMG (retry and don't fail build)
+        run: |
+          set -e
+          DMG=$(ls -1 dist/*.dmg | head -n 1 || true)
+          if [ -z "$DMG" ]; then echo "No DMG found; skipping manual stapling"; exit 0; fi
+          echo "Stapling $DMG"
+          for i in 1 2 3; do
+            if xcrun stapler staple -v "$DMG"; then
+              echo "Stapled on attempt $i"; break; fi
+            echo "Staple attempt $i failed; retrying..."; sleep 5;
+          done
+          echo "Validate DMG:" && xcrun stapler validate "$DMG" || true
+
+      - name: List artifacts
+        run: |
+          ls -lah dist || true
+          ls -lah dist/*.dmg || true
+
+      - name: Upload artifact (DMG)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Usuals-ai-mac
+          path: |
+            dist/*.dmg
+            dist/mac*/**/*.app
+            dist/builder-debug.yml
+
+      - name: Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            dist/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# fjefj

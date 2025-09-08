@@ -16,7 +16,7 @@
     "bundle:prod:src": "webpack --mode=production",
     "compile:prod": "tsc -p ./.tsconfig",
     "build:win": "npm run bundle:prod:src && electron-builder build --win --x64",
-    "prebuild:mac": "npm --prefix ./frontend ci && npm --prefix ./frontend run build:all-widgets && npm --prefix ./apps/overlay-record ci && npm --prefix ./apps/overlay-record run build && npm --prefix ./packages/render ci && npm --prefix ./packages/render run build && npm run compile:prod",
+    "prebuild:mac": "npm --prefix ./frontend ci && npm --prefix ./frontend run build:all && npm --prefix ./apps/overlay-record ci && npm --prefix ./apps/overlay-record run build && npm --prefix ./packages/render ci && npm --prefix ./packages/render run build && npm run compile:prod",
     "build:mac": "npm run bundle:prod:src && electron-builder build --mac",
     "build:mas": "npm run bundle:prod:src && electron-builder build --mac mas",
     "build": "npm run build:win"

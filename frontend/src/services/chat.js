@@ -60,6 +60,13 @@ export const AVAILABLE_MODELS = {
       duration: "5 seconds",
       resolution: "Variable",
     },
+    "veo3": {
+      name: "veo3",
+      description: "Advanced video generation",
+      provider: "Google",
+      duration: "5 seconds",
+      resolution: "Variable",
+    },
   },
 };
 

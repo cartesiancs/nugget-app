@@ -99,8 +99,9 @@ const ChatMessages = ({
     "gemini-pro": { label: "Gemini Pro", tokens: "4", time: "4" },
     "recraft-v3": { label: "Recraft", tokens: "1", time: "4" },
     imagen: { label: "Imagen", tokens: "2", time: "2" },
-    "gen4-turbo": { label: "RunwayML", tokens: "2.5", time: "3" },
+    "gen4_turbo": { label: "RunwayML", tokens: "2.5", time: "3" },
     "kling-v2.1-master": { label: "Kling", tokens: "20", time: "4" },
+    "veo3": { label: "veo3", tokens: "37", time: "5" },
   };
 
   // Get available models based on approval tool type (copied from InputArea logic)
@@ -126,11 +127,12 @@ const ChatMessages = ({
       ];
     }
 
-    // Video generation after image generation - Runway default, Kling option
+    // Video generation after image generation - Runway default, Kling and veo3 options
     if (toolName === 'generate_video_with_approval') {
       return [
-        { value: "gen4-turbo", ...modelData["gen4-turbo"] },
+        { value: "gen4_turbo", ...modelData["gen4_turbo"] },
         { value: "kling-v2.1-master", ...modelData["kling-v2.1-master"] },
+        { value: "veo3", ...modelData["veo3"] },
       ];
     }
 
@@ -147,10 +149,12 @@ const ChatMessages = ({
     if (chatFlow) {
       if (modelValue === "recraft-v3" || modelValue === "imagen") {
         chatFlow.setSelectedImageModel(modelValue);
-      } else if (modelValue === "gen4-turbo") {
+      } else if (modelValue === "gen4_turbo") {
         chatFlow.setSelectedVideoModel("gen4_turbo");
       } else if (modelValue === "kling-v2.1-master") {
         chatFlow.setSelectedVideoModel("kling-v2.1-master");
+      } else if (modelValue === "veo3") {
+        chatFlow.setSelectedVideoModel("veo3");
       } else if (modelValue === "gemini-pro") {
         chatFlow.setSelectedScriptModel("gemini-pro");
       } else if (modelValue === "gemini-flash") {

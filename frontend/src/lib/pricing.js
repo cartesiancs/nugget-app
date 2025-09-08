@@ -37,7 +37,7 @@ export const CREDIT_PRICES = {
       cost: 0.28,
     },
     veo3: {
-      credits: 37.5,
+      credits: 37,
       editCredits: 0,
       unit: "per second",
       cost: 0.75,

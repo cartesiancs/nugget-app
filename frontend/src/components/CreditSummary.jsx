@@ -29,6 +29,7 @@ const CreditSummary = ({ showDetailed = false }) => {
     'Video Generation (VEO2, 5s)': getVideoCreditCost('veo2', 5),
     'Video Generation (Runway, 5s)': getVideoCreditCost('gen4_turbo', 5),
     'Video Generation (Kling, 5s)': getVideoCreditCost('kling v2.1-master', 5),
+    'Video Generation (veo3, 5s)': getVideoCreditCost('veo3', 5),
   };
 
   return (

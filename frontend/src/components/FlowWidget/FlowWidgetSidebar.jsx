@@ -21,9 +21,9 @@ function FlowWidgetSidebar({ selectedNode, onClose, onRegenerate }) {
     "gemini-pro": { label: "Gemini Pro", tokens: "4", time: "4" },
     "recraft-v3": { label: "Recraft", tokens: "1", time: "4" },
     imagen: { label: "Imagen", tokens: "2", time: "2" },
-    "gen4-turbo": { label: "RunwayML", tokens: "2.5", time: "3" },
     "gen4_turbo": { label: "RunwayML", tokens: "2.5", time: "3" },
     "kling-v2.1-master": { label: "Kling", tokens: "20", time: "4" },
+    "veo3": { label: "veo3", tokens: "37", time: "5" },
   };
 
   // Get available models based on node type
@@ -37,6 +37,7 @@ function FlowWidgetSidebar({ selectedNode, onClose, onRegenerate }) {
       return [
         { value: "gen4_turbo", label: "RunwayML", tokens: "2.5", time: "3" },
         { value: "kling-v2.1-master", label: "Kling", tokens: "20", time: "4" },
+        { value: "veo3", label: "veo3", tokens: "37", time: "5" },
       ];
     }
     return [{ value: "GPT-4o mini", label: "GPT-4o mini", tokens: "5", time: "2" }];

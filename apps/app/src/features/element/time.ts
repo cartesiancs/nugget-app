@@ -22,22 +22,9 @@ export function isElementVisibleAtTime(
       : element.duration;
   const endTime = startTime + realDuration;
 
-  if (element.filetype === "video") {
-    return isVideoElementVisibleAtTime(timeInMs, element);
-  }
-
+  // Visibility depends ONLY on timeline position (startTime + duration)
+  // NOT on trim values (which are source file positions for FFmpeg -ss seeking)
   return isTimeInRange(timeInMs, startTime, endTime);
-}
-
-export function isVideoElementVisibleAtTime(
-  timeInMs: number,
-  videoElement: VideoElementType,
-) {
-  return isTimeInRange(
-    timeInMs,
-    videoElement.startTime + videoElement.trim.startTime,
-    videoElement.startTime + videoElement.trim.endTime,
-  );
 }
 
 function getAdditionalStartTime(

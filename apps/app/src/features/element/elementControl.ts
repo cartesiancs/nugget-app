@@ -1148,21 +1148,13 @@ export class ElementControl extends LitElement {
   appearAllElementInTime() {
     for (let elementId in this.timeline) {
       let filetype = this.timeline[elementId].filetype;
+      // Visibility depends ONLY on timeline position (startTime + duration)
+      // NOT on trim values (which are source file positions for FFmpeg -ss seeking)
       let checkFiletype =
         (this.timeline[elementId].startTime as number) > this.progressTime ||
         (this.timeline[elementId].startTime as number) +
           (this.timeline[elementId].duration as number) <
           this.progressTime;
-
-      if (filetype == "video" || filetype == "audio") {
-        checkFiletype =
-          (this.timeline[elementId].startTime as number) +
-            this.timeline[elementId].trim.startTime >
-            this.progressTime ||
-          this.timeline[elementId].startTime +
-            this.timeline[elementId].trim.endTime <
-            this.progressTime;
-      }
 
       if (checkFiletype) {
         this.hideElement(elementId);
